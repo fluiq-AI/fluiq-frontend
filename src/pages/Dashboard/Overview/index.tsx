@@ -9,6 +9,9 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAppSelector } from "@/store/hooks"
+import { UpgradePlanButton } from "@/components/UpgradePlanButton"
+import { CacheStatsCard } from "./CacheStatsCard"
+import { UsageCard } from "./UsageCard"
 
 function Overview() {
   const { user, organization } = useAppSelector((s) => s.auth)
@@ -27,7 +30,7 @@ function Overview() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -37,7 +40,15 @@ function Overview() {
             <CardDescription>{organization.name}</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2 text-sm">
-            <Row label="Plan" value={user.user_type} />
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">Plan</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-foreground">
+                  {user.user_type}
+                </span>
+                <UpgradePlanButton current={user.user_type} />
+              </div>
+            </div>
             <Row label="Email" value={user.email} />
             <Row
               label="API keys"
@@ -45,6 +56,10 @@ function Overview() {
             />
           </CardContent>
         </Card>
+
+        <UsageCard />
+
+        <CacheStatsCard />
 
         <Card>
           <CardHeader>

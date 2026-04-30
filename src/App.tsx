@@ -4,13 +4,16 @@ import Documentation from "@/pages/documentation"
 import Login from "@/pages/login"
 import Signup from "@/pages/signup"
 import Pricing from "@/pages/pricing"
+
 import Dashboard from "@/pages/Dashboard/dashboard"
-import Overview from "@/pages/Dashboard/Overview"
-import Traces from "@/pages/Dashboard/Traces"
-import Tests from "@/pages/Dashboard/Tests"
-import Optimize from "@/pages/Dashboard/Optimize"
-import ApiManagement from "@/pages/Dashboard/ApiManagement"
-import Profile from "@/pages/Dashboard/Profile"
+import Overview from "@/pages/Dashboard/Overview/index"
+import Traces from "@/pages/Dashboard/Traces/index"
+import Agents from "@/pages/Dashboard/Agents/index"
+import Tests from "@/pages/Dashboard/Tests/index"
+import Optimize from "@/pages/Dashboard/Optimize/index"
+import ApiManagement from "@/pages/Dashboard/ApiManagement/index"
+import Profile from "@/pages/Dashboard/Profile/index"
+
 import RequireAuth from "@/components/RequireAuth"
 
 function App() {
@@ -34,6 +37,7 @@ function App() {
           <Route index element={<Navigate to="overview" replace />} />
           <Route path="overview" element={<Overview />} />
           <Route path="traces" element={<Traces />} />
+          <Route path="agents" element={<Agents />} />
           <Route path="tests" element={<Tests />} />
           <Route path="optimize" element={<Optimize />} />
           <Route path="api-management" element={<ApiManagement />} />

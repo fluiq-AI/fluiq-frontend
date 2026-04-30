@@ -1,7 +1,6 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  AiMagicIcon,
   ArrowRight02Icon,
   Building01Icon,
   CheckmarkCircle02Icon,
@@ -9,6 +8,7 @@ import {
   Github01Icon,
   RocketIcon,
   SparklesIcon,
+  ChartLineData01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
@@ -33,6 +33,7 @@ const tiers = [
     featured: false,
     features: [
       "5M traces total",
+      "1,000 LLM-as-judge evaluations",
       "1 seat",
       "Tracing, evals & dashboards",
       "GitHub Action for PR eval gates",
@@ -50,12 +51,31 @@ const tiers = [
     featured: true,
     features: [
       "Unlimited tracing",
+      "10,000 LLM-as-judge evaluations",
       "5 seats included ($49 / extra seat)",
       "Cross-pipeline benchmarks",
       "Optimization engine & one-click apply",
       "Anomaly alerts to Slack",
       "90-day trace retention",
       "Priority email support",
+    ],
+  },
+  {
+    name: "Growth",
+    icon: ChartLineData01Icon,
+    price: "$1,499",
+    cadence: "per workspace / month",
+    description: "Higher eval throughput and longer retention for production-scale RAG and agent fleets.",
+    cta: { label: "Start 14-day trial", to: "/signup" },
+    featured: false,
+    features: [
+      "Unlimited tracing",
+      "100,000 LLM-as-judge evaluations",
+      "15 seats included ($39 / extra seat)",
+      "Everything in Team",
+      "Custom evaluators & metric pipelines",
+      "180-day trace retention",
+      "Priority Slack support",
     ],
   },
   {
@@ -67,6 +87,7 @@ const tiers = [
     cta: { label: "Talk to sales", to: "#contact" },
     featured: false,
     features: [
+      "Unlimited tracing & evaluations",
       "Unlimited seats & workspaces",
       "SSO / SAML & SCIM",
       "VPC or on-prem deployment",
@@ -83,8 +104,16 @@ const faqs = [
     a: "One traced span \u2014 typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5\u201320 traces.",
   },
   {
+    q: "What counts as an evaluation?",
+    a: "One LLM-as-judge scoring call \u2014 e.g. a context-relevance score over a retrieved chunk set, or a hallucination check on an answer. Each retrieval trace runs one evaluation by default; you can disable auto-eval per workspace.",
+  },
+  {
     q: "What happens after I hit 5M traces on the free tier?",
     a: "Tracing pauses and your dashboards stay accessible read-only. You can upgrade to Team at any time to resume ingestion \u2014 no data is lost.",
+  },
+  {
+    q: "What happens after I hit my evaluation limit?",
+    a: "Auto-evaluation pauses for the rest of the cycle, but tracing keeps running. Existing scores stay queryable in the dashboard. Upgrade tiers (or contact us) to lift the cap.",
   },
   {
     q: "Do you support self-hosting?",
@@ -103,9 +132,7 @@ function Pricing() {
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <HugeiconsIcon icon={AiMagicIcon} size={16} />
-            </span>
+            <img src="/logo.svg" alt="Fluiq" className="size-7" />
             <span className="font-heading text-lg font-semibold tracking-tight">Fluiq</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
@@ -115,7 +142,7 @@ function Pricing() {
           </nav>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
-              <a href="https://github.com" target="_blank" rel="noreferrer">
+              <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
                 <HugeiconsIcon icon={Github01Icon} />
                 GitHub
               </a>
@@ -143,14 +170,14 @@ function Pricing() {
             Free to start. Scales when your pipelines do.
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Tracing, evals, and dashboards are free up to 5M traces. Cross-pipeline benchmarks and the optimization engine unlock on Team.
+            Tracing, evals, and dashboards are free up to 5M traces and 1,000 evaluations. Lift the eval cap on Team and Growth; everything is unlimited on Enterprise.
           </p>
         </div>
       </section>
 
       <section className="border-b border-border/60">
-        <div className="mx-auto max-w-6xl px-6 py-16">
-          <div className="grid gap-6 md:grid-cols-3">
+        <div className="mx-auto max-w-7xl px-6 py-16">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {tiers.map((tier) => (
               <Card
                 key={tier.name}
@@ -228,9 +255,7 @@ function Pricing() {
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-10 text-sm text-muted-foreground md:flex-row md:items-center">
           <div className="flex items-center gap-2">
-            <span className="grid size-6 place-items-center rounded-md bg-primary text-primary-foreground">
-              <HugeiconsIcon icon={AiMagicIcon} size={14} />
-            </span>
+            <img src="/logo.svg" alt="Fluiq" className="size-6" />
             <span className="font-heading font-semibold text-foreground">Fluiq</span>
             <span>&middot; Observe, test, optimize, benchmark.</span>
           </div>
@@ -238,7 +263,7 @@ function Pricing() {
             <Link to="/" className="hover:text-foreground">Platform</Link>
             <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
             <Link to="/documentation" className="hover:text-foreground">Documentation</Link>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
+            <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
           </div>
         </div>
       </footer>

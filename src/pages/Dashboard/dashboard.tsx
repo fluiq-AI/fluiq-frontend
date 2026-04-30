@@ -2,7 +2,6 @@ import { Link, NavLink, Outlet, useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Activity01Icon,
-  AiMagicIcon,
   ApiIcon,
   DashboardSquare01Icon,
   Loading03Icon,
@@ -10,6 +9,7 @@ import {
   MagicWand01Icon,
   TestTube01Icon,
   UserCircleIcon,
+  WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 const NAV_ITEMS = [
   { to: "/dashboard/overview", label: "Overview", icon: DashboardSquare01Icon },
   { to: "/dashboard/traces", label: "Traces", icon: Activity01Icon },
+  { to: "/dashboard/agents", label: "Agents", icon: WorkflowSquare01Icon },
   { to: "/dashboard/tests", label: "Tests", icon: TestTube01Icon },
   { to: "/dashboard/optimize", label: "Optimize", icon: MagicWand01Icon },
   { to: "/dashboard/api-management", label: "API Management", icon: ApiIcon },
@@ -46,9 +47,7 @@ function Dashboard() {
       <aside className="sticky top-0 flex h-screen w-60 flex-col border-r border-border/60 bg-background">
         <div className="flex h-16 items-center border-b border-border/60 px-5">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <HugeiconsIcon icon={AiMagicIcon} size={16} />
-            </span>
+            <img src="/logo.svg" alt="Fluiq" className="size-7" />
             <span className="font-heading text-lg font-semibold tracking-tight">Fluiq</span>
             <Badge variant="muted" className="ml-1">Dashboard</Badge>
           </Link>

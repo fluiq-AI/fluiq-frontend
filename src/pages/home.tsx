@@ -6,7 +6,6 @@ import {
   RocketIcon,
   ZapIcon,
   ShieldIcon,
-  AiMagicIcon,
   SparklesIcon,
   Github01Icon,
   PythonIcon,
@@ -102,9 +101,7 @@ function Home() {
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <HugeiconsIcon icon={AiMagicIcon} size={16} />
-            </span>
+            <img src="/logo.svg" alt="Fluiq" className="size-7" />
             <span className="font-heading text-lg font-semibold tracking-tight">Fluiq</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
@@ -116,7 +113,7 @@ function Home() {
           </nav>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
-              <a href="https://github.com" target="_blank" rel="noreferrer">
+              <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
                 <HugeiconsIcon icon={Github01Icon} />
                 GitHub
               </a>
@@ -312,7 +309,7 @@ def answer(question: str) -> str:
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <a href="https://github.com" target="_blank" rel="noreferrer">
+              <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
                 <HugeiconsIcon icon={Github01Icon} />
                 Star on GitHub
               </a>
@@ -324,9 +321,7 @@ def answer(question: str) -> str:
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-10 text-sm text-muted-foreground md:flex-row md:items-center">
           <div className="flex items-center gap-2">
-            <span className="grid size-6 place-items-center rounded-md bg-primary text-primary-foreground">
-              <HugeiconsIcon icon={AiMagicIcon} size={14} />
-            </span>
+            <img src="/logo.svg" alt="Fluiq" className="size-6" />
             <span className="font-heading font-semibold text-foreground">Fluiq</span>
             <span>&middot; Observe, test, optimize, benchmark.</span>
           </div>
@@ -334,7 +329,7 @@ def answer(question: str) -> str:
             <a href="#pillars" className="hover:text-foreground">Platform</a>
             <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
             <Link to="/documentation" className="hover:text-foreground">Documentation</Link>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
+            <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
           </div>
         </div>
       </footer>

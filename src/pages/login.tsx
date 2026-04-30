@@ -2,7 +2,6 @@ import { useEffect, useState, type FormEvent } from "react"
 import { Link, useLocation, useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  AiMagicIcon,
   Alert02Icon,
   ArrowLeft02Icon,
   ArrowRight02Icon,
@@ -62,9 +61,7 @@ function Login() {
       <header className="border-b border-border/60 bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <HugeiconsIcon icon={AiMagicIcon} size={16} />
-            </span>
+            <img src="/logo.svg" alt="Fluiq" className="size-7" />
             <span className="font-heading text-lg font-semibold tracking-tight">Fluiq</span>
           </Link>
           <Button variant="ghost" size="sm" asChild>

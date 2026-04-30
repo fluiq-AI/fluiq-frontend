@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { UpgradePlanButton } from "@/components/UpgradePlanButton"
 import { useAppSelector } from "@/store/hooks"
 
 function Profile() {
@@ -36,7 +37,15 @@ function Profile() {
         <CardContent className="grid gap-2 text-sm">
           <Row label="Name" value={user.name} />
           <Row label="Email" value={user.email} />
-          <Row label="Plan" value={user.user_type} />
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">Plan</span>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-foreground">
+                {user.user_type}
+              </span>
+              <UpgradePlanButton current={user.user_type} />
+            </div>
+          </div>
         </CardContent>
       </Card>
     </>
