@@ -3,7 +3,7 @@ services:
     name: fluiq
     env: static
     buildCommand: npm install && npm run build
-    publishPath: dist
+    publishPath: ./dist
     routes:
       - type: rewrite
         source: /*
