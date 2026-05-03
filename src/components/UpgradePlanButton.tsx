@@ -51,7 +51,7 @@ export function UpgradePlanButton({
       <Button
         variant="outline"
         size={size}
-        onClick={() => navigate("/pricing#contact")}
+        // onClick={() => navigate("/pricing#contact")}
       >
         Contact sales
         <HugeiconsIcon icon={ArrowUpRight01Icon} size={14} />

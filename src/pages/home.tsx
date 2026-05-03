@@ -324,7 +324,7 @@ def answer(question: str) -> str:
           </div>
           <div className="flex items-center gap-5">
             <a href="#pillars" className="hover:text-foreground">Platform</a>
-            <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
+            {/* <Link to="/pricing" className="hover:text-foreground">Pricing</Link> */}
             <Link to="/documentation" className="hover:text-foreground">Documentation</Link>
             <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
           </div>
