@@ -109,7 +109,7 @@ function Home() {
             <a href="#pillars" className="hover:text-foreground">Platform</a>
             <a href="#frameworks" className="hover:text-foreground">Frameworks</a>
             <a href="#benchmarks" className="hover:text-foreground">Benchmarks</a>
-            <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
+            {/*<Link to="/pricing" className="hover:text-foreground">Pricing</Link>*/}
             <Link to="/documentation" className="hover:text-foreground">Documentation</Link>
           </nav>
           <div className="flex items-center gap-2">

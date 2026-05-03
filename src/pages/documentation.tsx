@@ -1151,7 +1151,7 @@ function Documentation() {
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <Link to="/" className="hover:text-foreground">Platform</Link>
-            <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
+            {/*<Link to="/pricing" className="hover:text-foreground">Pricing</Link>*/}
             <Link to="/documentation" className="text-foreground">Documentation</Link>
           </nav>
           <div className="flex items-center gap-2">
