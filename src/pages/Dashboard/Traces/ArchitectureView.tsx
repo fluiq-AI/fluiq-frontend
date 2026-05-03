@@ -1,5 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react"
-import { Alert02Icon, WorkflowSquare01Icon } from "@hugeicons/core-free-icons"
+import {
+  Alert02Icon,
+  Loading03Icon,
+  WorkflowSquare01Icon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Background,
@@ -33,6 +37,7 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
     sublabel,
     icon,
     failed,
+    running,
     selected,
     count,
     request,
@@ -63,14 +68,17 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
             ? "border-primary bg-primary/5 ring-1 ring-primary/40"
             : "border-border/60",
           failed ? "border-destructive/60 bg-destructive/5" : undefined,
+          running
+            ? "border-dashed border-primary/70 bg-primary/5 animate-pulse"
+            : undefined,
         )}
       >
-        <Handle type="target" position={Position.Top} className="!opacity-0" />
+        <Handle type="target" position={Position.Top} className="opacity-0!" />
         <Handle
           id="loop-target"
           type="target"
           position={Position.Right}
-          className="!opacity-0"
+          className="opacity-0!"
         />
         <HugeiconsIcon
           icon={icon}
@@ -103,7 +111,14 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
             {`\u00D7${count}`}
           </span>
         ) : null}
-        {failed ? (
+        {running ? (
+          <HugeiconsIcon
+            icon={Loading03Icon}
+            size={12}
+            className="shrink-0 animate-spin text-primary"
+            aria-label="Running"
+          />
+        ) : failed ? (
           <HugeiconsIcon
             icon={Alert02Icon}
             size={12}
@@ -114,9 +129,9 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
           id="loop-source"
           type="source"
           position={Position.Right}
-          className="!opacity-0"
+          className="opacity-0!"
         />
-        <Handle type="source" position={Position.Bottom} className="!opacity-0" />
+        <Handle type="source" position={Position.Bottom} className="opacity-0!" />
       </div>
       {showTooltip ? (
         // Outer wrapper sits flush against the node's right edge so the cursor
@@ -135,7 +150,7 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
                 <div className="mb-1 font-medium text-muted-foreground">
                   Input
                 </div>
-                <pre className="max-h-32 overflow-auto rounded bg-muted/60 p-1.5 font-mono text-[10px] leading-relaxed whitespace-pre-wrap break-words">
+                <pre className="max-h-32 overflow-auto rounded bg-muted/60 p-1.5 font-mono text-[10px] leading-relaxed whitespace-pre-wrap wrap-break-word">
                   {request}
                 </pre>
               </div>
@@ -145,7 +160,7 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
                 <div className="mb-1 font-medium text-muted-foreground">
                   Output
                 </div>
-                <pre className="max-h-32 overflow-auto rounded bg-muted/60 p-1.5 font-mono text-[10px] leading-relaxed whitespace-pre-wrap break-words">
+                <pre className="max-h-32 overflow-auto rounded bg-muted/60 p-1.5 font-mono text-[10px] leading-relaxed whitespace-pre-wrap wrap-break-word">
                   {response}
                 </pre>
               </div>
@@ -237,7 +252,7 @@ export function ArchitectureView({
           {group.count} step{group.count === 1 ? "" : "s"}
         </span>
       </div>
-      <div className="min-h-[320px] flex-1 rounded-md border border-border/60 bg-muted/20">
+      <div className="min-h-80 flex-1 rounded-md border border-border/60 bg-muted/20">
         <HoveredFlowIdContext.Provider value={hoveredFlowId}>
           <ReactFlow
             nodes={nodes}

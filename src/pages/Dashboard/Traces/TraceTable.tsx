@@ -4,6 +4,7 @@ import {
   ArrowDown01Icon,
   ArrowRight01Icon,
   InformationCircleIcon,
+  Loading03Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -23,6 +24,7 @@ import {
   formatScore,
   getStr,
   isFailed,
+  isRunning,
   scoreBandClass,
 } from "./utils"
 
@@ -46,6 +48,7 @@ export function TraceTreeRows({
   const isExpanded = expandedNodes.has(node.id)
   const isRoot = depth === 0
   const failed = isFailed(t.event)
+  const running = isRunning(t.event)
   const subtreeFailed = hasFailedDescendant(node)
   const displayCount =
     typeof subtreeCount === "number" ? subtreeCount : countSubtree(node)
@@ -56,6 +59,8 @@ export function TraceTreeRows({
     depth > 0 ? { paddingLeft: `${1.5 + depth * 1.5}rem` } : undefined
   const rowClass = failed
     ? "border-b border-border/60 bg-destructive/10 align-middle"
+    : running
+    ? "border-b border-border/60 bg-primary/5 align-middle"
     : isRoot
     ? "border-b border-border/60 align-middle"
     : "border-b border-border/60 bg-muted/20 align-middle"
@@ -94,7 +99,20 @@ export function TraceTreeRows({
             textSize,
           )}
         >
-          {formatLatency(t.event["latency"])}
+          {running ? (
+            <span className="inline-flex items-center gap-1.5 text-primary">
+              <HugeiconsIcon
+                icon={Loading03Icon}
+                size={12}
+                className="animate-spin"
+              />
+              <span className="text-[11px] font-medium uppercase tracking-wide">
+                Running
+              </span>
+            </span>
+          ) : (
+            formatLatency(t.event["latency"])
+          )}
         </td>
         <td
           className={cn(

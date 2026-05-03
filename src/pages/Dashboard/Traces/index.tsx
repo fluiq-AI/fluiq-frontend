@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Activity01Icon,
   Alert02Icon,
@@ -16,19 +16,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { RealtimeStatusBanner } from "@/components/RealtimeStatusBanner"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
+import { useRealtimeStream } from "@/lib/useRealtimeStream"
 import { useAppSelector } from "@/store/hooks"
 
 import { ALL_KEYS, TRACES_PAGE_SIZE } from "./constants"
 import type {
   DrawerTab,
+  EvaluationScore,
   TraceListResponse,
   TraceRecord,
 } from "./types"
 import { buildTraceTree, findGroupForTrace } from "./treeBuilder"
 import { synthesizeAggregatedEvent } from "./aggregation"
-import { formatDate, formatLatency, getStr, isFailed } from "./utils"
+import { formatDate, formatLatency, getStr, isFailed, isRunning } from "./utils"
 import { TraceTreeRows } from "./TraceTable"
 import { JsonView } from "./JsonView"
 import { DrawerTabButton } from "./DrawerPrimitives"
@@ -42,21 +45,42 @@ function Traces() {
   const [traces, setTraces] = useState<TraceRecord[]>([])
   const [keyId, setKeyId] = useState<string>(ALL_KEYS)
   const [page, setPage] = useState(0)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null)
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("ui")
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
+  const [liveBufferCount, setLiveBufferCount] = useState(0)
+  const pageRef = useRef(page)
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   const apiKeys = useMemo(() => organization?.api_keys ?? [], [organization])
   const groups = useMemo(() => buildTraceTree(traces), [traces])
+  // Derive the displayed selected trace from the latest `traces` list so
+  // SSE enrichments (cost / evaluations) land in the open drawer without
+  // an effect-driven setState. If the trace has scrolled off the current
+  // page we fall back to the original selection rather than clearing it.
+  const effectiveSelectedTrace = useMemo(() => {
+    if (!selectedTrace) return null
+    const tid = getStr(selectedTrace.event, "trace_id")
+    if (!tid) return selectedTrace
+    return traces.find((t) => getStr(t.event, "trace_id") === tid) ?? selectedTrace
+  }, [traces, selectedTrace])
   const selectedGroup = useMemo(
-    () => (selectedTrace ? findGroupForTrace(groups, selectedTrace) : null),
-    [groups, selectedTrace],
+    () =>
+      effectiveSelectedTrace
+        ? findGroupForTrace(groups, effectiveSelectedTrace)
+        : null,
+    [groups, effectiveSelectedTrace],
   )
   const selectedNodeId = useMemo(
-    () => (selectedTrace ? getStr(selectedTrace.event, "trace_id") : null),
-    [selectedTrace],
+    () =>
+      effectiveSelectedTrace
+        ? getStr(effectiveSelectedTrace.event, "trace_id")
+        : null,
+    [effectiveSelectedTrace],
   )
 
   const toggleNode = useCallback((nodeId: string) => {
@@ -77,6 +101,11 @@ function Traces() {
     setSelectedTrace(t)
   }, [])
 
+  // Used by event-handler call sites (Refresh button, visibility-change
+  // listener) where calling setState synchronously is fine. The auto-fetch
+  // effect below inlines the same logic so its setState calls happen only
+  // inside an async callback (after `await`), satisfying
+  // react-hooks/set-state-in-effect.
   const fetchTraces = useCallback(
     async (selectedKeyId: string, pageIndex: number) => {
       setLoading(true)
@@ -100,13 +129,218 @@ function Traces() {
     [],
   )
 
-  useEffect(() => {
+  // keyId / page resets and the live-buffer counter are driven from the
+  // event handlers below (select, pagination, "X new traces" button)
+  // rather than from useEffect to avoid setState-in-effect cascades.
+  // `setLoading(true)` is set here too so the spinner appears immediately;
+  // the auto-fetch effect clears it once data lands.
+  const handleKeyChange = useCallback((next: string) => {
+    setKeyId(next)
     setPage(0)
+    setLiveBufferCount(0)
+    setLoading(true)
+  }, [])
+
+  const handlePrevPage = useCallback(() => {
+    setPage((p) => {
+      const n = Math.max(0, p - 1)
+      if (n === 0) setLiveBufferCount(0)
+      return n
+    })
+    setLoading(true)
+  }, [])
+
+  const handleNextPage = useCallback(() => {
+    setPage((p) => p + 1)
+    setLoading(true)
+  }, [])
+
+  // Auto-fetch on keyId / page change. Inlined as an async IIFE so every
+  // setState happens after `await`, inside an async callback rather than
+  // in the synchronous prefix of the effect body.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const params = new URLSearchParams()
+        if (keyId !== ALL_KEYS) params.set("key_id", keyId)
+        params.set("limit", String(TRACES_PAGE_SIZE))
+        params.set("offset", String(page * TRACES_PAGE_SIZE))
+        const data = await authFetch<TraceListResponse>(
+          `/api/v1/traces?${params.toString()}`,
+        )
+        if (cancelled) return
+        setTraces(data.traces)
+        setError(null)
+      } catch (err) {
+        if (cancelled) return
+        setError(err instanceof ApiError ? err.detail : "Failed to load traces")
+        setTraces([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [keyId, page])
+
+  // Live stream: open one SSE connection per (keyId) filter and route new
+  // traces into state. When the user is on page 0 we prepend in-place
+  // (capped at TRACES_PAGE_SIZE so memory stays bounded); when paginated
+  // back in time we just bump a counter so the user can opt in by clicking
+  // the indicator. The Refresh button stays as a manual fallback.
+  const streamPath = useMemo(() => {
+    const params = new URLSearchParams()
+    if (keyId !== ALL_KEYS) params.set("key_id", keyId)
+    const qs = params.toString()
+    return `/api/v1/traces/stream${qs ? `?${qs}` : ""}`
   }, [keyId])
 
+  const { error: realtimeError } = useRealtimeStream({
+    path: streamPath,
+    events: ["trace", "trace.enriched", "trace.started"],
+    onEvent: (data, msg) => {
+      if (!data || typeof data !== "object") return
+      if (msg.event === "trace.started") {
+        // In-progress placeholder. Build a TraceRecord with status=running
+        // baked into the event payload; the eventual "trace" event with the
+        // same trace_id replaces it in place. On non-zero pages we just bump
+        // the buffer counter so the user can opt back to page 0 to see it.
+        const payload = data as {
+          api_key_prefix?: string
+          trace_id?: string
+          ingested_at_ms?: number
+          event?: Record<string, unknown>
+        }
+        if (!payload.event || typeof payload.event !== "object") return
+        const placeholder: TraceRecord = {
+          api_key_prefix: payload.api_key_prefix ?? "",
+          event: { ...payload.event, status: "running" },
+          ingested_at: payload.ingested_at_ms
+            ? new Date(payload.ingested_at_ms).toISOString()
+            : new Date().toISOString(),
+          cost: null,
+          currency: null,
+          evaluations: [],
+        }
+        if (pageRef.current !== 0) {
+          setLiveBufferCount((n) => n + 1)
+          return
+        }
+        setTraces((prev) => {
+          const tid = payload.trace_id ?? getStr(placeholder.event, "trace_id")
+          if (tid && prev.some((t) => getStr(t.event, "trace_id") === tid)) {
+            return prev
+          }
+          return [placeholder, ...prev].slice(0, TRACES_PAGE_SIZE)
+        })
+        return
+      }
+      if (msg.event === "trace.enriched") {
+        const payload = data as {
+          trace_id?: string
+          cost?: number
+          currency?: string
+          evaluation?: EvaluationScore
+        }
+        const tid = payload.trace_id
+        if (!tid) return
+        // Merge into whatever row currently has this trace_id. If the
+        // row is on a different page (not in state) the enrichment is
+        // dropped \u2014 it'll come back on the next fetch. We don't bump
+        // liveBufferCount because the trace itself was already counted
+        // when the "trace" event arrived.
+        setTraces((prev) => {
+          let changed = false
+          const next = prev.map((t) => {
+            if (getStr(t.event, "trace_id") !== tid) return t
+            changed = true
+            const merged: TraceRecord = { ...t }
+            if (typeof payload.cost === "number") {
+              merged.cost = payload.cost
+              merged.currency = payload.currency ?? t.currency ?? "USD"
+            }
+            if (payload.evaluation) {
+              const incoming = payload.evaluation
+              const existing = t.evaluations ?? []
+              // Replace in-place when (evaluator, metric) already
+              // exists \u2014 evaluators may re-emit on retry. Otherwise
+              // append.
+              const idx = existing.findIndex(
+                (e) =>
+                  e.evaluator === incoming.evaluator &&
+                  e.metric === incoming.metric,
+              )
+              merged.evaluations =
+                idx >= 0
+                  ? existing.map((e, i) => (i === idx ? incoming : e))
+                  : [...existing, incoming]
+            }
+            return merged
+          })
+          return changed ? next : prev
+        })
+        return
+      }
+
+      const payload = data as {
+        api_key_prefix?: string
+        trace_id?: string
+        ingested_at_ms?: number
+        event?: Record<string, unknown>
+      }
+      if (!payload.event || typeof payload.event !== "object") return
+      const newRecord: TraceRecord = {
+        api_key_prefix: payload.api_key_prefix ?? "",
+        event: payload.event,
+        ingested_at: payload.ingested_at_ms
+          ? new Date(payload.ingested_at_ms).toISOString()
+          : new Date().toISOString(),
+        cost: null,
+        currency: null,
+        evaluations: [],
+      }
+      if (pageRef.current !== 0) {
+        setLiveBufferCount((n) => n + 1)
+        return
+      }
+      setTraces((prev) => {
+        const newId = payload.trace_id ?? getStr(newRecord.event, "trace_id")
+        if (newId) {
+          const idx = prev.findIndex(
+            (t) => getStr(t.event, "trace_id") === newId,
+          )
+          if (idx >= 0) {
+            // A "trace.started" placeholder for this id is already in state;
+            // swap it for the durable record so the row transitions from
+            // running to completed without changing position. If the
+            // existing row was already completed (rare; producer replay)
+            // keep it and drop this duplicate.
+            if (!isRunning(prev[idx].event)) return prev
+            const next = prev.slice()
+            next[idx] = newRecord
+            return next
+          }
+        }
+        return [newRecord, ...prev].slice(0, TRACES_PAGE_SIZE)
+      })
+    },
+  })
+
+  // Catch up after the tab has been hidden: when visibility flips back on
+  // we re-fetch the current page so cost / evaluations that landed while
+  // hidden surface immediately, instead of waiting for the next manual
+  // refresh.
   useEffect(() => {
-    void fetchTraces(keyId, page)
-  }, [fetchTraces, keyId, page])
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        void fetchTraces(keyId, pageRef.current)
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibility)
+    return () => document.removeEventListener("visibilitychange", onVisibility)
+  }, [fetchTraces, keyId])
 
   useEffect(() => {
     if (!selectedTrace) return
@@ -130,18 +364,38 @@ function Traces() {
             Live request and span timeline from your instrumented pipelines.
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => fetchTraces(keyId, page)}
-          disabled={loading}
-        >
-          <HugeiconsIcon
-            icon={loading ? Loading03Icon : RefreshIcon}
-            className={loading ? "animate-spin" : undefined}
-          />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          {liveBufferCount > 0 ? (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPage(0)
+                setLiveBufferCount(0)
+                setLoading(true)
+              }}
+            >
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+              {liveBufferCount} new {liveBufferCount === 1 ? "trace" : "traces"}
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            onClick={() => fetchTraces(keyId, page)}
+            disabled={loading}
+          >
+            <HugeiconsIcon
+              icon={loading ? Loading03Icon : RefreshIcon}
+              className={loading ? "animate-spin" : undefined}
+            />
+            Refresh
+          </Button>
+        </div>
       </div>
+
+      <RealtimeStatusBanner
+        error={realtimeError}
+        fallbackHint="The Refresh button still works for historical traces."
+      />
 
       <Card>
         <CardHeader>
@@ -161,7 +415,7 @@ function Traces() {
             </div>
             <select
               value={keyId}
-              onChange={(e) => setKeyId(e.target.value)}
+              onChange={(e) => handleKeyChange(e.target.value)}
               disabled={loading || apiKeys.length === 0}
               className="h-9 rounded-md border border-border/60 bg-background px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
@@ -231,7 +485,7 @@ function Traces() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  onClick={handlePrevPage}
                   disabled={loading || page === 0}
                 >
                   Previous
@@ -239,7 +493,7 @@ function Traces() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage((p) => p + 1)}
+                  onClick={handleNextPage}
                   disabled={loading || traces.length < TRACES_PAGE_SIZE}
                 >
                   Next
@@ -250,9 +504,9 @@ function Traces() {
         </CardContent>
       </Card>
 
-      {selectedTrace ? (
+      {effectiveSelectedTrace ? (
         <TraceDrawer
-          trace={selectedTrace}
+          trace={effectiveSelectedTrace}
           group={selectedGroup}
           selectedNodeId={selectedNodeId}
           tab={drawerTab}
@@ -290,7 +544,7 @@ function TraceDrawer({
       className="fixed inset-0 z-50 flex"
     >
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="flex h-full w-full max-w-[88rem] flex-col border-l border-border/60 bg-background shadow-xl">
+      <div className="flex h-full w-full max-w-352 flex-col border-l border-border/60 bg-background shadow-xl">
         <div className="flex items-start justify-between gap-4 border-b border-border/60 px-6 py-4">
           <div>
             <div className="flex items-center gap-2">
@@ -336,14 +590,14 @@ function TraceDrawer({
           </div>
         </div>
         <div className="flex min-h-0 flex-1">
-          <div className="flex min-w-0 flex-[3] flex-col px-6 py-4">
+          <div className="flex min-w-0 flex-3 flex-col px-6 py-4">
             <ArchitectureView
               group={group}
               selectedNodeId={selectedNodeId}
               onSelectTrace={onFocusTrace}
             />
           </div>
-          <div className="flex min-w-[280px] flex-1 flex-col border-l border-border/60">
+          <div className="flex min-w-70 flex-1 flex-col border-l border-border/60">
             <EvaluationsSection evaluations={trace.evaluations} />
             <div className="flex items-center gap-1 border-b border-border/60 px-4 pt-3">
               <DrawerTabButton

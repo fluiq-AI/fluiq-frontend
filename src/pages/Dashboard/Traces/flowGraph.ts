@@ -19,6 +19,7 @@ import {
   getLanggraphNode,
   getStr,
   isFailed,
+  isRunning,
 } from "./utils"
 
 export type FlowNodeData = {
@@ -26,6 +27,7 @@ export type FlowNodeData = {
   sublabel: string | null
   icon: typeof Folder01Icon
   failed: boolean
+  running: boolean
   selected: boolean
   count: number
   request: string | null
@@ -267,6 +269,7 @@ export function buildFlowElements(
     first: TraceNode
     latest: TraceNode
     failed: boolean
+    running: boolean
     count: number
     traceIds: Set<string>
     iterations: TraceNode[]
@@ -290,6 +293,7 @@ export function buildFlowElements(
         first: t,
         latest: t,
         failed: false,
+        running: false,
         count: 0,
         traceIds: new Set(),
         iterations: [],
@@ -305,6 +309,11 @@ export function buildFlowElements(
     b.traceIds.add(t.id)
     b.iterations.push(t)
     if (isFailed(t.trace.event)) b.failed = true
+    // The latest iteration's status drives the visual: a node that retried
+    // after a failure and is running again should show the spinner, not the
+    // red border. Failed remains sticky (set above) so a fully-failed node
+    // still surfaces its error indicator after the run completes.
+    b.running = isRunning(b.latest.trace.event)
   }
 
   const recordEdge = (sourceId: string, targetId: string) => {
@@ -565,6 +574,7 @@ export function buildFlowElements(
         first: group.root,
         latest: group.root,
         failed: false,
+        running: isRunning(group.root.trace.event),
         count: 1,
         traceIds: new Set([group.root.id]),
         iterations: [group.root],
@@ -636,6 +646,7 @@ export function buildFlowElements(
         sublabel: view.sublabel,
         icon: view.icon,
         failed: b.failed,
+        running: b.running && !b.failed,
         count: b.count,
         selected:
           selectedNodeId !== null && b.traceIds.has(selectedNodeId),

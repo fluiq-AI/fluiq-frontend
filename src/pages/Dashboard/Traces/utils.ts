@@ -34,6 +34,13 @@ export function isFailed(event: Record<string, unknown>): boolean {
   return event["success"] === false
 }
 
+// True while the trace is in-flight (placeholder pushed by trace.started SSE).
+// The completion event will replace the row in state, dropping ``status`` so
+// any later read returns false.
+export function isRunning(event: Record<string, unknown>): boolean {
+  return event["status"] === "running"
+}
+
 export function isContentEmpty(value: unknown): boolean {
   if (value === undefined || value === null) return true
   if (typeof value === "string") return value.length === 0

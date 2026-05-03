@@ -22,6 +22,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { CodeBlock } from "@/components/code-block"
 import {
   Card,
   CardContent,
@@ -1106,11 +1107,7 @@ researcher = Agent(role="researcher", goal="answer", tools=[web_fetch])`,
 
 
 function Code({ children }: { children: string }) {
-  return (
-    <pre className="overflow-x-auto rounded-xl border border-border bg-muted/60 p-4 font-mono text-sm leading-relaxed text-foreground">
-      <code>{children}</code>
-    </pre>
-  )
+  return <CodeBlock>{children}</CodeBlock>
 }
 
 type ProviderSnippet = { name: string; code: string }

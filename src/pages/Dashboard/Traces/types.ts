@@ -42,6 +42,12 @@ export interface TraceRecord {
   evaluations?: EvaluationScore[]
 }
 
+// Phase of a trace as observed by the live SSE stream. ``running`` rows are
+// placeholders pushed on ``trace.started``; the eventual ``trace`` event
+// replaces them with the durable record. Absence (the typical case for
+// rows fetched from /traces) means "completed", same as in ClickHouse.
+export type TraceStatus = "running" | "complete"
+
 export interface TraceListResponse {
   traces: TraceRecord[]
   limit: number

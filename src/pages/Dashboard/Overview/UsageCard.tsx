@@ -135,7 +135,7 @@ function UsageRow({
       {unlimited ? null : (
         <Progress
           value={pct}
-          className={over ? "[&>[data-slot=progress-indicator]]:bg-destructive" : ""}
+          className={over ? "*:data-[slot=progress-indicator]:bg-destructive" : ""}
         />
       )}
     </div>

@@ -18,6 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { CodeBlock } from "@/components/code-block"
 import {
   Card,
   CardContent,
@@ -161,12 +162,10 @@ function Home() {
                 <HugeiconsIcon icon={PythonIcon} size={14} />
                 <span>install &amp; instrument</span>
               </div>
-              <pre className="overflow-x-auto rounded-xl bg-muted/60 p-4 font-mono text-sm leading-relaxed text-foreground">
-                <code>{`pip install fluiq
+              <CodeBlock>{`pip install fluiq
 
 from fluiq import instrument
-instrument()`}</code>
-              </pre>
+instrument()`}</CodeBlock>
             </div>
           </div>
         </div>
@@ -243,14 +242,12 @@ instrument()`}</code>
                 </div>
               </CardHeader>
               <CardContent>
-                <pre className="overflow-x-auto rounded-xl bg-muted/60 p-4 font-mono text-sm leading-relaxed text-foreground">
-                  <code>{`from fluiq import trace
+                <CodeBlock>{`from fluiq import trace
 
 @trace
 def answer(question: str) -> str:
     docs = retriever.invoke(question)
-    return llm.invoke(prompt(question, docs))`}</code>
-                </pre>
+    return llm.invoke(prompt(question, docs))`}</CodeBlock>
               </CardContent>
             </Card>
           </div>
