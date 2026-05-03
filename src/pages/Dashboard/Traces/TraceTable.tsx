@@ -64,7 +64,7 @@ export function TraceTreeRows({
     : isRoot
     ? "border-b border-border/60 align-middle"
     : "border-b border-border/60 bg-muted/20 align-middle"
-  const cellPad = isRoot ? "px-6 py-3" : "px-6 py-2"
+  const cellPad = isRoot ? "px-4 py-3" : "px-4 py-2"
   const textSize = isRoot ? "" : "text-xs"
 
   return (

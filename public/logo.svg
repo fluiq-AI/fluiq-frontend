@@ -1,7 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
-  <rect width="256" height="256" rx="80" fill="#000000"/>
-  <path d="M199 54 L111 54 A24 24 0 0 0 87 78 L87 214 M111 122 L163 122" stroke="#ffffff" stroke-width="15" stroke-linecap="round"/>
-  <circle cx="167" cy="54" r="15" stroke="#ffffff" fill="#000" stroke-width="10"/>
-  <circle cx="87" cy="122" r="30" stroke="#ffffff" fill="#000" stroke-width="15"/>
-  <text x="212" y="216" font-family="'FigTree Variable', sans-serif" font-size="64" font-weight="700" fill="#ffffff" text-anchor="end">ai</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect id="Rectangle_1" data-name="Rectangle 1" width="256" height="256" rx="80"/>
+  <rect id="Rectangle_7" data-name="Rectangle 7" width="65" height="25" rx="12.5" transform="translate(65 159) rotate(90)" fill="#222"/>
+  <rect id="Rectangle_4" data-name="Rectangle 4" width="65" height="25" rx="12.5" transform="translate(80 153) rotate(90)" fill="#fff"/>
+  <path id="Path_2" data-name="Path 2" d="M0,.367s-15.033,16.75-15.033,32S0,61,0,61" transform="translate(67.467 72.633)" fill="none" stroke="#222" stroke-linecap="round" stroke-width="25"/>
+  <rect id="Rectangle_8" data-name="Rectangle 8" width="94" height="25" rx="12.5" transform="translate(60 125)" fill="#222"/>
+  <rect id="Rectangle_3" data-name="Rectangle 3" width="94" height="25" rx="12.5" transform="translate(75 115)" fill="#fff"/>
+  <rect id="Rectangle_9" data-name="Rectangle 9" width="125" height="25" rx="12.5" transform="translate(55 61)" fill="#222"/>
+  <rect id="Rectangle_2" data-name="Rectangle 2" width="125" height="25" rx="12.5" transform="translate(75 51)" fill="#fff"/>
+  <path id="Path_1" data-name="Path 1" d="M0,.367s-15.033,16.75-15.033,32S0,61,0,61" transform="translate(82.5 63.5)" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="25"/>
+  <rect id="Rectangle_10" data-name="Rectangle 10" width="25" height="25" rx="12.5" transform="translate(198 202) rotate(90)" fill="#222"/>
+  <rect id="Rectangle_5" data-name="Rectangle 5" width="25" height="25" rx="12.5" transform="translate(200 199) rotate(90)" fill="#fff"/>
+  <rect id="Rectangle_11" data-name="Rectangle 11" width="12" height="12" rx="6" transform="translate(211 214) rotate(90)" fill="#222"/>
+  <rect id="Rectangle_6" data-name="Rectangle 6" width="12" height="12" rx="6" transform="translate(212 212) rotate(90)" fill="#fff"/>
 </svg>
