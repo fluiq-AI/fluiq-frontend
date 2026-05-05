@@ -3,8 +3,10 @@ import {
   Brain01Icon,
   CloudServerIcon,
   CodeIcon,
+  Database01Icon,
   File01Icon,
   Folder01Icon,
+  SortByDown01Icon,
   Wrench01Icon,
   WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
@@ -174,6 +176,42 @@ function describeNode(node: TraceNode): {
       sublabel: integration,
       icon: Brain01Icon,
     }
+  }
+  if (type === "cache") {
+    // Cache spans emitted by EmbeddingCache / PromptCache / DocumentCache /
+    // ToolCache via auto_optimize(). Surface the kind ("embedding",
+    // "prompt", "document", "tool") and a hit/miss summary so the box
+    // conveys the cache outcome at a glance without expanding it.
+    const kind = getStr(ev, "cache_kind")
+    const hits = ev["cache_hits"]
+    const misses = ev["cache_misses"]
+    const size = ev["cache_size"]
+    let outcome: string | null = null
+    if (typeof hits === "number" && typeof misses === "number") {
+      const total =
+        typeof size === "number" && Number.isFinite(size) ? size : hits + misses
+      if (total > 0) {
+        if (misses === 0) outcome = `hit (${hits}/${total})`
+        else if (hits === 0) outcome = `miss (${misses}/${total})`
+        else outcome = `${hits}/${total} hit`
+      }
+    }
+    const label = kind ? `${kind} cache` : "Cache"
+    const sublabel = outcome ?? (model ?? null)
+    return { label, sublabel, icon: Database01Icon }
+  }
+  if (type === "rerank") {
+    // Rerank spans emitted by TracedReranker around BM25 / cross-encoder /
+    // hybrid / MMR. Surface reranker name and the candidate count change
+    // (e.g. "20 -> 5") so the box reads as the reranking step it is.
+    const reranker = getStr(ev, "reranker") ?? fn ?? "rerank"
+    const inN = ev["input_count"]
+    const outN = ev["output_count"]
+    let sublabel: string | null = null
+    if (typeof inN === "number" && typeof outN === "number") {
+      sublabel = `${inN} \u2192 ${outN}`
+    }
+    return { label: reranker, sublabel, icon: SortByDown01Icon }
   }
   if (type === "function" || fn) {
     return {

@@ -1235,6 +1235,8 @@ function Documentation() {
 
 instrument(api_key="fl_...")
 
+# set FLUIQ_API_ENDPOINT="https://api.getfluiq.com/api" in .env
+# or pass it as a parameter to instrument endpoint="https://api.getfluiq.com/api"
 # Every OpenAI / Anthropic / Gemini / LangChain / MCP
 # call from this point on is traced automatically.`}</Code>
                 </div>
@@ -1279,6 +1281,13 @@ def run(question: str) -> str:
 @trace(name="research_agent")
 async def run_streaming(question: str) -> str:
     ...`}</Code>
+
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
+              <p className="font-medium">Fail-open by design</p>
+              <p className="mt-1 text-muted-foreground">
+                Every span emission is wrapped in a safety guard so a Fluiq SDK error never crashes your application. Network failures, malformed payloads, missing optional dependencies, and dashboard outages are absorbed silently — your <code className="font-mono text-foreground">@trace</code>-decorated function still returns its real result and your provider call still executes as if Fluiq weren't installed. The same guard wraps the auto-instrumentation patches, so a broken integration never breaks the underlying SDK call.
+              </p>
+            </div>
           </section>
 
           <section id="integrations" className="mt-16 scroll-mt-24 space-y-4">
@@ -1513,6 +1522,46 @@ app.invoke({"messages": [...]})`}</Code>
               <code className="font-mono text-foreground">(name, kwargs)</code> against the same shared backend the rest of the bundle uses, so cache hits survive across agent runs whenever you persist with <code className="font-mono text-foreground">cache_dir=...</code>.
             </p>
             <ProviderCode snippets={TOOL_CACHING_SNIPPETS} />
+
+            <div className="flex items-center gap-2 pt-4">
+              <HugeiconsIcon icon={TestTube01Icon} size={16} />
+              <p className="font-medium">Trace visibility</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              When <code className="font-mono text-foreground">auto_optimize(trace="auto")</code> sees that <code className="font-mono text-foreground">fluiq.instrument()</code> has been called, every cache lookup and reranker invocation emits its own span linked to the surrounding <code className="font-mono text-foreground">@trace</code> root. The Traces dashboard renders them with dedicated icons and sublabels so cache hit rates and reranker latency sit alongside your LLM calls — no extra wiring required.
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+              <li>
+                Cache spans (<code className="font-mono text-foreground">type=cache</code>) carry{" "}
+                <code className="font-mono text-foreground">cache_kind</code> (<code className="font-mono text-foreground">embedding</code> /{" "}
+                <code className="font-mono text-foreground">prompt</code> /{" "}
+                <code className="font-mono text-foreground">document</code> /{" "}
+                <code className="font-mono text-foreground">tool</code>) and{" "}
+                <code className="font-mono text-foreground">cache_hit</code> so you can chart hit rates per cache.
+              </li>
+              <li>
+                Rerank spans (<code className="font-mono text-foreground">type=rerank</code>) carry{" "}
+                <code className="font-mono text-foreground">reranker</code> (BM25 / CrossEncoder / Hybrid / MMR),{" "}
+                <code className="font-mono text-foreground">input_count</code>,{" "}
+                <code className="font-mono text-foreground">output_count</code>, and{" "}
+                <code className="font-mono text-foreground">top_k</code>.
+              </li>
+              <li>
+                Pass <code className="font-mono text-foreground">trace=False</code> to silence the spans (e.g. for offline evaluation runs), or{" "}
+                <code className="font-mono text-foreground">trace=True</code> to force them on regardless of whether{" "}
+                <code className="font-mono text-foreground">instrument()</code> ran.
+              </li>
+              <li>
+                Hand-built caches get the same visibility — pass{" "}
+                <code className="font-mono text-foreground">trace=True</code> to{" "}
+                <code className="font-mono text-foreground">EmbeddingCache(...)</code>,{" "}
+                <code className="font-mono text-foreground">PromptCache(...)</code>,{" "}
+                <code className="font-mono text-foreground">DocumentCache(...)</code>, or{" "}
+                <code className="font-mono text-foreground">ToolCache(...)</code>. Reranker spans go through the bundle, so route reranks via{" "}
+                <code className="font-mono text-foreground">auto_optimize(rerank=...)</code> (or{" "}
+                <code className="font-mono text-foreground">opt.rerank(...)</code>) when you want them on the dashboard.
+              </li>
+            </ul>
           </section>
 
 
@@ -1662,7 +1711,7 @@ app.invoke({"messages": [...]})`}</Code>
             <Code>{`def instrument(
     api_key: str,
     version: str = "v1",
-    endpoint: str = "https://api.fluiq.dev/api",
+    endpoint: str = "https://api.getfluiq.com/api",
 ) -> None: ...`}</Code>
             <div className="grid gap-3 text-sm">
               {[
