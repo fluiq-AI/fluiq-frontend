@@ -132,9 +132,12 @@ function Login() {
                       <HugeiconsIcon icon={LockIcon} size={14} />
                       Password
                     </Label>
-                    <a href="#" className="text-xs text-muted-foreground hover:text-foreground">
+                    <Link
+                      to="/forgot-password"
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
                       Forgot password?
-                    </a>
+                    </Link>
                   </div>
                   <Input
                     id="password"

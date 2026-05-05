@@ -61,3 +61,17 @@ export interface LoginPayload {
   email: string
   password: string
 }
+
+export interface ForgotPasswordPayload {
+  email: string
+}
+
+export interface ResetPasswordPayload {
+  email: string
+  otp: string
+  new_password: string
+}
+
+export interface OkResponse {
+  ok: boolean
+}

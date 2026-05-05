@@ -3,6 +3,8 @@ import Home from "@/pages/home"
 import Documentation from "@/pages/documentation"
 import Login from "@/pages/login"
 import Signup from "@/pages/signup"
+import ForgotPassword from "@/pages/forgot-password"
+import ResetPassword from "@/pages/reset-password"
 import Pricing from "@/pages/pricing"
 
 import Dashboard from "@/pages/Dashboard/dashboard"
@@ -25,6 +27,8 @@ function App() {
         <Route path="/documentation" element={<Documentation />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route
           path="/dashboard"
