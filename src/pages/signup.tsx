@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearError, registerThunk } from "@/store/auth/slice"
+import { API_BASE_URL } from "@/lib/api"
 
 const perks = [
   "5M free traces total to get started",
@@ -109,13 +110,13 @@ function Signup() {
               <CardContent className="gap-4">
                 <div className="grid gap-2">
                   <Button variant="outline" className="w-full" asChild>
-                    <a href="#">
+                    <a href={`${API_BASE_URL}/auth/oauth/github`}>
                       <HugeiconsIcon icon={Github01Icon} />
                       Continue with GitHub
                     </a>
                   </Button>
                   <Button variant="outline" className="w-full" asChild>
-                    <a href="#">
+                    <a href={`${API_BASE_URL}/auth/oauth/google`}>
                       <HugeiconsIcon icon={GoogleIcon} />
                       Continue with Google
                     </a>

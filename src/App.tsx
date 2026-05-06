@@ -5,6 +5,7 @@ import Login from "@/pages/login"
 import Signup from "@/pages/signup"
 import ForgotPassword from "@/pages/forgot-password"
 import ResetPassword from "@/pages/reset-password"
+import AuthCallback from "@/pages/auth-callback"
 import Pricing from "@/pages/pricing"
 
 import Dashboard from "@/pages/Dashboard/dashboard"
@@ -30,6 +31,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/pricing" element={<Pricing />} />
+        <Route path="/auth/callback" element={<AuthCallback/>}/>
         <Route
           path="/dashboard"
           element={

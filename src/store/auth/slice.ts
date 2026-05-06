@@ -136,6 +136,15 @@ const authSlice = createSlice({
       state.organization = action.payload
       persist(state)
     },
+    setSession(state, action: PayloadAction<AuthSession>) {
+      state.user = action.payload.user
+      state.organization = action.payload.organization
+      state.accessToken = action.payload.access_token
+      state.refreshToken = action.payload.refresh_token
+      state.status = "succeeded"
+      state.error = null
+      persist(state)
+    },
   },
   extraReducers: (builder) => {
     const handleSession = (state: AuthState, action: PayloadAction<AuthSession>) => {
@@ -186,5 +195,5 @@ const authSlice = createSlice({
   },
 })
 
-export const { clearError, setTokens, setOrganization } = authSlice.actions
+export const { clearError, setTokens, setOrganization, setSession } = authSlice.actions
 export default authSlice.reducer
