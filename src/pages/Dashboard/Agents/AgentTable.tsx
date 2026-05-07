@@ -64,7 +64,7 @@ export function AgentTable({
                 </span>
               </td>
               <td className="px-6 py-3 text-xs text-muted-foreground">
-                {a.integration || "\u2014"}
+                {a.integration == "OTHERFUNCTION" ? "FUNCTION" : a.integration || "\u2014"}
               </td>
               <td className="px-6 py-3 text-right font-mono text-xs">
                 {a.runs.toLocaleString()}
