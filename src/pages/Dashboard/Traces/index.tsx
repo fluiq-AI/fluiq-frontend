@@ -31,7 +31,14 @@ import type {
 } from "./types"
 import { buildTraceTree, findGroupForTrace } from "./treeBuilder"
 import { synthesizeAggregatedEvent } from "./aggregation"
-import { formatDate, formatLatency, getStr, isFailed, isRunning } from "./utils"
+import {
+  formatCost,
+  formatDate,
+  formatLatency,
+  getStr,
+  isFailed,
+  isRunning,
+} from "./utils"
 import { TraceTreeRows } from "./TraceTable"
 import { JsonView } from "./JsonView"
 import { DrawerTabButton } from "./DrawerPrimitives"
@@ -571,7 +578,7 @@ function TraceDrawer({
             <HugeiconsIcon icon={Cancel01Icon} size={16} />
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-4 border-b border-border/60 px-6 py-3 text-xs">
+        <div className="grid grid-cols-4 gap-4 border-b border-border/60 px-6 py-3 text-xs">
           <div>
             <div className="text-muted-foreground">Model</div>
             <div className="mt-0.5 font-mono">
@@ -583,9 +590,15 @@ function TraceDrawer({
             <div className="mt-0.5">{formatLatency(trace.event["latency"])}</div>
           </div>
           <div>
+            <div className="text-muted-foreground">Cost</div>
+            <div className="mt-0.5 font-mono">
+              {formatCost(trace.cost, trace.currency)}
+            </div>
+          </div>
+          <div>
             <div className="text-muted-foreground">Integration</div>
             <div className="mt-0.5">
-              {getStr(trace.event, "integration") ?? "\u2014"}
+              {getStr(trace.event, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(trace.event, "integration") ?? "\u2014"}
             </div>
           </div>
         </div>

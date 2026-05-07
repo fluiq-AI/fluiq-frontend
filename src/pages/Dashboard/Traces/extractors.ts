@@ -191,6 +191,52 @@ export function extractMcpCalls(event: Record<string, unknown>): unknown[] {
   return raw
 }
 
+// Tool calls embedded on an LLM event itself (no separate `tool` trace was
+// emitted because the user's tool function isn't @trace-decorated). Returns
+// unique tool-function names across the three integrations:
+//   OpenAI    : event.tool_calls[*].function.name
+//   Anthropic : event.tool_uses[*].name
+//   Gemini    : event.function_calls[*].name
+export function extractLlmToolCallNames(
+  event: Record<string, unknown>,
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const push = (name: unknown): void => {
+    if (typeof name !== "string" || name.length === 0) return
+    if (seen.has(name)) return
+    seen.add(name)
+    out.push(name)
+  }
+  const oai = event["tool_calls"]
+  if (Array.isArray(oai)) {
+    for (const tc of oai) {
+      if (!tc || typeof tc !== "object") continue
+      const fn = (tc as Record<string, unknown>)["function"]
+      if (fn && typeof fn === "object" && !Array.isArray(fn)) {
+        push((fn as Record<string, unknown>)["name"])
+      } else {
+        push((tc as Record<string, unknown>)["name"])
+      }
+    }
+  }
+  const ant = event["tool_uses"]
+  if (Array.isArray(ant)) {
+    for (const tu of ant) {
+      if (!tu || typeof tu !== "object") continue
+      push((tu as Record<string, unknown>)["name"])
+    }
+  }
+  const gem = event["function_calls"]
+  if (Array.isArray(gem)) {
+    for (const fc of gem) {
+      if (!fc || typeof fc !== "object") continue
+      push((fc as Record<string, unknown>)["name"])
+    }
+  }
+  return out
+}
+
 export function extractThinking(event: Record<string, unknown>): string[] {
   const raw = event["thinking"]
   if (!Array.isArray(raw)) return []

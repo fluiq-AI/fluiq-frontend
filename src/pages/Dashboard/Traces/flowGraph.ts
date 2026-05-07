@@ -13,7 +13,11 @@ import {
 import { Position, type Edge as RFEdge, type Node as RFNode } from "@xyflow/react"
 
 import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "./constants"
-import { extractMcpServers, extractTokens } from "./extractors"
+import {
+  extractLlmToolCallNames,
+  extractMcpServers,
+  extractTokens,
+} from "./extractors"
 import type { TokenUsage, TraceGroup, TraceNode, TraceRecord } from "./types"
 import { isGoogleAdkAgent, isGoogleAdkLeafAgent } from "./treeBuilder"
 import {
@@ -492,6 +496,33 @@ export function buildFlowElements(
     visitForMcp(node)
   }
 
+  // Tool calls embedded on an LLM event (OpenAI `tool_calls`, Anthropic
+  // `tool_uses`, Gemini `function_calls`) when the user's tool function isn't
+  // @trace-decorated. The tool execution itself emits no trace span, so the
+  // call would otherwise be invisible between two LLM boxes. Each unique tool
+  // name is bucketed under the LLM's flow id so repeated invocations of the
+  // same tool across iterations collapse into one box.
+  const expandLlmToolCalls = (
+    node: TraceNode,
+    parentFlowId: string,
+  ): void => {
+    const names = extractLlmToolCallNames(node.trace.event)
+    for (const name of names) {
+      const flowId = `llmtool:${parentFlowId}:${name}`
+      const synthetic: TraceNode = {
+        id: `${node.id}__llmtool__${name}`,
+        trace: node.trace,
+        children: [],
+      }
+      recordNode(flowId, synthetic, {
+        label: name,
+        sublabel: "Tool",
+        icon: Wrench01Icon as typeof Folder01Icon,
+      })
+      recordEdge(parentFlowId, flowId)
+    }
+  }
+
   const visit = (
     node: TraceNode,
     parentFlowId: string | null,
@@ -533,6 +564,12 @@ export function buildFlowElements(
     // Anthropic/OpenAI Responses LLM call). Descendants will be visited
     // separately and surface their own MCP servers under their own boxes.
     expandMcpServers(node, myFlowId, false)
+
+    // Tool calls embedded on an LLM event whose tool function isn't
+    // @trace-decorated (e.g. plain Python `fake_weather` invoked between
+    // two chat.completions.create calls). The SDK never emits a `tool`
+    // span for those, so the call is otherwise invisible in the flow.
+    expandLlmToolCalls(node, myFlowId)
 
     // LangGraph wrapper: a chain/agent whose descendants carry langgraph_node
     // tags. Pregel inserts one RunnableSequence wrapper per iteration between
@@ -580,6 +617,7 @@ export function buildFlowElements(
           expandMcpServers(c, cFlowId, true)
           continue
         }
+        expandLlmToolCalls(c, cFlowId)
         for (const gc of c.children) visit(gc, cFlowId, cFlowId)
       }
       return

@@ -11,7 +11,7 @@ import {
   extractToolLatencies,
   extractTools,
 } from "./extractors"
-import { isContentEmpty, safeStringify } from "./utils"
+import { getLanggraphNode, isContentEmpty, safeStringify } from "./utils"
 import {
   DrawerSection,
   EmptyBlock,
@@ -22,8 +22,16 @@ import { SmartContent } from "./SmartContent"
 export function TraceUiView({ event }: { event: Record<string, unknown> }) {
   const errorView = extractErrorView(event)
   const functionView = extractFunctionView(event)
+  const langgraphNode = getLanggraphNode(event)
   if (functionView) {
-    return <FunctionUiView view={functionView} errorView={errorView} />
+    return (
+      <FunctionUiView
+        view={functionView}
+        errorView={errorView}
+        event={event}
+        langgraphNode={langgraphNode}
+      />
+    )
   }
 
   const requestMessages = extractRequestMessages(event)
@@ -42,6 +50,13 @@ export function TraceUiView({ event }: { event: Record<string, unknown> }) {
         <ErrorSection
           message={errorView.message}
           traceback={errorView.traceback}
+        />
+      ) : null}
+      {langgraphNode ? (
+        <LanggraphStateSection
+          node={langgraphNode}
+          input={event["input"]}
+          output={event["output"]}
         />
       ) : null}
       <DrawerSection title="Request prompt">
@@ -216,9 +231,13 @@ export function TraceUiView({ event }: { event: Record<string, unknown> }) {
 function FunctionUiView({
   view,
   errorView,
+  event,
+  langgraphNode,
 }: {
   view: FunctionView
   errorView?: { message: string | null; traceback: string | null } | null
+  event?: Record<string, unknown>
+  langgraphNode?: string | null
 }) {
   return (
     <div className="space-y-5">
@@ -226,6 +245,13 @@ function FunctionUiView({
         <ErrorSection
           message={errorView.message}
           traceback={errorView.traceback}
+        />
+      ) : null}
+      {langgraphNode && event ? (
+        <LanggraphStateSection
+          node={langgraphNode}
+          input={event["input"]}
+          output={event["output"]}
         />
       ) : null}
       <DrawerSection title="Function">
@@ -258,5 +284,108 @@ function FunctionUiView({
         )}
       </DrawerSection>
     </div>
+  )
+}
+
+// LangGraph chain/tool/agent traces carry their pregel state on `input` /
+// `output` as dicts (e.g. {topic, outline, draft, summary}). The default
+// extractors don't surface dict-shaped IO, so render each top-level key in
+// its own labeled block when a `langgraph_node` tag is present.
+function LanggraphStateSection({
+  node,
+  input,
+  output,
+}: {
+  node: string
+  input: unknown
+  output: unknown
+}) {
+  const hasInput = !isContentEmpty(input)
+  const hasOutput = !isContentEmpty(output)
+  if (!hasInput && !hasOutput) return null
+  return (
+    <DrawerSection title={`State \u00b7 ${node}`}>
+      <div className="space-y-3">
+        {hasInput ? (
+          <div>
+            <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              Input
+            </div>
+            <StateValue value={input} />
+          </div>
+        ) : null}
+        {hasOutput ? (
+          <div>
+            <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              Output
+            </div>
+            <StateValue value={output} />
+          </div>
+        ) : null}
+      </div>
+    </DrawerSection>
+  )
+}
+
+function StateValue({ value }: { value: unknown }) {
+  if (value === null || value === undefined) return null
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return (
+      <div className="rounded-md border border-border/60 bg-muted/30 p-3">
+        <div className="whitespace-pre-wrap wrap-break-word text-xs">
+          {String(value)}
+        </div>
+      </div>
+    )
+  }
+  if (Array.isArray(value)) {
+    return (
+      <pre className="overflow-x-auto rounded-md border border-border/60 bg-muted/30 p-3 font-mono text-[11px] leading-relaxed">
+        {safeStringify(value)}
+      </pre>
+    )
+  }
+  const rec = value as Record<string, unknown>
+  const keys = Object.keys(rec)
+  if (keys.length === 0) return <EmptyBlock>(empty)</EmptyBlock>
+  return (
+    <div className="space-y-2">
+      {keys.map((k) => (
+        <div
+          key={k}
+          className="rounded-md border border-border/60 bg-muted/30 p-3"
+        >
+          <div className="mb-1 font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
+            {k}
+          </div>
+          <StateFieldValue value={rec[k]} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function StateFieldValue({ value }: { value: unknown }) {
+  if (typeof value === "string") {
+    return (
+      <div className="whitespace-pre-wrap wrap-break-word text-xs">
+        {value}
+      </div>
+    )
+  }
+  if (value === null || value === undefined) {
+    return <div className="text-xs text-muted-foreground">{"\u2014"}</div>
+  }
+  if (typeof value === "number" || typeof value === "boolean") {
+    return <div className="font-mono text-xs">{String(value)}</div>
+  }
+  return (
+    <pre className="overflow-x-auto rounded bg-muted/60 p-2 font-mono text-[11px] leading-relaxed">
+      {safeStringify(value)}
+    </pre>
   )
 }

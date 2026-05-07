@@ -173,7 +173,7 @@ export function TraceTreeRows({
         <td className={cn(cellPad, textSize)}>
           <div className="flex flex-wrap items-center gap-2">
             <span>
-              {getStr(t.event, "integration") ?? (
+              {getStr(t.event, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(t.event, "integration") ?? (
                 <span className="text-muted-foreground/60">{"\u2014"}</span>
               )}
             </span>
