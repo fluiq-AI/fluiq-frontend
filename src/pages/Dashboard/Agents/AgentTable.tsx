@@ -5,18 +5,16 @@ import { cn } from "@/lib/utils"
 import { formatCost, formatDate, formatLatency } from "@/pages/Dashboard/Traces/utils"
 import type { AgentRow, SortKey } from "./types"
 
-const KIND_LABEL: Record<string, string> = {
+export const KIND_LABEL: Record<string, string> = {
   function: "function",
   chain: "chain",
   langgraph_node: "graph",
-  llm: "llm",
 }
 
-const KIND_CLASS: Record<string, string> = {
+export const KIND_CLASS: Record<string, string> = {
   function: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
   chain: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
   langgraph_node: "bg-purple-500/15 text-purple-700 dark:text-purple-400",
-  llm: "bg-muted text-muted-foreground",
 }
 
 export function AgentTable({
@@ -24,19 +22,22 @@ export function AgentTable({
   sortKey,
   sortDir,
   onToggleSort,
+  selectedKey,
+  onSelectAgent,
 }: {
   agents: AgentRow[]
   sortKey: SortKey
   sortDir: "asc" | "desc"
   onToggleSort: (key: SortKey) => void
+  selectedKey?: string
+  onSelectAgent: (a: AgentRow) => void
 }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-y border-border/60 bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <SortableTh label="Agent"     skey="agent_key"        sortKey={sortKey} sortDir={sortDir} onClick={onToggleSort} />
-            <SortableTh label="Kind"      skey="agent_key"        sortKey={sortKey} sortDir={sortDir} onClick={onToggleSort} sortable={false} />
+            <SortableTh label="Agent"       skey="agent_key"      sortKey={sortKey} sortDir={sortDir} onClick={onToggleSort} />
             <SortableTh label="Integration" skey="integration"    sortKey={sortKey} sortDir={sortDir} onClick={onToggleSort} />
             <SortableTh label="Runs"      skey="runs"             sortKey={sortKey} sortDir={sortDir} onClick={onToggleSort} align="right" />
             <SortableTh label="Total cost" skey="total_cost"      sortKey={sortKey} sortDir={sortDir} onClick={onToggleSort} align="right" />
@@ -47,22 +48,19 @@ export function AgentTable({
           </tr>
         </thead>
         <tbody>
-          {agents.map((a) => (
+          {agents.map((a) => {
+            const rowKey = `${a.agent_key}__${a.agent_kind}__${a.integration}`
+            const isSelected = selectedKey === rowKey
+            return (
             <tr
-              key={`${a.agent_key}__${a.agent_kind}__${a.integration}`}
-              className="border-b border-border/60 align-middle hover:bg-muted/20"
+              key={rowKey}
+              onClick={() => onSelectAgent(a)}
+              className={cn(
+                "cursor-pointer border-b border-border/60 align-middle hover:bg-muted/20",
+                isSelected ? "bg-primary/5 hover:bg-primary/8" : "",
+              )}
             >
               <td className="px-6 py-3 font-mono text-xs">{a.agent_key}</td>
-              <td className="px-6 py-3">
-                <span
-                  className={cn(
-                    "inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide",
-                    KIND_CLASS[a.agent_kind] ?? KIND_CLASS.llm,
-                  )}
-                >
-                  {KIND_LABEL[a.agent_kind] ?? a.agent_kind}
-                </span>
-              </td>
               <td className="px-6 py-3 text-xs text-muted-foreground">
                 {a.integration == "OTHERFUNCTION" ? "FUNCTION" : a.integration || "\u2014"}
               </td>
@@ -85,7 +83,7 @@ export function AgentTable({
                 {a.last_run ? formatDate(a.last_run) : "\u2014"}
               </td>
             </tr>
-          ))}
+          )})}
         </tbody>
       </table>
     </div>

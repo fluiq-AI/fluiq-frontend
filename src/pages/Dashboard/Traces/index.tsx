@@ -464,7 +464,6 @@ function Traces() {
                     <th className="px-6 py-2 font-medium">Quality</th>
                     <th className="px-6 py-2 font-medium">Integration</th>
                     <th className="px-6 py-2 font-medium">Traces</th>
-                    <th className="w-12 px-6 py-2 font-medium" aria-label="Details" />
                   </tr>
                 </thead>
                 <tbody>

@@ -3,7 +3,6 @@ import {
   Alert02Icon,
   ArrowDown01Icon,
   ArrowRight01Icon,
-  InformationCircleIcon,
   Loading03Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -69,7 +68,7 @@ export function TraceTreeRows({
 
   return (
     <Fragment>
-      <tr className={rowClass}>
+      <tr className={cn(rowClass, "cursor-pointer")} onClick={() => openTrace(t)}>
         <td
           className={cn(
             "whitespace-nowrap text-muted-foreground",
@@ -189,7 +188,7 @@ export function TraceTreeRows({
           {hasChildren ? (
             <button
               type="button"
-              onClick={() => toggleNode(node.id)}
+              onClick={(e) => { e.stopPropagation(); toggleNode(node.id) }}
               aria-label={isExpanded ? "Collapse trace group" : "Expand trace group"}
               aria-expanded={isExpanded}
               className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -211,16 +210,6 @@ export function TraceTreeRows({
               {isRoot ? 1 : ""}
             </span>
           )}
-        </td>
-        <td className={cellPad}>
-          <button
-            type="button"
-            onClick={() => openTrace(t)}
-            aria-label="View trace details"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <HugeiconsIcon icon={InformationCircleIcon} size={16} />
-          </button>
         </td>
       </tr>
       {hasChildren && isExpanded

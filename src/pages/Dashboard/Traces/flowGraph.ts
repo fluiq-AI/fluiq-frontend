@@ -28,6 +28,19 @@ import {
   isRunning,
 } from "./utils"
 
+export type CacheEntry = {
+  kind: string | null
+  hits: number
+  misses: number
+  total: number
+}
+
+export type RerankerEntry = {
+  reranker: string
+  inputCount: number | null
+  outputCount: number | null
+}
+
 export type FlowNodeData = {
   label: string
   sublabel: string | null
@@ -41,6 +54,9 @@ export type FlowNodeData = {
   tokens: TokenUsage | null
   suppressTooltip: boolean
   onSelect: () => void
+  cacheEntries?: CacheEntry[]
+  rerankerEntries?: RerankerEntry[]
+  nodeHeight?: number
 }
 
 export type TraceFlowNode = RFNode<FlowNodeData, "trace">
@@ -53,7 +69,7 @@ export function layoutFlowNodes(
   g.setDefaultEdgeLabel(() => ({}))
   g.setGraph({ rankdir: "TB", nodesep: 24, ranksep: 56 })
   for (const n of nodes) {
-    g.setNode(n.id, { width: FLOW_NODE_WIDTH, height: FLOW_NODE_HEIGHT })
+    g.setNode(n.id, { width: FLOW_NODE_WIDTH, height: n.data.nodeHeight ?? FLOW_NODE_HEIGHT })
   }
   for (const e of edges) {
     // Skip loop-back edges so dagre's top-down ranking is driven purely by
@@ -64,11 +80,12 @@ export function layoutFlowNodes(
   dagre.layout(g)
   return nodes.map((n) => {
     const pos = g.node(n.id)
+    const h = n.data.nodeHeight ?? FLOW_NODE_HEIGHT
     return {
       ...n,
       position: {
         x: pos.x - FLOW_NODE_WIDTH / 2,
-        y: pos.y - FLOW_NODE_HEIGHT / 2,
+        y: pos.y - h / 2,
       },
       targetPosition: Position.Top,
       sourcePosition: Position.Bottom,
@@ -148,7 +165,7 @@ function describeNode(node: TraceNode): {
   const type = getStr(ev, "type")
   const fn = getStr(ev, "function")
   const model = getStr(ev, "model")
-  const integration = getStr(ev, "integration")
+  const integration = getStr(ev, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(ev, "integration")
   const lgNode = getLanggraphNode(ev)
   const hasChildren = node.children.length > 0
 
@@ -317,6 +334,9 @@ export function buildFlowElements(
     iterations: TraceNode[]
     view?: ViewOverride
     startStats?: StartStats
+    cacheEntries?: CacheEntry[]
+    rerankerEntries?: RerankerEntry[]
+    nodeHeight?: number
   }
   const buckets = new Map<string, Bucket>()
   const order: string[] = []
@@ -571,6 +591,34 @@ export function buildFlowElements(
     // span for those, so the call is otherwise invisible in the flow.
     expandLlmToolCalls(node, myFlowId)
 
+    // A compound reranker (e.g. hybrid) that contains sub-reranker children
+    // (bm25, cross-encoder, mmr …) is treated as opaque: the children are
+    // folded into the parent node rather than spawned as separate flow nodes.
+    if (type === "rerank") {
+      const subRankers = node.children.filter(
+        (c) => getStr(c.trace.event, "type") === "rerank",
+      )
+      if (subRankers.length > 0) {
+        const subNames = subRankers
+          .map(
+            (c) =>
+              getStr(c.trace.event, "reranker") ?? getStr(c.trace.event, "function"),
+          )
+          .filter((n): n is string => n !== null)
+        const b = buckets.get(myFlowId)
+        if (b) {
+          const rerankerName =
+            getStr(ev, "reranker") ?? getStr(ev, "function") ?? "rerank"
+          b.view = {
+            label: rerankerName,
+            sublabel: subNames.join(" + "),
+            icon: SortByDown01Icon as typeof Folder01Icon,
+          }
+        }
+        return
+      }
+    }
+
     // LangGraph wrapper: a chain/agent whose descendants carry langgraph_node
     // tags. Pregel inserts one RunnableSequence wrapper per iteration between
     // the compiled graph and the actual nodes; we skip those wrappers and
@@ -627,6 +675,241 @@ export function buildFlowElements(
   }
   visit(group.root, null, group.root.id)
 
+  // Merge sibling cache nodes that share the same parent into one consolidated
+  // box. This only applies to non-sequenced children (in sequenced layouts the
+  // caches form a chain and each has a different "parent" in the edge graph).
+  {
+    const parentOf = new Map<string, string>()
+    for (const e of edges) {
+      if (e.sourceHandle !== "loop-source") parentOf.set(e.target, e.source)
+    }
+
+    const cacheFlowIds = new Set<string>()
+    for (const [flowId, bucket] of buckets) {
+      if (getStr(bucket.first.trace.event, "type") === "cache") {
+        cacheFlowIds.add(flowId)
+      }
+    }
+
+    const cachesByParent = new Map<string, string[]>()
+    for (const cFlowId of cacheFlowIds) {
+      const parent = parentOf.get(cFlowId)
+      if (parent === undefined) continue
+      let list = cachesByParent.get(parent)
+      if (!list) {
+        list = []
+        cachesByParent.set(parent, list)
+      }
+      list.push(cFlowId)
+    }
+
+    for (const [parentFlowId, cacheIds] of cachesByParent) {
+      if (cacheIds.length < 2) continue
+
+      cacheIds.sort((a, b) => (orderIndex.get(a) ?? 0) - (orderIndex.get(b) ?? 0))
+
+      const entries: CacheEntry[] = []
+      let anyFailed = false
+      let anyRunning = false
+      const mergedTraceIds = new Set<string>()
+      const mergedIterations: TraceNode[] = []
+
+      for (const cId of cacheIds) {
+        const b = buckets.get(cId)!
+        if (b.failed) anyFailed = true
+        if (b.running) anyRunning = true
+
+        let totalHits = 0
+        let totalMisses = 0
+        let totalSize = 0
+        let kind: string | null = null
+
+        for (const it of b.iterations) {
+          const ev = it.trace.event
+          if (kind === null) kind = getStr(ev, "cache_kind")
+          const h = typeof ev["cache_hits"] === "number" ? (ev["cache_hits"] as number) : 0
+          const m = typeof ev["cache_misses"] === "number" ? (ev["cache_misses"] as number) : 0
+          const sz =
+            typeof ev["cache_size"] === "number" && Number.isFinite(ev["cache_size"] as number)
+              ? (ev["cache_size"] as number)
+              : h + m
+          totalHits += h
+          totalMisses += m
+          totalSize += sz
+          mergedIterations.push(it)
+          mergedTraceIds.add(it.id)
+        }
+        entries.push({
+          kind,
+          hits: totalHits,
+          misses: totalMisses,
+          total: Math.max(totalSize, totalHits + totalMisses),
+        })
+      }
+
+      const mergedFlowId = `merged-cache:${parentFlowId}`
+      const nodeHeight = Math.max(FLOW_NODE_HEIGHT, 44 + 32 * entries.length)
+      const firstBucket = buckets.get(cacheIds[0])!
+
+      buckets.set(mergedFlowId, {
+        first: firstBucket.first,
+        latest: mergedIterations[mergedIterations.length - 1],
+        failed: anyFailed,
+        running: anyRunning,
+        count: 1,
+        traceIds: mergedTraceIds,
+        iterations: mergedIterations,
+        view: { label: "Cache", sublabel: null, icon: Database01Icon },
+        cacheEntries: entries,
+        nodeHeight,
+      })
+
+      const sortedRemoveIndices = cacheIds
+        .map((id) => order.indexOf(id))
+        .filter((i) => i >= 0)
+        .sort((a, b) => a - b)
+      const insertAt = sortedRemoveIndices[0]
+      for (let i = sortedRemoveIndices.length - 1; i >= 0; i--) {
+        order.splice(sortedRemoveIndices[i], 1)
+      }
+      order.splice(insertAt, 0, mergedFlowId)
+      orderIndex.clear()
+      order.forEach((id, i) => orderIndex.set(id, i))
+
+      for (const cId of cacheIds) buckets.delete(cId)
+
+      const edgesToRemove = new Set(cacheIds.map((cId) => `${parentFlowId}->${cId}`))
+      for (let i = edges.length - 1; i >= 0; i--) {
+        if (edgesToRemove.has(edges[i].id)) {
+          edgeKeys.delete(edges[i].id)
+          edges.splice(i, 1)
+        }
+      }
+      const mergedEdgeKey = `${parentFlowId}->${mergedFlowId}`
+      edgeKeys.add(mergedEdgeKey)
+      edges.push({ id: mergedEdgeKey, source: parentFlowId, target: mergedFlowId, type: "smoothstep" })
+    }
+  }
+
+  // Merge sibling reranker nodes that share the same parent into one consolidated
+  // box, same treatment as cache nodes above.
+  {
+    const parentOf = new Map<string, string>()
+    for (const e of edges) {
+      if (e.sourceHandle !== "loop-source") parentOf.set(e.target, e.source)
+    }
+
+    const rerankerFlowIds = new Set<string>()
+    for (const [flowId, bucket] of buckets) {
+      if (getStr(bucket.first.trace.event, "type") === "rerank") {
+        rerankerFlowIds.add(flowId)
+      }
+    }
+
+    const rerankersByParent = new Map<string, string[]>()
+    for (const rFlowId of rerankerFlowIds) {
+      const parent = parentOf.get(rFlowId)
+      if (parent === undefined) continue
+      let list = rerankersByParent.get(parent)
+      if (!list) {
+        list = []
+        rerankersByParent.set(parent, list)
+      }
+      list.push(rFlowId)
+    }
+
+    for (const [parentFlowId, rerankerIds] of rerankersByParent) {
+      if (rerankerIds.length < 2) continue
+
+      rerankerIds.sort((a, b) => (orderIndex.get(a) ?? 0) - (orderIndex.get(b) ?? 0))
+
+      const entries: RerankerEntry[] = []
+      let anyFailed = false
+      let anyRunning = false
+      const mergedTraceIds = new Set<string>()
+      const mergedIterations: TraceNode[] = []
+
+      for (const rId of rerankerIds) {
+        const b = buckets.get(rId)!
+        if (b.failed) anyFailed = true
+        if (b.running) anyRunning = true
+
+        let totalInput = 0
+        let totalOutput = 0
+        let hasInput = false
+        let hasOutput = false
+        let rerankerName: string | null = null
+
+        for (const it of b.iterations) {
+          const ev = it.trace.event
+          if (rerankerName === null) {
+            rerankerName = getStr(ev, "reranker") ?? getStr(ev, "function") ?? "rerank"
+          }
+          const inN = ev["input_count"]
+          const outN = ev["output_count"]
+          if (typeof inN === "number") {
+            totalInput += inN
+            hasInput = true
+          }
+          if (typeof outN === "number") {
+            totalOutput += outN
+            hasOutput = true
+          }
+          mergedIterations.push(it)
+          mergedTraceIds.add(it.id)
+        }
+
+        entries.push({
+          reranker: rerankerName ?? "rerank",
+          inputCount: hasInput ? totalInput : null,
+          outputCount: hasOutput ? totalOutput : null,
+        })
+      }
+
+      const mergedFlowId = `merged-rerank:${parentFlowId}`
+      const nodeHeight = Math.max(FLOW_NODE_HEIGHT, 44 + 22 * entries.length)
+      const firstBucket = buckets.get(rerankerIds[0])!
+
+      buckets.set(mergedFlowId, {
+        first: firstBucket.first,
+        latest: mergedIterations[mergedIterations.length - 1],
+        failed: anyFailed,
+        running: anyRunning,
+        count: 1,
+        traceIds: mergedTraceIds,
+        iterations: mergedIterations,
+        view: { label: "Rerank", sublabel: null, icon: SortByDown01Icon },
+        rerankerEntries: entries,
+        nodeHeight,
+      })
+
+      const sortedRemoveIndices = rerankerIds
+        .map((id) => order.indexOf(id))
+        .filter((i) => i >= 0)
+        .sort((a, b) => a - b)
+      const insertAt = sortedRemoveIndices[0]
+      for (let i = sortedRemoveIndices.length - 1; i >= 0; i--) {
+        order.splice(sortedRemoveIndices[i], 1)
+      }
+      order.splice(insertAt, 0, mergedFlowId)
+      orderIndex.clear()
+      order.forEach((id, i) => orderIndex.set(id, i))
+
+      for (const rId of rerankerIds) buckets.delete(rId)
+
+      const edgesToRemove = new Set(rerankerIds.map((rId) => `${parentFlowId}->${rId}`))
+      for (let i = edges.length - 1; i >= 0; i--) {
+        if (edgesToRemove.has(edges[i].id)) {
+          edgeKeys.delete(edges[i].id)
+          edges.splice(i, 1)
+        }
+      }
+      const mergedEdgeKey = `${parentFlowId}->${mergedFlowId}`
+      edgeKeys.add(mergedEdgeKey)
+      edges.push({ id: mergedEdgeKey, source: parentFlowId, target: mergedFlowId, type: "smoothstep" })
+    }
+  }
+
   // Surface a "START NODE" at the top of the flow that aggregates the trace's
   // cross-cutting summary (every LLM call's request/response and the total
   // token usage). LangGraph and chain/agent-rooted integrations (GoogleADK,
@@ -639,7 +922,7 @@ export function buildFlowElements(
   if (order.length > 0) {
     const rootEv = group.root.trace.event
     const rootType = getStr(rootEv, "type")
-    const rootIntegration = getStr(rootEv, "integration")
+    const rootIntegration = getStr(rootEv, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(rootEv, "integration")
     const stats = aggregateLlmStats(group.root)
     if (rootType === "chain" || rootType === "agent") {
       const rootBucket = buckets.get(order[0])
@@ -662,23 +945,49 @@ export function buildFlowElements(
         startStats: stats,
       }
       buckets.set(startFlowId, startBucket)
-      // Prepend so the START NODE renders at the top of the flow; shift every
-      // existing entry's order index by one and link to the previous root.
+      // Prepend so the START NODE renders at the top of the flow.
       order.unshift(startFlowId)
       orderIndex.clear()
       order.forEach((id, i) => orderIndex.set(id, i))
-      const firstRealId = order[1]
-      const edgeKey = `${startFlowId}->${firstRealId}`
-      if (!edgeKeys.has(edgeKey)) {
-        edgeKeys.add(edgeKey)
-        edges.push({
-          id: edgeKey,
-          source: startFlowId,
-          target: firstRealId,
-          type: "smoothstep",
-        })
+      // Connect START NODE to every real node that has no incoming edge yet.
+      // In a single-root trace that is just the trace root; in a parallel-root
+      // trace (multiple concurrent top-level workers) it fans out to all of them.
+      const hasIncoming = new Set(edges.map((e) => e.target))
+      for (let i = 1; i < order.length; i++) {
+        const rId = order[i]
+        if (!hasIncoming.has(rId)) {
+          const edgeKey = `${startFlowId}->${rId}`
+          if (!edgeKeys.has(edgeKey)) {
+            edgeKeys.add(edgeKey)
+            edges.push({
+              id: edgeKey,
+              source: startFlowId,
+              target: rId,
+              type: "smoothstep",
+            })
+          }
+        }
       }
     }
+  }
+
+  // Drop nodes with no edges — they're orphaned and clutter the canvas.
+  // Only filter when there are edges; a single-node trace has none and should
+  // still render.
+  if (edges.length > 0) {
+    const connected = new Set<string>()
+    for (const e of edges) {
+      connected.add(e.source)
+      connected.add(e.target)
+    }
+    for (let i = order.length - 1; i >= 0; i--) {
+      if (!connected.has(order[i])) {
+        buckets.delete(order[i])
+        order.splice(i, 1)
+      }
+    }
+    orderIndex.clear()
+    order.forEach((id, i) => orderIndex.set(id, i))
   }
 
   const nodes: TraceFlowNode[] = order.map((flowId) => {
@@ -711,12 +1020,13 @@ export function buildFlowElements(
     const request = reqParts.length > 0 ? reqParts.join("\n\n") : null
     const response = resParts.length > 0 ? resParts.join("\n\n") : null
     const label = isStart ? "START NODE" : view.label
+    const isMergedNode = b.cacheEntries !== undefined || b.rerankerEntries !== undefined
     return {
       id: flowId,
       type: "trace",
       position: { x: 0, y: 0 },
       width: FLOW_NODE_WIDTH,
-      height: FLOW_NODE_HEIGHT,
+      height: b.nodeHeight ?? FLOW_NODE_HEIGHT,
       data: {
         label,
         sublabel: view.sublabel,
@@ -729,8 +1039,11 @@ export function buildFlowElements(
         request,
         response,
         tokens,
-        suppressTooltip: false,
+        suppressTooltip: isMergedNode,
         onSelect: () => onSelectTrace(b.latest.trace),
+        cacheEntries: b.cacheEntries,
+        rerankerEntries: b.rerankerEntries,
+        nodeHeight: b.nodeHeight,
       },
     }
   })

@@ -1,7 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import {
   Alert02Icon,
   Loading03Icon,
+  RefreshIcon,
   WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -9,10 +10,12 @@ import {
   Background,
   Controls,
   Handle,
+  Panel,
   Position,
   ReactFlow,
   useEdgesState,
   useNodesState,
+  useReactFlow,
   type Edge as RFEdge,
   type NodeProps,
 } from "@xyflow/react"
@@ -45,8 +48,15 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
     tokens,
     suppressTooltip,
     onSelect,
+    cacheEntries,
+    rerankerEntries,
+    nodeHeight,
   } = data
   const hoveredId = useContext(HoveredFlowIdContext)
+  const isMergedCache = Array.isArray(cacheEntries) && cacheEntries.length > 0
+  const isMergedReranker = Array.isArray(rerankerEntries) && rerankerEntries.length > 0
+  const isMergedNode = isMergedCache || isMergedReranker
+  const effectiveHeight = nodeHeight ?? FLOW_NODE_HEIGHT
   const hasTokens =
     tokens !== null &&
     (typeof tokens.total === "number" ||
@@ -58,12 +68,15 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
   return (
     <div
       className="relative"
-      style={{ width: FLOW_NODE_WIDTH, height: FLOW_NODE_HEIGHT }}
+      style={{ width: FLOW_NODE_WIDTH, height: effectiveHeight }}
     >
       <div
         onClick={onSelect}
         className={cn(
-          "flex h-full w-full cursor-pointer items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm shadow-xs transition-colors hover:bg-muted/40",
+          "h-full w-full cursor-pointer rounded-md border bg-background text-sm shadow-xs transition-colors hover:bg-muted/40",
+          isMergedNode
+            ? "flex flex-col overflow-hidden"
+            : "flex items-center gap-2 px-3 py-2",
           selected
             ? "border-primary bg-primary/5 ring-1 ring-primary/40"
             : "border-border/60",
@@ -80,51 +93,151 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
           position={Position.Right}
           className="opacity-0!"
         />
-        <HugeiconsIcon
-          icon={icon}
-          size={16}
-          className={cn(
-            "shrink-0",
-            failed ? "text-destructive" : "text-foreground",
-          )}
-        />
-        <div className="min-w-0 flex-1">
-          <div
-            className={cn(
-              "truncate font-medium",
-              failed ? "text-destructive" : undefined,
-            )}
-          >
-            {label}
-          </div>
-          {sublabel ? (
-            <div className="truncate font-mono text-[10px] text-muted-foreground">
-              {sublabel}
+        {isMergedNode ? (
+          <>
+            {/* Shared header for merged cache / merged reranker nodes */}
+            <div className="flex items-center gap-2 border-b border-border/30 px-3 py-2">
+              <HugeiconsIcon
+                icon={icon}
+                size={16}
+                className={cn(
+                  "shrink-0",
+                  failed ? "text-destructive" : "text-foreground",
+                )}
+              />
+              <div className="min-w-0 flex-1">
+                <div
+                  className={cn(
+                    "truncate font-medium",
+                    failed ? "text-destructive" : undefined,
+                  )}
+                >
+                  {label}
+                </div>
+              </div>
+              {running ? (
+                <HugeiconsIcon
+                  icon={Loading03Icon}
+                  size={12}
+                  className="shrink-0 animate-spin text-primary"
+                  aria-label="Running"
+                />
+              ) : failed ? (
+                <HugeiconsIcon
+                  icon={Alert02Icon}
+                  size={12}
+                  className="shrink-0 text-destructive"
+                />
+              ) : null}
             </div>
-          ) : null}
-        </div>
-        {count > 1 ? (
-          <span
-            aria-label={`Executed ${count} times`}
-            className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-primary"
-          >
-            {`\u00D7${count}`}
-          </span>
-        ) : null}
-        {running ? (
-          <HugeiconsIcon
-            icon={Loading03Icon}
-            size={12}
-            className="shrink-0 animate-spin text-primary"
-            aria-label="Running"
-          />
-        ) : failed ? (
-          <HugeiconsIcon
-            icon={Alert02Icon}
-            size={12}
-            className="shrink-0 text-destructive"
-          />
-        ) : null}
+            {/* Cache entries with hit-rate progress bars */}
+            {isMergedCache ? (
+              <div className="flex flex-col gap-1.5 px-3 py-2">
+                {cacheEntries!.map((entry, i) => {
+                  const pct =
+                    entry.total > 0
+                      ? Math.round((entry.hits / entry.total) * 100)
+                      : 0
+                  const barColor =
+                    pct >= 80
+                      ? "bg-emerald-500"
+                      : pct >= 40
+                        ? "bg-amber-500"
+                        : "bg-destructive/60"
+                  return (
+                    <div key={i} className="flex flex-col gap-0.5">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="truncate text-[10px] font-medium text-foreground">
+                          {entry.kind ?? "cache"}
+                        </span>
+                        <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                          {entry.hits}/{entry.total}
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className={cn("h-full rounded-full", barColor)}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : null}
+            {/* Reranker entries with keep-ratio progress bars */}
+            {isMergedReranker ? (
+              <div className="flex flex-col gap-1.5 px-3 py-2">
+                {rerankerEntries!.map((entry, i) => {
+                  const stat =
+                    entry.inputCount !== null && entry.outputCount !== null
+                      ? `${entry.inputCount}\u2192${entry.outputCount}`
+                      : null
+                  return (
+                    <div key={i} className="flex items-center justify-between gap-1">
+                      <span className="truncate text-[10px] font-medium text-foreground">
+                        {entry.reranker}
+                      </span>
+                      {stat !== null ? (
+                        <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                          {stat}
+                        </span>
+                      ) : null}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <>
+            <HugeiconsIcon
+              icon={icon}
+              size={16}
+              className={cn(
+                "shrink-0",
+                failed ? "text-destructive" : "text-foreground",
+              )}
+            />
+            <div className="min-w-0 flex-1">
+              <div
+                className={cn(
+                  "truncate font-medium",
+                  failed ? "text-destructive" : undefined,
+                )}
+              >
+                {label}
+              </div>
+              {sublabel ? (
+                <div className="truncate font-mono text-[10px] text-muted-foreground">
+                  {sublabel}
+                </div>
+              ) : null}
+            </div>
+            {count > 1 ? (
+              <span
+                aria-label={`Executed ${count} times`}
+                className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-primary"
+              >
+                {`\u00D7${count}`}
+              </span>
+            ) : null}
+            {running ? (
+              <HugeiconsIcon
+                icon={Loading03Icon}
+                size={12}
+                className="shrink-0 animate-spin text-primary"
+                aria-label="Running"
+              />
+            ) : failed ? (
+              <HugeiconsIcon
+                icon={Alert02Icon}
+                size={12}
+                className="shrink-0 text-destructive"
+              />
+            ) : null}
+          </>
+        )}
         <Handle
           id="loop-source"
           type="source"
@@ -201,6 +314,25 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
 
 const FLOW_NODE_TYPES = { trace: TraceFlowNodeCard }
 
+function RearrangeButton({ onRearrange }: { onRearrange: () => void }) {
+  const { fitView } = useReactFlow()
+  return (
+    <Panel position="top-right">
+      <button
+        type="button"
+        onClick={() => {
+          onRearrange()
+          requestAnimationFrame(() => fitView({ padding: 0.2, duration: 300 }))
+        }}
+        className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-background px-2 py-1 text-[11px] font-medium text-muted-foreground shadow-xs hover:bg-muted hover:text-foreground"
+      >
+        <HugeiconsIcon icon={RefreshIcon} size={11} />
+        Auto-layout
+      </button>
+    </Panel>
+  )
+}
+
 export function ArchitectureView({
   group,
   selectedNodeId,
@@ -213,6 +345,7 @@ export function ArchitectureView({
   const [hoveredFlowId, setHoveredFlowId] = useState<string | null>(null)
   const [nodes, setNodes, onNodesChange] = useNodesState<TraceFlowNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<RFEdge>([])
+  const builtRef = useRef<{ nodes: TraceFlowNode[]; edges: RFEdge[] } | null>(null)
 
   // Rebuild on group/selection/handler changes, but preserve any user-dragged
   // positions by merging previous coords for ids that still exist. New ids
@@ -221,9 +354,11 @@ export function ArchitectureView({
     if (!group) {
       setNodes([])
       setEdges([])
+      builtRef.current = null
       return
     }
     const built = buildFlowElements(group, selectedNodeId, onSelectTrace)
+    builtRef.current = built
     const laid = layoutFlowNodes(built.nodes, built.edges)
     setNodes((prev) => {
       const prevPos = new Map(prev.map((n) => [n.id, n.position]))
@@ -234,6 +369,11 @@ export function ArchitectureView({
     })
     setEdges(built.edges)
   }, [group, selectedNodeId, onSelectTrace, setNodes, setEdges])
+
+  const rearrange = useCallback(() => {
+    if (!builtRef.current) return
+    setNodes(layoutFlowNodes(builtRef.current.nodes, builtRef.current.edges))
+  }, [setNodes])
 
   if (!group) {
     return (
@@ -274,6 +414,7 @@ export function ArchitectureView({
           >
             <Background gap={16} size={1} />
             <Controls showInteractive={false} />
+            <RearrangeButton onRearrange={rearrange} />
           </ReactFlow>
         </HoveredFlowIdContext.Provider>
       </div>

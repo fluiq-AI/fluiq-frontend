@@ -49,7 +49,10 @@ export function isContentEmpty(value: unknown): boolean {
 }
 
 export function formatDate(iso: string): string {
-  const d = new Date(iso)
+  // All server timestamps are UTC. Append Z if no timezone offset is present
+  // so browsers parse them as UTC rather than local time before converting.
+  const src = /[Zz]$|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : iso + "Z"
+  const d = new Date(src)
   if (Number.isNaN(d.getTime())) return iso
   return d.toLocaleString(undefined, {
     year: "numeric",
