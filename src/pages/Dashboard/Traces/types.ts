@@ -1,4 +1,4 @@
-export type DrawerTab = "ui" | "json"
+export type DrawerTab = "ui" | "json" | "security"
 export type RequestMessage = { role: string; content: unknown }
 export type TokenUsage = { prompt?: number; completion?: number; total?: number }
 export type FunctionView = { name: string; input: string; output: string }

@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /documentation
+Allow: /pricing
+Allow: /signup
+Allow: /login
+
+# Auth flow and private app
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /dashboard/
+
+Sitemap: https://getfluiq.com/sitemap.xml

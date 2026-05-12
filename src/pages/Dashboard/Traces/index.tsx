@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   Activity01Icon,
   Alert02Icon,
@@ -45,23 +45,25 @@ import { DrawerTabButton } from "./DrawerPrimitives"
 import { TraceUiView } from "./TraceUiView"
 import { ArchitectureView } from "./ArchitectureView"
 import { EvaluationsSection } from "./EvaluationsSection"
+import { SecurityPanel } from "./SecurityPanel"
 
 function Traces() {
   const { organization } = useAppSelector((s) => s.auth)
 
   const [traces, setTraces] = useState<TraceRecord[]>([])
   const [keyId, setKeyId] = useState<string>(ALL_KEYS)
-  const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadOffset, setLoadOffset] = useState(TRACES_PAGE_SIZE)
   const [error, setError] = useState<string | null>(null)
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null)
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("ui")
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
-  const [liveBufferCount, setLiveBufferCount] = useState(0)
-  const pageRef = useRef(page)
-  useEffect(() => {
-    pageRef.current = page
-  }, [page])
+  // fetchedSpanRoots: root trace IDs whose child spans have been loaded into state.
+  // loadingSpanRoots: root trace IDs currently being fetched.
+  const [fetchedSpanRoots, setFetchedSpanRoots] = useState<Set<string>>(new Set())
+  const [loadingSpanRoots, setLoadingSpanRoots] = useState<Set<string>>(new Set())
 
   const apiKeys = useMemo(() => organization?.api_keys ?? [], [organization])
   const groups = useMemo(() => buildTraceTree(traces), [traces])
@@ -99,72 +101,116 @@ function Traces() {
     })
   }, [])
 
+  // fetchTraces: initial load (or refresh). Replaces the whole list with
+  // root-only traces and resets span-fetch tracking.
+  const fetchTraces = useCallback(async (selectedKeyId: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params = new URLSearchParams()
+      if (selectedKeyId !== ALL_KEYS) params.set("key_id", selectedKeyId)
+      params.set("limit", String(TRACES_PAGE_SIZE))
+      params.set("offset", "0")
+      params.set("roots_only", "true")
+      const data = await authFetch<TraceListResponse>(
+        `/api/v1/traces?${params.toString()}`,
+      )
+      setTraces(data.traces)
+      setLoadOffset(TRACES_PAGE_SIZE)
+      setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
+      setFetchedSpanRoots(new Set())
+    } catch (err) {
+      setError(err instanceof ApiError ? err.detail : "Failed to load traces")
+      setTraces([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  // loadMore: appends the next page of root traces (no replace).
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return
+    setIsLoadingMore(true)
+    try {
+      const params = new URLSearchParams()
+      if (keyId !== ALL_KEYS) params.set("key_id", keyId)
+      params.set("limit", String(TRACES_PAGE_SIZE))
+      params.set("offset", String(loadOffset))
+      params.set("roots_only", "true")
+      const data = await authFetch<TraceListResponse>(
+        `/api/v1/traces?${params.toString()}`,
+      )
+      setTraces((prev) => {
+        const seen = new Set(prev.map((t) => getStr(t.event, "trace_id")).filter(Boolean))
+        const fresh = data.traces.filter((t) => {
+          const tid = getStr(t.event, "trace_id")
+          return tid && !seen.has(tid)
+        })
+        return fresh.length > 0 ? [...prev, ...fresh] : prev
+      })
+      setLoadOffset((o) => o + TRACES_PAGE_SIZE)
+      setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
+    } catch {
+      // silently fail — "Load more" button stays visible so user can retry
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [isLoadingMore, hasMore, keyId, loadOffset])
+
+  // expandRoot: fetches child spans for a root trace on first expand.
+  // Safe to call repeatedly — deduplicates by fetchedSpanRoots.
+  const expandRoot = useCallback(async (rootTraceId: string) => {
+    if (fetchedSpanRoots.has(rootTraceId) || loadingSpanRoots.has(rootTraceId)) return
+    setLoadingSpanRoots((prev) => new Set(prev).add(rootTraceId))
+    try {
+      const params = new URLSearchParams()
+      params.set("root_trace_id", rootTraceId)
+      params.set("limit", "500")
+      const data = await authFetch<TraceListResponse>(
+        `/api/v1/traces?${params.toString()}`,
+      )
+      setTraces((prev) => {
+        const seen = new Set(prev.map((t) => getStr(t.event, "trace_id")).filter(Boolean))
+        const spans = data.traces.filter((t) => {
+          const tid = getStr(t.event, "trace_id")
+          return tid && !seen.has(tid)
+        })
+        return spans.length > 0 ? [...prev, ...spans] : prev
+      })
+      setFetchedSpanRoots((prev) => new Set(prev).add(rootTraceId))
+    } catch {
+      // silently fail — user can retry by collapsing and re-expanding
+    } finally {
+      setLoadingSpanRoots((prev) => {
+        const next = new Set(prev)
+        next.delete(rootTraceId)
+        return next
+      })
+    }
+  }, [fetchedSpanRoots, loadingSpanRoots])
+
   const openTrace = useCallback((t: TraceRecord) => {
     setDrawerTab("ui")
     setSelectedTrace(t)
-  }, [])
+    // Pre-load spans so the architecture view is populated when the drawer opens.
+    const tid = getStr(t.event, "trace_id")
+    if (tid) void expandRoot(tid)
+  }, [expandRoot])
 
   const focusTrace = useCallback((t: TraceRecord) => {
     setSelectedTrace(t)
   }, [])
 
-  // Used by event-handler call sites (Refresh button, visibility-change
-  // listener) where calling setState synchronously is fine. The auto-fetch
-  // effect below inlines the same logic so its setState calls happen only
-  // inside an async callback (after `await`), satisfying
-  // react-hooks/set-state-in-effect.
-  const fetchTraces = useCallback(
-    async (selectedKeyId: string, pageIndex: number) => {
-      setLoading(true)
-      setError(null)
-      try {
-        const params = new URLSearchParams()
-        if (selectedKeyId !== ALL_KEYS) params.set("key_id", selectedKeyId)
-        params.set("limit", String(TRACES_PAGE_SIZE))
-        params.set("offset", String(pageIndex * TRACES_PAGE_SIZE))
-        const data = await authFetch<TraceListResponse>(
-          `/api/v1/traces?${params.toString()}`,
-        )
-        setTraces(data.traces)
-      } catch (err) {
-        setError(err instanceof ApiError ? err.detail : "Failed to load traces")
-        setTraces([])
-      } finally {
-        setLoading(false)
-      }
-    },
-    [],
-  )
-
-  // keyId / page resets and the live-buffer counter are driven from the
-  // event handlers below (select, pagination, "X new traces" button)
-  // rather than from useEffect to avoid setState-in-effect cascades.
-  // `setLoading(true)` is set here too so the spinner appears immediately;
-  // the auto-fetch effect clears it once data lands.
+  // keyId change: reset and reload from scratch.
   const handleKeyChange = useCallback((next: string) => {
     setKeyId(next)
-    setPage(0)
-    setLiveBufferCount(0)
     setLoading(true)
+    setFetchedSpanRoots(new Set())
+    setLoadingSpanRoots(new Set())
   }, [])
 
-  const handlePrevPage = useCallback(() => {
-    setPage((p) => {
-      const n = Math.max(0, p - 1)
-      if (n === 0) setLiveBufferCount(0)
-      return n
-    })
-    setLoading(true)
-  }, [])
-
-  const handleNextPage = useCallback(() => {
-    setPage((p) => p + 1)
-    setLoading(true)
-  }, [])
-
-  // Auto-fetch on keyId / page change. Inlined as an async IIFE so every
-  // setState happens after `await`, inside an async callback rather than
-  // in the synchronous prefix of the effect body.
+  // Auto-fetch on keyId change. Inlined as an async IIFE so every setState
+  // happens after `await`, satisfying react-hooks/set-state-in-effect.
   useEffect(() => {
     let cancelled = false
     ;(async () => {
@@ -172,12 +218,16 @@ function Traces() {
         const params = new URLSearchParams()
         if (keyId !== ALL_KEYS) params.set("key_id", keyId)
         params.set("limit", String(TRACES_PAGE_SIZE))
-        params.set("offset", String(page * TRACES_PAGE_SIZE))
+        params.set("offset", "0")
+        params.set("roots_only", "true")
         const data = await authFetch<TraceListResponse>(
           `/api/v1/traces?${params.toString()}`,
         )
         if (cancelled) return
         setTraces(data.traces)
+        setLoadOffset(TRACES_PAGE_SIZE)
+        setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
+        setFetchedSpanRoots(new Set())
         setError(null)
       } catch (err) {
         if (cancelled) return
@@ -187,10 +237,8 @@ function Traces() {
         if (!cancelled) setLoading(false)
       }
     })()
-    return () => {
-      cancelled = true
-    }
-  }, [keyId, page])
+    return () => { cancelled = true }
+  }, [keyId])
 
   // Live stream: open one SSE connection per (keyId) filter and route new
   // traces into state. When the user is on page 0 we prepend in-place
@@ -209,11 +257,8 @@ function Traces() {
     events: ["trace", "trace.enriched", "trace.started"],
     onEvent: (data, msg) => {
       if (!data || typeof data !== "object") return
+
       if (msg.event === "trace.started") {
-        // In-progress placeholder. Build a TraceRecord with status=running
-        // baked into the event payload; the eventual "trace" event with the
-        // same trace_id replaces it in place. On non-zero pages we just bump
-        // the buffer counter so the user can opt back to page 0 to see it.
         const payload = data as {
           api_key_prefix?: string
           trace_id?: string
@@ -221,6 +266,10 @@ function Traces() {
           event?: Record<string, unknown>
         }
         if (!payload.event || typeof payload.event !== "object") return
+        // Only prepend root-level placeholders; child spans are loaded lazily.
+        const evtRoot = payload.event["root_trace_id"]
+        const evtTid = payload.trace_id ?? payload.event["trace_id"]
+        if (evtRoot && evtRoot !== evtTid) return
         const placeholder: TraceRecord = {
           api_key_prefix: payload.api_key_prefix ?? "",
           event: { ...payload.event, status: "running" },
@@ -231,19 +280,14 @@ function Traces() {
           currency: null,
           evaluations: [],
         }
-        if (pageRef.current !== 0) {
-          setLiveBufferCount((n) => n + 1)
-          return
-        }
         setTraces((prev) => {
           const tid = payload.trace_id ?? getStr(placeholder.event, "trace_id")
-          if (tid && prev.some((t) => getStr(t.event, "trace_id") === tid)) {
-            return prev
-          }
-          return [placeholder, ...prev].slice(0, TRACES_PAGE_SIZE)
+          if (tid && prev.some((t) => getStr(t.event, "trace_id") === tid)) return prev
+          return [placeholder, ...prev].slice(0, TRACES_PAGE_SIZE * 4)
         })
         return
       }
+
       if (msg.event === "trace.enriched") {
         const payload = data as {
           trace_id?: string
@@ -253,11 +297,6 @@ function Traces() {
         }
         const tid = payload.trace_id
         if (!tid) return
-        // Merge into whatever row currently has this trace_id. If the
-        // row is on a different page (not in state) the enrichment is
-        // dropped \u2014 it'll come back on the next fetch. We don't bump
-        // liveBufferCount because the trace itself was already counted
-        // when the "trace" event arrived.
         setTraces((prev) => {
           let changed = false
           const next = prev.map((t) => {
@@ -271,13 +310,8 @@ function Traces() {
             if (payload.evaluation) {
               const incoming = payload.evaluation
               const existing = t.evaluations ?? []
-              // Replace in-place when (evaluator, metric) already
-              // exists \u2014 evaluators may re-emit on retry. Otherwise
-              // append.
               const idx = existing.findIndex(
-                (e) =>
-                  e.evaluator === incoming.evaluator &&
-                  e.metric === incoming.metric,
+                (e) => e.evaluator === incoming.evaluator && e.metric === incoming.metric,
               )
               merged.evaluations =
                 idx >= 0
@@ -291,6 +325,7 @@ function Traces() {
         return
       }
 
+      // "trace" event \u2014 completed trace record.
       const payload = data as {
         api_key_prefix?: string
         trace_id?: string
@@ -298,6 +333,10 @@ function Traces() {
         event?: Record<string, unknown>
       }
       if (!payload.event || typeof payload.event !== "object") return
+      // Only prepend root traces; child spans are loaded lazily on expand.
+      const evtRoot = payload.event["root_trace_id"]
+      const evtTid = payload.trace_id ?? payload.event["trace_id"]
+      if (evtRoot && evtRoot !== evtTid) return
       const newRecord: TraceRecord = {
         api_key_prefix: payload.api_key_prefix ?? "",
         event: payload.event,
@@ -308,42 +347,27 @@ function Traces() {
         currency: null,
         evaluations: [],
       }
-      if (pageRef.current !== 0) {
-        setLiveBufferCount((n) => n + 1)
-        return
-      }
       setTraces((prev) => {
         const newId = payload.trace_id ?? getStr(newRecord.event, "trace_id")
         if (newId) {
-          const idx = prev.findIndex(
-            (t) => getStr(t.event, "trace_id") === newId,
-          )
+          const idx = prev.findIndex((t) => getStr(t.event, "trace_id") === newId)
           if (idx >= 0) {
-            // A "trace.started" placeholder for this id is already in state;
-            // swap it for the durable record so the row transitions from
-            // running to completed without changing position. If the
-            // existing row was already completed (rare; producer replay)
-            // keep it and drop this duplicate.
             if (!isRunning(prev[idx].event)) return prev
             const next = prev.slice()
             next[idx] = newRecord
             return next
           }
         }
-        return [newRecord, ...prev].slice(0, TRACES_PAGE_SIZE)
+        return [newRecord, ...prev].slice(0, TRACES_PAGE_SIZE * 4)
       })
     },
   })
 
-  // Catch up after the tab has been hidden: when visibility flips back on
-  // we re-fetch the current page so cost / evaluations that landed while
-  // hidden surface immediately, instead of waiting for the next manual
-  // refresh.
+  // Catch up after the tab has been hidden: re-fetch root traces so cost /
+  // evaluations that landed while hidden surface immediately.
   useEffect(() => {
     const onVisibility = () => {
-      if (document.visibilityState === "visible") {
-        void fetchTraces(keyId, pageRef.current)
-      }
+      if (document.visibilityState === "visible") void fetchTraces(keyId)
     }
     document.addEventListener("visibilitychange", onVisibility)
     return () => document.removeEventListener("visibilitychange", onVisibility)
@@ -372,22 +396,9 @@ function Traces() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {liveBufferCount > 0 ? (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setPage(0)
-                setLiveBufferCount(0)
-                setLoading(true)
-              }}
-            >
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-              {liveBufferCount} new {liveBufferCount === 1 ? "trace" : "traces"}
-            </Button>
-          ) : null}
           <Button
             variant="outline"
-            onClick={() => fetchTraces(keyId, page)}
+            onClick={() => fetchTraces(keyId)}
             disabled={loading}
           >
             <HugeiconsIcon
@@ -414,10 +425,8 @@ function Traces() {
               </div>
               <CardDescription>
                 {traces.length === 0
-                  ? "No traces on this page"
-                  : `Showing ${page * TRACES_PAGE_SIZE + 1}–${
-                      page * TRACES_PAGE_SIZE + traces.length
-                    } · page ${page + 1}`}
+                  ? "No traces yet"
+                  : `${groups.length} root trace${groups.length === 1 ? "" : "s"} loaded`}
               </CardDescription>
             </div>
             <select
@@ -463,6 +472,7 @@ function Traces() {
                     <th className="px-6 py-2 font-medium">Cost</th>
                     <th className="px-6 py-2 font-medium">Quality</th>
                     <th className="px-6 py-2 font-medium">Integration</th>
+                    <th className="px-6 py-2 font-medium">Security</th>
                     <th className="px-6 py-2 font-medium">Traces</th>
                   </tr>
                 </thead>
@@ -476,35 +486,29 @@ function Traces() {
                       expandedNodes={expandedNodes}
                       toggleNode={toggleNode}
                       openTrace={openTrace}
+                      fetchedSpanRoots={fetchedSpanRoots}
+                      loadingSpanRoots={loadingSpanRoots}
+                      onExpandRoot={expandRoot}
                     />
                   ))}
                 </tbody>
               </table>
             </div>
           )}
-          {!error && (page > 0 || traces.length > 0) ? (
-            <div className="flex items-center justify-between gap-4 border-t border-border/60 px-6 py-3 text-sm">
-              <div className="text-muted-foreground">
-                Page {page + 1}
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevPage}
-                  disabled={loading || page === 0}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNextPage}
-                  disabled={loading || traces.length < TRACES_PAGE_SIZE}
-                >
-                  Next
-                </Button>
-              </div>
+          {!error && hasMore ? (
+            <div className="flex justify-center border-t border-border/60 px-6 py-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadMore}
+                disabled={isLoadingMore}
+              >
+                <HugeiconsIcon
+                  icon={isLoadingMore ? Loading03Icon : RefreshIcon}
+                  className={isLoadingMore ? "animate-spin" : undefined}
+                />
+                {isLoadingMore ? "Loading…" : "Load more"}
+              </Button>
             </div>
           ) : null}
         </CardContent>
@@ -624,13 +628,21 @@ function TraceDrawer({
               >
                 JSON
               </DrawerTabButton>
+              <DrawerTabButton
+                active={tab === "security"}
+                onClick={() => onChangeTab("security")}
+              >
+                SECURITY
+              </DrawerTabButton>
             </div>
             <div className="flex-1 overflow-auto px-4 py-4">
               {tab === "json" ? (
                 <JsonView value={trace.event} />
-              ) : (
+              ) : tab === "ui" ? (
                 <TraceUiView event={synthesizeAggregatedEvent(trace, group)} />
-              )}
+              ) :
+                <SecurityPanel trace={trace}/>
+              }
             </div>
           </div>
         </div>

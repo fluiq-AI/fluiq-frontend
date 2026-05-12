@@ -27,6 +27,8 @@ import {
   scoreBandClass,
 } from "./utils"
 
+import { SecurityBadge } from "./SecurityPanel"
+
 export function TraceTreeRows({
   node,
   depth,
@@ -34,6 +36,9 @@ export function TraceTreeRows({
   expandedNodes,
   toggleNode,
   openTrace,
+  fetchedSpanRoots = new Set(),
+  loadingSpanRoots = new Set(),
+  onExpandRoot,
 }: {
   node: TraceNode
   depth: number
@@ -41,11 +46,19 @@ export function TraceTreeRows({
   expandedNodes: Set<string>
   toggleNode: (id: string) => void
   openTrace: (t: TraceRecord) => void
+  fetchedSpanRoots?: Set<string>
+  loadingSpanRoots?: Set<string>
+  onExpandRoot?: (traceId: string) => void
 }) {
   const t = node.trace
   const hasChildren = node.children.length > 0
   const isExpanded = expandedNodes.has(node.id)
   const isRoot = depth === 0
+  const isSpansFetched = isRoot && fetchedSpanRoots.has(node.id)
+  const isSpansLoading = isRoot && loadingSpanRoots.has(node.id)
+  // Show the expand toggle on root rows until we know the trace is a leaf
+  // (fetched and came back with no children). While loading, show a spinner.
+  const showExpandToggle = hasChildren || isSpansLoading || (isRoot && !isSpansFetched)
   const failed = isFailed(t.event)
   const running = isRunning(t.event)
   const subtreeFailed = hasFailedDescendant(node)
@@ -184,19 +197,30 @@ export function TraceTreeRows({
             ) : null}
           </div>
         </td>
+        <td className={cn(cellPad, textSize)}>
+          <SecurityBadge event={t.event} />
+        </td>
         <td className={cellPad}>
-          {hasChildren ? (
+          {showExpandToggle ? (
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); toggleNode(node.id) }}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleNode(node.id)
+                if (isRoot && !isExpanded && !isSpansFetched && !isSpansLoading) {
+                  onExpandRoot?.(node.id)
+                }
+              }}
               aria-label={isExpanded ? "Collapse trace group" : "Expand trace group"}
               aria-expanded={isExpanded}
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              disabled={isSpansLoading}
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
             >
-              <HugeiconsIcon
-                icon={isExpanded ? ArrowDown01Icon : ArrowRight01Icon}
-                size={14}
-              />
+              {isSpansLoading ? (
+                <HugeiconsIcon icon={Loading03Icon} size={14} className="animate-spin" />
+              ) : (
+                <HugeiconsIcon icon={isExpanded ? ArrowDown01Icon : ArrowRight01Icon} size={14} />
+              )}
               {displayCount}
               {!isExpanded && subtreeFailed ? (
                 <span
@@ -221,6 +245,9 @@ export function TraceTreeRows({
               expandedNodes={expandedNodes}
               toggleNode={toggleNode}
               openTrace={openTrace}
+              fetchedSpanRoots={fetchedSpanRoots}
+              loadingSpanRoots={loadingSpanRoots}
+              onExpandRoot={onExpandRoot}
             />
           ))
         : null}

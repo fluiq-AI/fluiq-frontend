@@ -14,6 +14,7 @@ import {
   MagicWand01Icon,
   PythonIcon,
   RocketIcon,
+  SecurityCheckIcon,
   SparklesIcon,
   TestTube01Icon,
   WorkflowSquare01Icon,
@@ -43,6 +44,7 @@ const sections = [
   { id: "tracing", title: "Custom tracing" },
   { id: "integrations", title: "Auto-instrumentation" },
   { id: "agents", title: "Tracing agents" },
+  { id: "security", title: "Security scanning" },
   { id: "optimization", title: "Optimization" },
   { id: "cost", title: "Cost analytics" },
   { id: "evaluations", title: "Automated evaluations" },
@@ -1216,6 +1218,14 @@ function Documentation() {
                 <div className="grow">
                   <p className="font-medium">Install</p>
                   <Code>{`pip install fluiq`}</Code>
+                  <p className="mt-2 text-muted-foreground text-sm">
+                    Prompt-injection and secret detection are included out of the box with no extra dependencies.
+                    For full PII scanning (credit cards, SSNs, email addresses, and more) install{" "}
+                    <a href="https://microsoft.github.io/presidio/" target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline">Microsoft Presidio</a>{" "}
+                    and its spaCy language model:
+                  </p>
+                  <Code>{`pip install presidio-analyzer presidio-anonymizer
+python -m spacy download en_core_web_lg`}</Code>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -1235,8 +1245,7 @@ function Documentation() {
 
 instrument(api_key="fl_...")
 
-# set FLUIQ_API_ENDPOINT="https://api.getfluiq.com/api" in .env
-# or pass it as a parameter to instrument endpoint="https://api.getfluiq.com/api"
+# or else set FLUIQ_API_KEY = "fl_..." in environment variable
 # Every OpenAI / Anthropic / Gemini / LangChain / MCP
 # call from this point on is traced automatically.`}</Code>
                 </div>
@@ -1378,6 +1387,121 @@ app.invoke({"messages": [...]})`}</Code>
                 <li>LangGraph <code className="font-mono text-foreground">langgraph_node</code> (e.g. <code className="font-mono text-foreground">planner</code>)</li>
                 <li>Provider + model for raw, undecorated LLM calls (e.g. <code className="font-mono text-foreground">openai:gpt-4o</code>)</li>
               </ol>
+            </div>
+          </section>
+
+          <section id="security" className="mt-16 scroll-mt-24 space-y-4">
+            <div className="flex items-center gap-2">
+              <HugeiconsIcon icon={SecurityCheckIcon} />
+              <h2 className="font-heading text-2xl font-semibold tracking-tight">Security scanning</h2>
+            </div>
+            <p className="text-muted-foreground">
+              Every traced prompt and response is scanned automatically for PII, prompt injection, and leaked secrets. Security scanning is on by default and runs entirely in your process — no data leaves your environment for scanning.
+            </p>
+
+            <p className="font-medium">What's scanned</p>
+            <p className="text-sm text-muted-foreground">
+              The scanner inspects the <code className="font-mono text-foreground">input</code> / <code className="font-mono text-foreground">messages</code> field as the <em>prompt</em> and the <code className="font-mono text-foreground">output</code> / <code className="font-mono text-foreground">response</code> field as the <em>response</em>. Three independent scanners run on each:
+            </p>
+            <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+              <li>
+                <span className="text-foreground">PII scanner</span> — uses{" "}
+                <a href="https://microsoft.github.io/presidio/" target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline">Microsoft Presidio</a>{" "}
+                to detect credit cards, SSNs, IBAN codes, email addresses, phone numbers, IP addresses, names, and five popular API key formats (OpenAI, Anthropic, AWS, GitHub, Stripe).
+                Requires <code className="font-mono text-foreground">presidio-analyzer</code>,{" "}
+                <code className="font-mono text-foreground">presidio-anonymizer</code>, and a spaCy model (see installation above).
+                When the optional dependencies are absent the PII scanner is skipped silently — injection and secret scanning still run.
+              </li>
+              <li>
+                <span className="text-foreground">Prompt-injection scanner</span> — pure Python, no extra dependencies. Detects known jailbreak and instruction-override phrases such as "ignore previous instructions", "you are now", "act as if", "DAN", and more.
+              </li>
+              <li>
+                <span className="text-foreground">Secret scanner</span> — pure Python, no extra dependencies. Matches hardcoded regex patterns for OpenAI, Anthropic, AWS, GitHub, and Stripe keys, and additionally flags any high-entropy token ≥ 20 characters (Shannon entropy {`>`} 4.5 bits) that looks like a bearer token or password.
+              </li>
+            </ul>
+
+            <p className="font-medium">Risk levels</p>
+            <p className="text-sm text-muted-foreground">
+              Each scan produces one of four levels, derived from the combined findings across all three scanners:
+            </p>
+            <div className="overflow-x-auto rounded-xl border border-border/60">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-2 font-medium">Level</th>
+                    <th className="px-4 py-2 font-medium">Score</th>
+                    <th className="px-4 py-2 font-medium">Meaning</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60 text-sm">
+                  <tr>
+                    <td className="px-4 py-2 font-medium text-emerald-600 dark:text-emerald-400">clean</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">{`< 0.3`}</td>
+                    <td className="px-4 py-2 text-muted-foreground">No significant findings</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 font-medium text-blue-600 dark:text-blue-400">low</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">0.3 – 0.49</td>
+                    <td className="px-4 py-2 text-muted-foreground">Weak signal; review recommended</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 font-medium text-amber-600 dark:text-amber-400">medium</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">0.5 – 0.89</td>
+                    <td className="px-4 py-2 text-muted-foreground">Likely PII, injection attempt, or suspicious string detected</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 font-medium text-destructive">high</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">{`≥ 0.9`}</td>
+                    <td className="px-4 py-2 text-muted-foreground">Sensitive data confirmed; prompt and response are auto-redacted before storage</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              When the overall risk is <span className="font-medium text-destructive">high</span>, the scanner replaces the original prompt and response fields in the stored trace with redacted versions — PII entities are substituted with their type labels (e.g. <code className="font-mono text-foreground">&lt;CREDIT_CARD&gt;</code>) before the event leaves your process.
+            </p>
+
+            <p className="font-medium">What's stored per trace</p>
+            <p className="text-sm text-muted-foreground">
+              Ten security fields are written into every trace event that passes through the enricher:
+            </p>
+            <Code>{`{
+  "security_risk_level":    "medium",         # clean | low | medium | high
+  "security_risk_score":    0.72,             # 0–1.0 composite score
+  "pii_entities_prompt":    ["CREDIT_CARD"],  # entity types found in prompt
+  "pii_entities_response":  [],
+  "injection_detected":     false,
+  "injection_patterns":     [],               # matched phrase fragments
+  "secrets_detected":       false,
+  "secret_types":           [],               # e.g. ["openai_key"]
+  "prompt_redacted":        "...",            # redacted copy (PII replaced)
+  "response_redacted":      "..."
+}`}</Code>
+
+            <p className="font-medium">Dashboard — Security tab</p>
+            <p className="text-sm text-muted-foreground">
+              Each trace and agent run on the{" "}
+              <Link to="/dashboard/traces" className="font-medium text-foreground hover:underline">Traces</Link>{" "}
+              and{" "}
+              <Link to="/dashboard/agents" className="font-medium text-foreground hover:underline">Agents</Link>{" "}
+              pages has a <span className="text-foreground">Security</span> tab in the detail drawer.
+              The tab shows the risk level badge, a per-category breakdown (PII / injection / secrets), matched entity types, and a redacted preview of the prompt and response when the risk level is high.
+              The trace table also shows a <span className="text-foreground">Security</span> column — green for clean, amber for low/medium, red for high — so risky traces are visible at a glance without opening the drawer.
+            </p>
+
+            <p className="font-medium">Disabling scanning</p>
+            <Code>{`from fluiq import instrument
+
+instrument(api_key="fl_...", security_scan=False)`}</Code>
+            <p className="text-sm text-muted-foreground">
+              Pass <code className="font-mono text-foreground">security_scan=False</code> to skip all three scanners. Useful for offline testing, high-throughput batch pipelines where latency matters, or environments where prompts are known-safe. All other tracing behaviour is unchanged.
+            </p>
+
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
+              <p className="font-medium">Fail-open by design</p>
+              <p className="mt-1 text-muted-foreground">
+                Like the rest of the SDK, the security enricher never raises. If Presidio is missing, if a scan throws, or if the enricher encounters an unexpected event shape, it returns the original trace unchanged. Your LLM call is unaffected.
+              </p>
             </div>
           </section>
 
@@ -1710,14 +1834,17 @@ app.invoke({"messages": [...]})`}</Code>
             </p>
             <Code>{`def instrument(
     api_key: str,
+    *,
     version: str = "v1",
     endpoint: str = "https://api.getfluiq.com/api",
+    security_scan: bool = True,
 ) -> None: ...`}</Code>
             <div className="grid gap-3 text-sm">
               {[
                 { name: "api_key", required: true, body: "Your workspace API key. Find it in the dashboard under Settings → API keys." },
                 { name: "version", required: false, body: "Trace schema version. Pin this in production so server-side schema bumps are opt-in." },
                 { name: "endpoint", required: false, body: "Override the ingest URL. Point this at your VPC deployment for self-hosted setups." },
+                { name: "security_scan", required: false, body: "Enable or disable automatic PII, injection, and secret scanning on every trace. Defaults to True. Set False to skip scanning entirely — useful for high-throughput batch pipelines where the overhead isn't needed." },
               ].map((p) => (
                 <div key={p.name} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
                   <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />

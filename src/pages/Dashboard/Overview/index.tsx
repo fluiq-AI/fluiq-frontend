@@ -1,4 +1,4 @@
-import { Building01Icon, Key01Icon } from "@hugeicons/core-free-icons"
+import { Building01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import {
@@ -16,8 +16,6 @@ import { UsageCard } from "./UsageCard"
 function Overview() {
   const { user, organization } = useAppSelector((s) => s.auth)
   if (!user || !organization) return null
-
-  const apiKey = organization.api_keys[0] ?? null
 
   return (
     <>
@@ -60,30 +58,6 @@ function Overview() {
         <UsageCard />
 
         <CacheStatsCard />
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={Key01Icon} size={16} />
-              <CardTitle className="text-base">API key</CardTitle>
-            </div>
-            <CardDescription>
-              Use this key to call <code className="font-mono text-foreground">instrument()</code> from the SDK.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {apiKey ? (
-              <code className="block rounded-md border border-border/60 bg-muted/40 p-3 font-mono text-xs break-all">
-                {apiKey.prefix}
-                <span className="text-muted-foreground/60">{"\u2026"}</span>
-              </code>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No API key yet. Create one in API Management to get started.
-              </p>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </>
   )

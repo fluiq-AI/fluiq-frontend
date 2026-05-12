@@ -37,6 +37,7 @@ import { ArchitectureView } from "@/pages/Dashboard/Traces/ArchitectureView"
 import { DrawerTabButton } from "@/pages/Dashboard/Traces/DrawerPrimitives"
 import { EvaluationsSection } from "@/pages/Dashboard/Traces/EvaluationsSection"
 import { JsonView } from "@/pages/Dashboard/Traces/JsonView"
+import { SecurityPanel } from "@/pages/Dashboard/Traces/SecurityPanel"
 import { TraceUiView } from "@/pages/Dashboard/Traces/TraceUiView"
 
 import type { AgentRow, AgentSummaryResponse, SortKey } from "./types"
@@ -200,6 +201,10 @@ function AgentDrawer({
   const [loadingTraces, setLoadingTraces] = useState(true)
   const [traceError, setTraceError] = useState<string | null>(null)
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null)
+  // Tracks the root run whose spans populate the architecture view. Updated
+  // only when the user picks a run from the left list — NOT when they click a
+  // node inside the diagram, so the tree never gets wiped mid-interaction.
+  const [traceSpansRoot, setTraceSpansRoot] = useState<TraceRecord | null>(null)
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("ui")
   const [traceSpans, setTraceSpans] = useState<TraceRecord[]>([])
 
@@ -208,6 +213,7 @@ function AgentDrawer({
     setLoadingTraces(true)
     setTraceError(null)
     setSelectedTrace(null)
+    setTraceSpansRoot(null)
     const params = new URLSearchParams()
     params.set("agent_key", agent.agent_key)
     params.set("agent_kind", agent.agent_kind)
@@ -215,7 +221,10 @@ function AgentDrawer({
     authFetch<TraceListResponse>(`/api/v1/traces?${params.toString()}`)
       .then((data) => {
         setTraces(data.traces)
-        if (data.traces.length > 0) setSelectedTrace(data.traces[0])
+        if (data.traces.length > 0) {
+          setSelectedTrace(data.traces[0])
+          setTraceSpansRoot(data.traces[0])
+        }
       })
       .catch((err) => {
         setTraceError(err instanceof ApiError ? err.detail : "Failed to load traces")
@@ -224,16 +233,18 @@ function AgentDrawer({
       .finally(() => setLoadingTraces(false))
   }, [agent.agent_key, agent.agent_kind])
 
-  // When a run is selected, fetch all its spans so the architecture view
-  // can render the full trace tree rather than just the root node.
+  // When the selected root run changes, fetch all its spans so the architecture
+  // view can render the full trace tree. This is intentionally decoupled from
+  // selectedTrace so that clicking a node in the diagram (which updates
+  // selectedTrace) does not re-fetch and wipe the tree.
   useEffect(() => {
-    if (!selectedTrace) {
+    if (!traceSpansRoot) {
       setTraceSpans([])
       return
     }
-    const traceId = getStr(selectedTrace.event, "trace_id")
+    const traceId = getStr(traceSpansRoot.event, "trace_id")
     if (!traceId) {
-      setTraceSpans([selectedTrace])
+      setTraceSpans([traceSpansRoot])
       return
     }
     const params = new URLSearchParams()
@@ -241,8 +252,8 @@ function AgentDrawer({
     params.set("limit", "500")
     authFetch<TraceListResponse>(`/api/v1/traces?${params.toString()}`)
       .then((data) => setTraceSpans(data.traces))
-      .catch(() => setTraceSpans([selectedTrace]))
-  }, [selectedTrace])
+      .catch(() => setTraceSpans([traceSpansRoot]))
+  }, [traceSpansRoot])
 
   const groups = useMemo(() => buildTraceTree(traceSpans), [traceSpans])
 
@@ -431,10 +442,18 @@ function AgentDrawer({
                   >
                     JSON
                   </DrawerTabButton>
+                  <DrawerTabButton
+                    active={drawerTab === "security"}
+                    onClick={() => setDrawerTab("security")}
+                  >
+                    SECURITY
+                  </DrawerTabButton>
                 </div>
                 <div className="flex-1 overflow-auto px-4 py-4">
                   {drawerTab === "json" ? (
                     <JsonView value={selectedTrace.event} />
+                  ) : drawerTab === "security" ? (
+                    <SecurityPanel trace={selectedTrace} />
                   ) : (
                     <TraceUiView
                       event={synthesizeAggregatedEvent(selectedTrace, selectedGroup)}

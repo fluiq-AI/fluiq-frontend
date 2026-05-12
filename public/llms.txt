@@ -1,0 +1,47 @@
+# Fluiq
+
+Fluiq is an AI observability and optimization platform for LLM applications. Install the Python SDK with two lines and get automatic tracing, cost attribution, security scanning, retrieval quality scores, and cache analytics — all in one dashboard.
+
+## Product
+
+Fluiq instruments OpenAI, Anthropic, Gemini, Vertex AI, LangChain, LangGraph, Google ADK, CrewAI, and MCP automatically. Every LLM call, agent run, and retrieval step is captured as a trace with token counts, latency, USD cost, and eval scores. A `@trace` decorator covers any Python function not handled by auto-instrumentation.
+
+Key capabilities:
+- **Tracing** — full span tree for agents, chains, and raw LLM calls, streamed live to the dashboard
+- **Cost analytics** — per-trace and per-agent USD cost using provider-published rates; rolled-up totals across nested spans
+- **Security scanning** — automatic PII detection (via Microsoft Presidio), prompt-injection pattern matching, and secret/high-entropy string detection on every trace; HIGH-risk prompts are auto-redacted before storage
+- **Automated evaluations** — retrieval quality scored asynchronously by an LLM-as-judge; `context_relevance` and per-chunk usefulness visible on every vectorstore trace
+- **Optimization** — in-process rerankers (BM25, CrossEncoder, Hybrid, MMR), embedding and prompt caches, context shaping, and query transforms (HyDE, MultiQuery); cache hit rates tracked on the Optimize dashboard
+
+## Pages
+
+- [Home](https://getfluiq.com/): Product overview, feature highlights, and getting-started links.
+- [Documentation](https://getfluiq.com/documentation): Full SDK reference — installation, auto-instrumentation, @trace decorator, agent tracing, security scanning, optimization, cost analytics, automated evaluations, configuration, and self-hosting.
+- [Pricing](https://getfluiq.com/pricing): Free, Team, Growth, and Enterprise tiers with trace and evaluation quotas.
+- [Sign up](https://getfluiq.com/signup): Create a free account and get an API key.
+- [Log in](https://getfluiq.com/login): Access the dashboard.
+
+## SDK
+
+The open-source Python SDK is available at https://github.com/fluiq-AI/fluiq-sdk
+
+Install:
+```
+pip install fluiq
+python -m spacy download en_core_web_lg
+```
+
+Quickstart:
+```python
+from fluiq import instrument
+instrument(api_key="fl_...")
+# All supported provider calls are now traced automatically.
+```
+
+Optional extras:
+- `pip install "fluiq[rerank]"` — adds sentence-transformers for CrossEncoder and Hybrid reranking
+
+## Support
+
+- Documentation: https://getfluiq.com/documentation
+- GitHub: https://github.com/fluiq-AI/fluiq-sdk
