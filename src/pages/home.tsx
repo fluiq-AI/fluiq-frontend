@@ -1,338 +1,678 @@
+import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  EyeIcon,
-  TestTube01Icon,
-  RocketIcon,
-  ZapIcon,
-  ShieldIcon,
-  SparklesIcon,
+  ArrowRight02Icon,
   Github01Icon,
   PythonIcon,
-  Database01Icon,
-  ArrowRight02Icon,
   CheckmarkCircle02Icon,
-  ActivityIcon,
-  DollarCircleIcon,
+  EyeIcon,
+  ShieldIcon,
+  ZapIcon,
+  TestTube01Icon,
+  SparklesIcon,
 } from "@hugeicons/core-free-icons"
-
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { CodeBlock } from "@/components/code-block"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 
-const pillars = [
+function useScrollReveal() {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute("data-visible", "true")
+            observer.unobserve(entry.target)
+          }
+        })
+      },
+      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+    )
+    const els = document.querySelectorAll("[data-animate]")
+    els.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [])
+}
+
+/* ─── Animated counter ──────────────────────────────────────────────── */
+function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const [started, setStarted] = useState(false)
+  const ref = useRef<HTMLSpanElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) { setStarted(true); observer.disconnect() }
+    })
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!started) return
+    let frame = 0
+    const total = 60
+    const timer = setInterval(() => {
+      frame++
+      const progress = frame / total
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.floor(eased * target))
+      if (frame >= total) { setCount(target); clearInterval(timer) }
+    }, 25)
+    return () => clearInterval(timer)
+  }, [started, target])
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
+
+/* ─── Typing animation hook ─────────────────────────────────────────── */
+function useTypingAnimation(lines: string[], speed = 30) {
+  const [displayed, setDisplayed] = useState<string[]>([""])
+  const [lineIdx, setLineIdx] = useState(0)
+  const [charIdx, setCharIdx] = useState(0)
+  const [started, setStarted] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setStarted(true); observer.disconnect() }
+    })
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    if (!started || lineIdx >= lines.length) return
+    if (charIdx < lines[lineIdx].length) {
+      const t = setTimeout(() => {
+        setDisplayed(prev => {
+          const next = [...prev]
+          next[lineIdx] = (next[lineIdx] || "") + lines[lineIdx][charIdx]
+          return next
+        })
+        setCharIdx(c => c + 1)
+      }, speed)
+      return () => clearTimeout(t)
+    } else {
+      const t = setTimeout(() => {
+        setLineIdx(i => i + 1)
+        setCharIdx(0)
+        setDisplayed(prev => [...prev, ""])
+      }, 80)
+      return () => clearTimeout(t)
+    }
+  }, [started, lineIdx, charIdx, lines, speed])
+
+  return { displayed, ref }
+}
+
+/* ─── Data ───────────────────────────────────────────────────────────── */
+const CODE_LINES = [
+  `import fluiq`,
+  ``,
+  `fluiq.instrument(api_key="fl_...")   # trace every call`,
+  `fluiq.secure(mode="block")            # block attacks`,
+  `fluiq.optimize()                      # cache repeats`,
+  `fluiq.eval(thresholds={               # gate quality`,
+  `    "hallucination": 0.8,`,
+  `    "relevance":     0.75,`,
+  `})`,
+]
+
+const PILLARS = [
   {
     icon: EyeIcon,
-    tag: "Observe",
-    title: "Cost Intelligence",
+    label: "Observe",
+    title: "Full trace visibility",
     description:
-      "Real-time token spend per agent node, latency percentiles, and anomaly alerts the moment cost or p99 spikes.",
-    points: [
-      "Per-node token attribution",
-      "p50 / p95 / p99 latency tracking",
-      "Slack alerts on cost & latency anomalies",
-    ],
-  },
-  {
-    icon: TestTube01Icon,
-    tag: "Test",
-    title: "Regression Testing",
-    description:
-      "Hallucination, faithfulness, and relevancy evals that gate every PR. Production failures auto-become permanent regression tests.",
-    points: [
-      "GitHub Action gates merges on eval thresholds",
-      "Auto-generated tests from production traces",
-      "Side-by-side GPT-4o / Claude / Gemini runs",
-    ],
-  },
-  {
-    icon: RocketIcon,
-    tag: "Optimize",
-    title: "Performance Recommendations",
-    description:
-      "Semantic caching, smart model routing, and embedding deduplication recommendations \u2014 applied with one click and a rollback button.",
-    points: [
-      "Semantic cache impact estimates",
-      "Auto-route simple queries to cheaper models",
-      "Embedding deduplication across the pipeline",
-    ],
-  },
-]
-
-const frameworks = [
-  "LangChain",
-  "LangGraph",
-  "LlamaIndex",
-  "CrewAI",
-  "OpenAI SDK",
-  "Anthropic SDK",
-  "Gemini SDK",
-  "Custom Pipelines",
-]
-
-const benchmarks = [
-  {
-    icon: ActivityIcon,
-    metric: "Cache hit rate",
-    body: "Your cache hit rate is 0.31. The top 25% of similar pipelines achieve 0.71. Here is what they changed.",
-  },
-  {
-    icon: ZapIcon,
-    metric: "p99 latency",
-    body: "Your p99 latency is 2.4s. The median for your query volume and document size is 680ms.",
+      "Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns — without changing how you write code.",
+    points: ["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Real-time trace streaming"],
+    code: `fluiq.instrument(api_key="fl_...")`,
   },
   {
     icon: ShieldIcon,
-    metric: "Hallucination rate",
-    body: "Hallucination rate increased 2.1% after Thursday's deploy. Correlated with your chunking parameter change.",
+    label: "Secure",
+    title: "Block attacks before they reach your model",
+    description:
+      "Pre-call scanning catches jailbreaks, prompt injections, and skeleton-key attacks before the LLM call is made. Post-call scanning redacts PII and secrets from stored traces.",
+    points: ["Pre-call jailbreak + injection blocking", "PII & secret redaction on traces", "No false positives — fails open on errors"],
+    code: `fluiq.secure(mode="block")`,
+  },
+  {
+    icon: ZapIcon,
+    label: "Optimize",
+    title: "Stop paying for duplicate LLM calls",
+    description:
+      "Fluiq analyses your actual trace history to find which prompts repeat, then provisions a dedicated Redis instance for your account. Repeated calls are served from cache automatically.",
+    points: ["Server-side Redis, zero infra to manage", "Profile built from your real traffic patterns", "Configurable TTL and model scope"],
+    code: `fluiq.optimize()   # "cache" | "observe"`,
+  },
+  {
+    icon: TestTube01Icon,
+    label: "Evaluate",
+    title: "Gate responses that fail quality thresholds",
+    description:
+      "LLM-as-judge runs server-side after each call. Set per-metric thresholds — warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app.",
+    points: ["hallucination, faithfulness, relevance, toxicity", "Scores stored and visible in the dashboard", "Block mode prevents bad responses reaching users"],
+    code: `fluiq.eval(thresholds={"hallucination": 0.8})`,
   },
 ]
 
+const INTEGRATIONS = [
+  "OpenAI", "Anthropic", "Google Gemini", "LangChain", "LangGraph",
+  "LlamaIndex", "CrewAI", "Pinecone", "Chroma", "Weaviate", "FAISS",
+  "Google ADK", "Qdrant",
+]
 
-function Home() {
+const STATS = [
+  { value: 4, suffix: "", label: "SDK functions to cover your full AI stack" },
+  { value: 6, suffix: "", label: "Evaluation metrics scored server-side" },
+  { value: 5, suffix: "M", label: "Traces on the free tier, no card required" },
+  { value: 2, suffix: "", label: "Lines of Python to instrument any pipeline" },
+]
+
+/* ─── Component ──────────────────────────────────────────────────────── */
+export default function Home() {
+  useScrollReveal()
+  const [navScrolled, setNavScrolled] = useState(false)
+  const { displayed, ref: codeRef } = useTypingAnimation(CODE_LINES, 18)
+
+  useEffect(() => {
+    const onScroll = () => setNavScrolled(window.scrollY > 20)
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
+    <div className="min-h-screen bg-white text-[#0a0a0a]">
+
+      {/* ── Keyframe styles ─────────────────────────────────────────── */}
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(28px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes marqueeLeft {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        .hero-badge  { animation: fadeIn  0.5s ease both; }
+        .hero-h1     { animation: fadeUp  0.7s ease 0.1s both; }
+        .hero-sub    { animation: fadeUp  0.7s ease 0.2s both; }
+        .hero-cta    { animation: fadeUp  0.7s ease 0.3s both; }
+        .hero-code   { animation: fadeUp  0.8s ease 0.4s both; }
+        .marquee-track { animation: marqueeLeft 28s linear infinite; }
+        .cursor { animation: blink 1s step-end infinite; }
+
+        [data-animate] {
+          opacity: 0;
+          transform: translateY(24px);
+          transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1),
+                      transform 0.65s cubic-bezier(0.16,1,0.3,1);
+        }
+        [data-animate][data-visible="true"] {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        [data-delay="1"] { transition-delay: 0.08s; }
+        [data-delay="2"] { transition-delay: 0.16s; }
+        [data-delay="3"] { transition-delay: 0.24s; }
+        [data-delay="4"] { transition-delay: 0.32s; }
+
+        .pillar-card {
+          transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .pillar-card:hover {
+          box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+          transform: translateY(-2px);
+        }
+        .cta-btn {
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .cta-btn:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        .cta-btn:active { transform: translateY(0); }
+
+        @media (prefers-reduced-motion: reduce) {
+          *, [data-animate], .marquee-track,
+          .hero-badge, .hero-h1, .hero-sub, .hero-cta, .hero-code {
+            animation: none !important;
+            transition: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        }
+      `}</style>
+
+      {/* ── Nav ─────────────────────────────────────────────────────── */}
+      <header
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          background: navScrolled ? "rgba(255,255,255,0.90)" : "white",
+          backdropFilter: navScrolled ? "blur(12px)" : "none",
+          borderBottom: navScrolled ? "1px solid #e5e7eb" : "1px solid transparent",
+        }}
+      >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2.5 group">
             <img src="/logo.svg" alt="Fluiq" className="size-7" />
-            <span className="font-heading text-lg font-semibold tracking-tight">Fluiq</span>
+            <span className="font-heading text-[15px] font-semibold tracking-tight">Fluiq</span>
           </Link>
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <a href="#pillars" className="hover:text-foreground">Platform</a>
-            <a href="#frameworks" className="hover:text-foreground">Frameworks</a>
-            <a href="#benchmarks" className="hover:text-foreground">Benchmarks</a>
-            {/*<Link to="/pricing" className="hover:text-foreground">Pricing</Link>*/}
-            <Link to="/documentation" className="hover:text-foreground">Documentation</Link>
+          <nav className="hidden items-center gap-7 text-[13px] text-[#6b7280] md:flex">
+            <a href="#pillars" className="hover:text-[#0a0a0a] transition-colors">Platform</a>
+            <a href="#how-it-works" className="hover:text-[#0a0a0a] transition-colors">How it works</a>
+            <Link to="/documentation" className="hover:text-[#0a0a0a] transition-colors">Docs</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" className="text-[#6b7280] hover:text-[#0a0a0a]" asChild>
               <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
-                <HugeiconsIcon icon={Github01Icon} />
+                <HugeiconsIcon icon={Github01Icon} size={15} />
                 GitHub
               </a>
             </Button>
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" className="text-[#6b7280] hover:text-[#0a0a0a]" asChild>
               <Link to="/login">Login</Link>
             </Button>
-            <Button size="sm" asChild>
+            <Button size="sm" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a]" asChild>
               <Link to="/signup">
-                Sign up
-                <HugeiconsIcon icon={ArrowRight02Icon} />
+                Get started
+                <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
               </Link>
             </Button>
           </div>
         </div>
       </header>
 
-      <section className="relative overflow-hidden border-b border-border/60">
-        <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
+      <section className="relative border-b border-[#f0f0f0] overflow-hidden">
+        <div className="mx-auto max-w-6xl px-6 pt-24 pb-20 md:pt-32 md:pb-28">
           <div className="flex flex-col items-center text-center">
-            <Badge variant="outline" className="mb-6 gap-1.5 px-3 py-1">
-              <HugeiconsIcon icon={SparklesIcon} />
-              Framework-agnostic AI pipeline intelligence
-            </Badge>
-            <h1 className="font-heading max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl">
-              Observe, test, and optimize any AI Agent and LLM Pipeline.
+
+            <div className="hero-badge mb-6">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-[#f9fafb] px-4 py-1.5 text-[12px] font-medium text-[#6b7280] tracking-wide">
+                <span className="size-1.5 rounded-full bg-[#0a0a0a] inline-block" />
+                Observe · Secure · Optimize · Evaluate
+              </span>
+            </div>
+
+            <h1 className="hero-h1 font-heading max-w-3xl text-5xl font-bold tracking-[-0.03em] text-[#0a0a0a] leading-[1.08] md:text-7xl">
+              Replace four AI tools<br className="hidden md:block" /> with one SDK.
             </h1>
-            <p className="mt-6 max-w-2xl text-base text-muted-foreground md:text-lg">
-              Fluiq instruments LangChain, LangGraph, LlamaIndex, CrewAI, raw OpenAI, Anthropic &amp; Gemini SDKs, and custom pipelines with two lines of Python. Cost attribution, regression evals, and cross-pipeline benchmarks in one place.
+
+            <p className="hero-sub mt-6 max-w-xl text-[17px] text-[#6b7280] leading-relaxed">
+              Fluiq gives every LLM call observability, security scanning, response caching,
+              and quality evaluation — wired in before your first production incident.
             </p>
-            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-              <Button size="lg" asChild>
+
+            <div className="hero-cta mt-8 flex flex-col items-center gap-3 sm:flex-row">
+              <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] px-6 h-11" asChild>
                 <Link to="/documentation">
                   Read the docs
-                  <HugeiconsIcon icon={ArrowRight02Icon} />
+                  <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <a href="#pillars">Explore the platform</a>
+              <Button size="lg" variant="outline" className="cta-btn border-[#e5e7eb] text-[#0a0a0a] hover:bg-[#f9fafb] px-6 h-11" asChild>
+                <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
+                  <HugeiconsIcon icon={Github01Icon} size={16} />
+                  Star on GitHub
+                </a>
               </Button>
             </div>
 
-            <div className="mt-12 w-full max-w-2xl rounded-2xl border border-border bg-card p-1 text-left shadow-sm">
-              <div className="flex items-center gap-2 px-4 py-2 text-xs text-muted-foreground">
-                <HugeiconsIcon icon={PythonIcon} size={14} />
-                <span>install &amp; instrument</span>
+            {/* Code block — typing animation */}
+            <div ref={codeRef} className="hero-code mt-14 w-full max-w-2xl text-left">
+              <div className="rounded-2xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden shadow-2xl">
+                <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[#1e1e1e]">
+                  <span className="size-2.5 rounded-full bg-[#2a2a2a]" />
+                  <span className="size-2.5 rounded-full bg-[#2a2a2a]" />
+                  <span className="size-2.5 rounded-full bg-[#2a2a2a]" />
+                  <div className="ml-auto flex items-center gap-1.5 text-[11px] text-[#6b7280]">
+                    <HugeiconsIcon icon={PythonIcon} size={12} />
+                    <span>main.py</span>
+                  </div>
+                </div>
+                <div className="p-5 font-mono text-[13px] leading-[1.8]">
+                  {displayed.map((line, i) => (
+                    <div key={i} className="flex">
+                      <span className="select-none w-7 text-right text-[#3a3a3a] mr-4 text-[11px] leading-[1.8]">
+                        {line !== "" || i < displayed.length - 1 ? i + 1 : ""}
+                      </span>
+                      <span>
+                        {line.startsWith("import") && (
+                          <span className="text-[#a0a0a0]">{line}</span>
+                        )}
+                        {line.startsWith("fluiq.") && (
+                          <>
+                            <span className="text-[#e0e0e0]">fluiq.</span>
+                            <span className="text-[#ffffff]">{line.slice(6).split("(")[0]}</span>
+                            <span className="text-[#e0e0e0]">({line.slice(6).split("(").slice(1).join("(")}</span>
+                          </>
+                        )}
+                        {line.startsWith("    ") && (
+                          <span className="text-[#a0a0a0]">{line}</span>
+                        )}
+                        {line === "}" && (
+                          <span className="text-[#e0e0e0]">{"}"}</span>
+                        )}
+                        {line === "" && " "}
+                        {i === displayed.length - 1 && (
+                          <span className="cursor text-[#ffffff]">|</span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <CodeBlock>{`pip install fluiq
-
-from fluiq import instrument
-instrument()`}</CodeBlock>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="pillars" className="border-b border-border/60">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="mb-12 max-w-2xl">
-            <Badge variant="muted" className="mb-3">Three pillars</Badge>
-            <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-              One platform from prototype to production.
-            </h2>
-            <p className="mt-3 text-muted-foreground">
-              Replace LangSmith, DeepEval, and three dashboards with a single instrumented pipeline that observes cost, gates regressions, and recommends optimizations.
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {pillars.map((p) => (
-              <Card key={p.title} className="h-full">
-                <CardHeader>
-                  <div className="mb-4 grid size-10 place-items-center rounded-xl bg-muted text-foreground">
-                    <HugeiconsIcon icon={p.icon} size={20} />
-                  </div>
-                  <Badge variant="muted" className="w-fit">{p.tag}</Badge>
-                  <CardTitle className="mt-1 text-xl">{p.title}</CardTitle>
-                  <CardDescription>{p.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm">
-                    {p.points.map((pt) => (
-                      <li key={pt} className="flex items-start gap-2">
-                        <HugeiconsIcon
-                          icon={CheckmarkCircle02Icon}
-                          size={16}
-                          className="mt-0.5 shrink-0 text-foreground/70"
-                        />
-                        <span className="text-muted-foreground">{pt}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+      {/* ── Integration marquee ──────────────────────────────────────── */}
+      <section className="border-b border-[#f0f0f0] py-6 overflow-hidden">
+        <div className="flex">
+          <div className="marquee-track flex shrink-0 gap-8 pr-8">
+            {[...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
+              <span key={i} className="shrink-0 text-[13px] font-medium text-[#9ca3af] tracking-wide whitespace-nowrap px-2">
+                {name}
+              </span>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="frameworks" className="border-b border-border/60 bg-muted/30">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="grid gap-10 md:grid-cols-2 md:items-center">
-            <div>
-              <Badge variant="muted" className="mb-3">Framework-agnostic</Badge>
-              <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-                Works with the stack you already shipped.
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                Fluiq instruments at the function-call level, not the framework level. Any Python function that hits an LLM or a vector database becomes a traced span with one decorator.
+      {/* ── Problem statement ────────────────────────────────────────── */}
+      <section className="border-b border-[#f0f0f0] py-20" id="pillars">
+        <div className="mx-auto max-w-6xl px-6">
+          <div
+            data-animate
+            className="mx-auto max-w-3xl text-center"
+          >
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9ca3af] mb-4">
+              The full picture
+            </p>
+            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] leading-[1.15] md:text-5xl">
+              Observability tools tell you what broke.<br />
+              <span className="text-[#6b7280]">Fluiq helps you prevent it.</span>
+            </h2>
+            <p className="mt-5 text-[16px] text-[#6b7280] leading-relaxed">
+              Most platforms stop at tracing. Fluiq adds a security layer, a caching layer,
+              and a quality gate — so you catch problems before your users do.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Pillars ──────────────────────────────────────────────────── */}
+      <section className="border-b border-[#f0f0f0] py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            {PILLARS.map((p, i) => (
+              <div
+                key={p.label}
+                data-animate
+                data-delay={String(i % 2 + 1)}
+                className="pillar-card rounded-2xl border border-[#e5e7eb] bg-white p-8"
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="grid size-9 place-items-center rounded-xl bg-[#f3f4f6] text-[#0a0a0a]">
+                    <HugeiconsIcon icon={p.icon} size={18} />
+                  </div>
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9ca3af]">
+                    {p.label}
+                  </span>
+                </div>
+                <h3 className="font-heading text-[22px] font-bold text-[#0a0a0a] leading-snug tracking-tight mb-3">
+                  {p.title}
+                </h3>
+                <p className="text-[14px] text-[#6b7280] leading-relaxed mb-5">
+                  {p.description}
+                </p>
+                <ul className="space-y-2 mb-6">
+                  {p.points.map((pt) => (
+                    <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#4b5563]">
+                      <HugeiconsIcon
+                        icon={CheckmarkCircle02Icon}
+                        size={14}
+                        className="mt-0.5 shrink-0 text-[#0a0a0a]"
+                      />
+                      {pt}
+                    </li>
+                  ))}
+                </ul>
+                <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2 font-mono text-[12px] text-[#6b7280]">
+                  {p.code}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ─────────────────────────────────────────────── */}
+      <section className="border-b border-[#f0f0f0] py-20 bg-[#fafafa]" id="how-it-works">
+        <div className="mx-auto max-w-6xl px-6">
+          <div data-animate className="mb-14 text-center">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9ca3af] mb-4">
+              How it works
+            </p>
+            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] leading-snug">
+              Four functions. Production-ready in minutes.
+            </h2>
+          </div>
+
+          <div className="grid gap-px bg-[#e5e7eb] rounded-2xl overflow-hidden md:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                step: "01",
+                fn: "instrument()",
+                color: "text-[#0a0a0a]",
+                description: "Patches every LLM call automatically. Traces, costs, and latency start flowing to your dashboard.",
+              },
+              {
+                step: "02",
+                fn: "secure()",
+                color: "text-[#0a0a0a]",
+                description: "Pre-call attack detection blocks bad prompts. Post-call scanning redacts PII from stored traces.",
+              },
+              {
+                step: "03",
+                fn: "optimize()",
+                color: "text-[#0a0a0a]",
+                description: "Fluiq analyses your trace history, provisions Redis, and serves duplicate calls from cache.",
+              },
+              {
+                step: "04",
+                fn: "eval()",
+                color: "text-[#0a0a0a]",
+                description: "LLM-as-judge scores every response. Warn or block based on your quality thresholds.",
+              },
+            ].map((item, i) => (
+              <div
+                key={item.step}
+                data-animate
+                data-delay={String(i + 1)}
+                className="bg-white p-7"
+              >
+                <p className="text-[11px] font-semibold text-[#9ca3af] tracking-widest mb-4">{item.step}</p>
+                <p className={`font-mono text-[15px] font-bold mb-3 ${item.color}`}>
+                  fluiq.{item.fn}
+                </p>
+                <p className="text-[13px] text-[#6b7280] leading-relaxed">{item.description}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Full code example */}
+          <div data-animate className="mt-10 rounded-2xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden shadow-xl">
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-[#1e1e1e]">
+              <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6b7280]" />
+              <span className="text-[11px] text-[#6b7280] font-mono">Complete setup</span>
+            </div>
+            <CodeBlock variant="dark">{`import fluiq, openai
+
+# 1. Wire instrumentation once at startup
+fluiq.instrument(api_key="fl_...")
+
+# 2. Block attacks before they reach the model (Team+)
+fluiq.secure(mode="block")
+
+# 3. Redis-cache repeated prompts (Team+)
+fluiq.optimize()
+
+# 4. Score and gate every response (all tiers)
+fluiq.eval(
+    thresholds={"hallucination": 0.8, "relevance": 0.75},
+    mode="warn",          # "block" raises FluiqEvalError
+)
+
+# Your code is unchanged from here
+client = openai.OpenAI()
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "..."}],
+)
+# ↑ Traced, scanned, cached, and evaluated automatically`}</CodeBlock>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats ────────────────────────────────────────────────────── */}
+      <section className="border-b border-[#f0f0f0] py-16">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-px bg-[#e5e7eb] rounded-2xl overflow-hidden sm:grid-cols-2 lg:grid-cols-4">
+            {STATS.map((s, i) => (
+              <div
+                key={s.label}
+                data-animate
+                data-delay={String(i + 1)}
+                className="bg-white px-8 py-10 text-center"
+              >
+                <p className="font-heading text-5xl font-bold text-[#0a0a0a] tracking-tight tabular-nums">
+                  <AnimatedCounter target={s.value} suffix={s.suffix} />
+                </p>
+                <p className="mt-2 text-[13px] text-[#6b7280] leading-snug">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Frameworks ───────────────────────────────────────────────── */}
+      <section className="border-b border-[#f0f0f0] py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
+            <div data-animate>
+              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9ca3af] mb-4">
+                Framework-agnostic
               </p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {frameworks.map((f) => (
-                  <Badge key={f} variant="outline" className="px-3 py-1 text-sm">
+              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] leading-snug mb-4">
+                Works with the stack you already use.
+              </h2>
+              <p className="text-[15px] text-[#6b7280] leading-relaxed mb-6">
+                Fluiq patches at the function-call level, not the framework level. Any Python function
+                that hits an LLM or vector database becomes a traced span with one decorator.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {INTEGRATIONS.map((f) => (
+                  <span
+                    key={f}
+                    className="rounded-full border border-[#e5e7eb] bg-[#f9fafb] px-3 py-1 text-[12px] font-medium text-[#6b7280]"
+                  >
                     {f}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>
+            <div data-animate data-delay="2" className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-[#f0f0f0]">
+                <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#9ca3af]" />
+                <span className="text-[12px] text-[#9ca3af]">any_pipeline.py</span>
+              </div>
+              <CodeBlock preClassName="rounded-none border-0 bg-[#f6f8fa]">{`from fluiq import instrument, trace
 
-            <Card className="bg-background">
-              <CardHeader>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <HugeiconsIcon icon={PythonIcon} size={14} />
-                  <span>custom_pipeline.py</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <CodeBlock>{`from fluiq import trace
+instrument(api_key="fl_...")
 
 @trace
-def answer(question: str) -> str:
-    docs = retriever.invoke(question)
-    return llm.invoke(prompt(question, docs))`}</CodeBlock>
-              </CardContent>
-            </Card>
+def answer_question(question: str) -> str:
+    docs = vector_store.search(question, k=5)
+    return llm.invoke(prompt(question, docs))
+
+# Every call is now:
+# → Traced with cost + latency
+# → Security-scanned
+# → Cached if repeated
+# → Evaluated for quality`}</CodeBlock>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="benchmarks" className="border-b border-border/60">
-        <div className="mx-auto max-w-6xl px-6 py-20">
-          <div className="mb-12 max-w-2xl">
-            <Badge variant="muted" className="mb-3 gap-1.5">
-              <HugeiconsIcon icon={Database01Icon} />
-              Cross-pipeline intelligence
-            </Badge>
-            <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-              Benchmarks against pipelines that look like yours.
+      {/* ── CTA ──────────────────────────────────────────────────────── */}
+      <section className="py-24">
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <div data-animate>
+            <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-[#0a0a0a] text-white mb-6">
+              <HugeiconsIcon icon={SparklesIcon} size={22} />
+            </div>
+            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] md:text-5xl">
+              Free up to 5M traces.
             </h2>
-            <p className="mt-3 text-muted-foreground">
-              See how your cache hit rate, p99 latency, and hallucination frequency compare to statistically similar deployments &mdash; by framework, query volume, and document type &mdash; and what the top quartile does differently.
+            <p className="mt-4 text-[16px] text-[#6b7280] leading-relaxed max-w-xl mx-auto">
+              Start with observability on the free tier. Add security, optimization, and
+              evaluation as your pipeline grows — no code changes required.
+            </p>
+            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] px-8 h-12 text-[15px]" asChild>
+                <Link to="/signup">
+                  Start for free
+                  <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" className="cta-btn border-[#e5e7eb] text-[#0a0a0a] hover:bg-[#f9fafb] px-8 h-12 text-[15px]" asChild>
+                <Link to="/documentation">Read the docs</Link>
+              </Button>
+            </div>
+            <p className="mt-5 text-[12px] text-[#9ca3af]">
+              No credit card required · pip install fluiq · instrument in 60 seconds
             </p>
           </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {benchmarks.map((b) => (
-              <Card key={b.metric}>
-                <CardHeader>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <HugeiconsIcon icon={b.icon} size={16} />
-                    <span className="text-xs uppercase tracking-wide">{b.metric}</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm leading-relaxed text-foreground">{b.body}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </div>
       </section>
 
-      <section className="border-b border-border/60 bg-muted/30">
-        <div className="mx-auto max-w-4xl px-6 py-20 text-center">
-          <div className="mx-auto mb-4 grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
-            <HugeiconsIcon icon={DollarCircleIcon} size={20} />
+      {/* ── Footer ───────────────────────────────────────────────────── */}
+      <footer className="border-t border-[#e5e7eb] py-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-6 text-[13px] text-[#9ca3af] md:flex-row md:items-center">
+          <div className="flex items-center gap-2.5">
+            <img src="/logo.svg" alt="Fluiq" className="size-6 opacity-60" />
+            <span className="font-heading font-semibold text-[#0a0a0a] text-[14px]">Fluiq</span>
+            <span className="text-[#d1d5db]">·</span>
+            <span>Observe, protect, optimize, evaluate.</span>
           </div>
-          <h2 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-            Free up to 5M traces total.
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            Tracing, evals, and dashboards are free up to 5M traces. Paid tiers unlock cross-pipeline benchmarks, the optimization engine, and team workspaces.
-          </p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button size="lg" asChild>
-              <Link to="/documentation">
-                Install the SDK
-                <HugeiconsIcon icon={ArrowRight02Icon} />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
-                <HugeiconsIcon icon={Github01Icon} />
-                Star on GitHub
-              </a>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t border-border/60">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-10 text-sm text-muted-foreground md:flex-row md:items-center">
-          <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Fluiq" className="size-6" />
-            <span className="font-heading font-semibold text-foreground">Fluiq</span>
-            <span>&middot; Observe, test, optimize, benchmark.</span>
-          </div>
-          <div className="flex items-center gap-5">
-            <a href="#pillars" className="hover:text-foreground">Platform</a>
-            {/* <Link to="/pricing" className="hover:text-foreground">Pricing</Link> */}
-            <Link to="/documentation" className="hover:text-foreground">Documentation</Link>
-            <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
+          <div className="flex items-center gap-6">
+            <a href="#pillars" className="hover:text-[#0a0a0a] transition-colors">Platform</a>
+            <Link to="/documentation" className="hover:text-[#0a0a0a] transition-colors">Docs</Link>
+            <a
+              href="https://github.com/fluiq-AI/fluiq-sdk"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-[#0a0a0a] transition-colors"
+            >
+              GitHub
+            </a>
           </div>
         </div>
       </footer>
     </div>
   )
 }
-
-export default Home
-

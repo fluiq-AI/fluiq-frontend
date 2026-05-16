@@ -1,7 +1,12 @@
+import { Link } from "react-router"
 import { cn } from "@/lib/utils"
 import type { TraceRecord } from "./types"
 
 type RiskLevel = "clean" | "low" | "medium" | "high"
+
+function hasSecurityData(event: Record<string, unknown>): boolean {
+  return "security_risk_level" in event
+}
 
 function getRiskLevel(event: Record<string, unknown>): RiskLevel {
   const v = event["security_risk_level"]
@@ -97,6 +102,53 @@ function RedactedBlock({
 
 export function SecurityPanel({ trace }: { trace: TraceRecord }) {
   const ev = trace.event
+
+  if (!hasSecurityData(ev)) {
+    return (
+      <div className="flex flex-col items-center gap-4 p-6 text-center">
+        <div className="flex size-10 items-center justify-center rounded-full bg-muted">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="size-5 text-muted-foreground"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+            />
+          </svg>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium">Security scanning not enabled</p>
+          <p className="text-xs text-muted-foreground">
+            Add{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
+              fluiq.secure()
+            </code>{" "}
+            to your setup to scan this trace for PII, prompt injections, and leaked secrets.
+          </p>
+        </div>
+        <Link
+          to="/docs#security"
+          className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
+        >
+          Learn about fluiq.secure() →
+        </Link>
+        <div className="w-full rounded-lg border border-dashed border-border/60 bg-muted/20 p-3 text-left text-xs text-muted-foreground">
+          <p className="mb-1.5 font-medium text-foreground">Quick setup</p>
+          <pre className="font-mono leading-relaxed">{`from fluiq import instrument, secure
+
+instrument(api_key="fl_...")
+secure()  # Team plan required`}</pre>
+        </div>
+      </div>
+    )
+  }
+
   const level = getRiskLevel(ev)
   const { pill, label } = RISK_CONFIG[level]
   const score = typeof ev["security_risk_score"] === "number"

@@ -1,16 +1,12 @@
-import { useState } from "react"
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  ArrowDown01Icon,
   ArrowRight02Icon,
   BookOpen01Icon,
   ChartLineData01Icon,
   CheckmarkCircle02Icon,
-  Database01Icon,
   DollarCircleIcon,
   Github01Icon,
-  Layers01Icon,
   MagicWand01Icon,
   PythonIcon,
   RocketIcon,
@@ -31,27 +27,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 const sections = [
-  { id: "quickstart", title: "Quickstart" },
-  { id: "tracing", title: "Custom tracing" },
-  { id: "integrations", title: "Auto-instrumentation" },
-  { id: "agents", title: "Tracing agents" },
-  { id: "security", title: "Security scanning" },
+  { id: "quickstart",   title: "Quickstart" },
+  { id: "observability", title: "Observability" },
   { id: "optimization", title: "Optimization" },
-  { id: "cost", title: "Cost analytics" },
-  { id: "evaluations", title: "Automated evaluations" },
-  { id: "quotas", title: "Tiers & quotas" },
+  { id: "security",    title: "Security" },
+  { id: "evaluation",  title: "Evaluation" },
   { id: "configuration", title: "Configuration" },
-  { id: "self-hosting", title: "Self-hosting" },
-  { id: "next-steps", title: "Next steps" },
+  { id: "next-steps",  title: "Next steps" },
 ]
 
 const integrations = [
@@ -121,1024 +105,8 @@ instrument(api_key="fl_...")
   },
 ]
 
-const RERANKER_SNIPPETS = [
-  {
-    name: "OpenAI",
-    code: `from openai import OpenAI
-from fluiq.optimization import HybridReranker
-
-client = OpenAI()
-reranker = HybridReranker(fusion="rrf", alpha=0.5)
-
-candidates = vector_store.similarity_search(question, k=20)
-result = reranker.rerank(question, [c.page_content for c in candidates], top_k=5)
-context = "\\n\\n".join(result.texts)
-
-client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[{"role": "user", "content": f"{context}\\n\\n{question}"}],
-)`,
-  },
-  {
-    name: "Anthropic",
-    code: `import anthropic
-from fluiq.optimization import HybridReranker
-
-client = anthropic.Anthropic()
-reranker = HybridReranker(fusion="rrf", alpha=0.5)
-
-candidates = vector_store.similarity_search(question, k=20)
-result = reranker.rerank(question, [c.page_content for c in candidates], top_k=5)
-context = "\\n\\n".join(result.texts)
-
-client.messages.create(
-    model="claude-sonnet-4-5",
-    max_tokens=512,
-    messages=[{"role": "user", "content": f"{context}\\n\\n{question}"}],
-)`,
-  },
-  {
-    name: "Gemini",
-    code: `from google import genai
-from fluiq.optimization import HybridReranker
-
-client = genai.Client()
-reranker = HybridReranker(fusion="rrf", alpha=0.5)
-
-candidates = vector_store.similarity_search(question, k=20)
-result = reranker.rerank(question, [c.page_content for c in candidates], top_k=5)
-context = "\\n\\n".join(result.texts)
-
-client.models.generate_content(
-    model="gemini-2.5-pro",
-    contents=f"{context}\\n\\n{question}",
-)`,
-  },
-  {
-    name: "Google ADK",
-    code: `from google.adk.agents import Agent
-from fluiq.optimization import HybridReranker
-
-reranker = HybridReranker(fusion="rrf", alpha=0.5)
-
-def retrieve(question: str) -> str:
-    candidates = vector_store.similarity_search(question, k=20)
-    result = reranker.rerank(
-        question, [c.page_content for c in candidates], top_k=5
-    )
-    return "\\n\\n".join(result.texts)
-
-agent = Agent(model="gemini-2.5-pro", tools=[retrieve])`,
-  },
-  {
-    name: "LangGraph",
-    code: `from langgraph.graph import StateGraph
-from fluiq.optimization import HybridReranker
-
-reranker = HybridReranker(fusion="rrf", alpha=0.5)
-
-def rerank_node(state):
-    result = reranker.rerank(
-        state["question"], state["candidates"], top_k=5
-    )
-    return {"context": "\\n\\n".join(result.texts)}
-
-graph = StateGraph(dict)
-graph.add_node("rerank", rerank_node)`,
-  },
-  {
-    name: "LangChain",
-    code: `from langchain_openai import ChatOpenAI
-from fluiq.optimization import HybridReranker
-
-reranker = HybridReranker(fusion="rrf", alpha=0.5)
-llm = ChatOpenAI(model="gpt-4o-mini")
-
-candidates = vector_store.similarity_search(question, k=20)
-result = reranker.rerank(question, [c.page_content for c in candidates], top_k=5)
-context = "\\n\\n".join(result.texts)
-
-llm.invoke(f"{context}\\n\\n{question}")`,
-  },
-  {
-    name: "LlamaIndex",
-    code: `from llama_index.llms.openai import OpenAI
-from fluiq.optimization import HybridReranker
-
-reranker = HybridReranker(fusion="rrf", alpha=0.5)
-llm = OpenAI(model="gpt-4o-mini")
-
-nodes = index.as_retriever(similarity_top_k=20).retrieve(question)
-result = reranker.rerank(question, [n.get_content() for n in nodes], top_k=5)
-context = "\\n\\n".join(result.texts)
-
-llm.complete(f"{context}\\n\\n{question}")`,
-  },
-  {
-    name: "CrewAI",
-    code: `from crewai import Agent
-from fluiq.optimization import HybridReranker
-
-reranker = HybridReranker(fusion="rrf", alpha=0.5)
-
-def retrieve_tool(question: str) -> str:
-    candidates = vector_store.similarity_search(question, k=20)
-    result = reranker.rerank(
-        question, [c.page_content for c in candidates], top_k=5
-    )
-    return "\\n\\n".join(result.texts)
-
-researcher = Agent(
-    role="researcher",
-    goal="answer with sources",
-    tools=[retrieve_tool],
-)`,
-  },
-]
-
-const CACHING_SNIPPETS = [
-  {
-    name: "OpenAI",
-    code: `from openai import OpenAI
-from fluiq.optimization import DiskCache, EmbeddingCache, PromptCache
-
-client = OpenAI()
-shared = DiskCache(".fluiq-cache")
-
-embed = EmbeddingCache(
-    embed_fn=lambda texts: [
-        d.embedding
-        for d in client.embeddings.create(
-            model="text-embedding-3-small", input=texts
-        ).data
-    ],
-    model="text-embedding-3-small",
-    backend=shared,
-)
-
-ask = PromptCache(
-    llm_fn=lambda prompt, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        **kw,
-    ).choices[0].message.content,
-    model="gpt-4o-mini",
-    backend=shared,
-)
-
-vectors = embed(["chunk one", "chunk two"])      # forwards to OpenAI
-vectors = embed(["chunk one", "chunk three"])    # only "chunk three" forwards
-answer  = ask("Summarize: ...", temperature=0)   # cached on second call`,
-  },
-  {
-    name: "Anthropic",
-    code: `import anthropic
-from fluiq.optimization import DiskCache, PromptCache
-
-client = anthropic.Anthropic()
-shared = DiskCache(".fluiq-cache")
-
-ask = PromptCache(
-    llm_fn=lambda prompt, **kw: client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=512,
-        messages=[{"role": "user", "content": prompt}],
-        **kw,
-    ).content[0].text,
-    model="claude-sonnet-4-5",
-    backend=shared,
-)
-
-answer = ask("Summarize: ...", temperature=0)    # cached on second call`,
-  },
-  {
-    name: "Gemini",
-    code: `from google import genai
-from fluiq.optimization import DiskCache, EmbeddingCache, PromptCache
-
-client = genai.Client()
-shared = DiskCache(".fluiq-cache")
-
-embed = EmbeddingCache(
-    embed_fn=lambda texts: [
-        e.values
-        for e in client.models.embed_content(
-            model="text-embedding-004", contents=texts
-        ).embeddings
-    ],
-    model="text-embedding-004",
-    backend=shared,
-)
-
-ask = PromptCache(
-    llm_fn=lambda prompt, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=prompt
-    ).text,
-    model="gemini-2.5-pro",
-    backend=shared,
-)`,
-  },
-  {
-    name: "Google ADK",
-    code: `from google.adk.agents import Agent
-from google import genai
-from fluiq.optimization import DiskCache, PromptCache
-
-client = genai.Client()
-shared = DiskCache(".fluiq-cache")
-
-ask = PromptCache(
-    llm_fn=lambda prompt, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=prompt
-    ).text,
-    model="gemini-2.5-pro",
-    backend=shared,
-)
-
-agent = Agent(model="gemini-2.5-pro", tools=[ask])`,
-  },
-  {
-    name: "LangGraph",
-    code: `from langgraph.graph import StateGraph
-from langchain_openai import ChatOpenAI
-from fluiq.optimization import DiskCache, PromptCache
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-shared = DiskCache(".fluiq-cache")
-
-ask = PromptCache(
-    llm_fn=lambda prompt, **kw: llm.invoke(prompt).content,
-    model="gpt-4o-mini",
-    backend=shared,
-)
-
-def answer_node(state):
-    return {"answer": ask(state["prompt"], temperature=0)}
-
-graph = StateGraph(dict)
-graph.add_node("answer", answer_node)`,
-  },
-  {
-    name: "LangChain",
-    code: `from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from fluiq.optimization import DiskCache, EmbeddingCache, PromptCache
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-shared = DiskCache(".fluiq-cache")
-
-embed = EmbeddingCache(
-    embed_fn=embeddings.embed_documents,
-    model="text-embedding-3-small",
-    backend=shared,
-)
-
-ask = PromptCache(
-    llm_fn=lambda prompt, **kw: llm.invoke(prompt).content,
-    model="gpt-4o-mini",
-    backend=shared,
-)`,
-  },
-  {
-    name: "LlamaIndex",
-    code: `from llama_index.llms.openai import OpenAI
-from llama_index.embeddings.openai import OpenAIEmbedding
-from fluiq.optimization import DiskCache, EmbeddingCache, PromptCache
-
-llm = OpenAI(model="gpt-4o-mini")
-emb = OpenAIEmbedding(model="text-embedding-3-small")
-shared = DiskCache(".fluiq-cache")
-
-embed = EmbeddingCache(
-    embed_fn=emb.get_text_embedding_batch,
-    model="text-embedding-3-small",
-    backend=shared,
-)
-
-ask = PromptCache(
-    llm_fn=lambda prompt, **kw: llm.complete(prompt).text,
-    model="gpt-4o-mini",
-    backend=shared,
-)`,
-  },
-  {
-    name: "CrewAI",
-    code: `from crewai import Agent
-from openai import OpenAI
-from fluiq.optimization import DiskCache, PromptCache
-
-client = OpenAI()
-shared = DiskCache(".fluiq-cache")
-
-ask = PromptCache(
-    llm_fn=lambda prompt, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        **kw,
-    ).choices[0].message.content,
-    model="gpt-4o-mini",
-    backend=shared,
-)
-
-researcher = Agent(role="researcher", goal="answer", tools=[ask])`,
-  },
-]
-
-const AUTO_OPTIMIZE_SNIPPETS = [
-  {
-    name: "OpenAI",
-    code: `from openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-client = OpenAI()
-opt = auto_optimize(
-    embed_fn=lambda texts: [
-        d.embedding
-        for d in client.embeddings.create(
-            model="text-embedding-3-small", input=texts
-        ).data
-    ],
-    llm_fn=lambda prompt, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        **kw,
-    ).choices[0].message.content,
-    embed_model="text-embedding-3-small",
-    llm_model="gpt-4o-mini",
-    cache_dir=".fluiq-cache",
-    rerank="hybrid",
-)
-
-vectors = opt.embed(["chunk one", "chunk two"])
-top_5   = opt.rerank(question, candidates, top_k=5)
-answer  = opt.ask("Summarize: ...", temperature=0)`,
-  },
-  {
-    name: "Anthropic",
-    code: `import anthropic
-from fluiq.optimization import auto_optimize
-
-client = anthropic.Anthropic()
-opt = auto_optimize(
-    llm_fn=lambda prompt, **kw: client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=512,
-        messages=[{"role": "user", "content": prompt}],
-        **kw,
-    ).content[0].text,
-    llm_model="claude-sonnet-4-5",
-    cache_dir=".fluiq-cache",
-    rerank="hybrid",
-)
-
-top_5  = opt.rerank(question, candidates, top_k=5)
-answer = opt.ask("Summarize: ...", temperature=0)`,
-  },
-  {
-    name: "Gemini",
-    code: `from google import genai
-from fluiq.optimization import auto_optimize
-
-client = genai.Client()
-opt = auto_optimize(
-    embed_fn=lambda texts: [
-        e.values
-        for e in client.models.embed_content(
-            model="text-embedding-004", contents=texts
-        ).embeddings
-    ],
-    llm_fn=lambda prompt, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=prompt
-    ).text,
-    embed_model="text-embedding-004",
-    llm_model="gemini-2.5-pro",
-    cache_dir=".fluiq-cache",
-    rerank="hybrid",
-)
-
-vectors = opt.embed(["chunk one", "chunk two"])
-top_5   = opt.rerank(question, candidates, top_k=5)
-answer  = opt.ask("Summarize: ...")`,
-  },
-  {
-    name: "Google ADK",
-    code: `from google.adk.agents import Agent
-from google import genai
-from fluiq.optimization import auto_optimize
-
-client = genai.Client()
-opt = auto_optimize(
-    llm_fn=lambda prompt, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=prompt
-    ).text,
-    llm_model="gemini-2.5-pro",
-    cache_dir=".fluiq-cache",
-    rerank="hybrid",
-)
-
-def retrieve(question: str) -> str:
-    candidates = vector_store.similarity_search(question, k=20)
-    return "\\n\\n".join(opt.rerank(
-        question, [c.page_content for c in candidates], top_k=5
-    ).texts)
-
-agent = Agent(model="gemini-2.5-pro", tools=[retrieve, opt.ask])`,
-  },
-  {
-    name: "LangGraph",
-    code: `from langgraph.graph import StateGraph
-from langchain_openai import ChatOpenAI
-from fluiq.optimization import auto_optimize
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-opt = auto_optimize(
-    llm_fn=lambda prompt, **kw: llm.invoke(prompt).content,
-    llm_model="gpt-4o-mini",
-    cache_dir=".fluiq-cache",
-    rerank="hybrid",
-)
-
-def answer_node(state):
-    top = opt.rerank(state["question"], state["candidates"], top_k=5)
-    context = "\\n\\n".join(top.texts)
-    return {"answer": opt.ask(f"{context}\\n\\n{state['question']}", temperature=0)}
-
-graph = StateGraph(dict)
-graph.add_node("answer", answer_node)`,
-  },
-  {
-    name: "LangChain",
-    code: `from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from fluiq.optimization import auto_optimize
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-opt = auto_optimize(
-    embed_fn=embeddings.embed_documents,
-    llm_fn=lambda prompt, **kw: llm.invoke(prompt).content,
-    embed_model="text-embedding-3-small",
-    llm_model="gpt-4o-mini",
-    cache_dir=".fluiq-cache",
-    rerank="hybrid",
-)
-
-vectors = opt.embed(["chunk one", "chunk two"])
-top_5   = opt.rerank(question, [c.page_content for c in candidates], top_k=5)
-answer  = opt.ask("Summarize: ...")`,
-  },
-  {
-    name: "LlamaIndex",
-    code: `from llama_index.llms.openai import OpenAI
-from llama_index.embeddings.openai import OpenAIEmbedding
-from fluiq.optimization import auto_optimize
-
-llm = OpenAI(model="gpt-4o-mini")
-emb = OpenAIEmbedding(model="text-embedding-3-small")
-opt = auto_optimize(
-    embed_fn=emb.get_text_embedding_batch,
-    llm_fn=lambda prompt, **kw: llm.complete(prompt).text,
-    embed_model="text-embedding-3-small",
-    llm_model="gpt-4o-mini",
-    cache_dir=".fluiq-cache",
-    rerank="hybrid",
-)
-
-vectors = opt.embed(["chunk one", "chunk two"])
-top_5   = opt.rerank(question, [n.get_content() for n in nodes], top_k=5)
-answer  = opt.ask("Summarize: ...")`,
-  },
-  {
-    name: "CrewAI",
-    code: `from crewai import Agent
-from openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-client = OpenAI()
-opt = auto_optimize(
-    llm_fn=lambda prompt, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        **kw,
-    ).choices[0].message.content,
-    llm_model="gpt-4o-mini",
-    cache_dir=".fluiq-cache",
-    rerank="hybrid",
-)
-
-researcher = Agent(role="researcher", goal="answer", tools=[opt.ask])`,
-  },
-]
-
-const CONTEXT_SHAPING_SNIPPETS = [
-  {
-    name: "OpenAI",
-    code: `from openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-client = OpenAI()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": p}], **kw,
-    ).choices[0].message.content,
-)
-
-shorter = opt.compress(top_5.texts, query=question)
-context = opt.pack(shorter, max_tokens=4000)
-answer  = opt.ask(f"{context}\\n\\nQuestion: {question}", temperature=0)`,
-  },
-  {
-    name: "Anthropic",
-    code: `import anthropic
-from fluiq.optimization import auto_optimize
-
-client = anthropic.Anthropic()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.messages.create(
-        model="claude-sonnet-4-5", max_tokens=512,
-        messages=[{"role": "user", "content": p}], **kw,
-    ).content[0].text,
-)
-
-shorter = opt.compress(top_5.texts, query=question)
-context = opt.pack(shorter, max_tokens=4000)
-answer  = opt.ask(f"{context}\\n\\nQuestion: {question}", temperature=0)`,
-  },
-  {
-    name: "Gemini",
-    code: `from google import genai
-from fluiq.optimization import auto_optimize
-
-client = genai.Client()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=p,
-    ).text,
-)
-
-shorter = opt.compress(top_5.texts, query=question)
-context = opt.pack(shorter, max_tokens=4000)
-answer  = opt.ask(f"{context}\\n\\nQuestion: {question}")`,
-  },
-  {
-    name: "Google ADK",
-    code: `from google.adk.agents import Agent
-from google import genai
-from fluiq.optimization import auto_optimize
-
-client = genai.Client()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=p,
-    ).text,
-)
-
-def answer_with_packed_context(question: str) -> str:
-    candidates = vector_store.similarity_search(question, k=20)
-    top = opt.rerank(question, [c.page_content for c in candidates], top_k=8)
-    shorter = opt.compress(top.texts, query=question)
-    context = opt.pack(shorter, max_tokens=4000)
-    return opt.ask(f"{context}\\n\\nQuestion: {question}")
-
-agent = Agent(model="gemini-2.5-pro", tools=[answer_with_packed_context])`,
-  },
-  {
-    name: "LangGraph",
-    code: `from langgraph.graph import StateGraph
-from langchain_openai import ChatOpenAI
-from fluiq.optimization import auto_optimize
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-opt = auto_optimize(llm_fn=lambda p, **kw: llm.invoke(p).content)
-
-def answer_node(state):
-    top = opt.rerank(state["question"], state["candidates"], top_k=8)
-    shorter = opt.compress(top.texts, query=state["question"])
-    context = opt.pack(shorter, max_tokens=4000)
-    return {"answer": opt.ask(f"{context}\\n\\n{state['question']}", temperature=0)}
-
-graph = StateGraph(dict)
-graph.add_node("answer", answer_node)`,
-  },
-  {
-    name: "LangChain",
-    code: `from langchain_openai import ChatOpenAI
-from fluiq.optimization import auto_optimize
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-opt = auto_optimize(llm_fn=lambda p, **kw: llm.invoke(p).content)
-
-candidates = vector_store.similarity_search(question, k=20)
-top = opt.rerank(question, [c.page_content for c in candidates], top_k=8)
-
-shorter = opt.compress(top.texts, query=question)
-context = opt.pack(shorter, max_tokens=4000)
-answer  = opt.ask(f"{context}\\n\\nQuestion: {question}")`,
-  },
-  {
-    name: "LlamaIndex",
-    code: `from llama_index.llms.openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-llm = OpenAI(model="gpt-4o-mini")
-opt = auto_optimize(llm_fn=lambda p, **kw: llm.complete(p).text)
-
-top = opt.rerank(question, [n.get_content() for n in nodes], top_k=8)
-shorter = opt.compress(top.texts, query=question)
-context = opt.pack(shorter, max_tokens=4000)
-answer  = opt.ask(f"{context}\\n\\nQuestion: {question}")`,
-  },
-  {
-    name: "CrewAI",
-    code: `from crewai import Agent
-from openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-client = OpenAI()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": p}], **kw,
-    ).choices[0].message.content,
-)
-
-def answer(question: str) -> str:
-    top = opt.rerank(question, retrieve(question), top_k=8)
-    shorter = opt.compress(top.texts, query=question)
-    context = opt.pack(shorter, max_tokens=4000)
-    return opt.ask(f"{context}\\n\\nQuestion: {question}")
-
-researcher = Agent(role="researcher", goal="answer", tools=[answer])`,
-  },
-]
-
-const QUERY_TRANSFORMS_SNIPPETS = [
-  {
-    name: "OpenAI",
-    code: `from openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-client = OpenAI()
-opt = auto_optimize(
-    embed_fn=lambda t: [d.embedding for d in client.embeddings.create(
-        model="text-embedding-3-small", input=t).data],
-    llm_fn=lambda p, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": p}], **kw,
-    ).choices[0].message.content,
-)
-
-# rewrites are cached because we route through opt.prompts
-fakes    = opt.hyde("What killed the dinosaurs?")
-variants = opt.multi_query("How did the dinosaurs die?", n=4)
-
-candidates = [c for q in variants for c in vector_store.similarity_search(q, k=10)]
-top_5      = opt.rerank(question, [c.page_content for c in candidates], top_k=5)`,
-  },
-  {
-    name: "Anthropic",
-    code: `import anthropic
-from fluiq.optimization import auto_optimize
-
-client = anthropic.Anthropic()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.messages.create(
-        model="claude-sonnet-4-5", max_tokens=512,
-        messages=[{"role": "user", "content": p}], **kw,
-    ).content[0].text,
-)
-
-fakes    = opt.hyde("What killed the dinosaurs?", n=3)
-variants = opt.multi_query("How did the dinosaurs die?", n=4)
-
-# embed each fake and fan-out the variants over your vector store, then
-# fuse with HybridReranker / RRF.
-top_5 = opt.rerank(question, candidates, top_k=5)`,
-  },
-  {
-    name: "Gemini",
-    code: `from google import genai
-from fluiq.optimization import auto_optimize
-
-client = genai.Client()
-opt = auto_optimize(
-    embed_fn=lambda t: [e.values for e in client.models.embed_content(
-        model="text-embedding-004", contents=t).embeddings],
-    llm_fn=lambda p, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=p,
-    ).text,
-)
-
-fakes    = opt.hyde("What killed the dinosaurs?")
-variants = opt.multi_query("How did the dinosaurs die?", n=4)
-
-vectors    = opt.embed(fakes + variants)
-candidates = [c for v in vectors for c in vector_store.search(v, k=10)]
-top_5      = opt.rerank(question, [c.page_content for c in candidates], top_k=5)`,
-  },
-  {
-    name: "Google ADK",
-    code: `from google.adk.agents import Agent
-from google import genai
-from fluiq.optimization import auto_optimize
-
-client = genai.Client()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=p,
-    ).text,
-)
-
-def retrieve(question: str) -> str:
-    variants = opt.multi_query(question, n=4)
-    pool = [c for q in variants for c in vector_store.similarity_search(q, k=10)]
-    top = opt.rerank(question, [c.page_content for c in pool], top_k=5)
-    return "\\n\\n".join(top.texts)
-
-agent = Agent(model="gemini-2.5-pro", tools=[retrieve])`,
-  },
-  {
-    name: "LangGraph",
-    code: `from langgraph.graph import StateGraph
-from langchain_openai import ChatOpenAI
-from fluiq.optimization import auto_optimize
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-opt = auto_optimize(llm_fn=lambda p, **kw: llm.invoke(p).content)
-
-def fanout_node(state):
-    variants = opt.multi_query(state["question"], n=4)
-    pool = [c for q in variants for c in vector_store.similarity_search(q, k=10)]
-    top  = opt.rerank(state["question"], [c.page_content for c in pool], top_k=5)
-    return {"candidates": top.texts}
-
-graph = StateGraph(dict)
-graph.add_node("fanout", fanout_node)`,
-  },
-  {
-    name: "LangChain",
-    code: `from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from fluiq.optimization import auto_optimize
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-opt = auto_optimize(
-    embed_fn=embeddings.embed_documents,
-    llm_fn=lambda p, **kw: llm.invoke(p).content,
-)
-
-fakes    = opt.hyde("What killed the dinosaurs?")
-variants = opt.multi_query("How did the dinosaurs die?", n=4)
-
-vectors    = opt.embed(fakes)
-candidates = [c for v in vectors for c in vector_store.similarity_search_by_vector(v, k=10)]
-top_5      = opt.rerank(question, [c.page_content for c in candidates], top_k=5)`,
-  },
-  {
-    name: "LlamaIndex",
-    code: `from llama_index.llms.openai import OpenAI
-from llama_index.embeddings.openai import OpenAIEmbedding
-from fluiq.optimization import auto_optimize
-
-llm = OpenAI(model="gpt-4o-mini")
-emb = OpenAIEmbedding(model="text-embedding-3-small")
-opt = auto_optimize(
-    embed_fn=emb.get_text_embedding_batch,
-    llm_fn=lambda p, **kw: llm.complete(p).text,
-)
-
-variants = opt.multi_query(question, n=4)
-nodes = [n for q in variants for n in retriever.retrieve(q)]
-top_5 = opt.rerank(question, [n.get_content() for n in nodes], top_k=5)`,
-  },
-  {
-    name: "CrewAI",
-    code: `from crewai import Agent
-from openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-client = OpenAI()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": p}], **kw,
-    ).choices[0].message.content,
-)
-
-def expanded_search(question: str) -> str:
-    variants = opt.multi_query(question, n=4)
-    pool = [c for q in variants for c in retrieve(q)]
-    top  = opt.rerank(question, pool, top_k=5)
-    return "\\n\\n".join(top.texts)
-
-researcher = Agent(role="researcher", goal="answer", tools=[expanded_search])`,
-  },
-]
-
-const TOOL_CACHING_SNIPPETS = [
-  {
-    name: "OpenAI",
-    code: `import requests
-from openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-client = OpenAI()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": p}], **kw,
-    ).choices[0].message.content,
-    cache_dir=".fluiq-cache",
-)
-
-opt.register_tool("web_fetch", lambda url: requests.get(url).text)
-opt.register_tool("search_db", lambda query, k=5: db.search(query, k=k))
-
-page = opt.tool("web_fetch", url="https://example.com")  # miss -> network
-page = opt.tool("web_fetch", url="https://example.com")  # hit  -> instant`,
-  },
-  {
-    name: "Anthropic",
-    code: `import requests
-import anthropic
-from fluiq.optimization import auto_optimize
-
-client = anthropic.Anthropic()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.messages.create(
-        model="claude-sonnet-4-5", max_tokens=512,
-        messages=[{"role": "user", "content": p}], **kw,
-    ).content[0].text,
-    cache_dir=".fluiq-cache",
-)
-
-opt.register_tool("web_fetch", lambda url: requests.get(url).text)
-page = opt.tool("web_fetch", url="https://example.com")
-page = opt.tool("web_fetch", url="https://example.com")  # cached`,
-  },
-  {
-    name: "Gemini",
-    code: `import requests
-from google import genai
-from fluiq.optimization import auto_optimize
-
-client = genai.Client()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.models.generate_content(
-        model="gemini-2.5-pro", contents=p,
-    ).text,
-    cache_dir=".fluiq-cache",
-)
-
-opt.register_tool("web_fetch", lambda url: requests.get(url).text)
-opt.register_tool("search_db", lambda query, k=5: db.search(query, k=k))
-
-page = opt.tool("web_fetch", url="https://example.com")
-page = opt.tool("web_fetch", url="https://example.com")  # cached`,
-  },
-  {
-    name: "Google ADK",
-    code: `import requests
-from google.adk.agents import Agent
-from fluiq.optimization import auto_optimize
-
-opt = auto_optimize(cache_dir=".fluiq-cache")
-opt.register_tool("web_fetch", lambda url: requests.get(url).text)
-opt.register_tool("search_db", lambda query, k=5: db.search(query, k=k))
-
-# Bind the cache-wrapped tools through the agent so repeat calls within a
-# run \u2014 or across runs when cache_dir is set \u2014 skip the underlying I/O.
-def web_fetch(url: str) -> str:
-    return opt.tool("web_fetch", url=url)
-
-def search_db(query: str, k: int = 5) -> list:
-    return opt.tool("search_db", query=query, k=k)
-
-agent = Agent(model="gemini-2.5-pro", tools=[web_fetch, search_db])`,
-  },
-  {
-    name: "LangGraph",
-    code: `import requests
-from langgraph.graph import StateGraph
-from langchain_openai import ChatOpenAI
-from fluiq.optimization import auto_optimize
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: llm.invoke(p).content,
-    cache_dir=".fluiq-cache",
-)
-opt.register_tool("web_fetch", lambda url: requests.get(url).text)
-
-def fetch_node(state):
-    return {"page": opt.tool("web_fetch", url=state["url"])}
-
-graph = StateGraph(dict)
-graph.add_node("fetch", fetch_node)`,
-  },
-  {
-    name: "LangChain",
-    code: `import requests
-from langchain_core.tools import tool
-from langchain_openai import ChatOpenAI
-from fluiq.optimization import auto_optimize
-
-llm = ChatOpenAI(model="gpt-4o-mini")
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: llm.invoke(p).content,
-    cache_dir=".fluiq-cache",
-)
-opt.register_tool("web_fetch", lambda url: requests.get(url).text)
-
-@tool
-def web_fetch(url: str) -> str:
-    """Fetch a URL, cached by (name, url)."""
-    return opt.tool("web_fetch", url=url)
-
-agent = create_react_agent(llm, tools=[web_fetch])`,
-  },
-  {
-    name: "LlamaIndex",
-    code: `import requests
-from llama_index.core.tools import FunctionTool
-from llama_index.llms.openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-llm = OpenAI(model="gpt-4o-mini")
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: llm.complete(p).text,
-    cache_dir=".fluiq-cache",
-)
-opt.register_tool("web_fetch", lambda url: requests.get(url).text)
-
-web_fetch_tool = FunctionTool.from_defaults(
-    fn=lambda url: opt.tool("web_fetch", url=url),
-    name="web_fetch",
-)`,
-  },
-  {
-    name: "CrewAI",
-    code: `import requests
-from crewai import Agent
-from crewai.tools import tool
-from openai import OpenAI
-from fluiq.optimization import auto_optimize
-
-client = OpenAI()
-opt = auto_optimize(
-    llm_fn=lambda p, **kw: client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": p}], **kw,
-    ).choices[0].message.content,
-    cache_dir=".fluiq-cache",
-)
-opt.register_tool("web_fetch", lambda url: requests.get(url).text)
-
-@tool("web_fetch")
-def web_fetch(url: str) -> str:
-    return opt.tool("web_fetch", url=url)
-
-researcher = Agent(role="researcher", goal="answer", tools=[web_fetch])`,
-  },
-]
-
-
-
-
-
-
-
 function Code({ children }: { children: string }) {
   return <CodeBlock>{children}</CodeBlock>
-}
-
-type ProviderSnippet = { name: string; code: string }
-
-function ProviderCode({ snippets }: { snippets: ProviderSnippet[] }) {
-  const [selected, setSelected] = useState(snippets[0].name)
-  const current = snippets.find((s) => s.name === selected) ?? snippets[0]
-  return (
-    <div className="space-y-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="font-mono">
-            {current.name}
-            <HugeiconsIcon icon={ArrowDown01Icon} size={14} />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuRadioGroup value={selected} onValueChange={setSelected}>
-            {snippets.map((s) => (
-              <DropdownMenuRadioItem key={s.name} value={s.name}>
-                {s.name}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <Code>{current.code}</Code>
-    </div>
-  )
 }
 
 function Documentation() {
@@ -1153,7 +121,6 @@ function Documentation() {
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <Link to="/" className="hover:text-foreground">Platform</Link>
-            {/*<Link to="/pricing" className="hover:text-foreground">Pricing</Link>*/}
             <Link to="/documentation" className="text-foreground">Documentation</Link>
           </nav>
           <div className="flex items-center gap-2">
@@ -1201,16 +168,19 @@ function Documentation() {
               Fluiq Python SDK
             </h1>
             <p className="mt-3 text-muted-foreground">
-              Two lines of Python instrument any AI agent or LLM pipeline. Auto-traced integrations for OpenAI, Anthropic, Gemini, LangChain, and MCP, plus a <code className="font-mono text-foreground">@trace</code> decorator for everything else. Retrieval steps are scored automatically by an LLM-as-judge so quality regressions surface alongside cost.
+              Two lines of Python instrument any AI agent or LLM pipeline. Auto-traced integrations for OpenAI, Anthropic, Gemini, LangChain, and MCP, plus a <code className="font-mono text-foreground">@trace</code> decorator for everything else. Server-side security scanning, Redis caching, and LLM-as-judge evaluations are one method call each — all on Fluiq infrastructure, nothing to deploy.
             </p>
           </div>
 
+          {/* ── QUICKSTART ─────────────────────────────────────────────────── */}
           <section id="quickstart" className="scroll-mt-24 space-y-4">
             <div className="flex items-center gap-2">
               <HugeiconsIcon icon={RocketIcon} />
               <h2 className="font-heading text-2xl font-semibold tracking-tight">Quickstart</h2>
             </div>
-            <p className="text-muted-foreground">Install the package, grab an API key, and call <code className="font-mono text-foreground">instrument()</code> once at startup.</p>
+            <p className="text-muted-foreground">
+              Install the package, grab an API key, and call <code className="font-mono text-foreground">instrument()</code> once at startup. Every supported LLM call from that point is traced automatically.
+            </p>
 
             <div className="grid gap-3 text-sm">
               <div className="flex items-start gap-3">
@@ -1218,14 +188,6 @@ function Documentation() {
                 <div className="grow">
                   <p className="font-medium">Install</p>
                   <Code>{`pip install fluiq`}</Code>
-                  <p className="mt-2 text-muted-foreground text-sm">
-                    Prompt-injection and secret detection are included out of the box with no extra dependencies.
-                    For full PII scanning (credit cards, SSNs, email addresses, and more) install{" "}
-                    <a href="https://microsoft.github.io/presidio/" target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline">Microsoft Presidio</a>{" "}
-                    and its spaCy language model:
-                  </p>
-                  <Code>{`pip install presidio-analyzer presidio-anonymizer
-python -m spacy download en_core_web_lg`}</Code>
                 </div>
               </div>
               <div className="flex items-start gap-3">
@@ -1233,7 +195,8 @@ python -m spacy download en_core_web_lg`}</Code>
                 <div className="grow">
                   <p className="font-medium">Get an API key</p>
                   <p className="text-muted-foreground">
-                    Create a free account and copy your key from the dashboard. <Link to="/signup" className="font-medium text-foreground hover:underline">Sign up &rarr;</Link>
+                    Create a free account and copy your key from the dashboard.{" "}
+                    <Link to="/signup" className="font-medium text-foreground hover:underline">Sign up &rarr;</Link>
                   </p>
                 </div>
               </div>
@@ -1241,25 +204,36 @@ python -m spacy download en_core_web_lg`}</Code>
                 <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold">3</span>
                 <div className="grow">
                   <p className="font-medium">Instrument once at startup</p>
-                  <Code>{`from fluiq import instrument
+                  <Code>{`import fluiq
 
-instrument(api_key="fl_...")
+fluiq.instrument(api_key="fl_...")
 
-# or else set FLUIQ_API_KEY = "fl_..." in environment variable
 # Every OpenAI / Anthropic / Gemini / LangChain / MCP
-# call from this point on is traced automatically.`}</Code>
+# call from this point on is traced automatically.
+# Optionally add paid features:
+fluiq.optimize()   # Redis caching — Team+
+fluiq.secure()     # Security scanning — Team+`}</Code>
                 </div>
               </div>
             </div>
           </section>
 
-          <section id="tracing" className="mt-16 scroll-mt-24 space-y-4">
+          {/* ── OBSERVABILITY ──────────────────────────────────────────────── */}
+          <section id="observability" className="mt-16 scroll-mt-24 space-y-4">
             <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={TestTube01Icon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Custom tracing</h2>
+              <HugeiconsIcon icon={ChartLineData01Icon} />
+              <h2 className="font-heading text-2xl font-semibold tracking-tight">Observability</h2>
             </div>
             <p className="text-muted-foreground">
-              Wrap any Python function with <code className="font-mono text-foreground">@trace</code> to record inputs, outputs, latency, and errors. Async functions are detected and awaited automatically. Nested calls preserve parent / child relationships.
+              Fluiq captures every LLM call, tool invocation, and retrieval step automatically — including model, messages, response, latency, token usage, and cost. Use the <code className="font-mono text-foreground">@trace</code> decorator to group any Python function into the same trace tree.
+            </p>
+
+            <div className="flex items-center gap-2 pt-2">
+              <HugeiconsIcon icon={TestTube01Icon} size={16} />
+              <p className="font-medium">@trace decorator</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Wrap any function with <code className="font-mono text-foreground">@trace</code> to record inputs, outputs, latency, and errors. Async functions are detected and awaited automatically. Nested calls preserve parent / child relationships.
             </p>
             <Code>{`from fluiq import instrument, trace
 
@@ -1274,38 +248,25 @@ async def answer(question: str) -> str:
     docs = retrieve(question)                 # nested span
     return await llm.ainvoke(prompt(question, docs))`}</Code>
             <p className="text-sm text-muted-foreground">
-              Inputs and outputs are serialized with <code className="font-mono text-foreground">str()</code>. Use <code className="font-mono text-foreground">__repr__</code> on your domain objects to control what shows up in the dashboard.
+              Pass <code className="font-mono text-foreground">name=</code> to override the function name used as the agent identity on the dashboard.
             </p>
-
-            <p className="font-medium">Custom span names</p>
-            <p className="text-sm text-muted-foreground">
-              Pass <code className="font-mono text-foreground">name=</code> to override the function name used as the agent identity on the dashboard. Useful when the function name is generic (<code className="font-mono text-foreground">run</code>, <code className="font-mono text-foreground">call</code>) or when you want to group multiple variants under one label.
-            </p>
-            <Code>{`from fluiq import trace
-
-@trace(name="research_agent")
+            <Code>{`@trace(name="research_agent")
 def run(question: str) -> str:
-    ...
-
-@trace(name="research_agent")
-async def run_streaming(question: str) -> str:
     ...`}</Code>
 
             <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
               <p className="font-medium">Fail-open by design</p>
               <p className="mt-1 text-muted-foreground">
-                Every span emission is wrapped in a safety guard so a Fluiq SDK error never crashes your application. Network failures, malformed payloads, missing optional dependencies, and dashboard outages are absorbed silently — your <code className="font-mono text-foreground">@trace</code>-decorated function still returns its real result and your provider call still executes as if Fluiq weren't installed. The same guard wraps the auto-instrumentation patches, so a broken integration never breaks the underlying SDK call.
+                Every span emission is wrapped in a safety guard so a Fluiq SDK error never crashes your application. Network failures, malformed payloads, missing optional dependencies, and dashboard outages are absorbed silently.
               </p>
             </div>
-          </section>
 
-          <section id="integrations" className="mt-16 scroll-mt-24 space-y-4">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={SparklesIcon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Auto-instrumentation</h2>
+            <div className="flex items-center gap-2 pt-4">
+              <HugeiconsIcon icon={SparklesIcon} size={16} />
+              <p className="font-medium">Auto-instrumentation</p>
             </div>
-            <p className="text-muted-foreground">
-              <code className="font-mono text-foreground">instrument()</code> patches every supported provider it can find on import. If a provider isn't installed, the corresponding patch is skipped silently — you never need feature flags.
+            <p className="text-sm text-muted-foreground">
+              <code className="font-mono text-foreground">instrument()</code> patches every supported provider it can find on import. If a provider isn't installed the patch is skipped silently — you never need feature flags.
             </p>
             <div className="grid gap-4">
               {integrations.map((i) => (
@@ -1323,18 +284,14 @@ async def run_streaming(question: str) -> str:
                 </Card>
               ))}
             </div>
-          </section>
 
-          <section id="agents" className="mt-16 scroll-mt-24 space-y-4">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={WorkflowSquare01Icon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Tracing agents</h2>
+            <div className="flex items-center gap-2 pt-4">
+              <HugeiconsIcon icon={WorkflowSquare01Icon} size={16} />
+              <p className="font-medium">Agents</p>
             </div>
-            <p className="text-muted-foreground">
-              An <em>agent</em> in Fluiq is any function or chain you want to monitor as a single unit of work. Wrap your entrypoint with <code className="font-mono text-foreground">@trace</code> so every nested LLM call, tool invocation, and retrieval step is grouped under one root — and aggregated as one row on the Agents dashboard.
+            <p className="text-sm text-muted-foreground">
+              An <em>agent</em> in Fluiq is any function or chain you want to monitor as a single unit of work. Wrap your entrypoint with <code className="font-mono text-foreground">@trace</code> so every nested LLM call and tool invocation is grouped under one root — and aggregated as one row on the Agents dashboard.
             </p>
-
-            <p className="font-medium">Plain Python agents</p>
             <Code>{`from fluiq import instrument, trace
 
 instrument(api_key="fl_...")
@@ -1345,85 +302,166 @@ def run_research_agent(question: str) -> str:
     docs = retrieve(plan)                 # nested @trace
     return synthesize(question, docs)     # nested @trace`}</Code>
             <p className="text-sm text-muted-foreground">
-              Every invocation of <code className="font-mono text-foreground">run_research_agent</code> is rolled up into one row keyed by the function name. Async functions work the same way — <code className="font-mono text-foreground">@trace</code> detects coroutines and awaits them.
+              LangChain and LangGraph agents are traced automatically without a decorator — the integration emits a root span for the runnable and child spans for every internal step.
             </p>
 
-            <p className="font-medium">LangChain chains and agents</p>
-            <Code>{`from langchain.agents import AgentExecutor, create_openai_tools_agent
-from fluiq import instrument
-
-instrument(api_key="fl_...")
-
-executor = AgentExecutor(agent=create_openai_tools_agent(...), tools=[...])
-executor.invoke({"input": "What's the weather in Paris?"})`}</Code>
+            <div className="flex items-center gap-2 pt-4">
+              <HugeiconsIcon icon={DollarCircleIcon} size={16} />
+              <p className="font-medium">Cost analytics</p>
+            </div>
             <p className="text-sm text-muted-foreground">
-              No decorator needed. The LangChain integration emits a root span for the runnable (e.g. <code className="font-mono text-foreground">AgentExecutor</code>, <code className="font-mono text-foreground">RunnableSequence</code>) and child spans for every internal step. The agent appears on the dashboard under the runnable's class name.
+              Every traced LLM call is priced server-side using the provider's published rates and rolled up across the full agent run. The{" "}
+              <Link to="/dashboard/traces" className="font-medium text-foreground hover:underline">Traces</Link>{" "}
+              table shows per-call cost; the{" "}
+              <Link to="/dashboard/agents" className="font-medium text-foreground hover:underline">Agents</Link>{" "}
+              dashboard groups by agent key and reports total cost, avg cost per run, tokens, and latency. Sort by total cost to find your most expensive agents in production.
+            </p>
+          </section>
+
+          {/* ── OPTIMIZATION ───────────────────────────────────────────────── */}
+          <section id="optimization" className="mt-16 scroll-mt-24 space-y-4">
+            <div className="flex items-center gap-2">
+              <HugeiconsIcon icon={MagicWand01Icon} />
+              <h2 className="font-heading text-2xl font-semibold tracking-tight">Optimization</h2>
+            </div>
+            <p className="text-muted-foreground">
+              Call <code className="font-mono text-foreground">fluiq.optimize()</code> after <code className="font-mono text-foreground">instrument()</code> to enable trace-driven Redis caching. Fluiq's backend analyses your historical traces, identifies which LLM calls repeat most, and provisions a dedicated Redis instance for your account. On the first call the SDK fetches that profile and begins serving repeated prompts from cache — saving both latency and LLM spend with no extra code.
             </p>
 
-            <p className="font-medium">LangGraph graphs</p>
-            <Code>{`from langgraph.graph import StateGraph
-from fluiq import instrument
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
+              <p className="font-semibold text-amber-700 dark:text-amber-400">Team plan and above</p>
+              <p className="mt-1 text-muted-foreground">
+                <code className="font-mono text-foreground">fluiq.optimize()</code> requires a Team, Growth, or Enterprise plan. Calling it on a Free account logs a warning and skips caching — tracing continues normally, your application is never interrupted.
+              </p>
+            </div>
 
-instrument(api_key="fl_...")
+            <p className="font-medium">Setup</p>
+            <Code>{`import fluiq
 
-graph = StateGraph(AgentState)
-graph.add_node("planner", planner_node)
-graph.add_node("tool_executor", tool_node)
-app = graph.compile()
-app.invoke({"messages": [...]})`}</Code>
-            <p className="text-sm text-muted-foreground">
-              Each node emits its own span tagged with <code className="font-mono text-foreground">langgraph_node</code>. On the Agents dashboard you'll see one row per node (e.g. <code className="font-mono text-foreground">planner</code>, <code className="font-mono text-foreground">tool_executor</code>) so you can spot which step of the graph is driving cost.
-            </p>
+fluiq.instrument(api_key="fl_...")
+fluiq.optimize()
+
+# All LLM calls from this point are transparently intercepted.
+# Repeated (model, messages) pairs are served from Redis instantly —
+# no LLM API call is made and your spend drops accordingly.`}</Code>
+
+            <p className="font-medium">How it works</p>
+            <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
+              <li>On the first LLM call after startup the SDK fetches your <strong className="text-foreground">optimization profile</strong> from the Fluiq backend.</li>
+              <li>The profile contains which models to cache, the suggested TTL, and the connection URL for your dedicated Redis instance.</li>
+              <li>Subsequent calls with an identical <code className="font-mono text-foreground">(model, messages)</code> combination are served from Redis instantly — your LLM provider is never contacted.</li>
+              <li>Real responses are cached automatically — there is nothing extra to instrument.</li>
+              <li>The dashboard <span className="text-foreground">Optimization</span> tab shows cache hit rate and estimated spend saved alongside your traces.</li>
+            </ol>
+
+            <p className="font-medium">Modes</p>
+            <div className="grid gap-3 text-sm">
+              {[
+                {
+                  name: `"cache"`,
+                  badge: "default",
+                  body: "Full Redis caching enabled. Repeated calls matching the backend profile are served from Redis before the LLM API is called. Real responses are stored automatically.",
+                },
+                {
+                  name: `"observe"`,
+                  badge: "optional",
+                  body: "No interception. The SDK records what would have been a cache hit so you can review potential savings — latency and spend — before opting into full caching.",
+                },
+              ].map((m) => (
+                <div key={m.name} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                  <HugeiconsIcon icon={ZapIcon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+                  <div>
+                    <p className="font-mono text-sm text-foreground">
+                      {m.name}
+                      <Badge variant={m.badge === "default" ? "muted" : "outline"} className="ml-2">{m.badge}</Badge>
+                    </p>
+                    <p className="mt-1 text-muted-foreground">{m.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Code>{`fluiq.optimize(mode="observe")   # review savings first
+fluiq.optimize(mode="cache")     # then enable full caching`}</Code>
 
             <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
-              <p className="font-medium">How an agent is identified</p>
+              <p className="font-medium">Fail-open by design</p>
               <p className="mt-1 text-muted-foreground">
-                Fluiq derives the agent key from the root span of each execution, in this priority:
+                If the profile endpoint is unreachable, returns an error, or Redis is unavailable, every LLM call proceeds normally to your provider. The cache layer never blocks your application.
               </p>
-              <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
-                <li><code className="font-mono text-foreground">@trace(name="...")</code> override, when set</li>
-                <li><code className="font-mono text-foreground">@trace</code> function name (e.g. <code className="font-mono text-foreground">run_research_agent</code>)</li>
-                <li>LangChain runnable name (e.g. <code className="font-mono text-foreground">AgentExecutor</code>)</li>
-                <li>LangGraph <code className="font-mono text-foreground">langgraph_node</code> (e.g. <code className="font-mono text-foreground">planner</code>)</li>
-                <li>Provider + model for raw, undecorated LLM calls (e.g. <code className="font-mono text-foreground">openai:gpt-4o</code>)</li>
-              </ol>
             </div>
           </section>
 
+          {/* ── SECURITY ───────────────────────────────────────────────────── */}
           <section id="security" className="mt-16 scroll-mt-24 space-y-4">
             <div className="flex items-center gap-2">
               <HugeiconsIcon icon={SecurityCheckIcon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Security scanning</h2>
+              <h2 className="font-heading text-2xl font-semibold tracking-tight">Security</h2>
             </div>
             <p className="text-muted-foreground">
-              Every traced prompt and response is scanned automatically for PII, prompt injection, and leaked secrets. Security scanning is on by default and runs entirely in your process — no data leaves your environment for scanning.
+              Call <code className="font-mono text-foreground">fluiq.secure()</code> after <code className="font-mono text-foreground">instrument()</code> to activate server-side security scanning. Every traced prompt and response is scanned for PII, prompt injection, and leaked secrets on Fluiq infrastructure. High-risk content is automatically redacted before persistence — the raw sensitive text is never written to the database.
+            </p>
+
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
+              <p className="font-semibold text-amber-700 dark:text-amber-400">Team plan and above</p>
+              <p className="mt-1 text-muted-foreground">
+                <code className="font-mono text-foreground">fluiq.secure()</code> requires a Team, Growth, or Enterprise plan. Calling it on a Free account logs a warning and skips scanning — tracing continues normally, your application is never interrupted.
+              </p>
+            </div>
+
+            <p className="font-medium">Setup</p>
+            <Code>{`import fluiq
+
+fluiq.instrument(api_key="fl_...")
+fluiq.secure()
+
+# All LLM calls are now traced and scanned server-side.
+# Use mode="block" to reject malicious prompts before the LLM call:
+fluiq.secure(mode="block")`}</Code>
+            <p className="text-sm text-muted-foreground">
+              No extra packages — scanning runs on Fluiq infrastructure, not in your process. Detection patterns are never shipped in the SDK and are improved continuously without requiring an update.
             </p>
 
             <p className="font-medium">What's scanned</p>
-            <p className="text-sm text-muted-foreground">
-              The scanner inspects the <code className="font-mono text-foreground">input</code> / <code className="font-mono text-foreground">messages</code> field as the <em>prompt</em> and the <code className="font-mono text-foreground">output</code> / <code className="font-mono text-foreground">response</code> field as the <em>response</em>. Three independent scanners run on each:
-            </p>
             <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
               <li>
-                <span className="text-foreground">PII scanner</span> — uses{" "}
-                <a href="https://microsoft.github.io/presidio/" target="_blank" rel="noreferrer" className="font-medium text-foreground hover:underline">Microsoft Presidio</a>{" "}
-                to detect credit cards, SSNs, IBAN codes, email addresses, phone numbers, IP addresses, names, and five popular API key formats (OpenAI, Anthropic, AWS, GitHub, Stripe).
-                Requires <code className="font-mono text-foreground">presidio-analyzer</code>,{" "}
-                <code className="font-mono text-foreground">presidio-anonymizer</code>, and a spaCy model (see installation above).
-                When the optional dependencies are absent the PII scanner is skipped silently — injection and secret scanning still run.
+                <span className="text-foreground">PII scanner</span> — running server-side. Detects credit cards, SSNs, IBAN codes, email addresses, phone numbers, IP addresses, names, and popular API key formats. No client dependencies required.
               </li>
               <li>
-                <span className="text-foreground">Prompt-injection scanner</span> — pure Python, no extra dependencies. Detects known jailbreak and instruction-override phrases such as "ignore previous instructions", "you are now", "act as if", "DAN", and more.
+                <span className="text-foreground">Prompt-injection scanner</span> — detects known jailbreak and instruction-override phrases. Patterns are maintained server-side and updated without SDK releases.
               </li>
               <li>
-                <span className="text-foreground">Secret scanner</span> — pure Python, no extra dependencies. Matches hardcoded regex patterns for OpenAI, Anthropic, AWS, GitHub, and Stripe keys, and additionally flags any high-entropy token ≥ 20 characters (Shannon entropy {`>`} 4.5 bits) that looks like a bearer token or password.
+                <span className="text-foreground">Secret scanner</span> — matches hardcoded credential patterns for OpenAI, Anthropic, AWS, GitHub, and Stripe keys, and flags high-entropy tokens resembling bearer tokens or passwords.
               </li>
             </ul>
 
+            <p className="font-medium">Modes</p>
+            <div className="grid gap-3 text-sm">
+              {[
+                {
+                  name: `"warn"`,
+                  badge: "default",
+                  body: "Post-call scan only. Security fields are written into the stored trace; HIGH-risk content is redacted before persistence. Your LLM calls are never interrupted.",
+                },
+                {
+                  name: `"block"`,
+                  badge: "optional",
+                  body: 'Pre-call guard enabled. Every prompt is checked before the LLM API call. If the check returns allow=false, a FluiqSecurityError is raised and the call is never made.',
+                },
+              ].map((m) => (
+                <div key={m.name} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                  <HugeiconsIcon icon={SecurityCheckIcon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+                  <div>
+                    <p className="font-mono text-sm text-foreground">
+                      {m.name}
+                      <Badge variant={m.badge === "default" ? "muted" : "outline"} className="ml-2">{m.badge}</Badge>
+                    </p>
+                    <p className="mt-1 text-muted-foreground">{m.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <p className="font-medium">Risk levels</p>
-            <p className="text-sm text-muted-foreground">
-              Each scan produces one of four levels, derived from the combined findings across all three scanners:
-            </p>
             <div className="overflow-x-auto rounded-xl border border-border/60">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -1457,435 +495,273 @@ app.invoke({"messages": [...]})`}</Code>
                 </tbody>
               </table>
             </div>
-            <p className="text-sm text-muted-foreground">
-              When the overall risk is <span className="font-medium text-destructive">high</span>, the scanner replaces the original prompt and response fields in the stored trace with redacted versions — PII entities are substituted with their type labels (e.g. <code className="font-mono text-foreground">&lt;CREDIT_CARD&gt;</code>) before the event leaves your process.
-            </p>
-
-            <p className="font-medium">What's stored per trace</p>
-            <p className="text-sm text-muted-foreground">
-              Ten security fields are written into every trace event that passes through the enricher:
-            </p>
-            <Code>{`{
-  "security_risk_level":    "medium",         # clean | low | medium | high
-  "security_risk_score":    0.72,             # 0–1.0 composite score
-  "pii_entities_prompt":    ["CREDIT_CARD"],  # entity types found in prompt
-  "pii_entities_response":  [],
-  "injection_detected":     false,
-  "injection_patterns":     [],               # matched phrase fragments
-  "secrets_detected":       false,
-  "secret_types":           [],               # e.g. ["openai_key"]
-  "prompt_redacted":        "...",            # redacted copy (PII replaced)
-  "response_redacted":      "..."
-}`}</Code>
-
-            <p className="font-medium">Dashboard — Security tab</p>
-            <p className="text-sm text-muted-foreground">
-              Each trace and agent run on the{" "}
-              <Link to="/dashboard/traces" className="font-medium text-foreground hover:underline">Traces</Link>{" "}
-              and{" "}
-              <Link to="/dashboard/agents" className="font-medium text-foreground hover:underline">Agents</Link>{" "}
-              pages has a <span className="text-foreground">Security</span> tab in the detail drawer.
-              The tab shows the risk level badge, a per-category breakdown (PII / injection / secrets), matched entity types, and a redacted preview of the prompt and response when the risk level is high.
-              The trace table also shows a <span className="text-foreground">Security</span> column — green for clean, amber for low/medium, red for high — so risky traces are visible at a glance without opening the drawer.
-            </p>
-
-            <p className="font-medium">Disabling scanning</p>
-            <Code>{`from fluiq import instrument
-
-instrument(api_key="fl_...", security_scan=False)`}</Code>
-            <p className="text-sm text-muted-foreground">
-              Pass <code className="font-mono text-foreground">security_scan=False</code> to skip all three scanners. Useful for offline testing, high-throughput batch pipelines where latency matters, or environments where prompts are known-safe. All other tracing behaviour is unchanged.
-            </p>
-
-            <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
-              <p className="font-medium">Fail-open by design</p>
-              <p className="mt-1 text-muted-foreground">
-                Like the rest of the SDK, the security enricher never raises. If Presidio is missing, if a scan throws, or if the enricher encounters an unexpected event shape, it returns the original trace unchanged. Your LLM call is unaffected.
-              </p>
-            </div>
           </section>
 
-          <section id="optimization" className="mt-16 scroll-mt-24 space-y-4">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={MagicWand01Icon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Optimization</h2>
-            </div>
-            <p className="text-muted-foreground">
-              <code className="font-mono text-foreground">fluiq.optimization</code> ships rerankers and caches that drop into any RAG pipeline with no extra service. Both modules are free on every tier and run entirely in your process. Reach for{" "}
-              <code className="font-mono text-foreground">auto_optimize()</code> if you want one call that wires everything together, or compose the pieces by hand below.
-            </p>
-
-            <div className="flex items-center gap-2 pt-2">
-              <HugeiconsIcon icon={ZapIcon} size={16} />
-              <p className="font-medium">Auto-optimize (one call)</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              <code className="font-mono text-foreground">auto_optimize()</code> returns an{" "}
-              <code className="font-mono text-foreground">OptimizedRAG</code> bundle with a shared cache backend, an embedding cache, a prompt cache, a document cache, and a reranker — all wired together with sensible defaults. Pass your{" "}
-              <code className="font-mono text-foreground">embed_fn</code> and{" "}
-              <code className="font-mono text-foreground">llm_fn</code>; everything else is optional.
-            </p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li>
-                <code className="font-mono text-foreground">cache_dir=".fluiq-cache"</code> uses{" "}
-                <code className="font-mono text-foreground">DiskCache</code> so hits survive process restarts; omit it for an in-memory LRU.
-              </li>
-              <li>
-                <code className="font-mono text-foreground">rerank="hybrid"</code> is the default and falls back to{" "}
-                <code className="font-mono text-foreground">BM25</code> with a warning when{" "}
-                <code className="font-mono text-foreground">sentence-transformers</code> isn't installed, so the call always returns a working bundle. Use{" "}
-                <code className="font-mono text-foreground">"bm25"</code>,{" "}
-                <code className="font-mono text-foreground">"cross-encoder"</code>, or{" "}
-                <code className="font-mono text-foreground">None</code> to override.
-              </li>
-              <li>
-                <code className="font-mono text-foreground">trace="auto"</code> (default) emits cache spans only after{" "}
-                <code className="font-mono text-foreground">fluiq.instrument()</code> has been called, so the bundle stays silent in offline scripts and lights up the dashboard hit-rate card in production.
-              </li>
-            </ul>
-            <ProviderCode snippets={AUTO_OPTIMIZE_SNIPPETS} />
-            <p className="text-sm text-muted-foreground">
-              The bundle exposes the raw components too —{" "}
-              <code className="font-mono text-foreground">opt.backend</code>,{" "}
-              <code className="font-mono text-foreground">opt.embeddings</code>,{" "}
-              <code className="font-mono text-foreground">opt.prompts</code>,{" "}
-              <code className="font-mono text-foreground">opt.documents</code>,{" "}
-              <code className="font-mono text-foreground">opt.reranker</code> — so you can mix the auto wiring with hand-tuned components when you outgrow the defaults.
-            </p>
-
-            <div className="flex items-center gap-2 pt-4">
-              <HugeiconsIcon icon={Layers01Icon} size={16} />
-              <p className="font-medium">Rerankers</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              After your vector store returns the top-K candidates, a reranker sorts them by query relevance before you stuff them into the LLM context. Fluiq ships four:
-            </p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li>
-                <code className="font-mono text-foreground">BM25Reranker</code> —{" "}
-                <span className="text-foreground">keyword</span>. Pure-Python Okapi BM25, no extra dependencies. Best when query and corpus share vocabulary (code search, legal, product catalogs).
-              </li>
-              <li>
-                <code className="font-mono text-foreground">CrossEncoderReranker</code> —{" "}
-                <span className="text-foreground">semantic</span>. Defaults to <code className="font-mono text-foreground">cross-encoder/ms-marco-MiniLM-L-6-v2</code>. Captures paraphrase and intent; install with <code className="font-mono text-foreground">pip install fluiq[rerank]</code>.
-              </li>
-              <li>
-                <code className="font-mono text-foreground">HybridReranker</code> —{" "}
-                <span className="text-foreground">hybrid</span>. Fuses both via Reciprocal Rank Fusion (default) or weighted score blending. The <code className="font-mono text-foreground">alpha</code> knob trades lexical vs. semantic.
-              </li>
-              <li>
-                <code className="font-mono text-foreground">MMRReranker</code> —{" "}
-                <span className="text-foreground">diversity-aware</span>. Wraps any of the above and re-selects with Maximal Marginal Relevance so the top-K isn't dominated by near-duplicates. Pass <code className="font-mono text-foreground">embed_fn=...</code> to upgrade redundancy scoring from token overlap to cosine, and tune the relevance/diversity tradeoff via <code className="font-mono text-foreground">lambda_mult</code>.
-              </li>
-            </ul>
-            <ProviderCode snippets={RERANKER_SNIPPETS} />
-            <p className="text-sm text-muted-foreground">
-              <code className="font-mono text-foreground">result.documents</code> exposes per-item <code className="font-mono text-foreground">index</code>, <code className="font-mono text-foreground">document</code>, and <code className="font-mono text-foreground">score</code> if you want to keep the original payloads.
-            </p>
-
-            <div className="flex items-center gap-2 pt-4">
-              <HugeiconsIcon icon={Database01Icon} size={16} />
-              <p className="font-medium">Caching</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Three specialized caches dedupe the expensive parts of a RAG pipeline. All share two pluggable backends: <code className="font-mono text-foreground">InMemoryCache</code> (LRU + TTL) and <code className="font-mono text-foreground">DiskCache</code> (file-backed, survives restarts).
-            </p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li>
-                <code className="font-mono text-foreground">EmbeddingCache</code> — wraps any{" "}
-                <code className="font-mono text-foreground">embed_fn(texts) {"-> "}vectors</code>. Only cache misses are forwarded to the model; the same texts in different orders all hit the cache.
-              </li>
-              <li>
-                <code className="font-mono text-foreground">PromptCache</code> — caches LLM responses by{" "}
-                <code className="font-mono text-foreground">(model, prompt, params)</code>. Sampling settings are part of the key, so <code className="font-mono text-foreground">temperature=0</code> and <code className="font-mono text-foreground">temperature=1</code> get separate slots.
-              </li>
-              <li>
-                <code className="font-mono text-foreground">DocumentCache</code> — caches preprocessed / chunked documents by source id. Skip re-chunking on notebook reloads, repeated CI runs, and batch reindex jobs.
-              </li>
-              <li>
-                <code className="font-mono text-foreground">ToolCache</code> — caches deterministic agent-tool results by{" "}
-                <code className="font-mono text-foreground">(name, kwargs)</code>. Drop-in for web fetches, DB reads, code interpreters, retrieval calls. Register tools once, then call through the cache so repeat invocations skip the underlying I/O.
-              </li>
-            </ul>
-            <ProviderCode snippets={CACHING_SNIPPETS} />
-            <p className="text-sm text-muted-foreground">
-              Backends are interchangeable — start with <code className="font-mono text-foreground">InMemoryCache</code> for ephemeral runs, swap in <code className="font-mono text-foreground">DiskCache</code> when you want hits across processes, or implement <code className="font-mono text-foreground">BaseCache</code> against Redis / Memcached for shared multi-host caches.
-            </p>
-
-            <div className="flex items-center gap-2 pt-4">
-              <HugeiconsIcon icon={WorkflowSquare01Icon} size={16} />
-              <p className="font-medium">Context shaping</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Two helpers sit between the reranker and the LLM.{" "}
-              <code className="font-mono text-foreground">pack_context</code> greedily fits chunks into a token budget and can reorder them with <code className="font-mono text-foreground">reorder="lost-in-middle"</code> to mitigate the empirical attention dropoff in the middle of long contexts.{" "}
-              <code className="font-mono text-foreground">compress_context</code> drops sentences with no query-term overlap so each chunk costs fewer tokens. Both are pure-Python and have no extra dependencies; pass a custom <code className="font-mono text-foreground">count_tokens</code> or <code className="font-mono text-foreground">scorer</code> when you want production-grade accuracy.
-            </p>
-            <ProviderCode snippets={CONTEXT_SHAPING_SNIPPETS} />
-            <p className="text-sm text-muted-foreground">
-              The auto-bundle exposes both as <code className="font-mono text-foreground">opt.compress(...)</code> and <code className="font-mono text-foreground">opt.pack(...)</code>; <code className="font-mono text-foreground">opt.pack</code> defaults to <code className="font-mono text-foreground">reorder="lost-in-middle"</code> so the common path stays one call.
-            </p>
-
-            <div className="flex items-center gap-2 pt-4">
-              <HugeiconsIcon icon={SparklesIcon} size={16} />
-              <p className="font-medium">Query transforms</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Help the vector store find the right chunks by rewriting the question before retrieval.{" "}
-              <code className="font-mono text-foreground">HyDE</code> generates a hypothetical answer and embeds <em>that</em> — the fake answer sits closer in embedding space to real evidence than the raw question does, often lifting recall by 10–20% on factoid corpora.{" "}
-              <code className="font-mono text-foreground">MultiQuery</code> fans the question out into N paraphrases for fusion-style retrieval. Both accept any <code className="font-mono text-foreground">llm_fn</code>; pass <code className="font-mono text-foreground">opt.prompts</code> so identical questions reuse cached rewrites.
-            </p>
-            <ProviderCode snippets={QUERY_TRANSFORMS_SNIPPETS} />
-
-            <div className="flex items-center gap-2 pt-4">
-              <HugeiconsIcon icon={Database01Icon} size={16} />
-              <p className="font-medium">Tool caching for agents</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Agents call the same deterministic tools repeatedly — the same URL, the same SQL, the same retrieval. <code className="font-mono text-foreground">ToolCache</code> sits in front of those calls and dedupes them by{" "}
-              <code className="font-mono text-foreground">(name, kwargs)</code> against the same shared backend the rest of the bundle uses, so cache hits survive across agent runs whenever you persist with <code className="font-mono text-foreground">cache_dir=...</code>.
-            </p>
-            <ProviderCode snippets={TOOL_CACHING_SNIPPETS} />
-
-            <div className="flex items-center gap-2 pt-4">
-              <HugeiconsIcon icon={TestTube01Icon} size={16} />
-              <p className="font-medium">Trace visibility</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              When <code className="font-mono text-foreground">auto_optimize(trace="auto")</code> sees that <code className="font-mono text-foreground">fluiq.instrument()</code> has been called, every cache lookup and reranker invocation emits its own span linked to the surrounding <code className="font-mono text-foreground">@trace</code> root. The Traces dashboard renders them with dedicated icons and sublabels so cache hit rates and reranker latency sit alongside your LLM calls — no extra wiring required.
-            </p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li>
-                Cache spans (<code className="font-mono text-foreground">type=cache</code>) carry{" "}
-                <code className="font-mono text-foreground">cache_kind</code> (<code className="font-mono text-foreground">embedding</code> /{" "}
-                <code className="font-mono text-foreground">prompt</code> /{" "}
-                <code className="font-mono text-foreground">document</code> /{" "}
-                <code className="font-mono text-foreground">tool</code>) and{" "}
-                <code className="font-mono text-foreground">cache_hit</code> so you can chart hit rates per cache.
-              </li>
-              <li>
-                Rerank spans (<code className="font-mono text-foreground">type=rerank</code>) carry{" "}
-                <code className="font-mono text-foreground">reranker</code> (BM25 / CrossEncoder / Hybrid / MMR),{" "}
-                <code className="font-mono text-foreground">input_count</code>,{" "}
-                <code className="font-mono text-foreground">output_count</code>, and{" "}
-                <code className="font-mono text-foreground">top_k</code>.
-              </li>
-              <li>
-                Pass <code className="font-mono text-foreground">trace=False</code> to silence the spans (e.g. for offline evaluation runs), or{" "}
-                <code className="font-mono text-foreground">trace=True</code> to force them on regardless of whether{" "}
-                <code className="font-mono text-foreground">instrument()</code> ran.
-              </li>
-              <li>
-                Hand-built caches get the same visibility — pass{" "}
-                <code className="font-mono text-foreground">trace=True</code> to{" "}
-                <code className="font-mono text-foreground">EmbeddingCache(...)</code>,{" "}
-                <code className="font-mono text-foreground">PromptCache(...)</code>,{" "}
-                <code className="font-mono text-foreground">DocumentCache(...)</code>, or{" "}
-                <code className="font-mono text-foreground">ToolCache(...)</code>. Reranker spans go through the bundle, so route reranks via{" "}
-                <code className="font-mono text-foreground">auto_optimize(rerank=...)</code> (or{" "}
-                <code className="font-mono text-foreground">opt.rerank(...)</code>) when you want them on the dashboard.
-              </li>
-            </ul>
-          </section>
-
-
-          <section id="cost" className="mt-16 scroll-mt-24 space-y-4">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={DollarCircleIcon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Cost analytics</h2>
-            </div>
-            <p className="text-muted-foreground">
-              Every traced LLM call is priced server-side using the provider's published rates. Costs are stored to ten decimal places, denominated in USD, and rolled up across whole agent runs.
-            </p>
-
-            <p className="font-medium">How costs are computed</p>
-            <p className="text-sm text-muted-foreground">
-              For each trace with token usage, Fluiq looks up the model in its price catalog and applies:
-            </p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li><span className="text-foreground">Input tokens</span> × input rate per million</li>
-              <li><span className="text-foreground">Cached input tokens</span> × cached rate (subtracted from billable input first)</li>
-              <li><span className="text-foreground">Output tokens</span> × output rate per million</li>
-              <li><span className="text-foreground">Long-context</span> rates are used automatically when the prompt crosses the model's threshold (e.g. {">"} 200k tokens)</li>
-            </ul>
-            <p className="text-sm text-muted-foreground">
-              If a model isn't in the catalog, the trace is still recorded but its cost shows as <code className="font-mono text-foreground">—</code>. Reach out and we'll add it.
-            </p>
-
-            <p className="font-medium">Per-trace cost (Traces page)</p>
-            <p className="text-sm text-muted-foreground">
-              The <Link to="/dashboard/traces" className="font-medium text-foreground hover:underline">Traces</Link> table shows a <code className="font-mono text-foreground">Cost</code> column for each row. Leaf rows (LLM calls) display the call's own cost; root rows show the rolled-up total of every descendant trace, marked with a small <code className="font-mono text-foreground">Σ</code> badge. Expand a row to see the per-step breakdown.
-            </p>
-
-            <p className="font-medium">Per-agent rollup (Agents page)</p>
-            <p className="text-sm text-muted-foreground">
-              The <Link to="/dashboard/agents" className="font-medium text-foreground hover:underline">Agents</Link> dashboard groups every execution by the agent key described above and reports:
-            </p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li><span className="text-foreground">Runs</span> — distinct invocations of the agent</li>
-              <li><span className="text-foreground">Total cost</span> — sum across the entire history</li>
-              <li><span className="text-foreground">Avg / run</span> — useful for spotting drift over time</li>
-              <li><span className="text-foreground">Tokens</span> and <span className="text-foreground">avg latency</span> — to correlate cost with throughput</li>
-            </ul>
-            <p className="text-sm text-muted-foreground">
-              Sort by total cost to find your most expensive agents in production, or by runs to find your hottest paths.
-            </p>
-          </section>
-
-          <section id="evaluations" className="mt-16 scroll-mt-24 space-y-4">
+          {/* ── EVALUATION ─────────────────────────────────────────────────── */}
+          <section id="evaluation" className="mt-16 scroll-mt-24 space-y-4">
             <div className="flex items-center gap-2">
               <HugeiconsIcon icon={CheckmarkCircle02Icon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Automated evaluations</h2>
+              <h2 className="font-heading text-2xl font-semibold tracking-tight">Evaluation</h2>
             </div>
             <p className="text-muted-foreground">
-              Every retrieval step Fluiq sees is scored asynchronously by an LLM-as-judge. You don't write evaluator code — instrument once, and quality scores show up next to cost on the same trace.
+              Add one line to score every LLM response with Fluiq's server-side judge. Set per-metric thresholds and choose whether failures log a warning or block the call from reaching your application.
             </p>
 
-            <p className="font-medium">What gets scored</p>
-            <p className="text-sm text-muted-foreground">
-              Any trace of <code className="font-mono text-foreground">type=vectorstore</code> (Chroma, Pinecone, pgvector, Weaviate, and any retriever surfaced by the LangChain integration) is queued for evaluation. The judge ranks each retrieved chunk against the user query and emits two metrics:
-            </p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li><span className="text-foreground">context_relevance</span> — fraction of retrieved chunks the judge considers useful for answering the query (0–1)</li>
-              <li><span className="text-foreground">per_chunk usefulness</span> — boolean per chunk, surfaced in the trace drawer with a green check / red cross</li>
-            </ul>
+            <Code>{`import fluiq
 
-            <p className="font-medium">Where they show up</p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li>The <Link to="/dashboard/traces" className="font-medium text-foreground hover:underline">Traces</Link> table has a <span className="text-foreground">Quality</span> column with a colored pill: green ≥ 0.8, amber ≥ 0.5, red {"<"} 0.5.</li>
-              <li>Wrapper rows roll up the <em>worst</em> score across the subtree (marked with a small <code className="font-mono text-foreground">↓</code>) so a bad chunk at any depth surfaces at the root.</li>
-              <li>The trace drawer's <span className="text-foreground">Evaluations</span> section lists each metric, the judge's reason, and per-chunk usefulness.</li>
-            </ul>
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(
+    thresholds={
+        "hallucination": 0.8,   # score 0–1; 1 = no hallucination
+        "faithfulness":  0.7,   # grounded in provided context
+        "relevance":     0.75,  # response addresses the question
+        "toxicity":      0.9,   # 1 = completely safe
+    },
+    mode="warn",                # "warn" | "block"
+    judge_model="gpt-4o-mini",  # judge model Fluiq uses server-side
+)`}</Code>
 
-            <p className="font-medium">Cost &amp; quotas</p>
-            <p className="text-sm text-muted-foreground">
-              Each evaluated retrieval consumes one count from your tier's eval budget (see <a href="#quotas" className="font-medium text-foreground hover:underline">Tiers &amp; quotas</a>). Once you hit the cap, traces continue to ingest normally — only the auto-eval is skipped — so observability never breaks because of a billing limit.
-            </p>
-          </section>
-
-          <section id="quotas" className="mt-16 scroll-mt-24 space-y-4">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={ChartLineData01Icon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Tiers &amp; quotas</h2>
+            <p className="font-medium">Supported metrics</p>
+            <div className="overflow-x-auto rounded-xl border border-border/60">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-2 font-medium">Metric</th>
+                    <th className="px-4 py-2 font-medium">What it measures</th>
+                    <th className="px-4 py-2 font-medium">Score 1.0 means</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {[
+                    ["hallucination", "Factual claims not supported by the prompt/context", "No hallucination — every claim is grounded"],
+                    ["faithfulness", "Whether the response stays within the provided context", "Fully grounded — no outside claims added"],
+                    ["relevance", "How directly the response addresses the question", "Completely on-topic and direct"],
+                    ["toxicity", "Harmful, offensive, or hateful content in the response", "Completely safe and respectful"],
+                    ["coherence", "Logical structure and internal consistency", "Perfectly coherent and well-structured"],
+                    ["completeness", "Whether the response fully answers the question", "Comprehensive — no key information omitted"],
+                  ].map(([metric, desc, best]) => (
+                    <tr key={metric}>
+                      <td className="px-4 py-2 font-mono text-foreground">{metric}</td>
+                      <td className="px-4 py-2 text-muted-foreground">{desc}</td>
+                      <td className="px-4 py-2 text-muted-foreground">{best}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <p className="text-muted-foreground">
-              Two counters drive your plan: traces ingested and automated evaluations performed. Counters are lifetime by default, scoped to your workspace, and visible on the <Link to="/dashboard" className="font-medium text-foreground hover:underline">Overview</Link> page in real time.
-            </p>
 
+            <p className="font-medium">Modes</p>
+            <div className="grid gap-3 text-sm">
+              <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+                <div>
+                  <p className="font-mono text-sm text-foreground">mode="warn" <span className="font-sans text-muted-foreground font-normal">(default)</span></p>
+                  <p className="mt-1 text-muted-foreground">
+                    Evaluation runs in a background thread after the LLM responds. Your application receives the response immediately. A Python warning is logged for every metric that falls below its threshold — visible in your logs and in the Fluiq dashboard's Quality column.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+                <div>
+                  <p className="font-mono text-sm text-foreground">mode="block"</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Evaluation runs synchronously before returning the response. If any metric is below its threshold, a <code className="font-mono text-foreground">FluiqEvalError</code> is raised instead — the low-quality response never reaches your application. Use in staging or for safety-critical flows.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Code>{`from fluiq.exceptions import FluiqEvalError
+
+try:
+    response = client.chat.completions.create(...)
+except FluiqEvalError as e:
+    print(e.failures)   # {"hallucination": 0.42, "relevance": 0.61}
+    print(e.scores)     # all metric scores
+    # fallback logic here`}</Code>
+
+            <div className="flex items-center gap-2 pt-4">
+              <HugeiconsIcon icon={Github01Icon} size={16} />
+              <p className="font-medium">GitHub Actions eval gate</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Gate every PR on quality scores stored during your test suite. The workflow below runs your tests (which generate traces evaluated by Fluiq), waits briefly for async evals to land, then queries the Fluiq API and fails the build if any score is below the threshold.
+            </p>
+            <Code>{`# .github/workflows/fluiq-eval-gate.yml
+name: Fluiq Eval Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  eval-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt fluiq
+
+      - name: Run test suite
+        env:
+          FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
+        run: pytest tests/ -x
+
+      - name: Wait for evaluations
+        run: sleep 30
+
+      - name: Check evaluation scores
+        env:
+          FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
+          THRESHOLD: \${{ vars.FLUIQ_EVAL_THRESHOLD || '0.7' }}
+        run: |
+          python - <<'PYEOF'
+          import httpx, os, sys
+          api_key   = os.environ["FLUIQ_API_KEY"]
+          threshold = float(os.environ.get("THRESHOLD", "0.7"))
+          resp = httpx.get(
+              "https://api.getfluiq.com/api/v1/optimize/evals",
+              headers={"x-api-key": api_key},
+              params={"window_minutes": 10, "threshold": threshold},
+              timeout=15,
+          )
+          resp.raise_for_status()
+          data = resp.json()
+          if data["total"] == 0:
+              print("No evaluations found — skipping gate.")
+              sys.exit(0)
+          avg = data.get("avg_score")
+          print(f"Evals: {data['total']} total, {data['passed']} passed, {data['failed']} failed  (avg {f'{avg:.2f}' if avg else 'n/a'})")
+          if data["failed"] > 0:
+              for e in data["entries"]:
+                  if e["score"] is not None and e["score"] < threshold:
+                      print(f"  FAIL  {e['metric']}: {e['score']:.2f}  trace={e['trace_id']}")
+              sys.exit(1)
+          print(f"All scores above threshold ({threshold}).")
+          PYEOF`}</Code>
+
+            <p className="font-medium">Quotas</p>
+            <p className="text-sm text-muted-foreground">
+              Each LLM response evaluation consumes one count from your tier's eval budget. Traces continue to ingest normally once the cap is hit — only the auto-eval is skipped.
+            </p>
             <div className="overflow-x-auto rounded-xl border border-border/60">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-4 py-2 font-medium">Tier</th>
                     <th className="px-4 py-2 font-medium">Traces</th>
-                    <th className="px-4 py-2 font-medium">Evaluations</th>
+                    <th className="px-4 py-2 font-medium">Evaluations / month</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/60">
-                  <tr>
-                    <td className="px-4 py-2 font-medium text-foreground">Free</td>
-                    <td className="px-4 py-2 text-muted-foreground">5,000,000 total</td>
-                    <td className="px-4 py-2 text-muted-foreground">1,000</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 font-medium text-foreground">Team</td>
-                    <td className="px-4 py-2 text-muted-foreground">Unlimited</td>
-                    <td className="px-4 py-2 text-muted-foreground">10,000</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 font-medium text-foreground">Growth</td>
-                    <td className="px-4 py-2 text-muted-foreground">Unlimited</td>
-                    <td className="px-4 py-2 text-muted-foreground">100,000</td>
-                  </tr>
-                  <tr>
-                    <td className="px-4 py-2 font-medium text-foreground">Enterprise</td>
-                    <td className="px-4 py-2 text-muted-foreground">Unlimited</td>
-                    <td className="px-4 py-2 text-muted-foreground">Unlimited</td>
-                  </tr>
+                  {[
+                    ["Free", "5M total", "1,000"],
+                    ["Team", "Unlimited", "10,000"],
+                    ["Growth", "Unlimited", "100,000"],
+                    ["Enterprise", "Unlimited", "Unlimited"],
+                  ].map(([tier, traces, evals]) => (
+                    <tr key={tier}>
+                      <td className="px-4 py-2 font-medium">{tier}</td>
+                      <td className="px-4 py-2 text-muted-foreground">{traces}</td>
+                      <td className="px-4 py-2 text-muted-foreground">{evals}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
-
-            <p className="font-medium">What happens at the limit</p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              <li><span className="text-foreground">Traces</span> — once a Free workspace exceeds 5M traces, <code className="font-mono text-foreground">/ingest</code> returns <code className="font-mono text-foreground">402 Payment Required</code> and the SDK drops the span. Upgrade to Team or higher for unlimited tracing.</li>
-              <li><span className="text-foreground">Evaluations</span> — when the eval budget is exhausted, traces still ingest normally; only the auto-eval is skipped. No hard error is raised.</li>
-            </ul>
-
-            <p className="font-medium">Tracking usage</p>
-            <p className="text-sm text-muted-foreground">
-              The dashboard's <Link to="/dashboard" className="font-medium text-foreground hover:underline">Overview</Link> page shows live progress bars for both counters, fed by <code className="font-mono text-foreground">GET /api/v1/quota</code>. The same endpoint is auth-gated and safe to poll from your own tooling.
-            </p>
-
-            <p className="font-medium">Upgrading</p>
-            <p className="text-sm text-muted-foreground">
-              The Plan row on Overview and Profile has an <span className="text-foreground">Upgrade</span> button that jumps to the next tier on the <Link to="/pricing" className="font-medium text-foreground hover:underline">pricing page</Link>, or to the comparison view if you want to skip ahead. Enterprise customers get unlimited everything plus VPC / on-prem deployment — <Link to="/pricing#contact" className="font-medium text-foreground hover:underline">contact sales</Link>.
-            </p>
           </section>
 
-
+          {/* ── CONFIGURATION ──────────────────────────────────────────────── */}
           <section id="configuration" className="mt-16 scroll-mt-24 space-y-4">
             <div className="flex items-center gap-2">
               <HugeiconsIcon icon={ZapIcon} />
               <h2 className="font-heading text-2xl font-semibold tracking-tight">Configuration</h2>
             </div>
             <p className="text-muted-foreground">
-              <code className="font-mono text-foreground">instrument()</code> accepts three parameters. Only <code className="font-mono text-foreground">api_key</code> is required.
+              Four top-level functions configure the SDK. <code className="font-mono text-foreground">instrument()</code> is required; <code className="font-mono text-foreground">optimize()</code>, <code className="font-mono text-foreground">secure()</code>, and <code className="font-mono text-foreground">eval()</code> are optional paid features.
             </p>
-            <Code>{`def instrument(
-    api_key: str,
-    *,
-    version: str = "v1",
-    endpoint: str = "https://api.getfluiq.com/api",
-    security_scan: bool = True,
-) -> None: ...`}</Code>
-            <div className="grid gap-3 text-sm">
-              {[
-                { name: "api_key", required: true, body: "Your workspace API key. Find it in the dashboard under Settings → API keys." },
-                { name: "version", required: false, body: "Trace schema version. Pin this in production so server-side schema bumps are opt-in." },
-                { name: "endpoint", required: false, body: "Override the ingest URL. Point this at your VPC deployment for self-hosted setups." },
-                { name: "security_scan", required: false, body: "Enable or disable automatic PII, injection, and secret scanning on every trace. Defaults to True. Set False to skip scanning entirely — useful for high-throughput batch pipelines where the overhead isn't needed." },
-              ].map((p) => (
-                <div key={p.name} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
-                  <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
-                  <div>
-                    <p className="font-mono text-sm text-foreground">
-                      {p.name}
-                      {p.required ? (
-                        <Badge variant="muted" className="ml-2">required</Badge>
-                      ) : (
-                        <Badge variant="outline" className="ml-2">optional</Badge>
-                      )}
-                    </p>
-                    <p className="mt-1 text-muted-foreground">{p.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              The SDK reads no environment variables on its own — wire <code className="font-mono text-foreground">os.getenv("FLUIQ_API_KEY")</code> in if you want one.
-            </p>
-          </section>
 
-          <section id="self-hosting" className="mt-16 scroll-mt-24 space-y-4">
-            <div className="flex items-center gap-2">
-              <HugeiconsIcon icon={Github01Icon} />
-              <h2 className="font-heading text-2xl font-semibold tracking-tight">Self-hosting</h2>
-            </div>
-            <p className="text-muted-foreground">
-              The SDK is open source. Point it at your own ingest service by passing a custom <code className="font-mono text-foreground">endpoint</code>.
-            </p>
-            <Code>{`from fluiq import instrument
-
-instrument(
-    api_key="fl_...",
-    endpoint="https://traces.internal.acme.com/api",
+            <p className="font-medium">fluiq.instrument()</p>
+            <Code>{`fluiq.instrument(
+    api_key  = "fl_...",          # required — or set FLUIQ_API_KEY env var
+    endpoint = "https://...",     # optional — override for self-hosted
+    version  = "v1",              # optional — pin for stable schema
 )`}</Code>
             <p className="text-sm text-muted-foreground">
-              VPC and on-prem deployments of the Fluiq backend are part of the Enterprise tier. <Link to="/pricing" className="font-medium text-foreground hover:underline">See pricing &rarr;</Link>
+              The SDK reads <code className="font-mono text-foreground">FLUIQ_API_KEY</code> and <code className="font-mono text-foreground">FLUIQ_API_ENDPOINT</code> from the environment automatically, so <code className="font-mono text-foreground">instrument()</code> can be called with no arguments in CI and production environments that set those variables.
             </p>
+
+            <p className="font-medium mt-2">fluiq.optimize()</p>
+            <Code>{`fluiq.optimize(
+    mode = "cache",    # "cache" (default) | "observe"
+)`}</Code>
+            <div className="grid gap-3 text-sm">
+              <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+                <div>
+                  <p className="font-mono text-sm text-foreground">
+                    mode
+                    <Badge variant="outline" className="ml-2">Team+ required</Badge>
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    <code className="font-mono text-foreground">"cache"</code> — full Redis caching enabled (default).{" "}
+                    <code className="font-mono text-foreground">"observe"</code> — records what would be hits without intercepting calls.
+                    Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open — if the backend is unreachable or the plan check fails, all LLM calls proceed normally.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="font-medium mt-2">fluiq.secure()</p>
+            <Code>{`fluiq.secure(
+    mode = "warn",     # "warn" (default) | "block"
+)`}</Code>
+            <div className="grid gap-3 text-sm">
+              <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+                <div>
+                  <p className="font-mono text-sm text-foreground">
+                    mode
+                    <Badge variant="outline" className="ml-2">Team+ required</Badge>
+                  </p>
+                  <p className="mt-1 text-muted-foreground">
+                    <code className="font-mono text-foreground">"warn"</code> — post-call scan only; security metadata enriched on the trace (default).{" "}
+                    <code className="font-mono text-foreground">"block"</code> — pre-call guard; raises <code className="font-mono text-foreground">FluiqSecurityError</code> before the LLM call when a HIGH-risk prompt is detected.
+                    Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open — a plan downgrade or endpoint outage never blocks your LLM calls.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <p className="font-medium mt-2">fluiq.eval()</p>
+            <Code>{`fluiq.eval(
+    thresholds   = {"hallucination": 0.8, "relevance": 0.7},
+    metrics      = ["hallucination", "relevance", "toxicity"],
+    mode         = "warn",          # "warn" (default) | "block"
+    judge_model  = "gpt-4o-mini",
+)`}</Code>
+            <div className="grid gap-3 text-sm">
+              <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+                <div>
+                  <p className="font-mono text-sm text-foreground">thresholds / metrics / mode / judge_model</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Runs Fluiq's LLM-as-judge server-side after every LLM call. Supported metrics: <code className="font-mono text-foreground">hallucination</code>, <code className="font-mono text-foreground">faithfulness</code>, <code className="font-mono text-foreground">relevance</code>, <code className="font-mono text-foreground">toxicity</code>, <code className="font-mono text-foreground">coherence</code>, <code className="font-mono text-foreground">completeness</code>.{" "}
+                    <code className="font-mono text-foreground">"warn"</code> logs when a score is below threshold (default).{" "}
+                    <code className="font-mono text-foreground">"block"</code> raises <code className="font-mono text-foreground">FluiqEvalError</code> before returning the response.
+                    Scores are stored in ClickHouse and visible in the dashboard's Quality column across all previous traces.
+                  </p>
+                </div>
+              </div>
+            </div>
           </section>
 
+          {/* ── NEXT STEPS ─────────────────────────────────────────────────── */}
           <section id="next-steps" className="mt-16 scroll-mt-24 space-y-4">
             <div className="flex items-center gap-2">
               <HugeiconsIcon icon={RocketIcon} />
@@ -1895,7 +771,7 @@ instrument(
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Open the dashboard</CardTitle>
-                  <CardDescription>Watch traces stream in, inspect costs by node, and configure Slack alerts.</CardDescription>
+                  <CardDescription>Watch traces stream in, inspect costs by node, and review quality scores.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button variant="outline" className="w-full" asChild>
@@ -1908,14 +784,42 @@ instrument(
               </Card>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Add the GitHub Action</CardTitle>
+                  <CardTitle className="text-base">Add the eval gate</CardTitle>
                   <CardDescription>Gate every PR on hallucination, faithfulness, and relevancy thresholds.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full" asChild>
+                    <a href="#evaluation">
+                      See eval gate setup
+                      <HugeiconsIcon icon={ArrowRight02Icon} />
+                    </a>
+                  </Button>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Enable optimization</CardTitle>
+                  <CardDescription>One method call activates Redis caching driven by your trace history.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/signup">
+                      Upgrade to Team
+                      <HugeiconsIcon icon={ArrowRight02Icon} />
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">View on GitHub</CardTitle>
+                  <CardDescription>The SDK is open source. Star it, fork it, or open a PR.</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button variant="outline" className="w-full" asChild>
                     <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
                       <HugeiconsIcon icon={Github01Icon} />
-                      View on GitHub
+                      fluiq-AI/fluiq-sdk
                     </a>
                   </Button>
                 </CardContent>
@@ -1929,4 +833,3 @@ instrument(
 }
 
 export default Documentation
-
