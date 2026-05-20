@@ -103,9 +103,11 @@ function Traces() {
 
   // fetchTraces: initial load (or refresh). Replaces the whole list with
   // root-only traces and resets span-fetch tracking.
-  const fetchTraces = useCallback(async (selectedKeyId: string) => {
-    setLoading(true)
-    setError(null)
+  // silent=true: no loading spinner, keep existing traces on API failure
+  // (used by the SSE reconnect path so a transient error doesn't wipe the table).
+  const fetchTraces = useCallback(async (selectedKeyId: string, silent = false) => {
+    if (!silent) setLoading(true)
+    if (!silent) setError(null)
     try {
       const params = new URLSearchParams()
       if (selectedKeyId !== ALL_KEYS) params.set("key_id", selectedKeyId)
@@ -120,10 +122,12 @@ function Traces() {
       setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
       setFetchedSpanRoots(new Set())
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail : "Failed to load traces")
-      setTraces([])
+      if (!silent) {
+        setError(err instanceof ApiError ? err.detail : "Failed to load traces")
+        setTraces([])
+      }
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [])
 
@@ -294,6 +298,8 @@ function Traces() {
           cost?: number
           currency?: string
           evaluation?: EvaluationScore
+          enrichment?: string
+          security?: Record<string, unknown>
         }
         const tid = payload.trace_id
         if (!tid) return
@@ -317,6 +323,9 @@ function Traces() {
                 idx >= 0
                   ? existing.map((e, i) => (i === idx ? incoming : e))
                   : [...existing, incoming]
+            }
+            if (payload.enrichment === "security" && payload.security) {
+              merged.event = { ...t.event, ...payload.security }
             }
             return merged
           })
@@ -361,6 +370,7 @@ function Traces() {
         return [newRecord, ...prev].slice(0, TRACES_PAGE_SIZE * 4)
       })
     },
+    onReopen: () => { void fetchTraces(keyId, true) },
   })
 
   // Catch up after the tab has been hidden: re-fetch root traces so cost /
@@ -614,7 +624,6 @@ function TraceDrawer({
             />
           </div>
           <div className="flex min-w-70 flex-1 flex-col border-l border-border/60">
-            <EvaluationsSection evaluations={trace.evaluations} />
             <div className="flex items-center gap-1 border-b border-border/60 px-4 pt-3">
               <DrawerTabButton
                 active={tab === "ui"}
@@ -629,6 +638,19 @@ function TraceDrawer({
                 JSON
               </DrawerTabButton>
               <DrawerTabButton
+                active={tab === "evaluation"}
+                onClick={() => onChangeTab("evaluation")}
+              >
+                <span className="flex items-center gap-1">
+                  EVALUATION
+                  {(trace.evaluations?.filter(e => e.evaluator !== "fluiq.security").length ?? 0) > 0 ? (
+                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1 font-mono text-[9px] font-medium text-muted-foreground tabular-nums">
+                      {trace.evaluations!.filter(e => e.evaluator !== "fluiq.security").length}
+                    </span>
+                  ) : null}
+                </span>
+              </DrawerTabButton>
+              <DrawerTabButton
                 active={tab === "security"}
                 onClick={() => onChangeTab("security")}
               >
@@ -640,9 +662,11 @@ function TraceDrawer({
                 <JsonView value={trace.event} />
               ) : tab === "ui" ? (
                 <TraceUiView event={synthesizeAggregatedEvent(trace, group)} />
-              ) :
-                <SecurityPanel trace={trace}/>
-              }
+              ) : tab === "evaluation" ? (
+                <EvaluationsSection evaluations={trace.evaluations?.filter(e => e.evaluator !== "fluiq.security")} />
+              ) : (
+                <SecurityPanel trace={trace} />
+              )}
             </div>
           </div>
         </div>

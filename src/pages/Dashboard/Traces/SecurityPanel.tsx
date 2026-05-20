@@ -133,7 +133,7 @@ export function SecurityPanel({ trace }: { trace: TraceRecord }) {
           </p>
         </div>
         <Link
-          to="/docs#security"
+          to="/documentation#security"
           className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
         >
           Learn about fluiq.secure() →
@@ -155,10 +155,17 @@ secure()  # Team plan required`}</pre>
     ? (ev["security_risk_score"] as number).toFixed(2)
     : null
 
+  const isBlocked   = ev["status"] === "blocked"
+  const blockReason = ev["block_reason"] as string | null | undefined
+
   const piiPrompt    = (ev["pii_entities_prompt"]   as string[] | null) ?? []
   const piiResponse  = (ev["pii_entities_response"] as string[] | null) ?? []
   const injDetected  = Boolean(ev["injection_detected"])
   const injPatterns  = (ev["injection_patterns"]    as string[] | null) ?? []
+  const jbDetected   = Boolean(ev["jailbreak_detected"])
+  const jbPatterns   = (ev["jailbreak_patterns"]    as string[] | null) ?? []
+  const skDetected   = Boolean(ev["skeleton_key_detected"])
+  const skPatterns   = (ev["skeleton_key_patterns"] as string[] | null) ?? []
   const secDetected  = Boolean(ev["secrets_detected"])
   const secretTypes  = (ev["secret_types"]          as string[] | null) ?? []
   const promptRedact = ev["prompt_redacted"]   as string | null | undefined
@@ -169,10 +176,24 @@ secure()  # Team plan required`}</pre>
     !piiPrompt.length &&
     !piiResponse.length &&
     !injDetected &&
+    !jbDetected &&
+    !skDetected &&
     !secDetected
 
   return (
     <div className="space-y-6 p-4">
+      {/* ── Blocked banner ── */}
+      {isBlocked && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-[13px] font-semibold text-red-700 mb-0.5">
+            LLM call blocked by fluiq.secure()
+          </p>
+          {blockReason && (
+            <p className="text-[12px] text-red-600/80 font-mono break-all">{blockReason}</p>
+          )}
+        </div>
+      )}
+
       {/* ── Summary ── */}
       <div className="flex items-center gap-3">
         <span
@@ -218,6 +239,18 @@ secure()  # Team plan required`}</pre>
       {injDetected && (
         <Section title="Injection Patterns Found">
           <TagList tags={injPatterns} />
+        </Section>
+      )}
+
+      {jbDetected && (
+        <Section title="Jailbreak Patterns Found">
+          <TagList tags={jbPatterns} />
+        </Section>
+      )}
+
+      {skDetected && (
+        <Section title="Skeleton Key Patterns Found">
+          <TagList tags={skPatterns} />
         </Section>
       )}
 

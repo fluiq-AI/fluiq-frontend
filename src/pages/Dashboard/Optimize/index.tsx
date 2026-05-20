@@ -115,7 +115,7 @@ function Optimize() {
     setError(null)
     try {
       const res = await authFetch<CacheStatsResponse>(
-        `/api/v1/cache-stats?window_hours=${hours}`,
+        `/api/v1/optimize/cache-stats?window_hours=${hours}`,
       )
       setData(res)
     } catch (err) {
@@ -132,7 +132,7 @@ function Optimize() {
     ;(async () => {
       try {
         const res = await authFetch<CacheStatsResponse>(
-          `/api/v1/cache-stats?window_hours=${windowHours}`,
+          `/api/v1/optimize/cache-stats?window_hours=${windowHours}`,
         )
         if (cancelled) return
         setData(res)

@@ -35,6 +35,7 @@ export function minTraceScore(t: TraceRecord): number | null {
   if (!evals || evals.length === 0) return null
   let lo: number | null = null
   for (const e of evals) {
+    if (e.evaluator === "fluiq.security") continue
     if (typeof e.score !== "number" || !Number.isFinite(e.score)) continue
     if (lo === null || e.score < lo) lo = e.score
   }

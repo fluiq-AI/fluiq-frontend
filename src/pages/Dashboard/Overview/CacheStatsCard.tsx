@@ -54,7 +54,7 @@ export function CacheStatsCard() {
     ;(async () => {
       try {
         const res = await authFetch<CacheStatsResponse>(
-          "/api/v1/cache-stats?window_hours=24",
+          "/api/v1/optimize/cache-stats?window_hours=24",
         )
         if (!cancelled) setData(res)
       } catch (err) {

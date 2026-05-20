@@ -18,17 +18,19 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { UserType } from "@/lib/auth-types"
 
-// Tier order matches the pricing page; index lookup gives the "next" tier.
-const TIER_ORDER: UserType[] = ["Free", "Team", "Growth", "Enterprise"]
+type BillableTier = Exclude<UserType, "Admin">
 
-const TIER_ICON: Record<UserType, typeof RocketIcon> = {
+// Tier order matches the pricing page; index lookup gives the "next" tier.
+const TIER_ORDER: BillableTier[] = ["Free", "Team", "Growth", "Enterprise"]
+
+const TIER_ICON: Record<BillableTier, typeof RocketIcon> = {
   Free: RocketIcon,
   Team: RocketIcon,
   Growth: ChartLineData01Icon,
   Enterprise: Building01Icon,
 }
 
-function nextTier(current: UserType): UserType | null {
+function nextTier(current: BillableTier): BillableTier | null {
   const i = TIER_ORDER.indexOf(current)
   if (i < 0 || i >= TIER_ORDER.length - 1) return null
   return TIER_ORDER[i + 1]
@@ -42,6 +44,9 @@ export function UpgradePlanButton({
   size?: "sm" | "default"
 }) {
   const navigate = useNavigate()
+
+  if (current === "Admin") return null
+
   const next = nextTier(current)
 
   // Enterprise has no upgrade target \u2014 collapse to a single "Contact sales"

@@ -43,9 +43,14 @@ import { TraceUiView } from "@/pages/Dashboard/Traces/TraceUiView"
 import type { AgentRow, AgentSummaryResponse, SortKey } from "./types"
 import { AgentTable, KIND_CLASS, KIND_LABEL } from "./AgentTable"
 
+const AGENTS_PAGE_SIZE = 50
+
 function Agents() {
   const [agents, setAgents] = useState<AgentRow[]>([])
   const [loading, setLoading] = useState(false)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadOffset, setLoadOffset] = useState(AGENTS_PAGE_SIZE)
   const [error, setError] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>("last_run")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
@@ -56,9 +61,11 @@ function Agents() {
     setError(null)
     try {
       const data = await authFetch<AgentSummaryResponse>(
-        "/api/v1/agents/summary?limit=200",
+        `/api/v1/agents/summary?limit=${AGENTS_PAGE_SIZE}&offset=0`,
       )
       setAgents(data.agents)
+      setLoadOffset(AGENTS_PAGE_SIZE)
+      setHasMore(data.agents.length >= AGENTS_PAGE_SIZE)
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "Failed to load agents")
       setAgents([])
@@ -66,6 +73,29 @@ function Agents() {
       setLoading(false)
     }
   }, [])
+
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return
+    setIsLoadingMore(true)
+    try {
+      const data = await authFetch<AgentSummaryResponse>(
+        `/api/v1/agents/summary?limit=${AGENTS_PAGE_SIZE}&offset=${loadOffset}`,
+      )
+      setAgents((prev) => {
+        const seen = new Set(prev.map((a) => `${a.agent_key}__${a.agent_kind}__${a.integration}`))
+        const fresh = data.agents.filter(
+          (a) => !seen.has(`${a.agent_key}__${a.agent_kind}__${a.integration}`),
+        )
+        return fresh.length > 0 ? [...prev, ...fresh] : prev
+      })
+      setLoadOffset((o) => o + AGENTS_PAGE_SIZE)
+      setHasMore(data.agents.length >= AGENTS_PAGE_SIZE)
+    } catch {
+      // silently fail — button stays visible so user can retry
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [isLoadingMore, hasMore, loadOffset])
 
   useEffect(() => {
     fetchAgents()
@@ -176,6 +206,22 @@ function Agents() {
               onSelectAgent={setSelectedAgent}
             />
           )}
+          {!error && hasMore ? (
+            <div className="flex justify-center border-t border-border/60 px-6 py-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadMore}
+                disabled={isLoadingMore}
+              >
+                <HugeiconsIcon
+                  icon={isLoadingMore ? Loading03Icon : RefreshIcon}
+                  className={isLoadingMore ? "animate-spin" : undefined}
+                />
+                {isLoadingMore ? "Loading…" : "Load more"}
+              </Button>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -275,7 +321,7 @@ function AgentDrawer({
       className="fixed inset-0 z-50 flex"
     >
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="flex h-full w-full max-w-352 flex-col border-l border-border/60 bg-background shadow-xl">
+      <div className="flex h-full w-full max-w-[95vw] flex-col border-l border-border/60 bg-background shadow-xl">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-border/60 px-6 py-4">
@@ -378,6 +424,7 @@ function AgentDrawer({
                     type="button"
                     onClick={() => {
                       setSelectedTrace(t)
+                      setTraceSpansRoot(t)
                       setDrawerTab("ui")
                     }}
                     className={cn(
@@ -428,7 +475,6 @@ function AgentDrawer({
           <div className="flex min-w-70 flex-1 flex-col border-l border-border/60">
             {selectedTrace ? (
               <>
-                <EvaluationsSection evaluations={selectedTrace.evaluations} />
                 <div className="flex items-center gap-1 border-b border-border/60 px-4 pt-3">
                   <DrawerTabButton
                     active={drawerTab === "ui"}
@@ -443,6 +489,19 @@ function AgentDrawer({
                     JSON
                   </DrawerTabButton>
                   <DrawerTabButton
+                    active={drawerTab === "evaluation"}
+                    onClick={() => setDrawerTab("evaluation")}
+                  >
+                    <span className="flex items-center gap-1">
+                      EVALUATION
+                      {(selectedTrace.evaluations?.filter(e => e.evaluator !== "fluiq.security").length ?? 0) > 0 ? (
+                        <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1 font-mono text-[9px] font-medium text-muted-foreground tabular-nums">
+                          {selectedTrace.evaluations!.filter(e => e.evaluator !== "fluiq.security").length}
+                        </span>
+                      ) : null}
+                    </span>
+                  </DrawerTabButton>
+                  <DrawerTabButton
                     active={drawerTab === "security"}
                     onClick={() => setDrawerTab("security")}
                   >
@@ -452,6 +511,8 @@ function AgentDrawer({
                 <div className="flex-1 overflow-auto px-4 py-4">
                   {drawerTab === "json" ? (
                     <JsonView value={selectedTrace.event} />
+                  ) : drawerTab === "evaluation" ? (
+                    <EvaluationsSection evaluations={selectedTrace.evaluations?.filter(e => e.evaluator !== "fluiq.security")} />
                   ) : drawerTab === "security" ? (
                     <SecurityPanel trace={selectedTrace} />
                   ) : (

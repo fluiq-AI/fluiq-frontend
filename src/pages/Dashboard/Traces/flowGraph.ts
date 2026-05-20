@@ -33,6 +33,8 @@ export type CacheEntry = {
   hits: number
   misses: number
   total: number
+  toolNames?: string[]
+  mcpNames?: string[]
 }
 
 export type RerankerEntry = {
@@ -192,10 +194,26 @@ function describeNode(node: TraceNode): {
     }
   }
   if (type === "llm") {
+    const apiStr = getStr(ev, "api")
+    if (apiStr === "embeddings") {
+      return {
+        label: integration ?? "Embeddings",
+        sublabel: model ?? null,
+        icon: Database01Icon,
+      }
+    }
     return {
       label: model ?? fn ?? "LLM call",
       sublabel: integration,
       icon: Brain01Icon,
+    }
+  }
+  if (type === "vectorstore") {
+    const apiStr = getStr(ev, "api")
+    return {
+      label: integration?.toLowerCase() ?? "vectorstore",
+      sublabel: apiStr,
+      icon: Database01Icon,
     }
   }
   if (type === "cache") {
@@ -674,6 +692,169 @@ export function buildFlowElements(
     for (const c of children) visit(c, myFlowId, childScope)
   }
   visit(group.root, null, group.root.id)
+
+  // Single "Fluiq Caching" node aggregating all LLM (prompt) and embedding
+  // buckets that carry cache_hit data from fluiq.optimize(). A single node is
+  // inserted before the first affected bucket; each affected bucket's parent
+  // edge is re-routed through it: parent(s) → Fluiq Caching → affected buckets.
+  {
+    const parentOf = new Map<string, string>()
+    for (const e of edges) {
+      if (e.sourceHandle !== "loop-source") parentOf.set(e.target, e.source)
+    }
+
+    const optimizedFlowIds = order.filter((flowId) => {
+      const b = buckets.get(flowId)
+      if (!b) return false
+      const type = getStr(b.first.trace.event, "type")
+      if (type !== "llm" && type !== "embedding" && type !== "vectorstore") return false
+      return b.iterations.some(
+        (it) => typeof it.trace.event["cache_hit"] === "boolean",
+      )
+    })
+
+    if (optimizedFlowIds.length > 0) {
+      let promptHits = 0
+      let promptMisses = 0
+      let embeddingHits = 0
+      let embeddingMisses = 0
+      // vectorstore kind → { hits, misses } — one row per unique integration
+      const vsMap = new Map<string, { hits: number; misses: number }>()
+      // unique tool/MCP names seen across all cached LLM (prompt) hits
+      const promptToolNames = new Set<string>()
+      const promptMcpNames = new Set<string>()
+
+      for (const flowId of optimizedFlowIds) {
+        const b = buckets.get(flowId)!
+        const type = getStr(b.first.trace.event, "type")
+        const api = getStr(b.first.trace.event, "api")
+        const isEmbeddingBucket = type === "embedding" || (type === "llm" && api === "embeddings")
+        for (const it of b.iterations) {
+          const ch = it.trace.event["cache_hit"]
+          if (isEmbeddingBucket) {
+            if (ch === true) embeddingHits++
+            else if (ch === false) embeddingMisses++
+          } else if (type === "vectorstore") {
+            const integration = (
+              getStr(it.trace.event, "integration") || "vectorstore"
+            ).toLowerCase()
+            const row = vsMap.get(integration) ?? { hits: 0, misses: 0 }
+            if (ch === true) row.hits++
+            else if (ch === false) row.misses++
+            vsMap.set(integration, row)
+          } else {
+            if (ch === true) {
+              promptHits++
+              for (const name of extractLlmToolCallNames(it.trace.event)) {
+                promptToolNames.add(name)
+              }
+              for (const s of extractMcpServers(it.trace.event)) {
+                promptMcpNames.add(s.name)
+              }
+            } else if (ch === false) promptMisses++
+          }
+        }
+      }
+
+      const cacheEntries: CacheEntry[] = []
+      const promptTotal = promptHits + promptMisses
+      if (promptTotal > 0) {
+        const toolNames = promptToolNames.size > 0 ? [...promptToolNames] : undefined
+        const mcpNames = promptMcpNames.size > 0 ? [...promptMcpNames] : undefined
+        cacheEntries.push({ kind: "prompt", hits: promptHits, misses: promptMisses, total: promptTotal, toolNames, mcpNames })
+      }
+      const embeddingTotal = embeddingHits + embeddingMisses
+      if (embeddingTotal > 0) {
+        cacheEntries.push({ kind: "embedding", hits: embeddingHits, misses: embeddingMisses, total: embeddingTotal })
+      }
+      for (const [kind, { hits, misses }] of vsMap) {
+        const total = hits + misses
+        if (total > 0) cacheEntries.push({ kind, hits, misses, total })
+      }
+
+      if (cacheEntries.length > 0) {
+        const firstBucket = buckets.get(optimizedFlowIds[0])!
+        const nodeHeight = Math.max(
+          FLOW_NODE_HEIGHT,
+          44 + cacheEntries.reduce(
+            (sum, e) =>
+              sum +
+              32 +
+              (e.toolNames && e.toolNames.length > 0 ? 20 : 0) +
+              (e.mcpNames && e.mcpNames.length > 0 ? 20 : 0),
+            0,
+          ),
+        )
+        const fluiqCacheFlowId = "fluiq-caching"
+
+        const syntheticNode: TraceNode = {
+          id: `${firstBucket.first.id}__fluiq_cache__`,
+          trace: firstBucket.first.trace,
+          children: [],
+        }
+
+        const cachedKinds = cacheEntries
+          .filter((e) => e.hits > 0)
+          .map((e) =>
+            e.kind === "embedding"
+              ? "Embedding Cached"
+              : e.kind === "prompt"
+              ? "Prompt Cached"
+              : "Query Cached",
+          )
+        const sublabel = cachedKinds.length > 0 ? cachedKinds.join(" · ") : null
+
+        const mergedTraceIds = new Set<string>()
+        for (const flowId of optimizedFlowIds) {
+          for (const id of buckets.get(flowId)!.traceIds) mergedTraceIds.add(id)
+        }
+
+        buckets.set(fluiqCacheFlowId, {
+          first: syntheticNode,
+          latest: syntheticNode,
+          failed: false,
+          running: false,
+          count: optimizedFlowIds.length,
+          traceIds: mergedTraceIds,
+          iterations: [syntheticNode],
+          view: {
+            label: "Fluiq Caching",
+            sublabel,
+            icon: Database01Icon as typeof Folder01Icon,
+          },
+          cacheEntries,
+          nodeHeight,
+        })
+
+        const firstIdx = order.indexOf(optimizedFlowIds[0])
+        order.splice(firstIdx, 0, fluiqCacheFlowId)
+        orderIndex.clear()
+        order.forEach((id, i) => orderIndex.set(id, i))
+
+        for (const flowId of optimizedFlowIds) {
+          const parentFlowId = parentOf.get(flowId)
+          if (parentFlowId !== undefined) {
+            const directKey = `${parentFlowId}->${flowId}`
+            const idx = edges.findIndex((e) => e.id === directKey)
+            if (idx >= 0) {
+              edgeKeys.delete(directKey)
+              edges.splice(idx, 1)
+            }
+            const p2cKey = `${parentFlowId}->${fluiqCacheFlowId}`
+            if (!edgeKeys.has(p2cKey)) {
+              edgeKeys.add(p2cKey)
+              edges.push({ id: p2cKey, source: parentFlowId, target: fluiqCacheFlowId, type: "smoothstep" })
+            }
+          }
+          const c2bKey = `${fluiqCacheFlowId}->${flowId}`
+          if (!edgeKeys.has(c2bKey)) {
+            edgeKeys.add(c2bKey)
+            edges.push({ id: c2bKey, source: fluiqCacheFlowId, target: flowId, type: "smoothstep" })
+          }
+        }
+      }
+    }
+  }
 
   // Merge sibling cache nodes that share the same parent into one consolidated
   // box. This only applies to non-sequenced children (in sequenced layouts the

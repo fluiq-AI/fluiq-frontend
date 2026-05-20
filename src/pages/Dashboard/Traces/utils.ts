@@ -31,7 +31,13 @@ export function getLanggraphNode(event: Record<string, unknown>): string | null 
 }
 
 export function isFailed(event: Record<string, unknown>): boolean {
-  return event["success"] === false
+  // ClickHouse's JSON type normalises boolean false → 0, so accept both.
+  const notSuccessful = event["success"] === false || event["success"] === 0
+  return notSuccessful && event["status"] !== "blocked"
+}
+
+export function isBlocked(event: Record<string, unknown>): boolean {
+  return event["status"] === "blocked"
 }
 
 // True while the trace is in-flight (placeholder pushed by trace.started SSE).

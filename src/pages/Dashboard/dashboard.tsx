@@ -1,15 +1,18 @@
-import { Link, NavLink, Outlet, useNavigate } from "react-router"
+import { Link, NavLink, Navigate, Outlet, useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Activity01Icon,
   ApiIcon,
   DashboardSquare01Icon,
+  Database01Icon,
   Loading03Icon,
   Logout01Icon,
   MagicWand01Icon,
+  AiSecurity02Icon,
+  AiContentGenerator01Icon,
   TestTube01Icon,
   UserCircleIcon,
-  WorkflowSquare01Icon,
+  RoboticIcon,
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
@@ -18,15 +21,48 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { logoutThunk } from "@/store/auth/slice"
 import { cn } from "@/lib/utils"
 
-const NAV_ITEMS = [
-  { to: "/dashboard/overview", label: "Overview", icon: DashboardSquare01Icon },
-  { to: "/dashboard/traces", label: "Traces", icon: Activity01Icon },
-  { to: "/dashboard/agents", label: "Agents", icon: WorkflowSquare01Icon },
-  { to: "/dashboard/tests", label: "Tests", icon: TestTube01Icon },
-  { to: "/dashboard/optimize", label: "Optimize", icon: MagicWand01Icon },
-  { to: "/dashboard/api-management", label: "API Management", icon: ApiIcon },
-  { to: "/dashboard/profile", label: "Profile", icon: UserCircleIcon },
-] as const
+const NAV_SECTIONS = [
+  {
+    section: "",
+    items:[
+      { to: "/dashboard/overview", label: "Overview", icon: DashboardSquare01Icon },
+    ]
+  },
+  {
+    section: "Observability",
+    items: [
+      { to: "/dashboard/traces", label: "Traces", icon: Activity01Icon },
+      { to: "/dashboard/agents", label: "Agents", icon: RoboticIcon },
+    ],
+  },
+  {
+    section: "Evaluation",
+    items: [
+      { to: "/dashboard/tests", label: "Tests", icon: TestTube01Icon },
+      { to: "/dashboard/prompts", label: "Prompts", icon: AiContentGenerator01Icon },
+      { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon }
+    ],
+  },
+  {
+    section: "Security",
+    items: [
+      { to: "/dashboard/security", label: "Security", icon: AiSecurity02Icon },
+    ],
+  },
+  {
+    section: "Optimization",
+    items: [
+      { to: "/dashboard/optimize", label: "Optimize", icon: MagicWand01Icon },
+    ],
+  },
+  {
+    section: "Account",
+    items: [
+      { to: "/dashboard/api-management", label: "API Management", icon: ApiIcon },
+      { to: "/dashboard/profile", label: "Profile", icon: UserCircleIcon },
+    ],
+  },
+]
 
 function Dashboard() {
   const dispatch = useAppDispatch()
@@ -41,6 +77,7 @@ function Dashboard() {
   }
 
   if (!user || !organization) return null
+  if (user.user_type === "Admin") return <Navigate to="/admin" replace />
 
   return (
     <div className="flex min-h-screen bg-muted/30">
@@ -54,26 +91,35 @@ function Dashboard() {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3">
-          <ul className="grid gap-1">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
-                      isActive
-                        ? "bg-muted font-medium text-foreground"
-                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
-                    )
-                  }
-                >
-                  <HugeiconsIcon icon={item.icon} size={16} />
-                  {item.label}
-                </NavLink>
-              </li>
+          <div className="grid gap-4">
+            {NAV_SECTIONS.map((group) => (
+              <div key={group.section}>
+                <p className="mb-1 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground/50">
+                  {group.section}
+                </p>
+                <ul className="grid gap-1">
+                  {group.items.map((item) => (
+                    <li key={item.to}>
+                      <NavLink
+                        to={item.to}
+                        className={({ isActive }) =>
+                          cn(
+                            "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
+                            isActive
+                              ? "bg-muted font-medium text-foreground"
+                              : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                          )
+                        }
+                      >
+                        <HugeiconsIcon icon={item.icon} size={16} />
+                        {item.label}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         </nav>
 
         <div className="border-t border-border/60 p-3">

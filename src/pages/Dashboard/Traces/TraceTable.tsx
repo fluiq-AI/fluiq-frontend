@@ -22,6 +22,7 @@ import {
   formatLatency,
   formatScore,
   getStr,
+  isBlocked,
   isFailed,
   isRunning,
   scoreBandClass,
@@ -60,6 +61,7 @@ export function TraceTreeRows({
   // (fetched and came back with no children). While loading, show a spinner.
   const showExpandToggle = hasChildren || isSpansLoading || (isRoot && !isSpansFetched)
   const failed = isFailed(t.event)
+  const blocked = isBlocked(t.event)
   const running = isRunning(t.event)
   const subtreeFailed = hasFailedDescendant(node)
   const displayCount =
@@ -71,6 +73,8 @@ export function TraceTreeRows({
     depth > 0 ? { paddingLeft: `${1.5 + depth * 1.5}rem` } : undefined
   const rowClass = failed
     ? "border-b border-border/60 bg-destructive/10 align-middle"
+    : blocked
+    ? "border-b border-border/60 bg-red-500/5 align-middle"
     : running
     ? "border-b border-border/60 bg-primary/5 align-middle"
     : isRoot
@@ -168,6 +172,7 @@ export function TraceTreeRows({
                   hasChildren
                     ? `Worst eval score across ${displayCount} traces`
                     : (t.evaluations ?? [])
+                        .filter((e) => e.evaluator !== "fluiq.security")
                         .map((e) => `${e.metric}: ${formatScore(e.score)}`)
                         .join("\n")
                 }
@@ -193,6 +198,11 @@ export function TraceTreeRows({
               <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
                 <HugeiconsIcon icon={Alert02Icon} size={10} />
                 Failed
+              </span>
+            ) : blocked ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-red-600">
+                <HugeiconsIcon icon={Alert02Icon} size={10} />
+                Blocked
               </span>
             ) : null}
           </div>

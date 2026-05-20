@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { ThemeToggle } from "@/components/ThemeToggle"
 import {
   ArrowRight02Icon,
-  Github01Icon,
   PythonIcon,
   CheckmarkCircle02Icon,
   EyeIcon,
@@ -184,7 +184,7 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-white text-[#0a0a0a]">
+    <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
 
       {/* ── Keyframe styles ─────────────────────────────────────────── */}
       <style>{`
@@ -256,34 +256,30 @@ export default function Home() {
 
       {/* ── Nav ─────────────────────────────────────────────────────── */}
       <header
-        className="sticky top-0 z-50 transition-all duration-300"
-        style={{
-          background: navScrolled ? "rgba(255,255,255,0.90)" : "white",
-          backdropFilter: navScrolled ? "blur(12px)" : "none",
-          borderBottom: navScrolled ? "1px solid #e5e7eb" : "1px solid transparent",
-        }}
+        className={`sticky top-0 z-50 transition-all duration-300 ${
+          navScrolled
+            ? "bg-[#FAF9F6]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#E5E1D6] dark:border-[#2A2A2A]"
+            : "bg-[#FAF9F6] dark:bg-[#0A0A0A] border-b border-transparent"
+        }`}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2.5 group">
             <img src="/logo.svg" alt="Fluiq" className="size-7" />
             <span className="font-heading text-[15px] font-semibold tracking-tight">Fluiq</span>
           </Link>
-          <nav className="hidden items-center gap-7 text-[13px] text-[#6b7280] md:flex">
-            <a href="#pillars" className="hover:text-[#0a0a0a] transition-colors">Platform</a>
-            <a href="#how-it-works" className="hover:text-[#0a0a0a] transition-colors">How it works</a>
-            <Link to="/documentation" className="hover:text-[#0a0a0a] transition-colors">Docs</Link>
+          <nav className="hidden items-center gap-7 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] md:flex">
+            <a href="#pillars" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</a>
+            <a href="#how-it-works" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">How it works</a>
+            <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
+            <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
+            <Link to="/contact" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Contact</Link>
           </nav>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-[#6b7280] hover:text-[#0a0a0a]" asChild>
-              <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
-                <HugeiconsIcon icon={Github01Icon} size={15} />
-                GitHub
-              </a>
-            </Button>
-            <Button variant="ghost" size="sm" className="text-[#6b7280] hover:text-[#0a0a0a]" asChild>
+            <ThemeToggle />
+            <Button variant="ghost" size="sm" className="text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6]" asChild>
               <Link to="/login">Login</Link>
             </Button>
-            <Button size="sm" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a]" asChild>
+            <Button size="sm" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]" asChild>
               <Link to="/signup">
                 Get started
                 <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
@@ -294,38 +290,32 @@ export default function Home() {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="relative border-b border-[#f0f0f0] overflow-hidden">
+      <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden">
         <div className="mx-auto max-w-6xl px-6 pt-24 pb-20 md:pt-32 md:pb-28">
           <div className="flex flex-col items-center text-center">
 
             <div className="hero-badge mb-6">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#e5e7eb] bg-[#f9fafb] px-4 py-1.5 text-[12px] font-medium text-[#6b7280] tracking-wide">
-                <span className="size-1.5 rounded-full bg-[#0a0a0a] inline-block" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9] dark:bg-[#1A1A1A] px-4 py-1.5 text-[12px] font-medium text-[#6B6B66] dark:text-[#9A9A92] tracking-wide">
+                <span className="size-1.5 rounded-full bg-[#0a0a0a] dark:bg-[#F5F5F5] inline-block" />
                 Observe · Secure · Optimize · Evaluate
               </span>
             </div>
 
-            <h1 className="hero-h1 font-heading max-w-3xl text-5xl font-bold tracking-[-0.03em] text-[#0a0a0a] leading-[1.08] md:text-7xl">
+            <h1 className="hero-h1 font-heading max-w-3xl text-5xl font-bold tracking-[-0.03em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.08] md:text-7xl">
               Replace four AI tools<br className="hidden md:block" /> with one SDK.
             </h1>
 
-            <p className="hero-sub mt-6 max-w-xl text-[17px] text-[#6b7280] leading-relaxed">
+            <p className="hero-sub mt-6 max-w-xl text-[17px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
               Fluiq gives every LLM call observability, security scanning, response caching,
               and quality evaluation — wired in before your first production incident.
             </p>
 
             <div className="hero-cta mt-8 flex flex-col items-center gap-3 sm:flex-row">
-              <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] px-6 h-11" asChild>
+              <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-6 h-11" asChild>
                 <Link to="/documentation">
                   Read the docs
                   <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
                 </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="cta-btn border-[#e5e7eb] text-[#0a0a0a] hover:bg-[#f9fafb] px-6 h-11" asChild>
-                <a href="https://github.com/fluiq-AI/fluiq-sdk" target="_blank" rel="noreferrer">
-                  <HugeiconsIcon icon={Github01Icon} size={16} />
-                  Star on GitHub
-                </a>
               </Button>
             </div>
 
@@ -336,7 +326,7 @@ export default function Home() {
                   <span className="size-2.5 rounded-full bg-[#2a2a2a]" />
                   <span className="size-2.5 rounded-full bg-[#2a2a2a]" />
                   <span className="size-2.5 rounded-full bg-[#2a2a2a]" />
-                  <div className="ml-auto flex items-center gap-1.5 text-[11px] text-[#6b7280]">
+                  <div className="ml-auto flex items-center gap-1.5 text-[11px] text-[#6B6B66]">
                     <HugeiconsIcon icon={PythonIcon} size={12} />
                     <span>main.py</span>
                   </div>
@@ -379,11 +369,11 @@ export default function Home() {
       </section>
 
       {/* ── Integration marquee ──────────────────────────────────────── */}
-      <section className="border-b border-[#f0f0f0] py-6 overflow-hidden">
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-6 overflow-hidden">
         <div className="flex">
           <div className="marquee-track flex shrink-0 gap-8 pr-8">
             {[...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
-              <span key={i} className="shrink-0 text-[13px] font-medium text-[#9ca3af] tracking-wide whitespace-nowrap px-2">
+              <span key={i} className="shrink-0 text-[13px] font-medium text-[#9A9A92] dark:text-[#9A9A92] tracking-wide whitespace-nowrap px-2">
                 {name}
               </span>
             ))}
@@ -392,20 +382,20 @@ export default function Home() {
       </section>
 
       {/* ── Problem statement ────────────────────────────────────────── */}
-      <section className="border-b border-[#f0f0f0] py-20" id="pillars">
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20" id="pillars">
         <div className="mx-auto max-w-6xl px-6">
           <div
             data-animate
             className="mx-auto max-w-3xl text-center"
           >
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9ca3af] mb-4">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9A9A92] dark:text-[#9A9A92] mb-4">
               The full picture
             </p>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] leading-[1.15] md:text-5xl">
+            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] md:text-5xl">
               Observability tools tell you what broke.<br />
-              <span className="text-[#6b7280]">Fluiq helps you prevent it.</span>
+              <span className="text-[#6B6B66] dark:text-[#9A9A92]">Fluiq helps you prevent it.</span>
             </h2>
-            <p className="mt-5 text-[16px] text-[#6b7280] leading-relaxed">
+            <p className="mt-5 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
               Most platforms stop at tracing. Fluiq adds a security layer, a caching layer,
               and a quality gate — so you catch problems before your users do.
             </p>
@@ -414,7 +404,7 @@ export default function Home() {
       </section>
 
       {/* ── Pillars ──────────────────────────────────────────────────── */}
-      <section className="border-b border-[#f0f0f0] py-20">
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-6 md:grid-cols-2">
             {PILLARS.map((p, i) => (
@@ -422,35 +412,35 @@ export default function Home() {
                 key={p.label}
                 data-animate
                 data-delay={String(i % 2 + 1)}
-                className="pillar-card rounded-2xl border border-[#e5e7eb] bg-white p-8"
+                className="pillar-card rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] p-8"
               >
                 <div className="flex items-center gap-3 mb-5">
-                  <div className="grid size-9 place-items-center rounded-xl bg-[#f3f4f6] text-[#0a0a0a]">
+                  <div className="grid size-9 place-items-center rounded-xl bg-[#F2F0E9] dark:bg-[#252525] text-[#0a0a0a] dark:text-[#FAF9F6]">
                     <HugeiconsIcon icon={p.icon} size={18} />
                   </div>
-                  <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9ca3af]">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9A9A92] dark:text-[#9A9A92]">
                     {p.label}
                   </span>
                 </div>
-                <h3 className="font-heading text-[22px] font-bold text-[#0a0a0a] leading-snug tracking-tight mb-3">
+                <h3 className="font-heading text-[22px] font-bold text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug tracking-tight mb-3">
                   {p.title}
                 </h3>
-                <p className="text-[14px] text-[#6b7280] leading-relaxed mb-5">
+                <p className="text-[14px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">
                   {p.description}
                 </p>
                 <ul className="space-y-2 mb-6">
                   {p.points.map((pt) => (
-                    <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#4b5563]">
+                    <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                       <HugeiconsIcon
                         icon={CheckmarkCircle02Icon}
                         size={14}
-                        className="mt-0.5 shrink-0 text-[#0a0a0a]"
+                        className="mt-0.5 shrink-0 text-[#0a0a0a] dark:text-[#FAF9F6]"
                       />
                       {pt}
                     </li>
                   ))}
                 </ul>
-                <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2 font-mono text-[12px] text-[#6b7280]">
+                <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">
                   {p.code}
                 </div>
               </div>
@@ -460,41 +450,37 @@ export default function Home() {
       </section>
 
       {/* ── How it works ─────────────────────────────────────────────── */}
-      <section className="border-b border-[#f0f0f0] py-20 bg-[#fafafa]" id="how-it-works">
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 bg-[#F2F0E9] dark:bg-[#0A0A0A]" id="how-it-works">
         <div className="mx-auto max-w-6xl px-6">
           <div data-animate className="mb-14 text-center">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9ca3af] mb-4">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9A9A92] dark:text-[#9A9A92] mb-4">
               How it works
             </p>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] leading-snug">
+            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
               Four functions. Production-ready in minutes.
             </h2>
           </div>
 
-          <div className="grid gap-px bg-[#e5e7eb] rounded-2xl overflow-hidden md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-px bg-[#D4CFC1] dark:bg-[#2A2A2A] rounded-2xl overflow-hidden md:grid-cols-2 lg:grid-cols-4">
             {[
               {
                 step: "01",
                 fn: "instrument()",
-                color: "text-[#0a0a0a]",
                 description: "Patches every LLM call automatically. Traces, costs, and latency start flowing to your dashboard.",
               },
               {
                 step: "02",
                 fn: "secure()",
-                color: "text-[#0a0a0a]",
                 description: "Pre-call attack detection blocks bad prompts. Post-call scanning redacts PII from stored traces.",
               },
               {
                 step: "03",
                 fn: "optimize()",
-                color: "text-[#0a0a0a]",
                 description: "Fluiq analyses your trace history, provisions Redis, and serves duplicate calls from cache.",
               },
               {
                 step: "04",
                 fn: "eval()",
-                color: "text-[#0a0a0a]",
                 description: "LLM-as-judge scores every response. Warn or block based on your quality thresholds.",
               },
             ].map((item, i) => (
@@ -502,22 +488,22 @@ export default function Home() {
                 key={item.step}
                 data-animate
                 data-delay={String(i + 1)}
-                className="bg-white p-7"
+                className="bg-[#FAF9F6] dark:bg-[#1A1A1A] p-7"
               >
-                <p className="text-[11px] font-semibold text-[#9ca3af] tracking-widest mb-4">{item.step}</p>
-                <p className={`font-mono text-[15px] font-bold mb-3 ${item.color}`}>
+                <p className="text-[11px] font-semibold text-[#9A9A92] dark:text-[#9A9A92] tracking-widest mb-4">{item.step}</p>
+                <p className="font-mono text-[15px] font-bold mb-3 text-[#0a0a0a] dark:text-[#FAF9F6]">
                   fluiq.{item.fn}
                 </p>
-                <p className="text-[13px] text-[#6b7280] leading-relaxed">{item.description}</p>
+                <p className="text-[13px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
 
           {/* Full code example */}
-          <div data-animate className="mt-10 rounded-2xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden shadow-xl">
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-[#1e1e1e]">
-              <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6b7280]" />
-              <span className="text-[11px] text-[#6b7280] font-mono">Complete setup</span>
+          <div data-animate className="mt-10 rounded-2xl border border-[#1a1a1a] dark:border-[#2A2A2A] bg-[#0a0a0a] dark:bg-[#1A1A1A] overflow-hidden shadow-xl">
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-[#1e1e1e] dark:border-[#2A2A2A]">
+              <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6B6B66]" />
+              <span className="text-[11px] text-[#6B6B66] font-mono">Complete setup</span>
             </div>
             <CodeBlock variant="dark">{`import fluiq, openai
 
@@ -548,20 +534,20 @@ response = client.chat.completions.create(
       </section>
 
       {/* ── Stats ────────────────────────────────────────────────────── */}
-      <section className="border-b border-[#f0f0f0] py-16">
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-16">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-px bg-[#e5e7eb] rounded-2xl overflow-hidden sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-px bg-[#D4CFC1] dark:bg-[#2A2A2A] rounded-2xl overflow-hidden sm:grid-cols-2 lg:grid-cols-4">
             {STATS.map((s, i) => (
               <div
                 key={s.label}
                 data-animate
                 data-delay={String(i + 1)}
-                className="bg-white px-8 py-10 text-center"
+                className="bg-[#FAF9F6] dark:bg-[#1A1A1A] px-8 py-10 text-center"
               >
-                <p className="font-heading text-5xl font-bold text-[#0a0a0a] tracking-tight tabular-nums">
+                <p className="font-heading text-5xl font-bold text-[#0a0a0a] dark:text-[#FAF9F6] tracking-tight tabular-nums">
                   <AnimatedCounter target={s.value} suffix={s.suffix} />
                 </p>
-                <p className="mt-2 text-[13px] text-[#6b7280] leading-snug">{s.label}</p>
+                <p className="mt-2 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] leading-snug">{s.label}</p>
               </div>
             ))}
           </div>
@@ -569,17 +555,17 @@ response = client.chat.completions.create(
       </section>
 
       {/* ── Frameworks ───────────────────────────────────────────────── */}
-      <section className="border-b border-[#f0f0f0] py-20">
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
             <div data-animate>
-              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9ca3af] mb-4">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9A9A92] dark:text-[#9A9A92] mb-4">
                 Framework-agnostic
               </p>
-              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] leading-snug mb-4">
+              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug mb-4">
                 Works with the stack you already use.
               </h2>
-              <p className="text-[15px] text-[#6b7280] leading-relaxed mb-6">
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-6">
                 Fluiq patches at the function-call level, not the framework level. Any Python function
                 that hits an LLM or vector database becomes a traced span with one decorator.
               </p>
@@ -587,19 +573,19 @@ response = client.chat.completions.create(
                 {INTEGRATIONS.map((f) => (
                   <span
                     key={f}
-                    className="rounded-full border border-[#e5e7eb] bg-[#f9fafb] px-3 py-1 text-[12px] font-medium text-[#6b7280]"
+                    className="rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9] dark:bg-[#1A1A1A] px-3 py-1 text-[12px] font-medium text-[#6B6B66] dark:text-[#9A9A92]"
                   >
                     {f}
                   </span>
                 ))}
               </div>
             </div>
-            <div data-animate data-delay="2" className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-[#f0f0f0]">
-                <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#9ca3af]" />
-                <span className="text-[12px] text-[#9ca3af]">any_pipeline.py</span>
+            <div data-animate data-delay="2" className="rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-[#D4CFC1] dark:border-[#2A2A2A]">
+                <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#9A9A92] dark:text-[#9A9A92]" />
+                <span className="text-[12px] text-[#9A9A92] dark:text-[#9A9A92]">any_pipeline.py</span>
               </div>
-              <CodeBlock preClassName="rounded-none border-0 bg-[#f6f8fa]">{`from fluiq import instrument, trace
+              <CodeBlock preClassName="rounded-none border-0 bg-[#F2F0E9] dark:bg-[#1A1A1A]">{`from fluiq import instrument, trace
 
 instrument(api_key="fl_...")
 
@@ -622,28 +608,28 @@ def answer_question(question: str) -> str:
       <section className="py-24">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <div data-animate>
-            <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-[#0a0a0a] text-white mb-6">
+            <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-[#0a0a0a] dark:bg-[#FAF9F6] text-white dark:text-[#0A0A0A] mb-6">
               <HugeiconsIcon icon={SparklesIcon} size={22} />
             </div>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] md:text-5xl">
+            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">
               Free up to 5M traces.
             </h2>
-            <p className="mt-4 text-[16px] text-[#6b7280] leading-relaxed max-w-xl mx-auto">
+            <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
               Start with observability on the free tier. Add security, optimization, and
               evaluation as your pipeline grows — no code changes required.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] px-8 h-12 text-[15px]" asChild>
+              <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-8 h-12 text-[15px]" asChild>
                 <Link to="/signup">
                   Start for free
                   <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="cta-btn border-[#e5e7eb] text-[#0a0a0a] hover:bg-[#f9fafb] px-8 h-12 text-[15px]" asChild>
+              <Button size="lg" variant="outline" className="cta-btn border-[#E5E1D6] dark:border-[#333333] text-[#0a0a0a] dark:text-[#FAF9F6] hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A] px-8 h-12 text-[15px]" asChild>
                 <Link to="/documentation">Read the docs</Link>
               </Button>
             </div>
-            <p className="mt-5 text-[12px] text-[#9ca3af]">
+            <p className="mt-5 text-[12px] text-[#9A9A92] dark:text-[#9A9A92]">
               No credit card required · pip install fluiq · instrument in 60 seconds
             </p>
           </div>
@@ -651,25 +637,19 @@ def answer_question(question: str) -> str:
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}
-      <footer className="border-t border-[#e5e7eb] py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-6 text-[13px] text-[#9ca3af] md:flex-row md:items-center">
+      <footer className="border-t border-[#E5E1D6] dark:border-[#2A2A2A] py-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-6 text-[13px] text-[#9A9A92] dark:text-[#9A9A92] md:flex-row md:items-center">
           <div className="flex items-center gap-2.5">
             <img src="/logo.svg" alt="Fluiq" className="size-6 opacity-60" />
-            <span className="font-heading font-semibold text-[#0a0a0a] text-[14px]">Fluiq</span>
-            <span className="text-[#d1d5db]">·</span>
+            <span className="font-heading font-semibold text-[#0a0a0a] dark:text-[#FAF9F6] text-[14px]">Fluiq</span>
+            <span className="text-[#D4CFC1] dark:text-[#333333]">·</span>
             <span>Observe, protect, optimize, evaluate.</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="#pillars" className="hover:text-[#0a0a0a] transition-colors">Platform</a>
-            <Link to="/documentation" className="hover:text-[#0a0a0a] transition-colors">Docs</Link>
-            <a
-              href="https://github.com/fluiq-AI/fluiq-sdk"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-[#0a0a0a] transition-colors"
-            >
-              GitHub
-            </a>
+            <a href="#pillars" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</a>
+            <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
+            <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
+            <Link to="/contact" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Contact</Link>
           </div>
         </div>
       </footer>

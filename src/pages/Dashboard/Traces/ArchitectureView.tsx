@@ -1,8 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 import {
   Alert02Icon,
+  CloudServerIcon,
   Loading03Icon,
   RefreshIcon,
+  Wrench01Icon,
   WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -160,6 +162,32 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
                           style={{ width: `${pct}%` }}
                         />
                       </div>
+                      {entry.toolNames && entry.toolNames.length > 0 ? (
+                        <div className="flex flex-wrap gap-0.5 pt-0.5">
+                          {entry.toolNames.map((name) => (
+                            <span
+                              key={name}
+                              className="inline-flex items-center gap-0.5 rounded bg-muted px-1 py-0.5 font-mono text-[9px] text-muted-foreground"
+                            >
+                              <HugeiconsIcon icon={Wrench01Icon} size={8} />
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                      {entry.mcpNames && entry.mcpNames.length > 0 ? (
+                        <div className="flex flex-wrap gap-0.5 pt-0.5">
+                          {entry.mcpNames.map((name) => (
+                            <span
+                              key={name}
+                              className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1 py-0.5 font-mono text-[9px] text-primary/80"
+                            >
+                              <HugeiconsIcon icon={CloudServerIcon} size={8} />
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
                   )
                 })}

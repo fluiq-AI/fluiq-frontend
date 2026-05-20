@@ -25,6 +25,7 @@ import type { EvaluationScore, TraceListResponse, TraceRecord } from "@/pages/Da
 import {
   formatDate,
   formatScore,
+  getStr,
   scoreBandClass,
 } from "@/pages/Dashboard/Traces/utils"
 
@@ -45,7 +46,7 @@ interface MetricStats {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const PASS_THRESHOLD = 0.7
-const FETCH_LIMIT = 500
+const TESTS_PAGE_SIZE = 100
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -76,18 +77,23 @@ function getTraceName(t: TraceRecord): string {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 function Tests() {
-  const [traces, setTraces]   = useState<TraceRecord[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [traces, setTraces]         = useState<TraceRecord[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore]       = useState(false)
+  const [loadOffset, setLoadOffset] = useState(TESTS_PAGE_SIZE)
+  const [error, setError]           = useState<string | null>(null)
 
   const refresh = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
       const data = await authFetch<TraceListResponse>(
-        `/api/v1/traces?limit=${FETCH_LIMIT}&offset=0`,
+        `/api/v1/traces?limit=${TESTS_PAGE_SIZE}&offset=0`,
       )
       setTraces(data.traces)
+      setLoadOffset(TESTS_PAGE_SIZE)
+      setHasMore(data.traces.length >= TESTS_PAGE_SIZE)
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "Failed to load evaluations")
     } finally {
@@ -95,25 +101,33 @@ function Tests() {
     }
   }, [])
 
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return
+    setIsLoadingMore(true)
+    try {
+      const data = await authFetch<TraceListResponse>(
+        `/api/v1/traces?limit=${TESTS_PAGE_SIZE}&offset=${loadOffset}`,
+      )
+      setTraces((prev) => {
+        const seen = new Set(prev.map((t) => getStr(t.event, "trace_id")).filter(Boolean))
+        const fresh = data.traces.filter((t) => {
+          const tid = getStr(t.event, "trace_id")
+          return tid && !seen.has(tid)
+        })
+        return fresh.length > 0 ? [...prev, ...fresh] : prev
+      })
+      setLoadOffset((o) => o + TESTS_PAGE_SIZE)
+      setHasMore(data.traces.length >= TESTS_PAGE_SIZE)
+    } catch {
+      // silently fail — button stays visible so user can retry
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }, [isLoadingMore, hasMore, loadOffset])
+
   useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const data = await authFetch<TraceListResponse>(
-          `/api/v1/traces?limit=${FETCH_LIMIT}&offset=0`,
-        )
-        if (cancelled) return
-        setTraces(data.traces)
-        setError(null)
-      } catch (err) {
-        if (cancelled) return
-        setError(err instanceof ApiError ? err.detail : "Failed to load evaluations")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => { cancelled = true }
-  }, [])
+    refresh()
+  }, [refresh])
 
   // Flatten all (trace, eval) pairs that have a score
   const evalRows = useMemo<EvalRow[]>(() => {
@@ -386,7 +400,7 @@ function Tests() {
                     </tr>
                   </thead>
                   <tbody>
-                    {evalRows.slice(0, 200).map(({ trace: t, evaluation: e }, idx) => {
+                    {evalRows.map(({ trace: t, evaluation: e }, idx) => {
                       const score = e.score as number
                       const passed = score >= PASS_THRESHOLD
                       return (
@@ -438,10 +452,22 @@ function Tests() {
                   </tbody>
                 </table>
               </div>
-              {evalRows.length > 200 ? (
-                <p className="px-4 py-3 text-xs text-muted-foreground">
-                  Showing 200 of {evalRows.length.toLocaleString()} evaluations.
-                </p>
+              {hasMore ? (
+                <div className="flex justify-center border-t border-border/60 px-6 py-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadMore}
+                    disabled={isLoadingMore}
+                  >
+                    <HugeiconsIcon
+                      icon={isLoadingMore ? Loading03Icon : RefreshIcon}
+                      size={14}
+                      className={isLoadingMore ? "animate-spin" : undefined}
+                    />
+                    {isLoadingMore ? "Loading…" : "Load more"}
+                  </Button>
+                </div>
               ) : null}
             </CardContent>
           </Card>

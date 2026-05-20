@@ -1,3 +1,4 @@
+import { Link } from "react-router"
 import { CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -10,19 +11,62 @@ export function EvaluationsSection({
 }: {
   evaluations: EvaluationScore[] | undefined
 }) {
-  if (!evaluations || evaluations.length === 0) return null
+  if (!evaluations || evaluations.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-4 p-6 text-center">
+        <div className="flex size-10 items-center justify-center rounded-full bg-muted">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="size-5 text-muted-foreground"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium">No evaluations yet</p>
+          <p className="text-xs text-muted-foreground">
+            Add{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
+              fluiq.eval()
+            </code>{" "}
+            to your setup to score each LLM response on hallucination, relevance, and more.
+          </p>
+        </div>
+        <Link
+          to="/documentation#evaluation"
+          className="text-xs font-medium text-foreground underline-offset-2 hover:underline"
+        >
+          Learn about fluiq.eval() →
+        </Link>
+        <div className="w-full rounded-lg border border-dashed border-border/60 bg-muted/20 p-3 text-left text-xs text-muted-foreground">
+          <p className="mb-1.5 font-medium text-foreground">Quick setup</p>
+          <pre className="font-mono leading-relaxed">{`import fluiq
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(
+    metrics=["hallucination", "relevance"],
+    thresholds={"hallucination": 0.7, "relevance": 0.6},
+    mode="warn",
+)`}</pre>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <section className="border-b border-border/60 px-4 py-3">
-      <h3 className="mb-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        Evaluations
-      </h3>
-      <div className="space-y-2">
-        {evaluations.map((e, idx) => (
-          <EvaluationItem key={`${e.metric}-${idx}`} evaluation={e} />
-        ))}
-      </div>
-    </section>
+    <div className="space-y-2">
+      {evaluations.map((e, idx) => (
+        <EvaluationItem key={`${e.metric}-${idx}`} evaluation={e} />
+      ))}
+    </div>
   )
 }
 
@@ -47,7 +91,7 @@ function EvaluationItem({ evaluation }: { evaluation: EvaluationScore }) {
             {judge_model ? (
               <>
                 <span className="px-1 text-muted-foreground/60">
-                  {"\u00b7"}
+                  {"·"}
                 </span>
                 <span className="font-mono">{judge_model}</span>
               </>
