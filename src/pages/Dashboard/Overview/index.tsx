@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card"
 import { useAppSelector } from "@/store/hooks"
 import { UpgradePlanButton } from "@/components/UpgradePlanButton"
+import { OnboardingChecklist } from "@/components/OnboardingChecklist"
 import { CacheStatsCard } from "./CacheStatsCard"
 import { UsageCard } from "./UsageCard"
 
@@ -19,6 +20,8 @@ function Overview() {
 
   return (
     <>
+      <OnboardingChecklist />
+
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
           Welcome back, {user.name.split(" ")[0]}.

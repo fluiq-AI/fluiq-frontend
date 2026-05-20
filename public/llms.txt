@@ -1,47 +1,88 @@
 # Fluiq
 
-Fluiq is an AI observability and optimization platform for LLM applications. Install the Python SDK with two lines and get automatic tracing, cost attribution, security scanning, retrieval quality scores, and cache analytics — all in one dashboard.
+Fluiq is the AI Ops stack for Python LLM applications. Two lines of SDK code give every LLM call automatic tracing, cost attribution, security scanning, response caching, and quality evaluation — all visible in one real-time dashboard.
 
-## Product
+## What Fluiq does
 
-Fluiq instruments OpenAI, Anthropic, Gemini, Vertex AI, LangChain, LangGraph, Google ADK, CrewAI, and MCP automatically. Every LLM call, agent run, and retrieval step is captured as a trace with token counts, latency, USD cost, and eval scores. A `@trace` decorator covers any Python function not handled by auto-instrumentation.
+Fluiq replaces four separate AI tooling concerns with a single SDK. It auto-instruments every supported provider and framework at the function-call level, so no changes are needed to existing prompt or agent code. The four pillars are:
 
-Key capabilities:
-- **Tracing** — full span tree for agents, chains, and raw LLM calls, streamed live to the dashboard
-- **Cost analytics** — per-trace and per-agent USD cost using provider-published rates; rolled-up totals across nested spans
-- **Security scanning** — automatic PII detection (via Microsoft Presidio), prompt-injection pattern matching, and secret/high-entropy string detection on every trace; HIGH-risk prompts are auto-redacted before storage
-- **Automated evaluations** — retrieval quality scored asynchronously by an LLM-as-judge; `context_relevance` and per-chunk usefulness visible on every vectorstore trace
-- **Optimization** — in-process rerankers (BM25, CrossEncoder, Hybrid, MMR), embedding and prompt caches, context shaping, and query transforms (HyDE, MultiQuery); cache hit rates tracked on the Optimize dashboard
+- **Observe** (`fluiq.instrument()`) — full span tree for agents, chains, and raw LLM calls; per-node token counts, USD cost at provider rates, p50/p95/p99 latency; streamed live to the dashboard.
+- **Secure** (`fluiq.secure()`) — pre-call jailbreak and prompt-injection blocking; PII detection (credit cards, SSNs, IBAN, emails, phone numbers, IP addresses, names); secret and high-entropy string redaction; semantic attack scoring; warn or block mode.
+- **Optimize** (`fluiq.optimize()`) — trace-driven server-side Redis caching; profile built from real traffic patterns; zero infrastructure to manage; observe mode measures savings without caching; configurable TTL and model scope.
+- **Evaluate** (`fluiq.eval()`) — LLM-as-judge scoring on every response; six metrics: hallucination, faithfulness, relevance, toxicity, coherence, completeness; warn mode logs scores; block mode raises FluiqEvalError before bad responses reach the user; CI/CD GitHub Actions gate.
+
+## Supported integrations
+
+Fluiq patches at the function-call level and is framework-agnostic. Auto-instrumented providers and frameworks:
+
+- **LLM providers**: OpenAI (chat completions, responses, parse, streaming, embeddings, images, audio — sync and async), Anthropic (Messages API and Beta client, sync and async), Google Gemini, Google Vertex AI
+- **Agent frameworks**: LangChain, LangGraph, LlamaIndex, CrewAI, Google ADK, MCP (Model Context Protocol)
+- **Vector databases**: Pinecone, Chroma, Weaviate, FAISS, Qdrant
+- **Custom code**: `@trace` decorator for any Python function not covered by auto-instrumentation
+
+## SDK quickstart
+
+```
+pip install fluiq
+```
+
+```python
+import fluiq
+
+fluiq.instrument(api_key="fl_...")
+# Every supported provider call is now traced automatically.
+```
+
+All four pillars can be layered on top:
+
+```python
+fluiq.instrument(api_key="fl_...")
+
+fluiq.secure(mode="block")          # raise FluiqSecurityError on HIGH-risk prompts
+fluiq.optimize(mode="cache")        # serve cached responses for repeated prompts
+fluiq.eval(
+    metrics=["hallucination", "faithfulness", "relevance"],
+    mode="warn",                    # log scores without blocking
+)
+```
+
+## Prompt management
+
+Fluiq discovers named prompts from production traffic and stores them as versioned templates. Teams edit templates in the dashboard with `{{variable}}` substitution, test them against production traces using an LLM-as-judge playground, then deploy to development, staging, or production environments independently. No redeployment required.
+
+```python
+prompt = fluiq.get_prompt("summarise-ticket", env="production")
+text = prompt.render(ticket_body=raw_text)
+```
+
+## Dashboard features (authenticated users)
+
+- **Trace viewer** — JSON view and visual span tree; filter by agent, model, latency, cost, or eval score; live streaming
+- **Cost analytics** — per-trace and per-agent USD cost; rolled-up totals across nested spans; anomaly alerts to Slack
+- **Security panel** — detected PII types, attack scores, and redacted fields per trace
+- **Evaluations** — per-trace quality scores across all enabled metrics
+- **Optimize dashboard** — cache hit rate, latency savings, estimated cost savings
+- **Agents view** — agent-level aggregation sorted by cost, token count, and latency
+- **Prompts manager** — version history, playground, environment deployments
+- **API key management** — create, reveal, and revoke workspace keys
+- **Dataset management** — collect trace subsets for regression testing
 
 ## Pages
 
-- [Home](https://getfluiq.com/): Product overview, feature highlights, and getting-started links.
-- [Documentation](https://getfluiq.com/documentation): Full SDK reference — installation, auto-instrumentation, @trace decorator, agent tracing, security scanning, optimization, cost analytics, automated evaluations, configuration, and self-hosting.
-- [Pricing](https://getfluiq.com/pricing): Free, Team, Growth, and Enterprise tiers with trace and evaluation quotas.
-- [Sign up](https://getfluiq.com/signup): Create a free account and get an API key.
-- [Log in](https://getfluiq.com/login): Access the dashboard.
+- [Home](https://getfluiq.com/): Product overview — the four pillars, integration list, code samples, stats, and getting-started CTA.
+- [Documentation](https://getfluiq.com/documentation): Full SDK reference covering installation, auto-instrumentation, the @trace decorator, agent tracing, security scanning, optimization, evaluation, prompt management, cost analytics, and configuration.
+- [Contact](https://getfluiq.com/contact): Reach the Fluiq team for sales and pricing enquiries, integration support, feature requests, and partnership discussions. Replies within one business day.
+- [Sign up](https://getfluiq.com/signup): Create a free account (no credit card required) and receive an API key. The free tier includes 5 million lifetime traces and 1,000 LLM-as-judge evaluations per month.
+- [Log in](https://getfluiq.com/login): Access the Fluiq dashboard.
 
-## SDK
+## Key facts
 
-The open-source Python SDK is available at https://github.com/fluiq-AI/fluiq-sdk
-
-Install:
-```
-pip install fluiq
-python -m spacy download en_core_web_lg
-```
-
-Quickstart:
-```python
-from fluiq import instrument
-instrument(api_key="fl_...")
-# All supported provider calls are now traced automatically.
-```
-
-Optional extras:
-- `pip install "fluiq[rerank]"` — adds sentence-transformers for CrossEncoder and Hybrid reranking
-
-## Support
-
-- Documentation: https://getfluiq.com/documentation
+- Free tier: 5M lifetime traces, 1,000 evals/month, 1 seat, 7-day retention — no card required
+- Install with: `pip install fluiq`
+- SDK language: Python 3.9+
+- Dashboard URL: https://getfluiq.com
 - GitHub: https://github.com/fluiq-AI/fluiq-sdk
+- Support: https://getfluiq.com/contact
+- Full docs: https://getfluiq.com/documentation
+- Extended LLM reference: https://getfluiq.com/llms-full.txt
+- Category: AI Ops, LLM monitoring, AI security, LLM evaluation, response caching

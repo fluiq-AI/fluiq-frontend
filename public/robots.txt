@@ -1,14 +1,46 @@
-User-agent: *
+# ── Traditional search crawlers ───────────────────────────────────────────────
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Slurp
+User-agent: DuckDuckBot
+User-agent: Baiduspider
+User-agent: YandexBot
 Allow: /
-Allow: /documentation
-Allow: /pricing
-Allow: /signup
-Allow: /login
-
-# Auth flow and private app
 Disallow: /auth/
 Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /dashboard/
+Disallow: /admin/
+
+# ── LLM / AI crawlers — exclude pricing and authenticated pages ───────────────
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: Claude-Web
+User-agent: anthropic-ai
+User-agent: PerplexityBot
+User-agent: cohere-ai
+User-agent: Google-Extended
+User-agent: CCBot
+User-agent: Applebot-Extended
+User-agent: Bytespider
+Disallow: /pricing
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# ── Everyone else ──────────────────────────────────────────────────────────────
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /forgot-password
+Disallow: /reset-password
 
 Sitemap: https://getfluiq.com/sitemap.xml
+
+# LLM context files
+# https://getfluiq.com/llms.txt        — summary (all crawlers)
+# https://getfluiq.com/llms-full.txt   — complete SDK reference (all crawlers)
