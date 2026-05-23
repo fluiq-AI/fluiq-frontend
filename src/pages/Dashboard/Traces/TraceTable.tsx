@@ -88,7 +88,7 @@ export function TraceTreeRows({
       <tr className={cn(rowClass, "cursor-pointer")} onClick={() => openTrace(t)}>
         <td
           className={cn(
-            "whitespace-nowrap text-muted-foreground",
+            "whitespace-wrap text-xs text-muted-foreground",
             cellPad,
             textSize,
           )}
@@ -97,7 +97,9 @@ export function TraceTreeRows({
           {!isRoot ? (
             <span className="mr-2 text-muted-foreground/60">{"\u21B3"}</span>
           ) : null}
-          {formatDate(t.ingested_at)}
+          {formatDate(t.ingested_at).split(",")[0]+","+formatDate(t.ingested_at).split(",")[1]}
+          <br/>
+          {formatDate(t.ingested_at).split(",")[2]}
         </td>
         <td className={cn("font-mono text-xs text-muted-foreground", cellPad)}>
           {t.api_key_prefix}
@@ -165,7 +167,7 @@ export function TraceTreeRows({
             return (
               <span
                 className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                  "inline-flex text-xs items-center gap-1 rounded-full px-2 py-0.5 font-medium",
                   scoreBandClass(score),
                 )}
                 title={
@@ -188,7 +190,7 @@ export function TraceTreeRows({
           })()}
         </td>
         <td className={cn(cellPad, textSize)}>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap text-xs items-center gap-2">
             <span>
               {getStr(t.event, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(t.event, "integration") ?? (
                 <span className="text-muted-foreground/60">{"\u2014"}</span>

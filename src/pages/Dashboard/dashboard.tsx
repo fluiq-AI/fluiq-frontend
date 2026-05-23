@@ -11,6 +11,7 @@ import {
   AiSecurity02Icon,
   AiContentGenerator01Icon,
   TestTube01Icon,
+  Rocket02Icon,
   UserCircleIcon,
   RoboticIcon,
 } from "@hugeicons/core-free-icons"
@@ -25,6 +26,7 @@ const NAV_SECTIONS = [
   {
     section: "",
     items:[
+      { to: "/dashboard/getting-started", label: "Getting Started", icon: Rocket02Icon},
       { to: "/dashboard/overview", label: "Overview", icon: DashboardSquare01Icon },
     ]
   },

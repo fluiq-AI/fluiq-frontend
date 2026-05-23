@@ -11,6 +11,7 @@ import Contact from "@/pages/contact"
 import Examples from "@/pages/Documentation/examples"
 
 import Dashboard from "@/pages/Dashboard/dashboard"
+import GettingStarted, { VISITED_KEY } from "@/pages/Dashboard/GettingStarted/index"
 import Overview from "@/pages/Dashboard/Overview/index"
 import Traces from "@/pages/Dashboard/Traces/index"
 import Agents from "@/pages/Dashboard/Agents/index"
@@ -56,7 +57,8 @@ function App() {
             </RequireAuth>
           }
         >
-          <Route index element={<Navigate to="overview" replace />} />
+          <Route index element={<Navigate to={localStorage.getItem(VISITED_KEY) === "true" ? "overview" : "getting-started"} replace />} />
+          <Route path="getting-started" element={<GettingStarted />} />
           <Route path="overview" element={<Overview />} />
           <Route path="traces" element={<Traces />} />
           <Route path="agents" element={<Agents />} />

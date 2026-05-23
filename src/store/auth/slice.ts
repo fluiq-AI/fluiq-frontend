@@ -120,6 +120,26 @@ export const logoutThunk = createAsyncThunk<void, void, { state: { auth: AuthSta
   },
 )
 
+export const deleteAccountThunk = createAsyncThunk<
+  void,
+  { reason?: string },
+  { state: { auth: AuthState }; rejectValue: string }
+>(
+  "auth/deleteAccount",
+  async ({ reason }, { getState, rejectWithValue }) => {
+    const { accessToken } = getState().auth
+    try {
+      await apiRequest("/auth/delete-account", {
+        method: "DELETE",
+        body: { reason: reason ?? null },
+        token: accessToken,
+      })
+    } catch (err) {
+      return rejectWithValue(err instanceof ApiError ? err.detail : "Failed to delete account")
+    }
+  },
+)
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -191,6 +211,18 @@ const authSlice = createSlice({
         state.status = "idle"
         state.error = null
         persist(state)
+      })
+      .addCase(deleteAccountThunk.fulfilled, (state) => {
+        state.user = null
+        state.organization = null
+        state.accessToken = null
+        state.refreshToken = null
+        state.status = "idle"
+        state.error = null
+        persist(state)
+      })
+      .addCase(deleteAccountThunk.rejected, (state, action) => {
+        state.error = action.payload ?? "Failed to delete account"
       })
   },
 })

@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router"
 import { Link } from "react-router"
 import { AnimatePresence, motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowRight01Icon,
-  Cancel01Icon,
   CheckmarkCircle02Icon,
   Copy01Icon,
 } from "@hugeicons/core-free-icons"
@@ -27,7 +27,9 @@ function loadStored(): StoredState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw) as StoredState
-  } catch {}
+  } catch {
+    console.log("Error while loading the getting started")
+  }
   return { sdk_lang: null, sdk_copied: false, trace_copied: false, dismissed: false }
 }
 
@@ -38,11 +40,18 @@ function persist(s: StoredState) {
 const INSTALL_CODE = `pip install fluiq`
 const TRACE_CODE = `import fluiq\n\nfluiq.instrument(api_key="fl_...")\n# Traces appear in your dashboard`
 
-export function OnboardingChecklist() {
+export const VISITED_KEY = "fluiq.visited"
+
+function GettingStarted() {
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    localStorage.setItem(VISITED_KEY, "true")
+  }, [])
+
   const { organization } = useAppSelector((s) => s.auth)
   const [stored, setStored] = useState<StoredState>(loadStored)
   const [copied, setCopied] = useState<"sdk" | "trace" | null>(null)
-  const [visible, setVisible] = useState(true)
 
   const hasApiKey = (organization?.api_keys.length ?? 0) > 0
 
@@ -109,20 +118,29 @@ export function OnboardingChecklist() {
     })
   }
 
-  function dismiss() {
-    setVisible(false)
-    setStored((prev) => {
-      const next = { ...prev, dismissed: true }
-      persist(next)
-      return next
-    })
-  }
-
-  if (stored.dismissed) return null
-
   return (
-    <AnimatePresence onExitComplete={() => {}}>
-      {visible && (
+    <>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
+            Getting Started
+          </h1>
+          <p className="mt-2 text-muted-foreground">
+            Follow these steps to get Fluiq running in your AI pipeline.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/overview", { replace: true })}
+          className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Skip to Dashboard
+          <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+        </button>
+      </div>
+
+      <AnimatePresence onExitComplete={() => {}}>
+      
         <motion.div
           key="onboarding"
           initial={{ opacity: 0, y: -6 }}
@@ -141,13 +159,6 @@ export function OnboardingChecklist() {
                 {allDone ? "You're all set!" : `${completedCount} of ${steps.length} steps complete`}
               </p>
             </div>
-            <button
-              onClick={dismiss}
-              aria-label="Dismiss onboarding"
-              className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground/50 transition-colors hover:text-foreground"
-            >
-              <HugeiconsIcon icon={Cancel01Icon} size={14} />
-            </button>
           </div>
 
           {/* Progress bar */}
@@ -265,17 +276,10 @@ export function OnboardingChecklist() {
               </div>
             ))}
           </div>
-
-          {/* Footer dismiss when all done */}
-          {allDone && (
-            <div className="mt-4 flex justify-end">
-              <Button size="sm" variant="outline" onClick={dismiss} className="h-7 text-xs">
-                Dismiss
-              </Button>
-            </div>
-          )}
         </motion.div>
-      )}
     </AnimatePresence>
+    </>
   )
 }
+
+export default GettingStarted

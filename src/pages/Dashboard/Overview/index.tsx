@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/card"
 import { useAppSelector } from "@/store/hooks"
 import { UpgradePlanButton } from "@/components/UpgradePlanButton"
-import { OnboardingChecklist } from "@/components/OnboardingChecklist"
 import { CacheStatsCard } from "./CacheStatsCard"
 import { UsageCard } from "./UsageCard"
+import { SpendingChartCard } from "./SpendingChartCard"
 
 function Overview() {
   const { user, organization } = useAppSelector((s) => s.auth)
@@ -20,8 +20,6 @@ function Overview() {
 
   return (
     <>
-      <OnboardingChecklist />
-
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
           Welcome back, {user.name.split(" ")[0]}.
@@ -62,6 +60,12 @@ function Overview() {
 
         <CacheStatsCard />
       </div>
+
+      
+      <div className="mt-4 grid grid-cols-1">
+        <SpendingChartCard />
+      </div>
+
     </>
   )
 }
