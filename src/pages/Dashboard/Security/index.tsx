@@ -27,10 +27,11 @@ const FLAG_STYLES: Record<RiskFlag, string> = {
 }
 
 function hasSecurityData(event: Record<string, unknown>): boolean {
-  return "security_risk_level" in event
+  return "security_risk_level" in event || event["status"] === "blocked"
 }
 
 function isSecurityRisk(event: Record<string, unknown>): boolean {
+  if (event["status"] === "blocked") return true
   const level = event["security_risk_level"]
   return level === "low" || level === "medium" || level === "high"
 }

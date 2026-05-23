@@ -5,11 +5,11 @@ import type { TraceRecord } from "./types"
 type RiskLevel = "clean" | "low" | "medium" | "high"
 
 function hasSecurityData(event: Record<string, unknown>): boolean {
-  return "security_risk_level" in event
+  return "security_risk_level" in event || event["status"] === "blocked"
 }
 
 function getRiskLevel(event: Record<string, unknown>): RiskLevel {
-  const v = event["security_risk_level"]
+  const v = event["security_risk_level"] ?? event["risk_level"]
   if (v === "low" || v === "medium" || v === "high") return v
   return "clean"
 }
@@ -158,6 +158,7 @@ secure()  # Team plan required`}</pre>
   const isBlocked   = ev["status"] === "blocked"
   const blockReason = ev["block_reason"] as string | null | undefined
 
+  const attackTypes  = (ev["attack_types"]           as string[] | null) ?? []
   const piiPrompt    = (ev["pii_entities_prompt"]   as string[] | null) ?? []
   const piiResponse  = (ev["pii_entities_response"] as string[] | null) ?? []
   const injDetected  = Boolean(ev["injection_detected"])
@@ -173,6 +174,7 @@ secure()  # Team plan required`}</pre>
 
   const nothingFound =
     level === "clean" &&
+    !attackTypes.length &&
     !piiPrompt.length &&
     !piiResponse.length &&
     !injDetected &&
@@ -210,6 +212,12 @@ secure()  # Team plan required`}</pre>
           </span>
         )}
       </div>
+
+      {attackTypes.length > 0 && (
+        <Section title="Attack Types Detected">
+          <TagList tags={attackTypes} />
+        </Section>
+      )}
 
       {nothingFound && (
         <p className="text-sm text-muted-foreground">
