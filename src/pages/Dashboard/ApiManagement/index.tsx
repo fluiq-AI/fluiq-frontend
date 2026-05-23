@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react"
-import { PlusSignIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 
-import { Button } from "@/components/ui/button"
+import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import type {
@@ -34,7 +32,7 @@ function ApiManagement() {
 
   if (!organization) return null
 
-  const limitReached = organization.api_key_usage >= organization.api_key_limit
+  // const limitReached = organization.api_key_usage >= organization.api_key_limit
 
   async function copyText(id: string, text: string) {
     try {
@@ -86,21 +84,11 @@ function ApiManagement() {
 
   return (
     <>
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-            API Management
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Issue, rotate, and revoke API keys for your organization.
-          </p>
-        </div>
-        <Button onClick={() => setIsModalOpen(true)} disabled={limitReached}>
-          <HugeiconsIcon icon={PlusSignIcon} />
-          Create API key
-        </Button>
-      </div>
-
+      <DashboardPageHeader
+        title="API Management"
+        description="Issue, rotate, and revoke API keys for your organization."
+      />
+      <div className="px-6 py-6">
       {revealedKey && (
         <RevealedKeyBanner
           revealedKey={revealedKey}
@@ -118,6 +106,7 @@ function ApiManagement() {
         deletingId={deletingId}
         onCopyPrefix={(k) => copyText(k.key_id, k.prefix)}
         onDelete={handleDelete}
+        setIsModalOpen={setIsModalOpen}
       />
 
       <CreateKeyModal
@@ -125,6 +114,7 @@ function ApiManagement() {
         onClose={() => setIsModalOpen(false)}
         onCreated={handleCreated}
       />
+      </div>
     </>
   )
 }

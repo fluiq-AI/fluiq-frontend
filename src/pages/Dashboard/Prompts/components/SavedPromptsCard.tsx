@@ -20,8 +20,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { formatDate } from "@/pages/Dashboard/Traces/utils"
-import type { PromptEnv, SavedPrompt, PromptVersion } from "./types"
-import { truncate } from "./utils"
+import type { PromptEnv, SavedPrompt, PromptVersion } from "../utils/types"
+import { truncate } from "../utils"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

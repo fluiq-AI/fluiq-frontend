@@ -26,7 +26,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import type { TraceListResponse } from "@/pages/Dashboard/Traces/types"
+import type { TraceListResponse } from "@/pages/Dashboard/Traces/utils/types"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -96,7 +96,7 @@ export function SpendingChartCard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState<Period>(30)
-  const [chartType, setChartType] = useState<ChartType>("bar")
+  const [chartType, setChartType] = useState<ChartType>("line")
   const [provider, setProvider] = useState<Provider>("all")
 
   useEffect(() => {
@@ -175,7 +175,7 @@ export function SpendingChartCard() {
           <div className="flex items-center gap-2">
             {/* Chart type toggle */}
             <div className="flex rounded-md border border-border/60 bg-muted/30 p-0.5">
-              {(["bar", "line"] as ChartType[]).map((t) => (
+              {(["line", "bar"] as ChartType[]).map((t) => (
                 <button
                   key={t}
                   type="button"

@@ -6,6 +6,7 @@ import {
   Loading03Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+import { PlusSignIcon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -37,6 +38,7 @@ export function KeyTable({
   deletingId,
   onCopyPrefix,
   onDelete,
+  setIsModalOpen,
 }: {
   keys: ApiKey[]
   usage: number
@@ -45,13 +47,21 @@ export function KeyTable({
   deletingId: string | null
   onCopyPrefix: (key: ApiKey) => void
   onDelete: (key: ApiKey) => void
+  setIsModalOpen: (open: boolean) => void
 }) {
+  const limitReached = usage >= limit
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <HugeiconsIcon icon={ApiIcon} size={16} />
-          <CardTitle className="text-base">API keys</CardTitle>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <HugeiconsIcon icon={ApiIcon} size={16} />
+            <CardTitle className="text-base">API keys</CardTitle>
+          </div>
+          <Button size="sm" onClick={() => setIsModalOpen(true)} disabled={limitReached}>
+            <HugeiconsIcon icon={PlusSignIcon} />
+            Create API key
+          </Button>
         </div>
         <CardDescription>
           {usage} of {limit} keys in use on this plan.

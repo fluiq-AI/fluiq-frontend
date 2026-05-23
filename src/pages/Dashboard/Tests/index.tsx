@@ -11,6 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import {
   Card,
   CardContent,
@@ -21,7 +22,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
-import type { EvaluationScore, TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/types"
+import type { EvaluationScore, TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
 import {
   formatDate,
   formatScore,
@@ -179,31 +180,17 @@ function Tests() {
 
   return (
     <>
-      {/* ── Header ── */}
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-            Tests
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Evaluation results from your AI pipelines.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={refresh}
-          disabled={loading}
-        >
-          <HugeiconsIcon
-            icon={loading ? Loading03Icon : RefreshIcon}
-            size={14}
-            className={loading ? "animate-spin" : undefined}
-          />
+      <DashboardPageHeader
+        title="Tests"
+        description="Evaluation results from your AI pipelines."
+      />
+      <div className="px-6 py-6">
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
+          <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} size={14} className={loading ? "animate-spin" : undefined} />
           Refresh
         </Button>
       </div>
-
       {/* ── Error banner ── */}
       {error ? (
         <div className="mb-6 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -474,6 +461,7 @@ function Tests() {
 
         </div>
       )}
+      </div>
     </>
   )
 }

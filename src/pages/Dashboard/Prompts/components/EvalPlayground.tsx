@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Alert02Icon,
   ArrowUp01Icon,
@@ -33,8 +33,8 @@ import {
   formatScore,
   scoreBandClass,
 } from "@/pages/Dashboard/Traces/utils"
-import type { MetricResult, PromptRow, DatasetRef, TraceMetadata } from "./types"
-import { ALL_METRICS, JUDGE_MODELS } from "./types"
+import type { MetricResult, PromptRow, DatasetRef, TraceMetadata } from "../utils/types"
+import { ALL_METRICS, JUDGE_MODELS } from "../utils/types"
 
 // ── Score Card ────────────────────────────────────────────────────────────────
 
@@ -273,6 +273,14 @@ export function EvalPlayground({
 }) {
   const hasVars = detectedVars.length > 0
   const isTemplateModified = row ? templateText !== row.userPrompt : false
+
+  const [resultsOpen, setResultsOpen] = useState(false)
+
+  useEffect(() => {
+    ;(async () => {
+      if (runResults && runResults.length > 0) setResultsOpen(true)
+    })()
+  }, [runResults])
 
   const [showDatasetPanel, setShowDatasetPanel] = useState(false)
   const [datasets,         setDatasets]         = useState<DatasetRef[]>([])
@@ -698,24 +706,37 @@ export function EvalPlayground({
           </div>
         ) : null}
 
-        {/* ── Results ── */}
+        
+
+      </div>        
         {runResults && runResults.length > 0 ? (
-          <div className="space-y-3">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Evaluation Results
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {runResults.map((r) => (
-                <ScoreCard key={r.metric} result={r} />
-              ))}
-            </div>
+          <div className="rounded-md border border-border/60">
+            <button
+              type="button"
+              onClick={() => setResultsOpen((v) => !v)}
+              className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+            >
+              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Evaluation Results
+              </span>
+              <HugeiconsIcon
+                icon={ArrowUp01Icon}
+                size={12}
+                className={cn("text-muted-foreground transition-transform", resultsOpen && "rotate-180")}
+              />
+            </button>
+            {resultsOpen ? (
+              <div className="border-t border-border/60 px-4 py-3">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {runResults.map((r) => (
+                    <ScoreCard key={r.metric} result={r} />
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
-
-      </div>
-       {/* ── Metadata (trace-backed only) ── */}
         {row ? <MetadataSection metadata={row.metadata} date={row.trace.ingested_at} /> : null}
-
     </div>
   )
 }

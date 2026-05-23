@@ -1,12 +1,10 @@
-import { Link, NavLink, Navigate, Outlet, useNavigate } from "react-router"
+import { Link, NavLink, Navigate, Outlet } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Activity01Icon,
   ApiIcon,
   DashboardSquare01Icon,
   Database01Icon,
-  Loading03Icon,
-  Logout01Icon,
   MagicWand01Icon,
   AiSecurity02Icon,
   AiContentGenerator01Icon,
@@ -16,10 +14,8 @@ import {
   RoboticIcon,
 } from "@hugeicons/core-free-icons"
 
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useAppDispatch, useAppSelector } from "@/store/hooks"
-import { logoutThunk } from "@/store/auth/slice"
+import { useAppSelector } from "@/store/hooks"
 import { cn } from "@/lib/utils"
 
 const NAV_SECTIONS = [
@@ -67,16 +63,7 @@ const NAV_SECTIONS = [
 ]
 
 function Dashboard() {
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const { user, organization, status } = useAppSelector((s) => s.auth)
-
-  const isLoggingOut = status === "loading"
-
-  async function handleLogout() {
-    await dispatch(logoutThunk())
-    navigate("/", { replace: true })
-  }
+  const { user, organization } = useAppSelector((s) => s.auth)
 
   if (!user || !organization) return null
   if (user.user_type === "Admin") return <Navigate to="/admin" replace />
@@ -123,37 +110,10 @@ function Dashboard() {
             ))}
           </div>
         </nav>
-
-        <div className="border-t border-border/60 p-3">
-          <div className="mb-2 flex items-center gap-2 px-2 py-1 text-sm">
-            <HugeiconsIcon icon={UserCircleIcon} size={16} className="text-muted-foreground" />
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium">{user.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            </div>
-            <Badge variant="outline">{user.user_type}</Badge>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-          >
-            {isLoggingOut ? (
-              <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />
-            ) : (
-              <HugeiconsIcon icon={Logout01Icon} />
-            )}
-            Sign out
-          </Button>
-        </div>
       </aside>
 
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-2 py-10">
-          <Outlet />
-        </div>
+        <Outlet />
       </main>
     </div>
   )

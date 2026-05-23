@@ -12,13 +12,13 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Position, type Edge as RFEdge, type Node as RFNode } from "@xyflow/react"
 
-import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "./constants"
+import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "../utils/constants"
 import {
   extractLlmToolCallNames,
   extractMcpServers,
   extractTokens,
 } from "./extractors"
-import type { TokenUsage, TraceGroup, TraceNode, TraceRecord } from "./types"
+import type { TokenUsage, TraceGroup, TraceNode, TraceRecord } from "../utils/types"
 import { isGoogleAdkAgent, isGoogleAdkLeafAgent } from "./treeBuilder"
 import {
   extractTooltipIO,
@@ -26,7 +26,7 @@ import {
   getStr,
   isFailed,
   isRunning,
-} from "./utils"
+} from "../utils"
 
 export type CacheEntry = {
   kind: string | null

@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { Button } from "@/components/ui/button"
+import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -134,30 +135,20 @@ function Datasets() {
 
   return (
     <>
-      {/* ── Header ── */}
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-            Datasets
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Curated input/output pairs collected from traces — use them as golden sets for evaluation.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <HugeiconsIcon
-              icon={loading ? Loading03Icon : RefreshIcon}
-              size={14}
-              className={loading ? "animate-spin" : undefined}
-            />
-            Refresh
-          </Button>
-          <Button size="sm" onClick={() => { setShowCreate((v) => !v); setCreateError(null) }}>
-            <HugeiconsIcon icon={Database01Icon} size={14} />
-            New Dataset
-          </Button>
-        </div>
+      <DashboardPageHeader
+        title="Datasets"
+        description="Curated input/output pairs collected from traces — use them as golden sets for evaluation."
+      />
+      <div className="px-6 py-6">
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} size={14} className={loading ? "animate-spin" : undefined} />
+          Refresh
+        </Button>
+        <Button size="sm" onClick={() => { setShowCreate((v) => !v); setCreateError(null) }}>
+          <HugeiconsIcon icon={Database01Icon} size={14} />
+          New Dataset
+        </Button>
       </div>
 
       {/* ── Error banner ── */}
@@ -292,6 +283,7 @@ function Datasets() {
             <p className="text-sm text-muted-foreground">Select a dataset to view its examples</p>
           </div>
         )}
+      </div>
       </div>
     </>
   )

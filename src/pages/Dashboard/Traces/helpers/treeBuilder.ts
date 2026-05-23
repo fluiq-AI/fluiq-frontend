@@ -1,5 +1,5 @@
-import type { TraceGroup, TraceNode, TraceRecord } from "./types"
-import { getEventTimestamp, getStr, isFailed } from "./utils"
+import type { TraceGroup, TraceNode, TraceRecord } from "../utils/types"
+import { getEventTimestamp, getStr, isFailed } from "../utils"
 
 export function countSubtree(n: TraceNode): number {
   let total = 1
@@ -182,8 +182,14 @@ export function buildTraceTree(traces: TraceRecord[]): TraceGroup[] {
   }
 
   function maxTimestamp(n: TraceNode): number {
-    let m = getEventTimestamp(n.trace)
-    for (const c of n.children) m = Math.max(m, maxTimestamp(c))
+    // Use ingested_at for the root (reflects when this group became visible to
+    // the client) and event timestamp for descendants so real LLM timing wins.
+    const rootMs = Date.parse(n.trace.ingested_at)
+    let m = Number.isNaN(rootMs) ? getEventTimestamp(n.trace) : rootMs / 1000
+    for (const c of n.children) {
+      const cm = getEventTimestamp(c.trace)
+      if (cm > m) m = cm
+    }
     return m
   }
 

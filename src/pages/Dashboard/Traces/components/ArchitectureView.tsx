@@ -24,13 +24,13 @@ import {
 import "@xyflow/react/dist/style.css"
 
 import { cn } from "@/lib/utils"
-import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "./constants"
-import type { TraceGroup, TraceRecord } from "./types"
+import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "../utils/constants"
+import type { TraceGroup, TraceRecord } from "../utils/types"
 import {
   buildFlowElements,
   layoutFlowNodes,
   type TraceFlowNode,
-} from "./flowGraph"
+} from "../helpers/flowGraph"
 
 // Hovered flow id is propagated through context rather than the nodes array
 // so React Flow doesn't rebuild every node on each mouse move.

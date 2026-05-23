@@ -1,6 +1,6 @@
-import type { TokenUsage, TraceGroup, TraceNode, TraceRecord } from "./types"
+import type { TokenUsage, TraceGroup, TraceNode, TraceRecord } from "../utils/types"
 import { findTraceNodeInTree } from "./treeBuilder"
-import { flattenMessageList, safeStringify } from "./utils"
+import { flattenMessageList, safeStringify } from "../utils"
 
 // Wrapper traces (chain/agent roots) carry no `messages`/`response`/`tokens`
 // of their own. Walk their subtree to roll up every LLM descendant's prompt,

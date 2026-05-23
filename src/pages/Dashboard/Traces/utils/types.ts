@@ -65,3 +65,33 @@ export interface TraceGroup {
   root: TraceNode
   count: number
 }
+
+// ── Filter types ──────────────────────────────────────────────────────────────
+
+export type TraceSortKey =
+  | "newest"
+  | "oldest"
+  | "latency_desc"
+  | "latency_asc"
+  | "cost_desc"
+  | "cost_asc"
+
+export type TraceSecurityFilter = "all" | "clean" | "low" | "medium" | "high"
+export type TraceQualityFilter  = "all" | "high" | "medium" | "low" | "none"
+export type TraceStatusFilter   = "all" | "completed" | "running" | "blocked" | "failed"
+
+export interface TraceFilters {
+  sort:        TraceSortKey
+  security:    TraceSecurityFilter
+  integration: string             // "all" or a raw integration string e.g. "OPENAI"
+  quality:     TraceQualityFilter
+  status:      TraceStatusFilter
+}
+
+export const DEFAULT_TRACE_FILTERS: TraceFilters = {
+  sort:        "newest",
+  security:    "all",
+  integration: "all",
+  quality:     "all",
+  status:      "all",
+}

@@ -1,4 +1,4 @@
-import type { TraceRecord } from "@/pages/Dashboard/Traces/types"
+import type { TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 

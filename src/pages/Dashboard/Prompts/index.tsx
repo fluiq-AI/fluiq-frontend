@@ -12,21 +12,22 @@ import { cn } from "@/lib/utils"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { Button } from "@/components/ui/button"
-import type { TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/types"
+import { DashboardPageHeader } from "@/components/DashboardPageHeader"
+import type { TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
 import {
   formatCost,
   formatDate,
   getStr,
 } from "@/pages/Dashboard/Traces/utils"
-import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/treeBuilder"
-import type { AgentRow } from "@/pages/Dashboard/Agents/types"
+import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/helpers/treeBuilder"
+import type { AgentRow } from "@/pages/Dashboard/Agents/utils/types"
 
-import type { MetricResult, PlaygroundResponse, SavedPrompt, PromptEnv, PromptRow } from "./types"
-import { JUDGE_MODELS, PROMPTS_PAGE_SIZE } from "./types"
+import type { MetricResult, PlaygroundResponse, SavedPrompt, PromptEnv, PromptRow } from "./utils/types"
+import { JUDGE_MODELS, PROMPTS_PAGE_SIZE } from "./utils/types"
 import { detectVars, renderTemplate, toPromptRow, toSlug } from "./utils"
-import { SpanTimeline, spanTypeIcon } from "./SpanTimeline"
-import { SavedPromptsCard } from "./SavedPromptsCard"
-import { EvalPlayground } from "./EvalPlayground"
+import { SpanTimeline, spanTypeIcon } from "./components/SpanTimeline"
+import { SavedPromptsCard } from "./components/SavedPromptsCard"
+import { EvalPlayground } from "./components/EvalPlayground"
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -404,26 +405,17 @@ function Prompts() {
 
   return (
     <>
-      {/* ── Page header ── */}
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-            Prompts
-          </h1>
-          <p className="mt-1.5 text-muted-foreground">
-            Write, discover, evaluate, and deploy prompt templates.
-          </p>
-        </div>
+      <DashboardPageHeader
+        title="Prompts"
+        description="Write, discover, evaluate, and deploy prompt templates."
+      />
+      <div className="px-6 py-6">
+      <div className="mb-4 flex items-center justify-end gap-2">
         <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
-          <HugeiconsIcon
-            icon={loading ? Loading03Icon : RefreshIcon}
-            size={14}
-            className={loading ? "animate-spin" : undefined}
-          />
+          <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} size={14} className={loading ? "animate-spin" : undefined} />
           Refresh
         </Button>
       </div>
-
       {/* ── Error banner ── */}
       {error ? (
         <div className="mb-4 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -707,6 +699,7 @@ function Prompts() {
         onDelete={handleDeleteSaved}
         onRestore={handleRestore}
       />
+      </div>
     </>
   )
 }

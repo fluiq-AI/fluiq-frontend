@@ -4,15 +4,16 @@ import { Alert02Icon, Cancel01Icon, Loading03Icon, RefreshIcon } from "@hugeicon
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { useRealtimeStream } from "@/lib/useRealtimeStream"
 
-import type { TraceListResponse, TraceRecord } from "../Traces/types"
-import { SecurityBadge, SecurityPanel } from "../Traces/SecurityPanel"
-import { extractRequestMessages } from "../Traces/extractors"
+import type { TraceListResponse, TraceRecord } from "../Traces/utils/types"
+import { SecurityBadge, SecurityPanel } from "../Traces/components/SecurityPanel"
+import { extractRequestMessages } from "../Traces/helpers/extractors"
 import { formatDate, getStr } from "../Traces/utils"
-import { TRACES_PAGE_SIZE } from "../Traces/constants"
+import { TRACES_PAGE_SIZE } from "../Traces/utils/constants"
 
 const SECURITY_PAGE_SIZE = TRACES_PAGE_SIZE * 2
 
@@ -197,26 +198,15 @@ function SecurityOverview() {
 
   return (
     <>
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-            Security
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Traces flagged with security risks — PII, injections, jailbreaks, and secrets.
-          </p>
-        </div>
-        <Button variant="outline" onClick={()=>{fetchRiskyTraces()}} disabled={loading}>
-          <HugeiconsIcon
-            icon={loading ? Loading03Icon : RefreshIcon}
-            className={loading ? "animate-spin" : undefined}
-          />
-          Refresh
-        </Button>
-      </div>
-
+      <DashboardPageHeader
+        title="Security"
+        description="Traces flagged with security risks — PII, injections, jailbreaks, and secrets."
+      />
+      <div className="px-6 py-6">
+      
       <Card>
         <CardHeader>
+
           <div className="flex items-center justify-between gap-4">
             <div>
               <CardTitle className="text-base">Flagged traces</CardTitle>
@@ -225,6 +215,12 @@ function SecurityOverview() {
                   ? "Loading…"
                   : `${traces.length} trace${traces.length === 1 ? "" : "s"} with security risks in recent history`}
               </CardDescription>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => { fetchRiskyTraces() }} disabled={loading}>
+                <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} className={loading ? "animate-spin" : undefined} />
+                Refresh
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -336,6 +332,7 @@ function SecurityOverview() {
           )}
         </CardContent>
       </Card>
+      </div>
 
       {selected && (
         <SecurityDetailDrawer trace={selected} onClose={() => setSelected(null)} />

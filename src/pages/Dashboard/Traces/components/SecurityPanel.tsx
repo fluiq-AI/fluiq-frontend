@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import { cn } from "@/lib/utils"
-import type { TraceRecord } from "./types"
+import type { TraceRecord } from "../utils/types"
 
 type RiskLevel = "clean" | "low" | "medium" | "high"
 

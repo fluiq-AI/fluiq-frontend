@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { UpgradePlanButton } from "@/components/UpgradePlanButton"
@@ -32,15 +33,11 @@ function Profile() {
 
   return (
     <>
-      <div className="mb-8">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-          Profile
-        </h1>
-        <p className="mt-2 text-muted-foreground">
-          Your account details and preferences.
-        </p>
-      </div>
-
+      <DashboardPageHeader
+        title="Profile"
+        description="Your account details and preferences."
+      />
+      <div className="px-6 py-6">
       <div className="flex flex-col gap-6">
         <Card>
           <CardHeader>
@@ -66,6 +63,7 @@ function Profile() {
         </Card>
 
         <DangerZone />
+      </div>
       </div>
     </>
   )

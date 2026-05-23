@@ -2,7 +2,7 @@ import {
   extractRequestMessages,
   extractSystemInstruction,
   extractTokens,
-} from "@/pages/Dashboard/Traces/extractors"
+} from "@/pages/Dashboard/Traces/helpers/extractors"
 import type { TraceRecord } from "@/pages/Dashboard/Traces/types"
 import type { PromptRow, TraceMetadata } from "./types"
 import { VAR_RE } from "./types"

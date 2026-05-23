@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
 import { formatCost, formatDate, formatLatency } from "@/pages/Dashboard/Traces/utils"
-import type { AgentRow, SortKey } from "./types"
+import type { AgentRow, SortKey } from "../utils/types"
 
 export const KIND_LABEL: Record<string, string> = {
   function: "function",

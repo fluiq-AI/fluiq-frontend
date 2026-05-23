@@ -13,13 +13,19 @@ import { UpgradePlanButton } from "@/components/UpgradePlanButton"
 import { CacheStatsCard } from "./CacheStatsCard"
 import { UsageCard } from "./UsageCard"
 import { SpendingChartCard } from "./SpendingChartCard"
+import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 
 function Overview() {
   const { user, organization } = useAppSelector((s) => s.auth)
   if (!user || !organization) return null
 
   return (
-    <>
+    <div>
+      <DashboardPageHeader
+        title="Overview"
+        description=""
+      />
+      <div className="px-6 py-6">
       <div className="mb-8">
         <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
           Welcome back, {user.name.split(" ")[0]}.
@@ -65,8 +71,8 @@ function Overview() {
       <div className="mt-4 grid grid-cols-1">
         <SpendingChartCard />
       </div>
-
-    </>
+    </div>
+    </div>
   )
 }
 

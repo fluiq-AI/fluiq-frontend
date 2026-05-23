@@ -12,6 +12,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import {
   Card,
   CardContent,
@@ -153,56 +154,34 @@ function Optimize() {
 
   return (
     <>
-      {/* ── Header ── */}
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-semibold tracking-tight md:text-4xl">
-            Optimize
-          </h1>
-          <p className="mt-2 text-muted-foreground">
-            Cache performance analytics for your SDK-instrumented pipelines.
-          </p>
+      <DashboardPageHeader
+        title="Optimize"
+        description="Cache performance analytics for your SDK-instrumented pipelines."
+      />
+      <div className="px-6 py-6">
+      <div className="mb-4 flex items-center justify-end gap-2">
+        <div className="flex items-center rounded-md border border-border/60 bg-muted/40 p-0.5">
+          {WINDOW_OPTIONS.map((opt) => (
+            <button
+              key={opt.hours}
+              type="button"
+              onClick={() => { setWindowHours(opt.hours); setLoading(true) }}
+              className={cn(
+                "rounded px-2.5 py-1 text-xs font-medium transition-colors",
+                windowHours === opt.hours
+                  ? "bg-background text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
-
-        <div className="flex items-center gap-2">
-          {/* Time-window segmented control */}
-          <div className="flex items-center rounded-md border border-border/60 bg-muted/40 p-0.5">
-            {WINDOW_OPTIONS.map((opt) => (
-              <button
-                key={opt.hours}
-                type="button"
-                onClick={() => {
-                  setWindowHours(opt.hours)
-                  setLoading(true)
-                }}
-                className={cn(
-                  "rounded px-2.5 py-1 text-xs font-medium transition-colors",
-                  windowHours === opt.hours
-                    ? "bg-background text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refresh(windowHours)}
-            disabled={loading}
-          >
-            <HugeiconsIcon
-              icon={loading ? Loading03Icon : RefreshIcon}
-              size={14}
-              className={loading ? "animate-spin" : undefined}
-            />
-            Refresh
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={() => refresh(windowHours)} disabled={loading}>
+          <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} size={14} className={loading ? "animate-spin" : undefined} />
+          Refresh
+        </Button>
       </div>
-
       {/* ── Error banner ── */}
       {error ? (
         <div className="mb-6 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -427,6 +406,7 @@ function Optimize() {
           </CardContent>
         </Card>
 
+      </div>
       </div>
     </>
   )

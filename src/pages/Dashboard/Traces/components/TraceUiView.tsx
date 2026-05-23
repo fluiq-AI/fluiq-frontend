@@ -1,4 +1,4 @@
-import type { FunctionView } from "./types"
+import type { FunctionView } from "../utils/types"
 import {
   extractErrorView,
   extractFunctionView,
@@ -10,8 +10,8 @@ import {
   extractTokens,
   extractToolLatencies,
   extractTools,
-} from "./extractors"
-import { getLanggraphNode, isContentEmpty, safeStringify } from "./utils"
+} from "../helpers/extractors"
+import { getLanggraphNode, isContentEmpty, safeStringify } from "../utils"
 import {
   DrawerSection,
   EmptyBlock,

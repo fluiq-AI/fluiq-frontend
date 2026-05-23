@@ -5,13 +5,13 @@ import type {
   ToolDef,
   ToolLatencyMap,
   TokenUsage,
-} from "./types"
+} from "../utils/types"
 import {
   flattenMessageList,
   isFailed,
   normalizeMessageRole,
   safeStringify,
-} from "./utils"
+} from "../utils"
 
 export function extractErrorView(
   event: Record<string, unknown>,

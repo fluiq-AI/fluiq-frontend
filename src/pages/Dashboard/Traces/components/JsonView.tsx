@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react"
 import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { summarize } from "./utils"
+import { summarize } from "../utils"
 
 export function JsonView({ value }: { value: unknown }) {
   const text = useMemo(() => summarize(value as Record<string, unknown>), [value])

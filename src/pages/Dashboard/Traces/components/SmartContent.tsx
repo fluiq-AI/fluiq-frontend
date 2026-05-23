@@ -1,5 +1,5 @@
-import type { ToolLatencyMap } from "./types"
-import { formatLatency, safeStringify } from "./utils"
+import type { ToolLatencyMap } from "../utils/types"
+import { formatLatency, safeStringify } from "../utils"
 
 export function SmartContent({
   value,

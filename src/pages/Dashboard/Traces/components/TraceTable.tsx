@@ -8,14 +8,14 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
-import type { TraceNode, TraceRecord } from "./types"
+import type { TraceNode, TraceRecord } from "../utils/types"
 import {
   countSubtree,
   hasFailedDescendant,
   minSubtreeScore,
   minTraceScore,
   sumSubtreeCost,
-} from "./treeBuilder"
+} from "../helpers/treeBuilder"
 import {
   formatCost,
   formatDate,
@@ -26,7 +26,7 @@ import {
   isFailed,
   isRunning,
   scoreBandClass,
-} from "./utils"
+} from "../utils"
 
 import { SecurityBadge } from "./SecurityPanel"
 
@@ -191,11 +191,6 @@ export function TraceTreeRows({
         </td>
         <td className={cn(cellPad, textSize)}>
           <div className="flex flex-wrap text-xs items-center gap-2">
-            <span>
-              {getStr(t.event, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(t.event, "integration") ?? (
-                <span className="text-muted-foreground/60">{"\u2014"}</span>
-              )}
-            </span>
             {failed ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
                 <HugeiconsIcon icon={Alert02Icon} size={10} />
@@ -206,7 +201,11 @@ export function TraceTreeRows({
                 <HugeiconsIcon icon={Alert02Icon} size={10} />
                 Blocked
               </span>
-            ) : null}
+            ) : <span>
+              {(getStr(t.event, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(t.event, "integration"))  ?? (
+                <span className="text-muted-foreground/60">{"\u2014"}</span>
+              )}
+            </span>}
           </div>
         </td>
         <td className={cn(cellPad, textSize)}>

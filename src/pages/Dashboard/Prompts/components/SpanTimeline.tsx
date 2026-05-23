@@ -23,7 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import type { TraceGroup, TraceNode, TraceRecord } from "@/pages/Dashboard/Traces/types"
+import type { TraceGroup, TraceNode, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
 import { formatLatency, isFailed } from "@/pages/Dashboard/Traces/utils"
 
 // ── Icon helpers ──────────────────────────────────────────────────────────────

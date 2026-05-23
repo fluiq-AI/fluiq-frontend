@@ -3,8 +3,8 @@ import { CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
-import type { EvaluationScore } from "./types"
-import { formatScore, scoreBandClass } from "./utils"
+import type { EvaluationScore } from "../utils/types"
+import { formatScore, scoreBandClass } from "../utils"
 
 export function EvaluationsSection({
   evaluations,
