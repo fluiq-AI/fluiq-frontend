@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
+import { useRealtimeStream } from "@/lib/useRealtimeStream"
 
 import type { TraceListResponse, TraceRecord } from "../Traces/types"
 import { SecurityBadge, SecurityPanel } from "../Traces/SecurityPanel"
@@ -79,9 +80,11 @@ function SecurityOverview() {
   const [error, setError]             = useState<string | null>(null)
   const [selected, setSelected]       = useState<TraceRecord | null>(null)
 
-  const fetchRiskyTraces = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const fetchRiskyTraces = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const data = await authFetch<TraceListResponse>(
         `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=0&roots_only=true`,
@@ -90,11 +93,58 @@ function SecurityOverview() {
       setRawOffset(SECURITY_PAGE_SIZE)
       setHasMore(data.traces.length >= SECURITY_PAGE_SIZE)
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail : "Failed to load traces")
+      if (!silent) setError(err instanceof ApiError ? err.detail : "Failed to load traces")
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [])
+
+  useRealtimeStream({
+    path: "/api/v1/traces/stream",
+    events: ["trace", "trace.enriched"],
+    onEvent: (data, msg) => {
+      if (!data || typeof data !== "object") return
+
+      if (msg.event === "trace.enriched") {
+        const payload = data as {
+          enrichment?: string
+          security?: Record<string, unknown>
+        }
+        if (payload.enrichment !== "security" || !payload.security) return
+        const level = payload.security["security_risk_level"]
+        if (level === "low" || level === "medium" || level === "high") {
+          void fetchRiskyTraces(true)
+        }
+        return
+      }
+
+      // "trace" event — add blocked traces immediately without waiting for a refresh
+      const payload = data as {
+        api_key_prefix?: string
+        trace_id?: string
+        ingested_at_ms?: number
+        event?: Record<string, unknown>
+      }
+      if (!payload.event || typeof payload.event !== "object") return
+      if (payload.event["status"] !== "blocked") return
+      const newRecord: TraceRecord = {
+        api_key_prefix: payload.api_key_prefix ?? "",
+        event: payload.event,
+        ingested_at: payload.ingested_at_ms
+          ? new Date(payload.ingested_at_ms).toISOString()
+          : new Date().toISOString(),
+        cost: null,
+        currency: null,
+        evaluations: [],
+      }
+      setTraces((prev) => {
+        const newId = payload.trace_id ?? getStr(newRecord.event, "trace_id")
+        if (newId && prev.some((t) => getStr(t.event, "trace_id") === newId)) return prev
+        return [newRecord, ...prev]
+      })
+    },
+    onReopen: () => { void fetchRiskyTraces(true) },
+  })
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore) return
@@ -123,8 +173,27 @@ function SecurityOverview() {
   }, [isLoadingMore, hasMore, rawOffset])
 
   useEffect(() => {
-    void fetchRiskyTraces()
-  }, [fetchRiskyTraces])
+    let cancelled = false
+    ;(async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await authFetch<TraceListResponse>(
+          `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=0&roots_only=true`,
+        )
+        if (cancelled) return
+        setTraces(data.traces.filter((t) => hasSecurityData(t.event) && isSecurityRisk(t.event)))
+        setRawOffset(SECURITY_PAGE_SIZE)
+        setHasMore(data.traces.length >= SECURITY_PAGE_SIZE)
+      } catch (err) {
+        if (cancelled) return
+        setError(err instanceof ApiError ? err.detail : "Failed to load traces")
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <>
@@ -137,7 +206,7 @@ function SecurityOverview() {
             Traces flagged with security risks — PII, injections, jailbreaks, and secrets.
           </p>
         </div>
-        <Button variant="outline" onClick={fetchRiskyTraces} disabled={loading}>
+        <Button variant="outline" onClick={()=>{fetchRiskyTraces()}} disabled={loading}>
           <HugeiconsIcon
             icon={loading ? Loading03Icon : RefreshIcon}
             className={loading ? "animate-spin" : undefined}
