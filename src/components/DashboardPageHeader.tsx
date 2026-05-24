@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router"
-import { Notification01Icon, Logout01Icon, UserCircleIcon } from "@hugeicons/core-free-icons"
+import { Logout01Icon, UserCircleIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import {
@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useAppSelector, useAppDispatch } from "@/store/hooks"
 import { logoutThunk } from "@/store/auth/slice"
 import { ThemeToggle } from "@/components/ThemeToggle"
+import { NotificationPanel } from "@/components/NotificationPanel"
 
 export function DashboardPageHeader({
   title,
@@ -57,13 +58,7 @@ export function DashboardPageHeader({
         <ThemeToggle className="text-muted-foreground hover:bg-muted hover:text-foreground" />
 
         {/* Notification bell */}
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        >
-          <HugeiconsIcon icon={Notification01Icon} size={16} />
-        </button>
+        <NotificationPanel />
 
         {/* Profile dropdown */}
         <DropdownMenu>

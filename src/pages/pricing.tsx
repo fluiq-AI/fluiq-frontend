@@ -63,10 +63,11 @@ const tiers = [
   {
     name: "Starter",
     icon: UserIcon,
-    price: "$149",
+    price: "$0",
+    originalPrice: "$149",
     cadence: "per workspace / month",
     description: "Unlimited tracing for solo developers and small teams who've outgrown the free cap.",
-    cta: { label: "Start 14-day trial", to: "/signup" },
+    cta: { label: "Contact us for free upgrade", to: "/contact" },
     featured: false,
     note: null,
     features: [
@@ -83,10 +84,11 @@ const tiers = [
   {
     name: "Team",
     icon: RocketIcon,
-    price: "$499",
+    price: "$0",
+    originalPrice: "$499",
     cadence: "per workspace / month",
     description: "Security scanning and response caching for teams shipping production-grade AI pipelines.",
-    cta: { label: "Start 14-day trial", to: "/signup" },
+    cta: { label: "Contact us for free upgrade", to: "/contact" },
     featured: true,
     note: null,
     features: [
@@ -104,10 +106,11 @@ const tiers = [
   {
     name: "Growth",
     icon: ChartLineData01Icon,
-    price: "$1,499",
+    price: "$0",
+    originalPrice: "$1,499",
     cadence: "per workspace / month",
     description: "Higher eval throughput, longer retention, and custom evaluators for production-scale pipelines.",
-    cta: { label: "Start 14-day trial", to: "/signup" },
+    cta: { label: "Contact us for free upgrade", to: "/contact" },
     featured: false,
     note: null,
     features: [
@@ -123,7 +126,8 @@ const tiers = [
   {
     name: "Enterprise",
     icon: Building01Icon,
-    price: "Custom",
+    price: "$0",
+    originalPrice: "Custom",
     cadence: "annual contract",
     description: "Compliance, on-prem deployment, and a dedicated success engineer.",
     cta: { label: "Talk to sales", to: "#contact" },
@@ -378,7 +382,12 @@ export default function Pricing() {
                 </div>
 
                 {/* Price */}
-                <div className="mb-2 flex items-baseline gap-1.5">
+                <div className="mb-2 flex items-baseline gap-2 flex-wrap">
+                  {"originalPrice" in tier && (
+                    <span className="font-heading text-2xl font-bold text-[#D4CFC1] dark:text-[#3A3A3A] tracking-tight line-through">
+                      {tier.originalPrice}
+                    </span>
+                  )}
                   <span className="font-heading text-4xl font-bold text-[#0a0a0a] dark:text-[#FAF9F6] tracking-tight">
                     {tier.price}
                   </span>

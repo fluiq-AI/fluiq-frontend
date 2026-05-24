@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { Button } from "@/components/ui/button"
+import { Tip } from "@/components/ui/tooltip"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -470,19 +471,20 @@ function ExamplesPanel({
                         )}
                       />
                     </button>
-                    <button
-                      type="button"
-                      disabled={deletingId === ex.example_id}
-                      onClick={() => handleDeleteExample(ex.example_id)}
-                      className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded border border-border/60 text-muted-foreground/50 transition-colors hover:border-destructive/40 hover:text-destructive disabled:opacity-40"
-                      title="Remove example"
-                    >
-                      <HugeiconsIcon
-                        icon={deletingId === ex.example_id ? Loading03Icon : Delete02Icon}
-                        size={11}
-                        className={deletingId === ex.example_id ? "animate-spin" : undefined}
-                      />
-                    </button>
+                    <Tip content="Remove example">
+                      <button
+                        type="button"
+                        disabled={deletingId === ex.example_id}
+                        onClick={() => handleDeleteExample(ex.example_id)}
+                        className="ml-2 flex h-6 w-6 shrink-0 items-center justify-center rounded border border-border/60 text-muted-foreground/50 transition-colors hover:border-destructive/40 hover:text-destructive disabled:opacity-40"
+                      >
+                        <HugeiconsIcon
+                          icon={deletingId === ex.example_id ? Loading03Icon : Delete02Icon}
+                          size={11}
+                          className={deletingId === ex.example_id ? "animate-spin" : undefined}
+                        />
+                      </button>
+                    </Tip>
                   </div>
 
                   {expanded ? (

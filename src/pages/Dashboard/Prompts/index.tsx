@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react"
 import {
   Alert02Icon,
   BotIcon,
+  Cancel01Icon,
   Loading03Icon,
   PlusSignIcon,
   RefreshIcon,
@@ -11,8 +12,8 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { cn } from "@/lib/utils"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
-import { Button } from "@/components/ui/button"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
+import { Tip } from "@/components/ui/tooltip"
 import type { TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
 import {
   formatCost,
@@ -22,64 +23,141 @@ import {
 import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/helpers/treeBuilder"
 import type { AgentRow } from "@/pages/Dashboard/Agents/utils/types"
 
-import type { MetricResult, PlaygroundResponse, SavedPrompt, PromptEnv, PromptRow } from "./utils/types"
+import type { MetricResult, PlaygroundResponse, SavedPrompt, PromptRow, PromptVersion, PromptEnv, EnvDeployment } from "./utils/types"
 import { JUDGE_MODELS, PROMPTS_PAGE_SIZE } from "./utils/types"
 import { detectVars, renderTemplate, toPromptRow, toSlug } from "./utils"
 import { SpanTimeline, spanTypeIcon } from "./components/SpanTimeline"
-import { SavedPromptsCard } from "./components/SavedPromptsCard"
 import { EvalPlayground } from "./components/EvalPlayground"
+
+// ── Per-tab state ─────────────────────────────────────────────────────────────
+
+type PromptTab = {
+  id: string
+  templateName: string
+  templateText: string
+  templateVars: Record<string, string>
+  activeRow: PromptRow | null
+  // Eval
+  context: string
+  selectedMetrics: Set<string>
+  judgeModel: string
+  runLoading: boolean
+  runError: string | null
+  runResults: MetricResult[] | null
+  // Versions
+  currentVersion: number | null   // what is loaded in the editor (may be an old version)
+  latestVersion: number | null    // the server head — never changes on local load
+  latestTemplate: string | null   // the server head template — never overwritten by local load
+  promptVersions: PromptVersion[] | null
+  versionsLoading: boolean
+  // Deploy
+  savedPromptId: string | null
+  savedPromptEnvs: Record<PromptEnv, EnvDeployment | null>
+  deployLoading: PromptEnv | null
+  // Save
+  showSaveForm: boolean
+  saveName: string
+  saveSlug: string
+  savePending: boolean
+  saveError: string | null
+  saveSuccess: boolean
+}
+
+function makeTab(overrides: Partial<PromptTab> = {}): PromptTab {
+  return {
+    id: crypto.randomUUID(),
+    templateName: "",
+    templateText: "",
+    templateVars: {},
+    activeRow: null,
+    context: "",
+    selectedMetrics: new Set(["hallucination", "relevance"]),
+    judgeModel: JUDGE_MODELS[0].value,
+    runLoading: false,
+    runError: null,
+    runResults: null,
+    showSaveForm: false,
+    saveName: "",
+    saveSlug: "",
+    savePending: false,
+    saveError: null,
+    saveSuccess: false,
+    currentVersion: null,
+    latestVersion: null,
+    latestTemplate: null,
+    promptVersions: null,
+    versionsLoading: false,
+    savedPromptId: null,
+    savedPromptEnvs: { development: null, staging: null, production: null },
+    deployLoading: null,
+    ...overrides,
+  }
+}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 function Prompts() {
-  // Discovered traces
-  const [traces,        setTraces]        = useState<TraceRecord[]>([])
-  const [loading,       setLoading]       = useState(true)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [hasMore,       setHasMore]       = useState(false)
-  const [loadOffset,    setLoadOffset]    = useState(PROMPTS_PAGE_SIZE)
-  const [error,         setError]         = useState<string | null>(null)
-  const [selected,      setSelected]      = useState<number | null>(null)
-  const [activeTrace,   setActiveTrace]   = useState<TraceRecord | null>(null)
+  // ── Tab state ──
+  const [tabs, setTabs] = useState<PromptTab[]>([])
+  const [activeTabId, setActiveTabId] = useState<string | null>(null)
+  const activeTab = useMemo(
+    () => tabs.find((t) => t.id === activeTabId) ?? null,
+    [tabs, activeTabId],
+  )
 
-  // Agent summary (list)
-  const [agentSummary,        setAgentSummary]        = useState<AgentRow[]>([])
+  // ── Data ──
+  const [traces, setTraces] = useState<TraceRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadOffset, setLoadOffset] = useState(PROMPTS_PAGE_SIZE)
+  const [error, setError] = useState<string | null>(null)
+
+  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([])
+  const [savedLoading, setSavedLoading] = useState(true)
+
+  const [agentSummary, setAgentSummary] = useState<AgentRow[]>([])
   const [agentSummaryLoading, setAgentSummaryLoading] = useState(true)
 
-  // Selected agent detail
-  const [selectedAgent,    setSelectedAgent]    = useState<AgentRow | null>(null)
-  const [agentSpans,       setAgentSpans]       = useState<TraceRecord[]>([])
+  // ── Sidebar selection (page-level) ──
+  const [leftTab, setLeftTab] = useState<"saved" | "traces" | "agents">("saved")
+  const [selectedTraceIdx, setSelectedTraceIdx] = useState<number | null>(null)
+  const [selectedAgent, setSelectedAgent] = useState<AgentRow | null>(null)
+  const [traceTreeOpen, setTraceTreeOpen] = useState(false)
+  const [agentSpans, setAgentSpans] = useState<TraceRecord[]>([])
   const [agentSpansLoading, setAgentSpansLoading] = useState(false)
+  const [activeTrace, setActiveTrace] = useState<TraceRecord | null>(null)
 
-  // Saved prompts
-  const [savedPrompts,  setSavedPrompts]  = useState<SavedPrompt[]>([])
-  const [savedLoading,  setSavedLoading]  = useState(true)
-  const [showSaveForm,  setShowSaveForm]  = useState(false)
-  const [saveName,      setSaveName]      = useState("")
-  const [saveSlug,      setSaveSlug]      = useState("")
-  const [savePending,   setSavePending]   = useState(false)
-  const [saveError,     setSaveError]     = useState<string | null>(null)
-  const [saveSuccess,   setSaveSuccess]   = useState(false)
+  // ── Computed ──
+  const traceGroups = useMemo(() => buildTraceTree(traces), [traces])
+  const agentTraceGroups = useMemo(() => buildTraceTree(agentSpans), [agentSpans])
 
-  // Evaluation state
-  const [selectedMetrics, setSelectedMetrics] = useState<Set<string>>(
-    new Set(["hallucination", "relevance"]),
+  const singleRows = useMemo<PromptRow[]>(
+    () => traces.filter((t) => t.event["type"] === "llm").map(toPromptRow),
+    [traces],
   )
-  const [judgeModel,  setJudgeModel]  = useState(JUDGE_MODELS[0].value)
-  const [context,     setContext]     = useState("")
-  const [runLoading,  setRunLoading]  = useState(false)
-  const [runError,    setRunError]    = useState<string | null>(null)
-  const [runResults,  setRunResults]  = useState<MetricResult[] | null>(null)
 
-  // Template state
-  const [templateText, setTemplateText] = useState("")
-  const [templateName, setTemplateName] = useState("")
-  const [templateVars, setTemplateVars] = useState<Record<string, string>>({})
+  const selectedGroup = useMemo(() => {
+    if (selectedAgent) {
+      if (activeTrace) return findGroupForTrace(agentTraceGroups, activeTrace) ?? agentTraceGroups[0] ?? null
+      return agentTraceGroups[0] ?? null
+    }
+    const root = selectedTraceIdx !== null ? singleRows[selectedTraceIdx]?.trace : null
+    return root ? findGroupForTrace(traceGroups, root) : null
+  }, [traceGroups, agentTraceGroups, singleRows, selectedTraceIdx, selectedAgent, activeTrace])
 
-  // Left panel navigation
-  const [leftTab,       setLeftTab]       = useState<"saved" | "traces" | "agents">("saved")
-  const [isNewTemplate, setIsNewTemplate] = useState(false)
+  const spanTimelineTrace = activeTrace ?? agentTraceGroups[0]?.root.trace ?? agentSpans[0] ?? null
 
+  const activeDetectedVars = useMemo(
+    () => detectVars(activeTab?.templateText ?? ""),
+    [activeTab?.templateText],
+  )
+  const activeRenderedPrompt = useMemo(
+    () => renderTemplate(activeTab?.templateText ?? "", activeTab?.templateVars ?? {}),
+    [activeTab?.templateText, activeTab?.templateVars],
+  )
+
+  // ── Data loading ──
   useEffect(() => {
     ;(async () => {
       try {
@@ -118,106 +196,100 @@ function Prompts() {
     })()
   }, [])
 
-  const traceGroups      = useMemo(() => buildTraceTree(traces), [traces])
-  const agentTraceGroups = useMemo(() => buildTraceTree(agentSpans), [agentSpans])
+  // ── Tab helpers ──
+  function updateTab(id: string, updates: Partial<PromptTab>) {
+    setTabs((prev) => prev.map((t) => (t.id === id ? { ...t, ...updates } : t)))
+  }
 
-  const singleRows = useMemo<PromptRow[]>(
-    () => traces.filter((t) => t.event["type"] === "llm").map(toPromptRow),
-    [traces],
-  )
+  function updateActiveTab(updates: Partial<PromptTab>) {
+    if (activeTabId) updateTab(activeTabId, updates)
+  }
 
-  const activeRow = useMemo(
-    () => activeTrace ? toPromptRow(activeTrace) : null,
-    [activeTrace],
-  )
+  function openNewTab(overrides: Partial<PromptTab> = {}) {
+    const tab = makeTab(overrides)
+    setTabs((prev) => [...prev, tab])
+    setActiveTabId(tab.id)
+    return tab.id
+  }
 
-  const selectedGroup = useMemo(() => {
-    if (selectedAgent) {
-      if (activeTrace) return findGroupForTrace(agentTraceGroups, activeTrace) ?? agentTraceGroups[0] ?? null
-      return agentTraceGroups[0] ?? null
+  function closeTab(id: string) {
+    setTabs((prev) => {
+      const idx = prev.findIndex((t) => t.id === id)
+      const next = prev.filter((t) => t.id !== id)
+      if (id === activeTabId) {
+        setActiveTabId(next.length > 0 ? next[Math.max(0, idx - 1)].id : null)
+      }
+      return next
+    })
+  }
+
+  // Load content into the active tab (or open a new one if none exists)
+  function loadIntoActiveOrNew(overrides: Partial<PromptTab>) {
+    if (activeTabId) {
+      updateTab(activeTabId, {
+        ...makeTab(),
+        id: activeTabId,
+        ...overrides,
+      })
+    } else {
+      openNewTab(overrides)
     }
-    const root = selected !== null ? singleRows[selected]?.trace : null
-    return root ? findGroupForTrace(traceGroups, root) : null
-  }, [traceGroups, agentTraceGroups, singleRows, selected, selectedAgent, activeTrace])
+  }
 
-  const spanTimelineTrace = activeTrace ?? agentTraceGroups[0]?.root.trace ?? agentSpans[0] ?? null
+  // ── Sidebar handlers ──
+  function handleSelectSaved(p: SavedPrompt) {
+    loadIntoActiveOrNew({
+      templateText: p.template,
+      templateName: p.name,
+      saveName: p.name,
+      saveSlug: p.slug,
+      activeRow: null,
+      savedPromptId: p.prompt_id,
+      savedPromptEnvs: p.environments,
+      currentVersion: p.version,
+      latestVersion: p.version,
+      latestTemplate: p.template,
+      promptVersions: null,
+    })
+  }
 
-  const showEditor = isNewTemplate || activeRow !== null
-
-  const detectedVars   = useMemo(() => detectVars(templateText), [templateText])
-  const renderedPrompt = useMemo(
-    () => renderTemplate(templateText, templateVars),
-    [templateText, templateVars],
-  )
-
-  // ── Handlers ──────────────────────────────────────────────────────────────
+  function handleSelectTrace(idx: number) {
+    if (selectedTraceIdx === idx) {
+      setSelectedTraceIdx(null)
+      setActiveTrace(null)
+      return
+    }
+    setSelectedTraceIdx(idx)
+    setSelectedAgent(null)
+    setAgentSpans([])
+    setTraceTreeOpen(true)
+    const row = singleRows[idx]
+    if (row) {
+      setActiveTrace(row.trace)
+      loadIntoActiveOrNew({
+        templateText: row.userPrompt,
+        templateName: row.name !== "—" ? row.name : "",
+        activeRow: row,
+      })
+    }
+  }
 
   function handleActivateTrace(trace: TraceRecord) {
     const row = toPromptRow(trace)
     setActiveTrace(trace)
-    setIsNewTemplate(true)
-    setTemplateText(row.userPrompt)
-    setTemplateName(row.name !== "—" ? row.name : "")
-    setTemplateVars({})
-    setRunResults(null)
-    setRunError(null)
-  }
-
-  function handleNew() {
-    setIsNewTemplate(true)
-    setActiveTrace(null)
-    setSelected(null)
-    setSelectedAgent(null)
-    setAgentSpans([])
-    setTemplateText("")
-    setTemplateName("")
-    setTemplateVars({})
-    setRunResults(null)
-    setRunError(null)
-    setShowSaveForm(false)
-    setSaveName("")
-    setSaveSlug("")
-    setSaveSuccess(false)
-    setSaveError(null)
-  }
-
-  function handleSelectSaved(p: SavedPrompt) {
-    setIsNewTemplate(true)
-    setActiveTrace(null)
-    setSelected(null)
-    setSelectedAgent(null)
-    setAgentSpans([])
-    setTemplateText(p.template)
-    setTemplateName(p.name)
-    setTemplateVars({})
-    setRunResults(null)
-    setRunError(null)
-    setSaveName(p.name)
-    setSaveSlug(p.slug)
-    setSaveSuccess(false)
-    setSaveError(null)
-  }
-
-  function handleSelectTrace(idx: number) {
-    if (selected === idx) {
-      setSelected(null)
-      setActiveTrace(null)
-      setIsNewTemplate(false)
-    } else {
-      setSelected(idx)
-      setSelectedAgent(null)
-      setAgentSpans([])
-      if (singleRows[idx]) handleActivateTrace(singleRows[idx].trace)
-    }
+    loadIntoActiveOrNew({
+      templateText: row.userPrompt,
+      templateName: row.name !== "—" ? row.name : "",
+      activeRow: row,
+    })
   }
 
   async function handleSelectAgent(agent: AgentRow) {
     setSelectedAgent(agent)
     setAgentSpans([])
     setActiveTrace(null)
-    setIsNewTemplate(false)
-    setRunResults(null)
-    setRunError(null)
+    setSelectedTraceIdx(null)
+    setTraceTreeOpen(true)
     setAgentSpansLoading(true)
     try {
       const rootParams = new URLSearchParams()
@@ -285,114 +357,172 @@ function Prompts() {
     }
   }
 
-  function toggleMetric(metric: string) {
-    setSelectedMetrics((prev) => {
-      const next = new Set(prev)
-      if (next.has(metric)) { next.delete(metric) } else { next.add(metric) }
-      return next
-    })
-  }
-
-  function handleVarChange(name: string, value: string) {
-    setTemplateVars((prev) => ({ ...prev, [name]: value }))
-  }
-
-  function handleResetTemplate() {
-    if (activeRow) {
-      setTemplateText(activeRow.userPrompt)
-    } else {
-      setTemplateText("")
-    }
-    setTemplateVars({})
-  }
-
+  // ── Eval handlers ──
   async function handleRunEval() {
-    setRunLoading(true)
-    setRunError(null)
-    setRunResults(null)
+    if (!activeTab || !activeTabId) return
+    const tabId = activeTabId
+    updateTab(tabId, { runLoading: true, runError: null, runResults: null })
     try {
       const resp = await authFetch<PlaygroundResponse>("/api/v1/evaluate/playground", {
         method: "POST",
         body: {
-          prompt:      renderedPrompt || templateText,
-          response:    activeRow?.fullOutput || "",
-          context,
-          metrics:     Array.from(selectedMetrics),
-          judge_model: judgeModel,
-          thresholds:  {},
+          prompt: activeRenderedPrompt || activeTab.templateText,
+          response: activeTab.activeRow?.fullOutput || "",
+          context: activeTab.context,
+          metrics: Array.from(activeTab.selectedMetrics),
+          judge_model: activeTab.judgeModel,
+          thresholds: {},
         },
       })
-      setRunResults(resp.results)
+      updateTab(tabId, { runResults: resp.results, runLoading: false })
     } catch (err) {
-      setRunError(err instanceof ApiError ? err.detail : "Evaluation failed")
-    } finally {
-      setRunLoading(false)
+      updateTab(tabId, {
+        runError: err instanceof ApiError ? err.detail : "Evaluation failed",
+        runLoading: false,
+      })
     }
   }
 
   async function handleSavePrompt() {
-    if (!saveName.trim() || !saveSlug.trim()) return
-    setSavePending(true)
-    setSaveError(null)
+    if (!activeTab || !activeTabId) return
+    const tabId = activeTabId
+    updateTab(tabId, { savePending: true, saveError: null })
     try {
-      const result = await authFetch<SavedPrompt>("/api/v1/prompts", {
-        method: "POST",
-        body: {
-          name:      saveName.trim(),
-          slug:      saveSlug.trim(),
-          template:  templateText,
-          model:     activeRow?.model && activeRow.model !== "—" ? activeRow.model : undefined,
-          variables: detectedVars,
-        },
+      let result: SavedPrompt
+      if (activeTab.savedPromptId) {
+        // Save a new version of an existing prompt
+        result = await authFetch<SavedPrompt>(`/api/v1/prompts/${activeTab.savedPromptId}`, {
+          method: "PATCH",
+          body: {
+            name: activeTab.saveName.trim() || activeTab.templateName.trim(),
+            template: activeTab.templateText,
+          },
+        })
+        setSavedPrompts((prev) => prev.map((p) => (p.prompt_id === result.prompt_id ? result : p)))
+      } else {
+        if (!activeTab.saveName.trim() || !activeTab.saveSlug.trim()) {
+          updateTab(tabId, { savePending: false })
+          return
+        }
+        result = await authFetch<SavedPrompt>("/api/v1/prompts", {
+          method: "POST",
+          body: {
+            name: activeTab.saveName.trim(),
+            slug: activeTab.saveSlug.trim(),
+            template: activeTab.templateText,
+            model:
+              activeTab.activeRow?.model && activeTab.activeRow.model !== "—"
+                ? activeTab.activeRow.model
+                : undefined,
+            variables: activeDetectedVars,
+          },
+        })
+        setSavedPrompts((prev) => [result, ...prev])
+      }
+      updateTab(tabId, {
+        showSaveForm: false,
+        saveSuccess: true,
+        savePending: false,
+        savedPromptId: result.prompt_id,
+        savedPromptEnvs: result.environments,
+        currentVersion: result.version,
+        latestVersion: result.version,
+        latestTemplate: result.template,
+        promptVersions: null,
       })
-      setSavedPrompts((prev) => [result, ...prev])
-      setShowSaveForm(false)
-      setSaveName("")
-      setSaveSuccess(true)
-      setTimeout(() => setSaveSuccess(false), 3000)
+      setTimeout(() => updateTab(tabId, { saveSuccess: false }), 3000)
     } catch (err) {
-      setSaveError(err instanceof ApiError ? err.detail : "Save failed")
-    } finally {
-      setSavePending(false)
+      updateTab(tabId, {
+        saveError: err instanceof ApiError ? err.detail : "Save failed",
+        savePending: false,
+      })
     }
   }
 
-  async function handleDeployEnv(promptId: string, env: PromptEnv, deploy: boolean) {
+  async function handleLoadVersionHistory() {
+    if (!activeTab || !activeTabId || !activeTab.savedPromptId) return
+    const tabId = activeTabId
+    updateTab(tabId, { versionsLoading: true })
     try {
-      const result = await authFetch<SavedPrompt>(
-        `/api/v1/prompts/${promptId}/environments/${env}`,
-        { method: "POST", body: { deploy } },
+      const data = await authFetch<{ versions: PromptVersion[] }>(
+        `/api/v1/prompts/${activeTab.savedPromptId}/versions`,
       )
-      setSavedPrompts((prev) => prev.map((p) => p.prompt_id === promptId ? result : p))
+      updateTab(tabId, { promptVersions: data.versions, versionsLoading: false })
     } catch {
-      // silent
+      updateTab(tabId, { versionsLoading: false })
     }
   }
 
-  async function handleDeleteSaved(promptId: string) {
-    try {
-      await authFetch(`/api/v1/prompts/${promptId}`, { method: "DELETE" })
-      setSavedPrompts((prev) => prev.filter((p) => p.prompt_id !== promptId))
-    } catch {
-      // silent
-    }
+  function handleLoadVersion(v: PromptVersion) {
+    if (!activeTabId) return
+    updateTab(activeTabId, {
+      templateText: v.template,
+      templateName: v.name,
+      saveName: v.name,
+      currentVersion: v.version,
+    })
   }
 
-  async function handleRestore(promptId: string, version: number) {
+  async function handleRestoreVersion(version: number) {
+    if (!activeTab || !activeTabId || !activeTab.savedPromptId) return
+    const tabId = activeTabId
+    const promptId = activeTab.savedPromptId
     try {
       const result = await authFetch<SavedPrompt>(
         `/api/v1/prompts/${promptId}/versions/${version}/restore`,
         { method: "POST" },
       )
-      setSavedPrompts((prev) => prev.map((p) => p.prompt_id === promptId ? result : p))
+      setSavedPrompts((prev) => prev.map((p) => (p.prompt_id === result.prompt_id ? result : p)))
+      updateTab(tabId, {
+        templateText: result.template,
+        templateName: result.name,
+        saveName: result.name,
+        savedPromptEnvs: result.environments,
+        currentVersion: result.version,
+        latestVersion: result.version,
+        latestTemplate: result.template,
+        promptVersions: null,
+      })
     } catch {
-      // silent
+      // silent — user will see the tab state unchanged
     }
   }
 
-  function onSaveNameChange(v: string) {
-    setSaveName(v)
-    setSaveSlug(toSlug(v))
+  async function handleDeployEnv(env: PromptEnv, deploy: boolean) {
+    if (!activeTab || !activeTabId || !activeTab.savedPromptId) return
+    const tabId = activeTabId
+    const promptId = activeTab.savedPromptId
+    updateTab(tabId, { deployLoading: env })
+    try {
+      const result = await authFetch<SavedPrompt>(
+        `/api/v1/prompts/${promptId}/environments/${env}`,
+        { method: "POST", body: { deploy } },
+      )
+      setSavedPrompts((prev) => prev.map((p) => (p.prompt_id === result.prompt_id ? result : p)))
+      updateTab(tabId, { savedPromptEnvs: result.environments, deployLoading: null })
+    } catch {
+      updateTab(tabId, { deployLoading: null })
+    }
+  }
+
+  async function handleDeleteSaved() {
+    if (!activeTab || !activeTabId || !activeTab.savedPromptId) return
+    if (!window.confirm(`Delete "${activeTab.templateName}"? This cannot be undone.`)) return
+    const tabId = activeTabId
+    const promptId = activeTab.savedPromptId
+    try {
+      await authFetch(`/api/v1/prompts/${promptId}`, { method: "DELETE" })
+      setSavedPrompts((prev) => prev.filter((p) => p.prompt_id !== promptId))
+      updateTab(tabId, {
+        savedPromptId: null,
+        savedPromptEnvs: { development: null, staging: null, production: null },
+        currentVersion: null,
+        latestVersion: null,
+        promptVersions: null,
+      })
+    } catch {
+      // silent
+    }
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -409,40 +539,26 @@ function Prompts() {
         title="Prompts"
         description="Write, discover, evaluate, and deploy prompt templates."
       />
-      <div className="px-6 py-6">
-      <div className="mb-4 flex items-center justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={reload} disabled={loading}>
-          <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} size={14} className={loading ? "animate-spin" : undefined} />
-          Refresh
-        </Button>
-      </div>
-      {/* ── Error banner ── */}
-      {error ? (
-        <div className="mb-4 flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          <HugeiconsIcon icon={Alert02Icon} size={14} />
-          {error}
-        </div>
-      ) : null}
 
-      {/* ── IDE split ── */}
-      <div className="mb-6 flex h-[720px] items-start gap-0 overflow-hidden rounded-xl border border-border/60 bg-background">
+      {/* ── Full-height IDE layout ── */}
+      <div className="flex h-[calc(100vh-48px)] overflow-hidden">
 
-        {/* ── Left panel ── */}
-        <div className="flex h-full w-56 shrink-0 flex-col overflow-hidden border-r border-border/60 bg-muted/20">
+        {/* ── Left sidebar ── */}
+        <div className="flex w-52 shrink-0 flex-col border-r border-border/60 bg-background">
 
-          {/* New Template button */}
-          <div className="border-b border-border/60 p-3">
+          {/* New Prompt button */}
+          <div className="border-b border-border/60 p-2.5">
             <button
               type="button"
-              onClick={handleNew}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              onClick={() => openNewTab()}
+              className="flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <HugeiconsIcon icon={PlusSignIcon} size={13} />
-              New Template
+              New Prompt
             </button>
           </div>
 
-          {/* Tabs */}
+          {/* Sidebar tabs */}
           <div className="flex border-b border-border/60">
             {LEFT_TABS.map(({ key, label, count, busy }) => (
               <button
@@ -457,20 +573,22 @@ function Prompts() {
                 )}
               >
                 {label}
-                <span className={cn(
-                  "rounded-full px-1.5 font-mono text-[9px]",
-                  leftTab === key ? "text-primary" : "text-muted-foreground/60",
-                )}>
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 font-mono text-[9px]",
+                    leftTab === key ? "text-primary" : "text-muted-foreground/60",
+                  )}
+                >
                   {busy ? "…" : count}
                 </span>
               </button>
             ))}
           </div>
 
-          {/* List */}
+          {/* List area */}
           <div className="min-h-0 flex-1 overflow-y-auto">
 
-            {/* Saved tab */}
+            {/* Saved */}
             {leftTab === "saved" ? (
               savedLoading ? (
                 <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground">
@@ -489,7 +607,7 @@ function Prompts() {
                     onClick={() => handleSelectSaved(p)}
                     className="flex w-full flex-col items-start gap-0.5 border-b border-border/40 px-3 py-2.5 text-left transition-colors hover:bg-muted/40"
                   >
-                    <span className="truncate text-xs font-medium w-full">{p.name}</span>
+                    <span className="w-full truncate text-xs font-medium">{p.name}</span>
                     <span className="font-mono text-[10px] text-muted-foreground/50">
                       v{p.version} · {p.slug}
                     </span>
@@ -498,7 +616,7 @@ function Prompts() {
               )
             ) : null}
 
-            {/* Traces tab */}
+            {/* Traces */}
             {leftTab === "traces" ? (
               loading ? (
                 <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground">
@@ -518,18 +636,21 @@ function Prompts() {
                       onClick={() => handleSelectTrace(idx)}
                       className={cn(
                         "flex w-full flex-col items-start gap-0.5 border-b border-border/40 px-3 py-2.5 text-left transition-colors hover:bg-muted/40",
-                        selected === idx && "bg-primary/5 text-primary",
+                        selectedTraceIdx === idx && "bg-primary/5 text-primary",
                       )}
                     >
-                      <div className="flex w-full items-center gap-1.5 min-w-0">
+                      <div className="flex w-full min-w-0 items-center gap-1.5">
                         <HugeiconsIcon
                           icon={spanTypeIcon("llm", typeof row.trace.event["model"] === "string" ? row.trace.event["model"] as string : null)}
                           size={11}
-                          className={cn("shrink-0", selected === idx ? "text-primary" : "text-muted-foreground/60")}
+                          className={cn(
+                            "shrink-0",
+                            selectedTraceIdx === idx ? "text-primary" : "text-muted-foreground/60",
+                          )}
                         />
                         <span className="truncate text-xs font-medium">{row.name}</span>
                       </div>
-                      <span className="font-mono text-[10px] text-muted-foreground/50 pl-4">
+                      <span className="pl-4 font-mono text-[10px] text-muted-foreground/50">
                         {row.model !== "—" ? row.model : formatDate(row.trace.ingested_at)}
                       </span>
                     </button>
@@ -541,9 +662,9 @@ function Prompts() {
                       disabled={isLoadingMore}
                       className="flex w-full items-center justify-center gap-1.5 py-2.5 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-50"
                     >
-                      {isLoadingMore
-                        ? <HugeiconsIcon icon={Loading03Icon} size={11} className="animate-spin" />
-                        : null}
+                      {isLoadingMore ? (
+                        <HugeiconsIcon icon={Loading03Icon} size={11} className="animate-spin" />
+                      ) : null}
                       {isLoadingMore ? "Loading…" : "Load more"}
                     </button>
                   ) : null}
@@ -551,7 +672,7 @@ function Prompts() {
               )
             ) : null}
 
-            {/* Agents tab */}
+            {/* Agents */}
             {leftTab === "agents" ? (
               agentSummaryLoading ? (
                 <div className="flex items-center gap-2 px-4 py-3 text-xs text-muted-foreground">
@@ -565,7 +686,9 @@ function Prompts() {
               ) : (
                 agentSummary.map((a) => {
                   const key = `${a.agent_key}__${a.agent_kind}__${a.integration}`
-                  const isSelected = selectedAgent?.agent_key === a.agent_key && selectedAgent?.agent_kind === a.agent_kind
+                  const isSelected =
+                    selectedAgent?.agent_key === a.agent_key &&
+                    selectedAgent?.agent_kind === a.agent_kind
                   return (
                     <button
                       key={key}
@@ -576,13 +699,18 @@ function Prompts() {
                         isSelected && "bg-primary/5",
                       )}
                     >
-                      <div className="flex w-full items-center gap-1.5 min-w-0">
+                      <div className="flex w-full min-w-0 items-center gap-1.5">
                         <HugeiconsIcon
                           icon={BotIcon}
                           size={11}
                           className={cn("shrink-0", isSelected ? "text-primary" : "text-muted-foreground/60")}
                         />
-                        <span className={cn("truncate font-mono text-xs font-medium", isSelected && "text-primary")}>
+                        <span
+                          className={cn(
+                            "truncate font-mono text-xs font-medium",
+                            isSelected && "text-primary",
+                          )}
+                        >
                           {a.agent_key}
                         </span>
                       </div>
@@ -597,109 +725,194 @@ function Prompts() {
 
           </div>
 
-          {/* Span timeline (shown when agent selected or trace selected with a group) */}
-          {selectedAgent && !agentSpansLoading && spanTimelineTrace ? (
-            <div className="border-t border-border/60 max-h-72 overflow-y-auto">
-              <SpanTimeline
-                group={selectedGroup}
-                selectedTrace={spanTimelineTrace}
-                onSelectTrace={handleActivateTrace}
-                sticky={false}
-              />
+        </div>
+
+        {/* ── Trace tree sidebar ── */}
+        {traceTreeOpen && selectedAgent && agentSpansLoading ? (
+          <div className="flex w-56 shrink-0 items-center gap-2 border-l border-border/60 px-4 py-3 text-xs text-muted-foreground">
+            <HugeiconsIcon icon={Loading03Icon} size={12} className="animate-spin" />
+            Loading trace…
+          </div>
+        ) : traceTreeOpen && selectedGroup && spanTimelineTrace ? (
+          <div className="flex w-56 shrink-0 flex-col border-l border-border/60 overflow-hidden">
+            <SpanTimeline
+              group={selectedGroup}
+              selectedTrace={spanTimelineTrace}
+              onSelectTrace={handleActivateTrace}
+              sticky={false}
+              bare
+              onClose={() => setTraceTreeOpen(false)}
+            />
+          </div>
+        ) : null}
+
+        {/* ── Right: tab strip + editor ── */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+
+          {/* Tab strip */}
+          <div className="flex h-9 shrink-0 items-center border-b border-border/60 bg-muted/10 overflow-hidden">
+
+            {/* Scrollable tabs */}
+            <div className="flex min-w-0 flex-1 items-center overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTabId(tab.id)}
+                  className={cn(
+                    "group relative flex h-9 min-w-0 max-w-44 shrink-0 items-center gap-1.5 border-r border-border/60 px-3 text-xs transition-colors",
+                    tab.id === activeTabId
+                      ? "bg-background text-foreground shadow-[inset_0_-2px_0_0] shadow-primary"
+                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                  )}
+                >
+                  <span className="min-w-0 flex-1 truncate">
+                    {tab.templateName || "Untitled"}
+                  </span>
+                  <span
+                    role="button"
+                    tabIndex={-1}
+                    onClick={(e) => { e.stopPropagation(); closeTab(tab.id) }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); closeTab(tab.id) } }}
+                    className="flex shrink-0 cursor-pointer items-center rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-60 hover:!opacity-100"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} size={9} />
+                  </span>
+                </button>
+              ))}
+
+              {/* New tab button */}
+              <Tip content="New prompt tab">
+                <button
+                  type="button"
+                  onClick={() => openNewTab()}
+                  className="flex h-9 shrink-0 items-center px-3 text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                >
+                  <HugeiconsIcon icon={PlusSignIcon} size={13} />
+                </button>
+              </Tip>
             </div>
-          ) : selectedAgent && agentSpansLoading ? (
-            <div className="flex items-center gap-2 border-t border-border/60 px-4 py-3 text-xs text-muted-foreground">
-              <HugeiconsIcon icon={Loading03Icon} size={12} className="animate-spin" />
-              Loading trace…
+
+            {/* Refresh (right side of tab strip) */}
+            <div className="flex shrink-0 items-center border-l border-border/60 px-2">
+              <Tip content="Refresh traces">
+                <button
+                  type="button"
+                  onClick={reload}
+                  disabled={loading}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40"
+                >
+                  <HugeiconsIcon
+                    icon={loading ? Loading03Icon : RefreshIcon}
+                    size={13}
+                    className={loading ? "animate-spin" : undefined}
+                  />
+                </button>
+              </Tip>
             </div>
-          ) : selected !== null && selectedGroup ? (
-            <div className="border-t border-border/60 max-h-64 overflow-y-auto">
-              <SpanTimeline
-                group={selectedGroup}
-                selectedTrace={activeTrace!}
-                onSelectTrace={handleActivateTrace}
-                sticky={false}
-              />
+          </div>
+
+          {/* Error banner */}
+          {error ? (
+            <div className="flex shrink-0 items-center gap-2 border-b border-destructive/30 bg-destructive/10 px-4 py-2 text-xs text-destructive">
+              <HugeiconsIcon icon={Alert02Icon} size={13} />
+              {error}
             </div>
           ) : null}
 
-        </div>
-
-        {/* ── Right panel ── */}
-        <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-          {showEditor ? (
+          {/* Editor area */}
+          {activeTab ? (
             <EvalPlayground
-              row={activeRow}
-              templateName={templateName}
-              templateText={templateText}
-              templateVars={templateVars}
-              detectedVars={detectedVars}
-              renderedPrompt={renderedPrompt}
-              selectedMetrics={selectedMetrics}
-              judgeModel={judgeModel}
-              judgeModelLabel={JUDGE_MODELS.find((m) => m.value === judgeModel)?.label ?? judgeModel}
-              context={context}
-              runLoading={runLoading}
-              runError={runError}
-              runResults={runResults}
-              showSaveForm={showSaveForm}
-              saveName={saveName}
-              saveSlug={saveSlug}
-              savePending={savePending}
-              saveError={saveError}
-              saveSuccess={saveSuccess}
-              onTemplateNameChange={setTemplateName}
-              onTemplateChange={setTemplateText}
-              onVarChange={handleVarChange}
-              onResetTemplate={handleResetTemplate}
-              onToggleMetric={toggleMetric}
-              onJudgeModelChange={setJudgeModel}
-              onContextChange={setContext}
+              row={activeTab.activeRow}
+              templateName={activeTab.templateName}
+              templateText={activeTab.templateText}
+              templateVars={activeTab.templateVars}
+              detectedVars={activeDetectedVars}
+              renderedPrompt={activeRenderedPrompt}
+              selectedMetrics={activeTab.selectedMetrics}
+              judgeModel={activeTab.judgeModel}
+              judgeModelLabel={
+                JUDGE_MODELS.find((m) => m.value === activeTab.judgeModel)?.label ??
+                activeTab.judgeModel
+              }
+              context={activeTab.context}
+              runLoading={activeTab.runLoading}
+              runError={activeTab.runError}
+              runResults={activeTab.runResults}
+              showSaveForm={activeTab.showSaveForm}
+              saveName={activeTab.saveName}
+              saveSlug={activeTab.saveSlug}
+              savePending={activeTab.savePending}
+              saveError={activeTab.saveError}
+              saveSuccess={activeTab.saveSuccess}
+              onTemplateNameChange={(v) => updateActiveTab({ templateName: v, saveName: v, saveSlug: toSlug(v) })}
+              onTemplateChange={(v) => updateActiveTab({ templateText: v })}
+              onVarChange={(name, value) =>
+                updateActiveTab({
+                  templateVars: { ...(activeTab.templateVars), [name]: value },
+                })
+              }
+              onResetTemplate={() =>
+                updateActiveTab({
+                  templateText: activeTab.activeRow?.userPrompt ?? "",
+                  templateVars: {},
+                })
+              }
+              onToggleMetric={(m) => {
+                const next = new Set(activeTab.selectedMetrics)
+                if (next.has(m)) next.delete(m)
+                else next.add(m)
+                updateActiveTab({ selectedMetrics: next })
+              }}
+              onJudgeModelChange={(m) => updateActiveTab({ judgeModel: m })}
+              onContextChange={(v) => updateActiveTab({ context: v })}
               onRun={handleRunEval}
-              onToggleSaveForm={() => { setShowSaveForm((v) => !v); setSaveError(null) }}
-              onSaveNameChange={onSaveNameChange}
-              onSaveSlugChange={setSaveSlug}
+              onToggleSaveForm={() =>
+                updateActiveTab({
+                  showSaveForm: !activeTab.showSaveForm,
+                  saveError: null,
+                })
+              }
+              onSaveNameChange={(v) =>
+                updateActiveTab({ saveName: v, saveSlug: toSlug(v), templateName: v })
+              }
+              onSaveSlugChange={(v) => updateActiveTab({ saveSlug: v })}
               onSave={handleSavePrompt}
+              currentVersion={activeTab.currentVersion}
+              latestVersion={activeTab.latestVersion}
+              latestTemplate={activeTab.latestTemplate}
+              promptVersions={activeTab.promptVersions}
+              versionsLoading={activeTab.versionsLoading}
+              onLoadVersionHistory={handleLoadVersionHistory}
+              onLoadVersion={handleLoadVersion}
+              onRestoreVersion={handleRestoreVersion}
+              savedPromptId={activeTab.savedPromptId}
+              savedPromptEnvs={activeTab.savedPromptEnvs}
+              savedPromptSlug={savedPrompts.find((p) => p.prompt_id === activeTab.savedPromptId)?.slug ?? null}
+              deployLoading={activeTab.deployLoading}
+              onDeploy={handleDeployEnv}
+              onDelete={handleDeleteSaved}
             />
-          ) : selectedAgent && !agentSpansLoading && agentSpans.length > 0 ? (
-            <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-              <div className="text-center space-y-1.5">
-                <p className="font-medium text-foreground">{selectedAgent.agent_key}</p>
-                <p>Select an LLM span from the trace tree to evaluate it</p>
-                <p className="text-xs text-muted-foreground/60">
-                  {agentSpans.length} span{agentSpans.length !== 1 ? "s" : ""} in most recent run
-                </p>
-              </div>
-            </div>
           ) : (
             <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-              <div className="text-center space-y-3">
+              <div className="space-y-3 text-center">
                 <p className="text-base font-medium text-foreground">Prompt Playground</p>
-                <p>Create a new template or select one from the list</p>
+                <p>Create a new tab or select a prompt from the list</p>
                 <button
                   type="button"
-                  onClick={handleNew}
+                  onClick={() => openNewTab()}
                   className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90"
                 >
                   <HugeiconsIcon icon={PlusSignIcon} size={13} />
-                  New Template
+                  New Prompt
                 </button>
               </div>
             </div>
           )}
+
         </div>
-
       </div>
 
-      {/* ── Saved Prompts management (deploy / version history) ── */}
-      <SavedPromptsCard
-        prompts={savedPrompts}
-        loading={savedLoading}
-        onDeployEnv={handleDeployEnv}
-        onDelete={handleDeleteSaved}
-        onRestore={handleRestore}
-      />
-      </div>
     </>
   )
 }

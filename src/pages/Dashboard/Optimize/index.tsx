@@ -12,6 +12,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Tip } from "@/components/ui/tooltip"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import {
   Card,
@@ -286,16 +287,18 @@ function Optimize() {
                     Hits vs misses
                   </p>
                   <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full bg-emerald-500 transition-all duration-500"
-                      style={{ width: `${data.hit_rate * 100}%` }}
-                      title={`${formatNumber(data.hits)} hits`}
-                    />
-                    <div
-                      className="h-full bg-destructive/50 transition-all duration-500"
-                      style={{ width: `${(1 - data.hit_rate) * 100}%` }}
-                      title={`${formatNumber(data.misses)} misses`}
-                    />
+                    <Tip content={`${formatNumber(data.hits)} hits`}>
+                      <div
+                        className="h-full bg-emerald-500 transition-all duration-500"
+                        style={{ width: `${data.hit_rate * 100}%` }}
+                      />
+                    </Tip>
+                    <Tip content={`${formatNumber(data.misses)} misses`}>
+                      <div
+                        className="h-full bg-destructive/50 transition-all duration-500"
+                        style={{ width: `${(1 - data.hit_rate) * 100}%` }}
+                      />
+                    </Tip>
                   </div>
                   <div className="flex items-center gap-5 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1.5">

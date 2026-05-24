@@ -47,8 +47,7 @@ export function buildFullInput(event: Record<string, unknown>): string {
   if (sys) lines.push(`[System]\n${sys}`)
   const msgs = extractRequestMessages(event)
   for (const m of msgs) {
-    const content = typeof m.content === "string" ? m.content : JSON.stringify(m.content)
-    lines.push(`[${m.role}]\n${content}`)
+    lines.push(`[${m.role}]\n${extractTextFromValue(m.content)}`)
   }
   return lines.join("\n\n")
 }
@@ -56,25 +55,15 @@ export function buildFullInput(event: Record<string, unknown>): string {
 export function buildUserPrompt(event: Record<string, unknown>): string {
   const msgs = extractRequestMessages(event)
   for (let i = msgs.length - 1; i >= 0; i--) {
-    if (msgs[i].role === "user") {
-      const c = msgs[i].content
-      return typeof c === "string" ? c : JSON.stringify(c, null, 2)
-    }
+    if (msgs[i].role === "user") return extractTextFromValue(msgs[i].content)
   }
-  if (msgs.length > 0) {
-    const c = msgs[msgs.length - 1].content
-    return typeof c === "string" ? c : JSON.stringify(c, null, 2)
-  }
+  if (msgs.length > 0) return extractTextFromValue(msgs[msgs.length - 1].content)
   return ""
 }
 
 export function buildInputPreview(event: Record<string, unknown>): string {
   const msgs = extractRequestMessages(event)
-  if (msgs.length > 0) {
-    const last = msgs[msgs.length - 1]
-    const c = typeof last.content === "string" ? last.content : JSON.stringify(last.content)
-    return truncate(c)
-  }
+  if (msgs.length > 0) return truncate(extractTextFromValue(msgs[msgs.length - 1].content))
   const sys = extractSystemInstruction(event)
   if (sys) return truncate(sys)
   return "—"
@@ -103,10 +92,11 @@ export function extractMetadata(trace: TraceRecord): TraceMetadata {
 
 export function toPromptRow(trace: TraceRecord): PromptRow {
   const e = trace.event
+  const promptPreview = buildUserPrompt(e).split("\n").find((l) => l.trim()) ?? ""
   const name =
     (typeof e["function"] === "string" && e["function"]) ? e["function"] as string
     : (typeof e["name"] === "string" && e["name"]) ? e["name"] as string
-    : trace.api_key_prefix ? `${trace.api_key_prefix}…`
+    : promptPreview ? truncate(promptPreview, 60)
     : "—"
   const model = (typeof e["model"] === "string" && e["model"]) ? e["model"] as string : "—"
   const fullOutput = extractOutput(e)

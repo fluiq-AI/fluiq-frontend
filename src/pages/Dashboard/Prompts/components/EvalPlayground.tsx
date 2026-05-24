@@ -5,11 +5,15 @@ import {
   ArrowDown01Icon,
   Cancel01Icon,
   CheckmarkCircle02Icon,
+  Copy01Icon,
   Database01Icon,
+  Delete02Icon,
   FloppyDiskIcon,
   Loading03Icon,
   PlayIcon,
+  Rocket02Icon,
   RotateClockwiseIcon,
+  Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -17,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { Button } from "@/components/ui/button"
+import { Tip } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -33,8 +38,9 @@ import {
   formatScore,
   scoreBandClass,
 } from "@/pages/Dashboard/Traces/utils"
-import type { MetricResult, PromptRow, DatasetRef, TraceMetadata } from "../utils/types"
+import type { MetricResult, PromptRow, DatasetRef, TraceMetadata, PromptVersion, PromptEnv, EnvDeployment } from "../utils/types"
 import { ALL_METRICS, JUDGE_MODELS } from "../utils/types"
+import { PromptEditor } from "./PromptEditor"
 
 // ── Score Card ────────────────────────────────────────────────────────────────
 
@@ -238,6 +244,20 @@ export function EvalPlayground({
   onSaveNameChange,
   onSaveSlugChange,
   onSave,
+  currentVersion = null,
+  latestVersion = null,
+  latestTemplate = null,
+  promptVersions = null,
+  versionsLoading = false,
+  onLoadVersionHistory,
+  onLoadVersion,
+  onRestoreVersion,
+  savedPromptId = null,
+  savedPromptEnvs = { development: null, staging: null, production: null },
+  savedPromptSlug = null,
+  deployLoading = null,
+  onDeploy,
+  onDelete,
 }: {
   row?: PromptRow | null
   templateName: string
@@ -270,11 +290,29 @@ export function EvalPlayground({
   onSaveNameChange: (v: string) => void
   onSaveSlugChange: (v: string) => void
   onSave: () => void
+  currentVersion?: number | null
+  latestVersion?: number | null
+  latestTemplate?: string | null
+  promptVersions?: PromptVersion[] | null
+  versionsLoading?: boolean
+  onLoadVersionHistory?: () => void
+  onLoadVersion?: (v: PromptVersion) => void
+  onRestoreVersion?: (version: number) => void
+  savedPromptId?: string | null
+  savedPromptEnvs?: Record<PromptEnv, EnvDeployment | null>
+  savedPromptSlug?: string | null
+  deployLoading?: PromptEnv | null
+  onDeploy?: (env: PromptEnv, deploy: boolean) => void
+  onDelete?: () => void
 }) {
   const hasVars = detectedVars.length > 0
   const isTemplateModified = row ? templateText !== row.userPrompt : false
 
   const [resultsOpen, setResultsOpen] = useState(false)
+  const [evalOpen, setEvalOpen] = useState(false)
+  const [deployOpen, setDeployOpen] = useState(false)
+  const [showVersionHistory, setShowVersionHistory] = useState(false)
+  const [copiedSnippet, setCopiedSnippet] = useState(false)
 
   useEffect(() => {
     ;(async () => {
@@ -375,6 +413,84 @@ export function EvalPlayground({
               {row.model}
             </Badge>
           ) : null}
+          {currentVersion != null ? (
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowVersionHistory((v) => !v)
+                  if (!promptVersions && !versionsLoading) onLoadVersionHistory?.()
+                }}
+                className="flex items-center gap-1 rounded border border-border/60 bg-muted/40 px-2 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                v{currentVersion}
+                <HugeiconsIcon
+                  icon={versionsLoading ? Loading03Icon : ArrowDown01Icon}
+                  size={10}
+                  className={cn(versionsLoading ? "animate-spin" : "", showVersionHistory && "rotate-180", "transition-transform")}
+                />
+              </button>
+              {showVersionHistory && promptVersions ? (
+                <div className="absolute left-0 top-full z-20 mt-1 w-64 rounded-md border border-border/60 bg-background shadow-lg">
+                  <p className="border-b border-border/60 px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Version History
+                  </p>
+                  <div className="max-h-64 overflow-y-auto">
+                    {([
+                      // Inject the server-head version at the top (API only returns archived rows)
+                      ...(latestVersion != null ? [{
+                        version_id: "__latest__",
+                        prompt_id: savedPromptId ?? "",
+                        version: latestVersion,
+                        name: templateName,
+                        template: latestTemplate ?? templateText,
+                        model: null as string | null,
+                        variables: [] as string[],
+                        created_at: null as string | null,
+                      }] : []),
+                      // All archived versions — no filtering needed
+                      ...promptVersions,
+                    ] as PromptVersion[]).map((v) => (
+                      <div
+                        key={v.version_id}
+                        className={cn(
+                          "flex items-center gap-1 px-3 py-2 text-xs",
+                          v.version === currentVersion && "bg-primary/5",
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => { onLoadVersion?.(v); setShowVersionHistory(false) }}
+                          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                        >
+                          <span className={cn("font-mono font-medium", v.version === currentVersion && "text-primary")}>
+                            v{v.version}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {v.version === latestVersion ? "latest" : v.created_at ? new Date(v.created_at).toLocaleDateString() : "—"}
+                          </span>
+                        </button>
+                        {v.version === currentVersion ? (
+                          <span className="shrink-0 text-[10px] text-primary/60">viewing</span>
+                        ) : v.version === latestVersion ? null : (
+                          <Tip content={`Restore v${v.version} as latest`} side="left">
+                            <button
+                              type="button"
+                              onClick={() => { onRestoreVersion?.(v.version); setShowVersionHistory(false) }}
+                              className="flex shrink-0 items-center gap-0.5 rounded border border-border/60 px-1.5 py-0.5 text-[10px] text-muted-foreground/60 transition-colors hover:border-primary/40 hover:text-primary"
+                            >
+                              <HugeiconsIcon icon={RotateClockwiseIcon} size={9} />
+                              Restore
+                            </button>
+                          </Tip>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2">
@@ -395,85 +511,306 @@ export function EvalPlayground({
               Add to Dataset
             </Button>
           ) : null}
-          <Button variant="outline" size="sm" onClick={onToggleSaveForm}>
-            <HugeiconsIcon icon={FloppyDiskIcon} size={14} />
-            Save
-          </Button>
+          {row ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEvalOpen((v) => !v)}
+              className={cn(evalOpen && "border-primary/40 bg-primary/5 text-primary")}
+            >
+              Evaluation
+              <HugeiconsIcon
+                icon={ArrowDown01Icon}
+                size={12}
+                className={cn("transition-transform", evalOpen && "rotate-180")}
+              />
+            </Button>
+          ) : null}
+          {savedPromptId ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeployOpen((v) => !v)}
+              className={cn(deployOpen && "border-primary/40 bg-primary/5 text-primary")}
+            >
+              <HugeiconsIcon icon={Rocket02Icon} size={14} />
+              Deploy
+              <HugeiconsIcon
+                icon={ArrowDown01Icon}
+                size={12}
+                className={cn("transition-transform", deployOpen && "rotate-180")}
+              />
+            </Button>
+          ) : null}
           <Button
+            variant="outline"
             size="sm"
-            onClick={onRun}
-            disabled={runLoading || selectedMetrics.size === 0}
+            onClick={currentVersion != null ? onSave : onToggleSaveForm}
+            disabled={savePending}
           >
             <HugeiconsIcon
-              icon={runLoading ? Loading03Icon : PlayIcon}
+              icon={savePending ? Loading03Icon : FloppyDiskIcon}
               size={14}
-              className={runLoading ? "animate-spin" : undefined}
+              className={savePending ? "animate-spin" : undefined}
             />
-            {runLoading ? "Running…" : "Run Eval"}
+            {currentVersion != null ? "Save Version" : "Save"}
           </Button>
+          {savedPromptId && onDelete ? (
+            <Tip content="Delete prompt">
+              <button
+                type="button"
+                onClick={onDelete}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground/50 transition-colors hover:border-destructive/40 hover:text-destructive"
+              >
+                <HugeiconsIcon icon={Delete02Icon} size={14} />
+              </button>
+            </Tip>
+          ) : null}
+          {row ? (
+            <Button
+              size="sm"
+              onClick={onRun}
+              disabled={runLoading || selectedMetrics.size === 0}
+            >
+              <HugeiconsIcon
+                icon={runLoading ? Loading03Icon : PlayIcon}
+                size={14}
+                className={runLoading ? "animate-spin" : undefined}
+              />
+              {runLoading ? "Running…" : "Spot Check"}
+            </Button>
+          ) : null}
         </div>
       </div>
 
+      {/* ── Evaluation dropdown panel ── */}
+      {evalOpen ? (
+        <div className="shrink-0 border-b border-border/60 bg-muted/10">
+          <div className="max-h-72 overflow-y-auto space-y-4 px-5 py-4">
+            {/* Context */}
+            <div className="space-y-1.5">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Context{" "}
+                <span className="normal-case font-normal text-muted-foreground/60">
+                  (optional — paste retrieved passages for faithfulness eval)
+                </span>
+              </p>
+              <textarea
+                value={context}
+                onChange={(e) => onContextChange(e.target.value)}
+                rows={3}
+                placeholder="Paste any retrieved context here…"
+                className="w-full resize-y rounded-md border border-border/60 bg-background px-3 py-2.5 font-mono text-xs leading-relaxed placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
+              />
+            </div>
+            {/* Metrics */}
+            <div className="space-y-2">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Metrics
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {ALL_METRICS.map((metric) => {
+                  const active = selectedMetrics.has(metric)
+                  return (
+                    <button
+                      key={metric}
+                      type="button"
+                      onClick={() => onToggleMetric(metric)}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border/60 bg-muted/40 text-muted-foreground hover:border-border hover:text-foreground",
+                      )}
+                    >
+                      <span className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-primary" : "bg-muted-foreground/30")} />
+                      {metric}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            {/* Judge Model */}
+            <div className="space-y-2">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                Judge Model
+              </p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 font-mono text-xs">
+                    {judgeModelLabel}
+                    <HugeiconsIcon icon={ArrowDown01Icon} size={12} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {JUDGE_MODELS.map((m) => (
+                    <DropdownMenuItem
+                      key={m.value}
+                      onClick={() => onJudgeModelChange(m.value)}
+                      className={cn("font-mono text-xs", judgeModel === m.value && "font-semibold")}
+                    >
+                      {m.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── Deploy dropdown panel ── */}
+      {deployOpen && savedPromptId ? (
+        <div className="shrink-0 border-b border-border/60 bg-muted/10">
+          <div className="space-y-2 px-5 py-4">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Deploy Environments
+            </p>
+            {(["development", "staging", "production"] as const).map((env) => {
+              const dep = savedPromptEnvs[env]
+              const isLoading = deployLoading === env
+              return (
+                <div key={env} className="flex items-center gap-3 rounded-md border border-border/60 bg-background px-3 py-2.5">
+                  <span className={cn(
+                    "h-2 w-2 shrink-0 rounded-full",
+                    dep
+                      ? env === "production" ? "bg-emerald-500"
+                        : env === "staging" ? "bg-amber-500"
+                        : "bg-blue-500"
+                      : "bg-muted-foreground/25",
+                  )} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium capitalize">{env}</p>
+                    {dep ? (
+                      <p className="font-mono text-[10px] text-muted-foreground/60">
+                        v{dep.version} · {formatDate(dep.deployed_at)}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-muted-foreground/50">Not deployed</p>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={dep ? "outline" : "default"}
+                    className={cn(
+                      "h-7 shrink-0 text-xs",
+                      dep && "border-destructive/30 text-destructive hover:bg-destructive/5",
+                    )}
+                    disabled={isLoading}
+                    onClick={() => onDeploy?.(env, !dep)}
+                  >
+                    {isLoading ? <HugeiconsIcon icon={Loading03Icon} size={12} className="animate-spin" /> : null}
+                    {dep ? "Undeploy" : "Deploy"}
+                  </Button>
+                </div>
+              )
+            })}
+
+            {/* SDK snippet */}
+            {savedPromptSlug ? (() => {
+              const highestEnv = savedPromptEnvs.production ? "production"
+                : savedPromptEnvs.staging ? "staging"
+                : savedPromptEnvs.development ? "development"
+                : null
+              if (!highestEnv) return (
+                <p className="pt-1 text-[10px] text-muted-foreground/50">
+                  Deploy to an environment to get the SDK snippet.
+                </p>
+              )
+              const snippet = highestEnv === "production"
+                ? `prompt = fluiq.get_prompt("${savedPromptSlug}")`
+                : `prompt = fluiq.get_prompt("${savedPromptSlug}", env="${highestEnv}")`
+              return (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(snippet)
+                    setCopiedSnippet(true)
+                    setTimeout(() => setCopiedSnippet(false), 2000)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-md border border-border/60 bg-background px-3 py-2 text-left transition-colors hover:bg-muted/40"
+                >
+                  <HugeiconsIcon
+                    icon={copiedSnippet ? Tick02Icon : Copy01Icon}
+                    size={12}
+                    className={cn("shrink-0", copiedSnippet ? "text-emerald-500" : "text-muted-foreground/50")}
+                  />
+                  <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground">
+                    {snippet}
+                  </code>
+                  <span className="shrink-0 text-[10px] text-muted-foreground/40">
+                    {copiedSnippet ? "Copied!" : "Copy"}
+                  </span>
+                </button>
+              )
+            })() : null}
+          </div>
+        </div>
+      ) : null}
+
       {/* ── Body ── */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 space-y-5">
+      <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
 
         {/* ── Save form ── */}
         {showSaveForm ? (
-          <div className="rounded-md border border-primary/20 bg-primary/5 p-4 space-y-3">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-primary/70">
-              Save Prompt Template
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Name</Label>
-                <Input
-                  value={saveName}
-                  onChange={(e) => onSaveNameChange(e.target.value)}
-                  placeholder="My prompt name"
-                  className="h-8 text-sm"
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">
-                  Slug
-                  <span className="ml-1 font-normal text-muted-foreground/60">(unique identifier)</span>
-                </Label>
-                <Input
-                  value={saveSlug}
-                  onChange={(e) => onSaveSlugChange(e.target.value)}
-                  placeholder="my-prompt-name"
-                  className="h-8 font-mono text-sm"
-                />
-              </div>
-            </div>
-            {saveError ? (
-              <p className="text-xs text-destructive">{saveError}</p>
-            ) : null}
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                onClick={onSave}
-                disabled={savePending || !saveName.trim() || !saveSlug.trim()}
-              >
-                {savePending ? (
-                  <HugeiconsIcon icon={Loading03Icon} size={13} className="animate-spin" />
-                ) : (
-                  <HugeiconsIcon icon={FloppyDiskIcon} size={13} />
-                )}
-                Save
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onToggleSaveForm}>
-                Cancel
-              </Button>
-              <p className="text-[10px] text-muted-foreground/60">
-                Saves current template ({detectedVars.length} variable{detectedVars.length !== 1 ? "s" : ""})
+          <div className="shrink-0 border-b border-border/60 px-5 py-4">
+            <div className="rounded-md border border-primary/20 bg-primary/5 p-4 space-y-3">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-primary/70">
+                Save Prompt Template
               </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Name</Label>
+                  <Input
+                    value={saveName}
+                    onChange={(e) => onSaveNameChange(e.target.value)}
+                    placeholder="My prompt name"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">
+                    Slug
+                    <span className="ml-1 font-normal text-muted-foreground/60">(unique identifier)</span>
+                  </Label>
+                  <Input
+                    value={saveSlug}
+                    onChange={(e) => onSaveSlugChange(e.target.value)}
+                    placeholder="my-prompt-name"
+                    className="h-8 font-mono text-sm"
+                  />
+                </div>
+              </div>
+              {saveError ? (
+                <p className="text-xs text-destructive">{saveError}</p>
+              ) : null}
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={onSave}
+                  disabled={savePending || !saveName.trim() || !saveSlug.trim()}
+                >
+                  {savePending ? (
+                    <HugeiconsIcon icon={Loading03Icon} size={13} className="animate-spin" />
+                  ) : (
+                    <HugeiconsIcon icon={FloppyDiskIcon} size={13} />
+                  )}
+                  Save
+                </Button>
+                <Button variant="ghost" size="sm" onClick={onToggleSaveForm}>
+                  Cancel
+                </Button>
+                <p className="text-[10px] text-muted-foreground/60">
+                  Saves current template ({detectedVars.length} variable{detectedVars.length !== 1 ? "s" : ""})
+                </p>
+              </div>
             </div>
           </div>
         ) : null}
 
         {/* ── Add to Dataset panel ── */}
         {showDatasetPanel && row ? (
+          <div className="shrink-0 border-b border-border/60 px-5 py-4">
           <div className="rounded-md border border-primary/20 bg-primary/5 p-4 space-y-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[11px] font-medium uppercase tracking-wide text-primary/70">
@@ -555,12 +892,13 @@ export function EvalPlayground({
               </Button>
             </div>
           </div>
+          </div>
         ) : null}
 
         {/* ── Prompt editor ── */}
-        <div className="overflow-hidden rounded-md border border-border/60">
+        <div className="min-h-0 flex-1 flex flex-col border-b border-border/60">
           {/* Editor header bar */}
-          <div className="flex items-center justify-between gap-2 border-b border-border/60 bg-muted/40 px-3 py-1.5">
+          <div className="shrink-0 flex items-center justify-between gap-2 border-b border-border/60 bg-muted/40 px-3 py-1.5">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                 Prompt
@@ -587,20 +925,21 @@ export function EvalPlayground({
               ) : null}
             </div>
           </div>
-          <textarea
+          <PromptEditor
             value={templateText}
-            onChange={(e) => onTemplateChange(e.target.value)}
-            rows={14}
-            placeholder={row
-              ? "Edit the prompt template. Use {{variable}} for dynamic values."
-              : "Write your prompt template here.\n\nExample:\nYou are a helpful assistant.\n\nAnswer the user's question about {{topic}} in {{language}}."}
-            className="w-full resize-y bg-background px-4 py-3 font-mono text-xs leading-relaxed placeholder:text-muted-foreground/30 focus:outline-none"
+            onChange={onTemplateChange}
+            placeholder={
+              row
+                ? "Edit the prompt template. Use {{variable}} for dynamic values."
+                : "Write your prompt template here.\n\nExample:\nYou are a helpful assistant.\n\nAnswer the user's question about {{topic}} in {{language}}."
+            }
+            className="min-h-0 flex-1"
           />
         </div>
 
         {/* ── LLM Output ── */}
         {row?.fullOutput ? (
-          <div className="overflow-hidden rounded-md border border-border/60">
+          <div className="shrink-0 border-b border-border/60">
             <div className="flex items-center gap-2 border-b border-border/60 bg-muted/40 px-3 py-1.5">
               <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                 Output
@@ -617,126 +956,62 @@ export function EvalPlayground({
 
         {/* ── Template Variables ── */}
         {hasVars ? (
-          <TemplateVarsSection
-            vars={detectedVars}
-            values={templateVars}
-            renderedPrompt={renderedPrompt}
-            originalInput={row?.userPrompt ?? ""}
-            onChange={onVarChange}
-          />
+          <div className="shrink-0 border-b border-border/60 px-5 py-4">
+            <TemplateVarsSection
+              vars={detectedVars}
+              values={templateVars}
+              renderedPrompt={renderedPrompt}
+              originalInput={row?.userPrompt ?? ""}
+              onChange={onVarChange}
+            />
+          </div>
         ) : null}
 
-        {/* ── Context ── */}
-        <div className="space-y-1.5">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            Context{" "}
-            <span className="normal-case font-normal text-muted-foreground/60">
-              (optional — paste retrieved passages for faithfulness eval)
+      </div>
+
+      {/* ── Run error ── */}
+      {row && runError ? (
+        <div className="flex shrink-0 items-center gap-2 border-t border-destructive/30 bg-destructive/10 px-4 py-2 text-xs text-destructive">
+          <HugeiconsIcon icon={Alert02Icon} size={13} />
+          {runError}
+        </div>
+      ) : null}
+
+      {/* ── Evaluation Results ── */}
+      {row && runResults && runResults.length > 0 ? (
+        <div className="shrink-0 border-t border-border/60">
+          <button
+            type="button"
+            onClick={() => setResultsOpen((v) => !v)}
+            className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+          >
+            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Evaluation Results
             </span>
-          </p>
-          <textarea
-            value={context}
-            onChange={(e) => onContextChange(e.target.value)}
-            rows={3}
-            placeholder="Paste any retrieved context here…"
-            className="w-full resize-y rounded-md border border-border/60 bg-muted/20 px-3 py-2.5 font-mono text-xs leading-relaxed placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-        </div>
-
-        {/* ── Metrics + Judge model ── */}
-        <div className="flex flex-wrap items-start gap-6">
-          <div className="space-y-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Metrics
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {ALL_METRICS.map((metric) => {
-                const active = selectedMetrics.has(metric)
-                return (
-                  <button
-                    key={metric}
-                    type="button"
-                    onClick={() => onToggleMetric(metric)}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                      active
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border/60 bg-muted/40 text-muted-foreground hover:border-border hover:text-foreground",
-                    )}
-                  >
-                    <span className={cn("h-1.5 w-1.5 rounded-full", active ? "bg-primary" : "bg-muted-foreground/30")} />
-                    {metric}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Judge Model
-            </p>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5 font-mono text-xs">
-                  {judgeModelLabel}
-                  <HugeiconsIcon icon={ArrowDown01Icon} size={12} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {JUDGE_MODELS.map((m) => (
-                  <DropdownMenuItem
-                    key={m.value}
-                    onClick={() => onJudgeModelChange(m.value)}
-                    className={cn("font-mono text-xs", judgeModel === m.value && "font-semibold")}
-                  >
-                    {m.label}
-                  </DropdownMenuItem>
+            <HugeiconsIcon
+              icon={ArrowUp01Icon}
+              size={12}
+              className={cn("text-muted-foreground transition-transform", resultsOpen && "rotate-180")}
+            />
+          </button>
+          {resultsOpen ? (
+            <div className="border-t border-border/60 px-4 py-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {runResults.map((r) => (
+                  <ScoreCard key={r.metric} result={r} />
                 ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        {/* ── Run error ── */}
-        {runError ? (
-          <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            <HugeiconsIcon icon={Alert02Icon} size={14} />
-            {runError}
-          </div>
-        ) : null}
-
-        
-
-      </div>        
-        {runResults && runResults.length > 0 ? (
-          <div className="rounded-md border border-border/60">
-            <button
-              type="button"
-              onClick={() => setResultsOpen((v) => !v)}
-              className="flex w-full items-center justify-between px-4 py-2.5 text-left"
-            >
-              <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Evaluation Results
-              </span>
-              <HugeiconsIcon
-                icon={ArrowUp01Icon}
-                size={12}
-                className={cn("text-muted-foreground transition-transform", resultsOpen && "rotate-180")}
-              />
-            </button>
-            {resultsOpen ? (
-              <div className="border-t border-border/60 px-4 py-3">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {runResults.map((r) => (
-                    <ScoreCard key={r.metric} result={r} />
-                  ))}
-                </div>
               </div>
-            ) : null}
-          </div>
-        ) : null}
-        {row ? <MetadataSection metadata={row.metadata} date={row.trace.ingested_at} /> : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {/* ── Trace Metadata ── */}
+      {row ? (
+        <div className="shrink-0 border-t border-border/60">
+          <MetadataSection metadata={row.metadata} date={row.trace.ingested_at} />
+        </div>
+      ) : null}
     </div>
   )
 }

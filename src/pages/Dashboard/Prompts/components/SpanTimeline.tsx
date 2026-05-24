@@ -1,8 +1,9 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import {
   AiBrain04Icon,
   ArrowDown01Icon,
   BotIcon,
+  Cancel01Icon,
   ChatGptIcon,
   ClaudeIcon,
   Database01Icon,
@@ -67,6 +68,29 @@ export function spanTypeLabel(type: string): string {
   }
 }
 
+// ── Filter helpers ────────────────────────────────────────────────────────────
+
+const TOGGLE_TYPES = ["llm", "function", "tool", "agent", "mcp", "chain", "retriever", "embedding"] as const
+
+function nodeMatchesFilter(node: TraceNode, hidden: Set<string>, q: string): boolean {
+  const e = node.trace.event
+  const type = typeof e["type"] === "string" ? (e["type"] as string) : "function"
+  if (hidden.has(type)) return false
+  if (!q) return true
+  const name =
+    (typeof e["function"] === "string" && e["function"]) ? e["function"] as string
+    : (typeof e["name"] === "string" && e["name"]) ? e["name"] as string
+    : type
+  if (name.toLowerCase().includes(q.toLowerCase())) return true
+  return node.children.some((child) => nodeMatchesFilter(child, hidden, q))
+}
+
+function collectTypes(node: TraceNode, out: Set<string>) {
+  const t = typeof node.trace.event["type"] === "string" ? node.trace.event["type"] as string : "function"
+  out.add(t)
+  node.children.forEach((c) => collectTypes(c, out))
+}
+
 // ── SpanNode ──────────────────────────────────────────────────────────────────
 
 function SpanNode({
@@ -74,13 +98,20 @@ function SpanNode({
   depth,
   selectedTrace,
   onSelect,
+  searchQuery,
+  hiddenTypes,
 }: {
   node: TraceNode
   depth: number
   selectedTrace: TraceRecord
   onSelect: (trace: TraceRecord) => void
+  searchQuery: string
+  hiddenTypes: Set<string>
 }) {
   const [collapsed, setCollapsed] = useState(false)
+
+  if (!nodeMatchesFilter(node, hiddenTypes, searchQuery)) return null
+
   const e = node.trace.event
   const type = typeof e["type"] === "string" ? (e["type"] as string) : "function"
   const name =
@@ -154,6 +185,8 @@ function SpanNode({
               depth={depth + 1}
               selectedTrace={selectedTrace}
               onSelect={onSelect}
+              searchQuery={searchQuery}
+              hiddenTypes={hiddenTypes}
             />
           ))
         : null}
@@ -168,13 +201,109 @@ export function SpanTimeline({
   selectedTrace,
   onSelectTrace,
   sticky = true,
+  bare = false,
+  onClose,
 }: {
   group: TraceGroup | null
   selectedTrace: TraceRecord
   onSelectTrace: (trace: TraceRecord) => void
   sticky?: boolean
+  bare?: boolean
+  onClose?: () => void
 }) {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(new Set())
+
+  function toggleType(t: string) {
+    setHiddenTypes((prev) => {
+      const next = new Set(prev)
+      if (next.has(t)) next.delete(t)
+      else next.add(t)
+      return next
+    })
+  }
+
   const spanCount = group?.count ?? 1
+
+  const presentTypes = useMemo(() => {
+    if (!group) return new Set<string>()
+    const types = new Set<string>()
+    collectTypes(group.root, types)
+    return types
+  }, [group])
+
+  const treeContent = group ? (
+    <div className="space-y-1.5">
+      <div className="px-2">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Filter spans…"
+          className="w-full rounded-sm border border-border/50 bg-muted/30 px-2 py-1 text-[11px] outline-none placeholder:text-muted-foreground/50 focus:border-primary/50"
+        />
+      </div>
+      {TOGGLE_TYPES.some((t) => presentTypes.has(t)) ? (
+        <div className="flex flex-wrap gap-1 px-2 pb-1 border-b border-border/40">
+          {TOGGLE_TYPES.filter((t) => presentTypes.has(t)).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => toggleType(t)}
+              className={cn(
+                "flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] transition-colors",
+                hiddenTypes.has(t)
+                  ? "opacity-40 bg-muted/30 text-muted-foreground"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted",
+              )}
+            >
+              <HugeiconsIcon icon={spanTypeIcon(t)} size={9} />
+              {spanTypeLabel(t)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div className="space-y-px">
+        <SpanNode
+          node={group.root}
+          depth={0}
+          selectedTrace={selectedTrace}
+          onSelect={onSelectTrace}
+          searchQuery={searchQuery}
+          hiddenTypes={hiddenTypes}
+        />
+      </div>
+    </div>
+  ) : (
+    <div className="px-2 py-2 text-xs text-muted-foreground">
+      No trace tree — standalone LLM call
+    </div>
+  )
+
+  if (bare) {
+    return (
+      <div className="flex h-full flex-col">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/40 px-3 py-2.5">
+          <span className="text-sm font-semibold">Trace Tree</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">
+              {spanCount} span{spanCount !== 1 ? "s" : ""}
+            </span>
+            {onClose ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex h-4 w-4 items-center justify-center rounded text-muted-foreground/60 hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <HugeiconsIcon icon={Cancel01Icon} size={10} />
+              </button>
+            ) : null}
+          </div>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-1 py-2">{treeContent}</div>
+      </div>
+    )
+  }
 
   return (
     <Card className={cn(sticky && "self-start sticky top-4")}>
@@ -189,30 +318,7 @@ export function SpanTimeline({
           Execution context for this LLM call
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-1 pb-3">
-        {group ? (
-          <div className="space-y-px">
-            <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1 px-2 pb-1 border-b border-border/40">
-              {(["llm", "function", "tool", "agent"] as const).map((t) => (
-                <span key={t} className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
-                  <HugeiconsIcon icon={spanTypeIcon(t)} size={10} />
-                  {spanTypeLabel(t)}
-                </span>
-              ))}
-            </div>
-            <SpanNode
-              node={group.root}
-              depth={0}
-              selectedTrace={selectedTrace}
-              onSelect={onSelectTrace}
-            />
-          </div>
-        ) : (
-          <div className="px-2 py-2 text-xs text-muted-foreground">
-            No trace tree — standalone LLM call
-          </div>
-        )}
-      </CardContent>
+      <CardContent className="px-1 pb-3">{treeContent}</CardContent>
     </Card>
   )
 }

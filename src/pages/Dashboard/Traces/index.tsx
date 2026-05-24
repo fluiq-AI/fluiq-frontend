@@ -96,6 +96,35 @@ function Traces() {
   // root-only traces and resets span-fetch tracking.
   // silent=true: no loading spinner, keep existing traces on API failure
   // (used by the SSE reconnect path so a transient error doesn't wipe the table).
+  // prefetchRootSpans: silently fetches child spans for a set of root traces
+  // immediately after load so sumSubtreeCost has data before the user expands.
+  // Uses functional setTraces updaters and guards against stale results by
+  // checking that the root trace is still in the list before merging children.
+  const prefetchRootSpans = useCallback((rootTraces: TraceRecord[]) => {
+    for (const t of rootTraces) {
+      const rootId = getStr(t.event, "trace_id")
+      if (!rootId) continue
+      ;(async () => {
+        try {
+          const params = new URLSearchParams({ root_trace_id: rootId, limit: "500" })
+          const data = await authFetch<TraceListResponse>(`/api/v1/traces?${params.toString()}`)
+          setTraces((prev) => {
+            if (!prev.some((r) => getStr(r.event, "trace_id") === rootId)) return prev
+            const seen = new Set(prev.map((r) => getStr(r.event, "trace_id")).filter(Boolean))
+            const fresh = data.traces.filter((r) => {
+              const tid = getStr(r.event, "trace_id")
+              return tid && !seen.has(tid)
+            })
+            return fresh.length > 0 ? [...prev, ...fresh] : prev
+          })
+          setFetchedSpanRoots((prev) => new Set(prev).add(rootId))
+        } catch {
+          // silently ignore — cost column falls back to root's own cost
+        }
+      })()
+    }
+  }, [])
+
   const fetchTraces = useCallback(async (currentKeyId: string, currentFilters: TraceFilters, silent = false) => {
     if (!silent) setLoading(true)
     if (!silent) setError(null)
@@ -107,6 +136,7 @@ function Traces() {
       setLoadOffset(TRACES_PAGE_SIZE)
       setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
       setFetchedSpanRoots(new Set())
+      prefetchRootSpans(data.traces)
     } catch (err) {
       if (!silent) {
         setError(err instanceof ApiError ? err.detail : "Failed to load traces")
@@ -115,7 +145,7 @@ function Traces() {
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [])
+  }, [prefetchRootSpans])
 
   // loadMore: appends the next page of root traces (no replace).
   const loadMore = useCallback(async () => {
@@ -205,6 +235,7 @@ function Traces() {
         setLoadOffset(TRACES_PAGE_SIZE)
         setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
         setFetchedSpanRoots(new Set())
+        prefetchRootSpans(data.traces)
       } catch (err) {
         if (cancelled) return
         setError(err instanceof ApiError ? err.detail : "Failed to load traces")
@@ -214,7 +245,7 @@ function Traces() {
       }
     })()
     return () => { cancelled = true }
-  }, [keyId, filters])
+  }, [keyId, filters, prefetchRootSpans])
 
   const { realtimeError } = useTraceStream({
     keyId,

@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { useAppSelector } from "@/store/hooks"
 import { cn } from "@/lib/utils"
+import { NotificationWatcher } from "@/components/NotificationWatcher"
 
 const NAV_SECTIONS = [
   {
@@ -115,6 +116,7 @@ function Dashboard() {
       <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
+      <NotificationWatcher />
     </div>
   )
 }

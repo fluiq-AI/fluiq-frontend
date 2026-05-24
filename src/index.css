@@ -49,6 +49,7 @@
 }
 
 :root {
+    --fluiq-var-color: #2563eb;
     --background: #FAF9F6;
     --foreground: #0A0A0A;
     --card: #FAF9F6;
@@ -84,6 +85,7 @@
 }
 
 .dark {
+    --fluiq-var-color: #60a5fa;
     --background: #0A0A0A;
     --foreground: #FAF9F6;
     --card: #1A1A1A;
@@ -168,4 +170,20 @@
 
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #3A3A3A;
+}
+
+/* ── React Flow dark mode overrides ── */
+.dark .react-flow__controls-button {
+  background: #1A1A1A;
+  border-color: #2A2A2A;
+  color: #FAF9F6;
+  fill: #FAF9F6;
+}
+
+.dark .react-flow__controls-button:hover {
+  background: #2A2A2A;
+}
+
+.dark .react-flow__controls-button svg {
+  fill: #FAF9F6;
 }

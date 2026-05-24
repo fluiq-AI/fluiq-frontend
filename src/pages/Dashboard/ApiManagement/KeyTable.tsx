@@ -9,6 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { PlusSignIcon } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
+import { Tip } from "@/components/ui/tooltip"
 import {
   Card,
   CardContent,
@@ -99,39 +100,41 @@ export function KeyTable({
                     </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => onCopyPrefix(k)}
-                          title="Copy prefix"
-                        >
-                          <HugeiconsIcon
-                            icon={
-                              copiedId === k.key_id
-                                ? CheckmarkCircle02Icon
-                                : Copy01Icon
-                            }
-                          />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          onClick={() => onDelete(k)}
-                          disabled={deletingId === k.key_id}
-                          title="Delete key"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <HugeiconsIcon
-                            icon={
-                              deletingId === k.key_id
-                                ? Loading03Icon
-                                : Delete02Icon
-                            }
-                            className={
-                              deletingId === k.key_id ? "animate-spin" : undefined
-                            }
-                          />
-                        </Button>
+                        <Tip content="Copy prefix">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => onCopyPrefix(k)}
+                          >
+                            <HugeiconsIcon
+                              icon={
+                                copiedId === k.key_id
+                                  ? CheckmarkCircle02Icon
+                                  : Copy01Icon
+                              }
+                            />
+                          </Button>
+                        </Tip>
+                        <Tip content="Delete key">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => onDelete(k)}
+                            disabled={deletingId === k.key_id}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <HugeiconsIcon
+                              icon={
+                                deletingId === k.key_id
+                                  ? Loading03Icon
+                                  : Delete02Icon
+                              }
+                              className={
+                                deletingId === k.key_id ? "animate-spin" : undefined
+                              }
+                            />
+                          </Button>
+                        </Tip>
                       </div>
                     </td>
                   </tr>
