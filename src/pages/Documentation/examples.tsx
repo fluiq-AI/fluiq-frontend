@@ -743,7 +743,7 @@ fluiq.instrument(api_key="fl_...")
 client = openai.OpenAI()
 
 # Fetch the production snapshot (default)
-prompt = fluiq.get_prompt("customer-support-reply")
+prompt = fluiq.fetch_prompt("customer-support-reply")
 
 # Fill template variables and call your LLM
 filled = prompt.render(
@@ -767,13 +767,13 @@ print(response.choices[0].message.content)`,
 fluiq.instrument(api_key="fl_...")
 
 # Production snapshot (default)
-prod_prompt    = fluiq.get_prompt("summariser")
+prod_prompt    = fluiq.fetch_prompt("summariser")
 
 # Staging — test changes before promoting to prod
-staging_prompt = fluiq.get_prompt("summariser", env="staging")
+staging_prompt = fluiq.fetch_prompt("summariser", env="staging")
 
 # Development — iterate locally without touching staging
-dev_prompt     = fluiq.get_prompt("summariser", env="development")
+dev_prompt     = fluiq.fetch_prompt("summariser", env="development")
 
 print(f"prod v{prod_prompt.version}  →  {prod_prompt.template[:60]}...")
 print(f"stg  v{staging_prompt.version}  →  {staging_prompt.template[:60]}...")
@@ -782,7 +782,7 @@ print(f"dev  v{dev_prompt.version}  →  {dev_prompt.template[:60]}...")`,
   {
     label: "Anthropic",
     description:
-      "Use get_prompt() with Anthropic — the prompt object exposes the suggested model so your code stays model-agnostic.",
+      "Use fetch_prompt() with Anthropic — the prompt object exposes the suggested model so your code stays model-agnostic.",
     code: `import fluiq
 import anthropic
 
@@ -790,7 +790,7 @@ fluiq.instrument(api_key="fl_...")
 
 client = anthropic.Anthropic()
 
-prompt = fluiq.get_prompt("technical-explainer")
+prompt = fluiq.fetch_prompt("technical-explainer")
 
 filled = prompt.render(topic=user_question, audience="engineers")
 
@@ -809,7 +809,7 @@ print(response.content[0].text)`,
 
 fluiq.instrument(api_key="fl_...")
 
-prompt = fluiq.get_prompt("onboarding-email")
+prompt = fluiq.fetch_prompt("onboarding-email")
 
 # Variables detected from {{...}} placeholders in the template
 print(prompt.variables)   # ["first_name", "product", "tier"]
@@ -828,7 +828,7 @@ print(filled)`,
   {
     label: "Hot-swap",
     description:
-      "Call get_prompt() per request to pick up promoted changes instantly — no code change or redeploy needed.",
+      "Call fetch_prompt() per request to pick up promoted changes instantly — no code change or redeploy needed.",
     code: `import fluiq
 import openai
 
@@ -838,7 +838,7 @@ client = openai.OpenAI()
 
 def handle_request(user_message: str) -> str:
     # Fetched fresh every call — promotions appear immediately
-    prompt = fluiq.get_prompt("chat-system-prompt")
+    prompt = fluiq.fetch_prompt("chat-system-prompt")
 
     response = client.chat.completions.create(
         model=prompt.model or "gpt-4o",
@@ -856,7 +856,7 @@ def handle_request(user_message: str) -> str:
   {
     label: "Async",
     description:
-      "get_prompt() works identically inside async functions — await it in FastAPI, async LangChain, or any async framework.",
+      "fetch_prompt() works identically inside async functions — await it in FastAPI, async LangChain, or any async framework.",
     code: `import fluiq
 import openai
 import asyncio
@@ -866,7 +866,7 @@ fluiq.instrument(api_key="fl_...")
 client = openai.AsyncOpenAI()
 
 async def handle(user_message: str) -> str:
-    prompt = fluiq.get_prompt("support-agent")
+    prompt = fluiq.fetch_prompt("support-agent")
 
     filled = prompt.render(question=user_message)
 
@@ -886,7 +886,7 @@ asyncio.run(handle("How do I upgrade my plan?"))`,
 
 fluiq.instrument(api_key="fl_...")
 
-prompt = fluiq.get_prompt("product-description")
+prompt = fluiq.fetch_prompt("product-description")
 
 print(f"slug:         {prompt.slug}")
 print(f"name:         {prompt.name}")
@@ -1371,7 +1371,7 @@ export default function Examples() {
               id="prompts"
               icon={FileScriptIcon}
               title="Prompts"
-              description="fluiq.get_prompt() fetches a versioned template from the Prompts dashboard at runtime. Edit and promote prompts without touching your code or triggering a redeploy."
+              description="fluiq.fetch_prompt() fetches a versioned template from the Prompts dashboard at runtime. Edit and promote prompts without touching your code or triggering a redeploy."
             />
             <IntegrationTabs tabs={promptsTabs} />
           </section>

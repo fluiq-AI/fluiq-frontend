@@ -734,19 +734,19 @@ Answer the following question in {{language}}: {{question}}`}</Code>
                     <td className="px-4 py-2 font-medium text-blue-600 dark:text-blue-400">development</td>
                     <td className="px-4 py-2"><span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 font-mono text-[10px] text-blue-600 dark:text-blue-400">dev</span></td>
                     <td className="px-4 py-2 text-muted-foreground">Local iteration and unit tests</td>
-                    <td className="px-4 py-2 font-mono text-muted-foreground text-xs">get_prompt(slug, env="development")</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground text-xs">fetch_prompt(slug, env="development")</td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2 font-medium text-amber-600 dark:text-amber-400">staging</td>
                     <td className="px-4 py-2"><span className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-600 dark:text-amber-400">stg</span></td>
                     <td className="px-4 py-2 text-muted-foreground">Integration and regression testing</td>
-                    <td className="px-4 py-2 font-mono text-muted-foreground text-xs">get_prompt(slug, env="staging")</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground text-xs">fetch_prompt(slug, env="staging")</td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2 font-medium text-emerald-600 dark:text-emerald-400">production</td>
                     <td className="px-4 py-2"><span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-600 dark:text-emerald-400">prod</span></td>
                     <td className="px-4 py-2 text-muted-foreground">Live traffic — the default</td>
-                    <td className="px-4 py-2 font-mono text-muted-foreground text-xs">get_prompt(slug)</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground text-xs">fetch_prompt(slug)</td>
                   </tr>
                 </tbody>
               </table>
@@ -757,17 +757,17 @@ Answer the following question in {{language}}: {{question}}`}</Code>
               <p className="font-medium">SDK fetch</p>
             </div>
             <p className="text-sm text-muted-foreground">
-              Call <code className="font-mono text-foreground">fluiq.get_prompt()</code> anywhere in your application to retrieve the deployed template for an environment. The call is authenticated with your API key and returns the snapshot that was promoted — not the current editor draft.
+              Call <code className="font-mono text-foreground">fluiq.fetch_prompt()</code> anywhere in your application to retrieve the deployed template for an environment. The call is authenticated with your API key and returns the snapshot that was promoted — not the current editor draft.
             </p>
             <Code>{`import fluiq
 
 fluiq.instrument(api_key="fl_...")
 
 # Fetch the production snapshot (default):
-prompt = fluiq.get_prompt("customer-support-reply")
+prompt = fluiq.fetch_prompt("customer-support-reply")
 
 # Fetch a specific environment:
-prompt = fluiq.get_prompt("customer-support-reply", env="staging")
+prompt = fluiq.fetch_prompt("customer-support-reply", env="staging")
 
 # Fill template variables and call your LLM:
 filled = prompt.render(
@@ -827,7 +827,7 @@ response = client.chat.completions.create(
             <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
               <p className="font-medium">Decoupled from your deploy pipeline</p>
               <p className="mt-1 text-muted-foreground">
-                Because <code className="font-mono text-foreground">fluiq.get_prompt()</code> fetches at runtime, you can update a production prompt — fix a hallucination-prone instruction, add a guardrail, tweak tone — in the dashboard without touching your codebase or triggering a new deployment. The change is live the next time your SDK calls <code className="font-mono text-foreground">get_prompt()</code>.
+                Because <code className="font-mono text-foreground">fluiq.fetch_prompt()</code> fetches at runtime, you can update a production prompt — fix a hallucination-prone instruction, add a guardrail, tweak tone — in the dashboard without touching your codebase or triggering a new deployment. The change is live the next time your SDK calls <code className="font-mono text-foreground">fetch_prompt()</code>.
               </p>
             </div>
           </section>
@@ -894,8 +894,8 @@ response = client.chat.completions.create(
               </div>
             </div>
 
-            <p className="font-medium mt-2">fluiq.get_prompt()</p>
-            <Code>{`fluiq.get_prompt(
+            <p className="font-medium mt-2">fluiq.fetch_prompt()</p>
+            <Code>{`fluiq.fetch_prompt(
     slug  = "my-prompt",       # required — the unique identifier
     env   = "production",      # optional — "development" | "staging" | "production" (default)
 )`}</Code>

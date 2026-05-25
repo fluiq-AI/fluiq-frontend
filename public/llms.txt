@@ -51,7 +51,7 @@ fluiq.eval(
 Fluiq discovers named prompts from production traffic and stores them as versioned templates. Teams edit templates in the dashboard with `{{variable}}` substitution, test them against production traces using an LLM-as-judge playground, then deploy to development, staging, or production environments independently. No redeployment required.
 
 ```python
-prompt = fluiq.get_prompt("summarise-ticket", env="production")
+prompt = fluiq.fetch_prompt("summarise-ticket", env="production")
 text = prompt.render(ticket_body=raw_text)
 ```
 

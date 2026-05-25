@@ -113,8 +113,8 @@ export function SavedPromptsCard({
   function copySnippet(slug: string, env: PromptEnv, id: string) {
     const snippet =
       env === "production"
-        ? `prompt = fluiq.get_prompt("${slug}")`
-        : `prompt = fluiq.get_prompt("${slug}", env="${env}")`
+        ? `prompt = fluiq.fetch_prompt("${slug}")`
+        : `prompt = fluiq.fetch_prompt("${slug}", env="${env}")`
     navigator.clipboard.writeText(snippet)
     setCopiedId(id)
     setTimeout(() => setCopiedId(null), 2000)
@@ -135,7 +135,7 @@ export function SavedPromptsCard({
           Promote templates to <span className="font-medium text-blue-500/80">dev</span>,{" "}
           <span className="font-medium text-amber-500/80">staging</span>, or{" "}
           <span className="font-medium text-emerald-500/80">production</span> — then fetch them via{" "}
-          <code className="font-mono text-[11px]">fluiq.get_prompt(slug)</code>.
+          <code className="font-mono text-[11px]">fluiq.fetch_prompt(slug)</code>.
         </CardDescription>
       </CardHeader>
 
@@ -236,8 +236,8 @@ export function SavedPromptsCard({
                                 size={11}
                               />
                               {highestDeployedEnv === "production"
-                                ? `fluiq.get_prompt("${p.slug}")`
-                                : `fluiq.get_prompt("${p.slug}", env="${highestDeployedEnv}")`}
+                                ? `fluiq.fetch_prompt("${p.slug}")`
+                                : `fluiq.fetch_prompt("${p.slug}", env="${highestDeployedEnv}")`}
                             </button>
                           ) : (
                             <span className="text-[10px] text-muted-foreground/30">

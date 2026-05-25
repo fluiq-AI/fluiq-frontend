@@ -183,7 +183,7 @@ Fluiq watches production traces and surfaces named prompts automatically. When a
 Templates use `{{variable}}` syntax. Once a prompt is saved, it is versioned and can be retrieved at runtime:
 
 ```python
-prompt = fluiq.get_prompt("classify-ticket", env="production")
+prompt = fluiq.fetch_prompt("classify-ticket", env="production")
 text = prompt.render(ticket_body=raw_text, customer_tier="enterprise")
 ```
 
@@ -281,7 +281,7 @@ The full SDK reference, organized into eight sections accessible via a sticky si
 
 5. **Evaluation** — `fluiq.eval()` metrics (hallucination, faithfulness, relevance, toxicity, coherence, completeness); threshold configuration; warn and block modes; FluiqEvalError; CI/CD GitHub Actions gate; dataset management.
 
-6. **Prompts** — `fluiq.get_prompt()` runtime fetch; template `{{variable}}` syntax; environment-based deployment; version history; playground usage.
+6. **Prompts** — `fluiq.fetch_prompt()` runtime fetch; template `{{variable}}` syntax; environment-based deployment; version history; playground usage.
 
 7. **Configuration** — All `fluiq.instrument()` kwargs; environment variable support; timeout and retry settings; self-hosting notes.
 
