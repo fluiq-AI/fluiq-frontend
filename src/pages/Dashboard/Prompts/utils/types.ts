@@ -16,6 +16,12 @@ export const JUDGE_MODELS = [
   { label: "Sonnet 4.6 (accurate)", value: "claude-sonnet-4-6" },
 ]
 
+export const COMPARE_MODELS = [
+  { label: "Haiku 4.5",  value: "claude-haiku-4-5-20251001" },
+  { label: "Sonnet 4.6", value: "claude-sonnet-4-6" },
+  { label: "Opus 4.7",   value: "claude-opus-4-7" },
+] as const
+
 export const PROMPTS_PAGE_SIZE = 100
 export const VAR_RE = /\{\{([a-zA-Z_][a-zA-Z0-9_]*)\}\}/g
 
@@ -93,6 +99,16 @@ export interface PromptVersion {
   model: string | null
   variables: string[]
   created_at: string | null
+}
+
+export interface CompareResult {
+  model:         string
+  output:        string | null
+  latency_ms:    number | null
+  input_tokens:  number | null
+  output_tokens: number | null
+  cost_usd:      number | null
+  error:         string | null
 }
 
 export interface DatasetRef {

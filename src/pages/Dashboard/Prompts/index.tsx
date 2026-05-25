@@ -23,8 +23,8 @@ import {
 import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/helpers/treeBuilder"
 import type { AgentRow } from "@/pages/Dashboard/Agents/utils/types"
 
-import type { MetricResult, PlaygroundResponse, SavedPrompt, PromptRow, PromptVersion, PromptEnv, EnvDeployment } from "./utils/types"
-import { JUDGE_MODELS, PROMPTS_PAGE_SIZE } from "./utils/types"
+import type { CompareResult, MetricResult, PlaygroundResponse, SavedPrompt, PromptRow, PromptVersion, PromptEnv, EnvDeployment } from "./utils/types"
+import { COMPARE_MODELS, JUDGE_MODELS, PROMPTS_PAGE_SIZE } from "./utils/types"
 import { detectVars, renderTemplate, toPromptRow, toSlug } from "./utils"
 import { SpanTimeline, spanTypeIcon } from "./components/SpanTimeline"
 import { EvalPlayground } from "./components/EvalPlayground"
@@ -37,13 +37,18 @@ type PromptTab = {
   templateText: string
   templateVars: Record<string, string>
   activeRow: PromptRow | null
-  // Eval
+  // Eval (used in Traces / Agents tabs)
   context: string
   selectedMetrics: Set<string>
   judgeModel: string
   runLoading: boolean
   runError: string | null
   runResults: MetricResult[] | null
+  // Compare (used in Saved / New Prompt tabs)
+  compareModels: string[]
+  compareResults: CompareResult[] | null
+  compareLoading: boolean
+  compareError: string | null
   // Versions
   currentVersion: number | null   // what is loaded in the editor (may be an old version)
   latestVersion: number | null    // the server head — never changes on local load
@@ -76,6 +81,10 @@ function makeTab(overrides: Partial<PromptTab> = {}): PromptTab {
     runLoading: false,
     runError: null,
     runResults: null,
+    compareModels: [COMPARE_MODELS[0].value, COMPARE_MODELS[1].value],
+    compareResults: null,
+    compareLoading: false,
+    compareError: null,
     showSaveForm: false,
     saveName: "",
     saveSlug: "",
@@ -379,6 +388,28 @@ function Prompts() {
       updateTab(tabId, {
         runError: err instanceof ApiError ? err.detail : "Evaluation failed",
         runLoading: false,
+      })
+    }
+  }
+
+  // ── Compare handlers ──
+  async function handleRunCompare() {
+    if (!activeTab || !activeTabId) return
+    const tabId = activeTabId
+    updateTab(tabId, { compareLoading: true, compareError: null, compareResults: null })
+    try {
+      const resp = await authFetch<{ results: CompareResult[] }>("/api/v1/evaluate/compare", {
+        method: "POST",
+        body: {
+          prompt: activeRenderedPrompt || activeTab.templateText,
+          models: activeTab.compareModels,
+        },
+      })
+      updateTab(tabId, { compareResults: resp.results, compareLoading: false })
+    } catch (err) {
+      updateTab(tabId, {
+        compareError: err instanceof ApiError ? err.detail : "Comparison failed",
+        compareLoading: false,
       })
     }
   }
@@ -829,16 +860,22 @@ function Prompts() {
               templateVars={activeTab.templateVars}
               detectedVars={activeDetectedVars}
               renderedPrompt={activeRenderedPrompt}
-              selectedMetrics={activeTab.selectedMetrics}
-              judgeModel={activeTab.judgeModel}
-              judgeModelLabel={
-                JUDGE_MODELS.find((m) => m.value === activeTab.judgeModel)?.label ??
-                activeTab.judgeModel
+              compareModels={activeTab.compareModels}
+              compareResults={activeTab.compareResults}
+              compareLoading={activeTab.compareLoading}
+              compareError={activeTab.compareError}
+              onCompareModelChange={(idx, model) =>
+                updateActiveTab({
+                  compareModels: activeTab.compareModels.map((m, i) => (i === idx ? model : m)),
+                })
               }
-              context={activeTab.context}
-              runLoading={activeTab.runLoading}
-              runError={activeTab.runError}
-              runResults={activeTab.runResults}
+              onAddCompareModel={() =>
+                updateActiveTab({ compareModels: [...activeTab.compareModels, "claude-opus-4-7"] })
+              }
+              onRemoveCompareModel={(idx) =>
+                updateActiveTab({ compareModels: activeTab.compareModels.filter((_, i) => i !== idx) })
+              }
+              onRunCompare={handleRunCompare}
               showSaveForm={activeTab.showSaveForm}
               saveName={activeTab.saveName}
               saveSlug={activeTab.saveSlug}
@@ -858,6 +895,16 @@ function Prompts() {
                   templateVars: {},
                 })
               }
+              selectedMetrics={activeTab.selectedMetrics}
+              judgeModel={activeTab.judgeModel}
+              judgeModelLabel={
+                JUDGE_MODELS.find((m) => m.value === activeTab.judgeModel)?.label ??
+                activeTab.judgeModel
+              }
+              context={activeTab.context}
+              runLoading={activeTab.runLoading}
+              runError={activeTab.runError}
+              runResults={activeTab.runResults}
               onToggleMetric={(m) => {
                 const next = new Set(activeTab.selectedMetrics)
                 if (next.has(m)) next.delete(m)

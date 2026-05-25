@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
   Alert02Icon,
   ArrowUp01Icon,
@@ -38,8 +38,8 @@ import {
   formatScore,
   scoreBandClass,
 } from "@/pages/Dashboard/Traces/utils"
-import type { MetricResult, PromptRow, DatasetRef, TraceMetadata, PromptVersion, PromptEnv, EnvDeployment } from "../utils/types"
-import { ALL_METRICS, JUDGE_MODELS } from "../utils/types"
+import type { CompareResult, MetricResult, PromptRow, DatasetRef, TraceMetadata, PromptVersion, PromptEnv, EnvDeployment } from "../utils/types"
+import { ALL_METRICS, COMPARE_MODELS, JUDGE_MODELS } from "../utils/types"
 import { PromptEditor } from "./PromptEditor"
 
 // ── Score Card ────────────────────────────────────────────────────────────────
@@ -193,7 +193,7 @@ export function TemplateVarsSection({
       </div>
       {!allFilled ? (
         <p className="text-[10px] text-muted-foreground/60">
-          Fill all variables — the rendered prompt is sent to the evaluator.
+          Fill in variables — the rendered prompt is sent to each model.
         </p>
       ) : null}
       {showPreview ? (
@@ -219,6 +219,14 @@ export function EvalPlayground({
   templateVars,
   detectedVars,
   renderedPrompt,
+  compareModels = ["claude-haiku-4-5-20251001", "claude-sonnet-4-6"],
+  compareResults = null,
+  compareLoading = false,
+  compareError = null,
+  onCompareModelChange,
+  onAddCompareModel,
+  onRemoveCompareModel,
+  onRunCompare,
   selectedMetrics,
   judgeModel,
   judgeModelLabel,
@@ -226,6 +234,10 @@ export function EvalPlayground({
   runLoading,
   runError,
   runResults,
+  onToggleMetric,
+  onJudgeModelChange,
+  onContextChange,
+  onRun,
   showSaveForm,
   saveName,
   saveSlug,
@@ -236,10 +248,6 @@ export function EvalPlayground({
   onTemplateChange,
   onVarChange,
   onResetTemplate,
-  onToggleMetric,
-  onJudgeModelChange,
-  onContextChange,
-  onRun,
   onToggleSaveForm,
   onSaveNameChange,
   onSaveSlugChange,
@@ -265,13 +273,25 @@ export function EvalPlayground({
   templateVars: Record<string, string>
   detectedVars: string[]
   renderedPrompt: string
-  selectedMetrics: Set<string>
-  judgeModel: string
-  judgeModelLabel: string
-  context: string
-  runLoading: boolean
-  runError: string | null
-  runResults: MetricResult[] | null
+  compareModels?: string[]
+  compareResults?: CompareResult[] | null
+  compareLoading?: boolean
+  compareError?: string | null
+  onCompareModelChange?: (idx: number, model: string) => void
+  onAddCompareModel?: () => void
+  onRemoveCompareModel?: (idx: number) => void
+  onRunCompare?: () => void
+  selectedMetrics?: Set<string>
+  judgeModel?: string
+  judgeModelLabel?: string
+  context?: string
+  runLoading?: boolean
+  runError?: string | null
+  runResults?: MetricResult[] | null
+  onToggleMetric?: (m: string) => void
+  onJudgeModelChange?: (m: string) => void
+  onContextChange?: (v: string) => void
+  onRun?: () => void
   showSaveForm: boolean
   saveName: string
   saveSlug: string
@@ -282,10 +302,6 @@ export function EvalPlayground({
   onTemplateChange: (v: string) => void
   onVarChange: (name: string, value: string) => void
   onResetTemplate: () => void
-  onToggleMetric: (m: string) => void
-  onJudgeModelChange: (m: string) => void
-  onContextChange: (v: string) => void
-  onRun: () => void
   onToggleSaveForm: () => void
   onSaveNameChange: (v: string) => void
   onSaveSlugChange: (v: string) => void
@@ -308,17 +324,11 @@ export function EvalPlayground({
   const hasVars = detectedVars.length > 0
   const isTemplateModified = row ? templateText !== row.userPrompt : false
 
-  const [resultsOpen, setResultsOpen] = useState(false)
+  const [compareOpen, setCompareOpen] = useState(false)
   const [evalOpen, setEvalOpen] = useState(false)
   const [deployOpen, setDeployOpen] = useState(false)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [copiedSnippet, setCopiedSnippet] = useState(false)
-
-  useEffect(() => {
-    ;(async () => {
-      if (runResults && runResults.length > 0) setResultsOpen(true)
-    })()
-  }, [runResults])
 
   const [showDatasetPanel, setShowDatasetPanel] = useState(false)
   const [datasets,         setDatasets]         = useState<DatasetRef[]>([])
@@ -511,6 +521,21 @@ export function EvalPlayground({
               Add to Dataset
             </Button>
           ) : null}
+          {!row ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCompareOpen((v) => !v)}
+              className={cn(compareOpen && "border-primary/40 bg-primary/5 text-primary")}
+            >
+              Compare
+              <HugeiconsIcon
+                icon={ArrowDown01Icon}
+                size={12}
+                className={cn("transition-transform", compareOpen && "rotate-180")}
+              />
+            </Button>
+          ) : null}
           {row ? (
             <Button
               variant="outline"
@@ -570,7 +595,7 @@ export function EvalPlayground({
             <Button
               size="sm"
               onClick={onRun}
-              disabled={runLoading || selectedMetrics.size === 0}
+              disabled={runLoading || (selectedMetrics?.size ?? 0) === 0}
             >
               <HugeiconsIcon
                 icon={runLoading ? Loading03Icon : PlayIcon}
@@ -583,11 +608,72 @@ export function EvalPlayground({
         </div>
       </div>
 
+      {/* ── Compare controls panel ── */}
+      {compareOpen ? (
+        <div className="shrink-0 border-b border-border/60 bg-muted/10">
+          <div className="flex flex-wrap items-center gap-2 px-5 py-3">
+            {compareModels.map((model, idx) => (
+              <div key={idx} className="flex items-center gap-1">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="font-mono text-xs">
+                      {COMPARE_MODELS.find((m) => m.value === model)?.label ?? model}
+                      <HugeiconsIcon icon={ArrowDown01Icon} size={11} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {COMPARE_MODELS.map((m) => (
+                      <DropdownMenuItem
+                        key={m.value}
+                        onClick={() => onCompareModelChange?.(idx, m.value)}
+                        className={cn("font-mono text-xs", model === m.value && "font-semibold")}
+                      >
+                        {m.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {compareModels.length > 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveCompareModel?.(idx)}
+                    className="flex items-center rounded p-0.5 text-muted-foreground/50 hover:text-foreground"
+                  >
+                    <HugeiconsIcon icon={Cancel01Icon} size={10} />
+                  </button>
+                ) : null}
+              </div>
+            ))}
+            {compareModels.length < 3 ? (
+              <button
+                type="button"
+                onClick={onAddCompareModel}
+                className="text-[11px] text-muted-foreground/60 hover:text-foreground"
+              >
+                + Add model
+              </button>
+            ) : null}
+            <Button
+              size="sm"
+              onClick={onRunCompare}
+              disabled={compareLoading || !templateText.trim()}
+              className="ml-auto"
+            >
+              <HugeiconsIcon
+                icon={compareLoading ? Loading03Icon : PlayIcon}
+                size={13}
+                className={compareLoading ? "animate-spin" : undefined}
+              />
+              {compareLoading ? "Running…" : "Run All"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       {/* ── Evaluation dropdown panel ── */}
-      {evalOpen ? (
+      {evalOpen && row ? (
         <div className="shrink-0 border-b border-border/60 bg-muted/10">
           <div className="max-h-72 overflow-y-auto space-y-4 px-5 py-4">
-            {/* Context */}
             <div className="space-y-1.5">
               <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                 Context{" "}
@@ -596,26 +682,23 @@ export function EvalPlayground({
                 </span>
               </p>
               <textarea
-                value={context}
-                onChange={(e) => onContextChange(e.target.value)}
+                value={context ?? ""}
+                onChange={(e) => onContextChange?.(e.target.value)}
                 rows={3}
                 placeholder="Paste any retrieved context here…"
                 className="w-full resize-y rounded-md border border-border/60 bg-background px-3 py-2.5 font-mono text-xs leading-relaxed placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
               />
             </div>
-            {/* Metrics */}
             <div className="space-y-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Metrics
-              </p>
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Metrics</p>
               <div className="flex flex-wrap gap-2">
                 {ALL_METRICS.map((metric) => {
-                  const active = selectedMetrics.has(metric)
+                  const active = selectedMetrics?.has(metric) ?? false
                   return (
                     <button
                       key={metric}
                       type="button"
-                      onClick={() => onToggleMetric(metric)}
+                      onClick={() => onToggleMetric?.(metric)}
                       className={cn(
                         "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                         active
@@ -630,15 +713,12 @@ export function EvalPlayground({
                 })}
               </div>
             </div>
-            {/* Judge Model */}
             <div className="space-y-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Judge Model
-              </p>
+              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Judge Model</p>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5 font-mono text-xs">
-                    {judgeModelLabel}
+                    {judgeModelLabel ?? judgeModel}
                     <HugeiconsIcon icon={ArrowDown01Icon} size={12} />
                   </Button>
                 </DropdownMenuTrigger>
@@ -646,7 +726,7 @@ export function EvalPlayground({
                   {JUDGE_MODELS.map((m) => (
                     <DropdownMenuItem
                       key={m.value}
-                      onClick={() => onJudgeModelChange(m.value)}
+                      onClick={() => onJudgeModelChange?.(m.value)}
                       className={cn("font-mono text-xs", judgeModel === m.value && "font-semibold")}
                     >
                       {m.label}
@@ -717,9 +797,14 @@ export function EvalPlayground({
                   Deploy to an environment to get the SDK snippet.
                 </p>
               )
-              const snippet = highestEnv === "production"
-                ? `prompt = fluiq.get_prompt("${savedPromptSlug}")`
-                : `prompt = fluiq.get_prompt("${savedPromptSlug}", env="${highestEnv}")`
+              const fetchLine = highestEnv === "production"
+                ? `prompt = fluiq.fetch_prompt("${savedPromptSlug}")`
+                : `prompt = fluiq.fetch_prompt("${savedPromptSlug}", env="${highestEnv}")`
+              const renderArgs = detectedVars.length > 0
+                ? detectedVars.map((v) => `${v}=""`).join(", ")
+                : ""
+              const renderLine = `result = prompt.render(${renderArgs})`
+              const snippet = `${fetchLine}\n${renderLine}`
               return (
                 <button
                   type="button"
@@ -735,8 +820,9 @@ export function EvalPlayground({
                     size={12}
                     className={cn("shrink-0", copiedSnippet ? "text-emerald-500" : "text-muted-foreground/50")}
                   />
-                  <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-muted-foreground">
-                    {snippet}
+                  <code className="min-w-0 flex-1 font-mono text-[11px] text-muted-foreground">
+                    <span className="block truncate">{fetchLine}</span>
+                    <span className="block truncate">{renderLine}</span>
                   </code>
                   <span className="shrink-0 text-[10px] text-muted-foreground/40">
                     {copiedSnippet ? "Copied!" : "Copy"}
@@ -969,7 +1055,7 @@ export function EvalPlayground({
 
       </div>
 
-      {/* ── Run error ── */}
+      {/* ── Eval run error ── */}
       {row && runError ? (
         <div className="flex shrink-0 items-center gap-2 border-t border-destructive/30 bg-destructive/10 px-4 py-2 text-xs text-destructive">
           <HugeiconsIcon icon={Alert02Icon} size={13} />
@@ -979,30 +1065,66 @@ export function EvalPlayground({
 
       {/* ── Evaluation Results ── */}
       {row && runResults && runResults.length > 0 ? (
+        <div className="shrink-0 border-t border-border/60 px-4 py-3">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Evaluation Results
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {runResults.map((r) => (
+              <ScoreCard key={r.metric} result={r} />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {/* ── Compare error ── */}
+      {compareError ? (
+        <div className="flex shrink-0 items-center gap-2 border-t border-destructive/30 bg-destructive/10 px-4 py-2 text-xs text-destructive">
+          <HugeiconsIcon icon={Alert02Icon} size={13} />
+          {compareError}
+        </div>
+      ) : null}
+
+      {/* ── Compare results ── */}
+      {compareResults && compareResults.length > 0 ? (
         <div className="shrink-0 border-t border-border/60">
-          <button
-            type="button"
-            onClick={() => setResultsOpen((v) => !v)}
-            className="flex w-full items-center justify-between px-4 py-2.5 text-left"
+          <div className="grid gap-3 p-4"
+            style={{ gridTemplateColumns: `repeat(${compareResults.length}, minmax(0, 1fr))` }}
           >
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-              Evaluation Results
-            </span>
-            <HugeiconsIcon
-              icon={ArrowUp01Icon}
-              size={12}
-              className={cn("text-muted-foreground transition-transform", resultsOpen && "rotate-180")}
-            />
-          </button>
-          {resultsOpen ? (
-            <div className="border-t border-border/60 px-4 py-3">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {runResults.map((r) => (
-                  <ScoreCard key={r.metric} result={r} />
-                ))}
+            {compareResults.map((r) => (
+              <div key={r.model} className="flex flex-col rounded-md border border-border/60 overflow-hidden">
+                {/* Card header */}
+                <div className="flex flex-wrap items-center gap-2 border-b border-border/60 bg-muted/40 px-3 py-2">
+                  <span className="font-mono text-xs font-semibold truncate">
+                    {COMPARE_MODELS.find((m) => m.value === r.model)?.label ?? r.model}
+                  </span>
+                  {r.latency_ms != null ? (
+                    <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                      {r.latency_ms < 1000 ? `${r.latency_ms}ms` : `${(r.latency_ms / 1000).toFixed(1)}s`}
+                    </span>
+                  ) : null}
+                  {r.input_tokens != null && r.output_tokens != null ? (
+                    <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                      {r.input_tokens.toLocaleString()} in / {r.output_tokens.toLocaleString()} out
+                    </span>
+                  ) : null}
+                  {r.cost_usd != null ? (
+                    <span className="ml-auto rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                      {formatCost(r.cost_usd, "USD")}
+                    </span>
+                  ) : null}
+                </div>
+                {/* Card body */}
+                {r.error ? (
+                  <p className="px-3 py-3 text-xs text-destructive">{r.error}</p>
+                ) : (
+                  <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap break-words px-3 py-3 font-mono text-xs leading-relaxed text-foreground">
+                    {r.output ?? ""}
+                  </pre>
+                )}
               </div>
-            </div>
-          ) : null}
+            ))}
+          </div>
         </div>
       ) : null}
 
