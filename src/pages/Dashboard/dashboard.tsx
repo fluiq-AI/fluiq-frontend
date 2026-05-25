@@ -4,7 +4,7 @@ import {
   Activity01Icon,
   ApiIcon,
   DashboardSquare01Icon,
-  Database01Icon,
+  // Database01Icon,
   MagicWand01Icon,
   AiSecurity02Icon,
   AiContentGenerator01Icon,
@@ -39,7 +39,7 @@ const NAV_SECTIONS = [
     items: [
       { to: "/dashboard/tests", label: "Tests", icon: TestTube01Icon },
       { to: "/dashboard/prompts", label: "Prompts", icon: AiContentGenerator01Icon },
-      { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon }
+      // { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon }
     ],
   },
   {
