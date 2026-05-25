@@ -149,13 +149,14 @@ export function MetadataSection({ metadata: m, date }: { metadata: TraceMetadata
 // ── Template Variables Section ────────────────────────────────────────────────
 
 export function TemplateVarsSection({
-  vars, values, renderedPrompt, originalInput, onChange,
+  vars, values, renderedPrompt, originalInput, onChange, hideTitle = false,
 }: {
   vars: string[]
   values: Record<string, string>
   renderedPrompt: string
   originalInput: string
   onChange: (name: string, value: string) => void
+  hideTitle?: boolean
 }) {
   const [showPreview, setShowPreview] = useState(false)
   const allFilled = vars.every((v) => (values[v] ?? "").trim().length > 0)
@@ -163,9 +164,11 @@ export function TemplateVarsSection({
   return (
     <div className="rounded-md border border-primary/20 bg-primary/5 p-4 space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-primary/70">
-          Template Variables
-        </p>
+        {!hideTitle ? (
+          <p className="text-[11px] font-medium uppercase tracking-wide text-primary/70">
+            Template Variables
+          </p>
+        ) : null}
         <button
           type="button"
           onClick={() => setShowPreview((v) => !v)}
@@ -329,6 +332,8 @@ export function EvalPlayground({
   const [deployOpen, setDeployOpen] = useState(false)
   const [showVersionHistory, setShowVersionHistory] = useState(false)
   const [copiedSnippet, setCopiedSnippet] = useState(false)
+  const [templateVarsOpen, setTemplateVarsOpen] = useState(true)
+  const [compareResultsOpen, setCompareResultsOpen] = useState(true)
 
   const [showDatasetPanel, setShowDatasetPanel] = useState(false)
   const [datasets,         setDatasets]         = useState<DatasetRef[]>([])
@@ -1042,14 +1047,38 @@ export function EvalPlayground({
 
         {/* ── Template Variables ── */}
         {hasVars ? (
-          <div className="shrink-0 border-b border-border/60 px-5 py-4">
-            <TemplateVarsSection
-              vars={detectedVars}
-              values={templateVars}
-              renderedPrompt={renderedPrompt}
-              originalInput={row?.userPrompt ?? ""}
-              onChange={onVarChange}
-            />
+          <div className="shrink-0 border-b border-border/60">
+            <button
+              type="button"
+              onClick={() => setTemplateVarsOpen((v) => !v)}
+              className="flex w-full items-center justify-between border-b border-border/60 bg-muted/40 px-3 py-1.5"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Template Variables
+                </span>
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-1.5 py-px text-[10px] font-semibold text-primary">
+                  {detectedVars.length} var{detectedVars.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <HugeiconsIcon
+                icon={ArrowDown01Icon}
+                size={12}
+                className={cn("text-muted-foreground transition-transform", templateVarsOpen && "rotate-180")}
+              />
+            </button>
+            {templateVarsOpen ? (
+              <div className="max-h-64 overflow-y-auto px-5 py-4">
+                <TemplateVarsSection
+                  vars={detectedVars}
+                  values={templateVars}
+                  renderedPrompt={renderedPrompt}
+                  originalInput={row?.userPrompt ?? ""}
+                  onChange={onVarChange}
+                  hideTitle
+                />
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -1088,43 +1117,61 @@ export function EvalPlayground({
       {/* ── Compare results ── */}
       {compareResults && compareResults.length > 0 ? (
         <div className="shrink-0 border-t border-border/60">
-          <div className="grid gap-3 p-4"
-            style={{ gridTemplateColumns: `repeat(${compareResults.length}, minmax(0, 1fr))` }}
+          <button
+            type="button"
+            onClick={() => setCompareResultsOpen((v) => !v)}
+            className="flex w-full items-center justify-between border-b border-border/60 bg-muted/40 px-3 py-1.5"
           >
-            {compareResults.map((r) => (
-              <div key={r.model} className="flex flex-col rounded-md border border-border/60 overflow-hidden">
-                {/* Card header */}
-                <div className="flex flex-wrap items-center gap-2 border-b border-border/60 bg-muted/40 px-3 py-2">
-                  <span className="font-mono text-xs font-semibold truncate">
-                    {COMPARE_MODELS.find((m) => m.value === r.model)?.label ?? r.model}
-                  </span>
-                  {r.latency_ms != null ? (
-                    <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
-                      {r.latency_ms < 1000 ? `${r.latency_ms}ms` : `${(r.latency_ms / 1000).toFixed(1)}s`}
-                    </span>
-                  ) : null}
-                  {r.input_tokens != null && r.output_tokens != null ? (
-                    <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
-                      {r.input_tokens.toLocaleString()} in / {r.output_tokens.toLocaleString()} out
-                    </span>
-                  ) : null}
-                  {r.cost_usd != null ? (
-                    <span className="ml-auto rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
-                      {formatCost(r.cost_usd, "USD")}
-                    </span>
-                  ) : null}
-                </div>
-                {/* Card body */}
-                {r.error ? (
-                  <p className="px-3 py-3 text-xs text-destructive">{r.error}</p>
-                ) : (
-                  <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap break-words px-3 py-3 font-mono text-xs leading-relaxed text-foreground">
-                    {r.output ?? ""}
-                  </pre>
-                )}
+            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              Compare Results
+            </span>
+            <HugeiconsIcon
+              icon={ArrowDown01Icon}
+              size={12}
+              className={cn("text-muted-foreground transition-transform", compareResultsOpen && "rotate-180")}
+            />
+          </button>
+          {compareResultsOpen ? (
+            <div className="max-h-96 overflow-y-auto">
+              <div className="grid gap-3 p-4"
+                style={{ gridTemplateColumns: `repeat(${compareResults.length}, minmax(0, 1fr))` }}
+              >
+                {compareResults.map((r) => (
+                  <div key={r.model} className="flex flex-col rounded-md border border-border/60 overflow-hidden">
+                    {/* Card header */}
+                    <div className="flex flex-wrap items-center gap-2 border-b border-border/60 bg-muted/40 px-3 py-2">
+                      <span className="font-mono text-xs font-semibold truncate">
+                        {COMPARE_MODELS.find((m) => m.value === r.model)?.label ?? r.model}
+                      </span>
+                      {r.latency_ms != null ? (
+                        <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                          {r.latency_ms < 1000 ? `${r.latency_ms}ms` : `${(r.latency_ms / 1000).toFixed(1)}s`}
+                        </span>
+                      ) : null}
+                      {r.input_tokens != null && r.output_tokens != null ? (
+                        <span className="rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                          {r.input_tokens.toLocaleString()} in / {r.output_tokens.toLocaleString()} out
+                        </span>
+                      ) : null}
+                      {r.cost_usd != null ? (
+                        <span className="ml-auto rounded-full bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground">
+                          {formatCost(r.cost_usd, "USD")}
+                        </span>
+                      ) : null}
+                    </div>
+                    {/* Card body */}
+                    {r.error ? (
+                      <p className="px-3 py-3 text-xs text-destructive">{r.error}</p>
+                    ) : (
+                      <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap break-words px-3 py-3 font-mono text-xs leading-relaxed text-foreground">
+                        {r.output ?? ""}
+                      </pre>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
