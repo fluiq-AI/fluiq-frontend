@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Link } from "react-router"
+import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import {
@@ -10,136 +11,10 @@ import {
   FlashIcon,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
+import { CodeBlock } from "@/components/code-block"
+import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 
-function useScrollReveal() {
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.setAttribute("data-visible", "true")
-            observer.unobserve(entry.target)
-          }
-        })
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
-    )
-    const els = document.querySelectorAll("[data-animate]")
-    els.forEach((el) => observer.observe(el))
-    return () => observer.disconnect()
-  }, [])
-}
-
-/*
-const tiers = [
-  {
-    name: "Free",
-    icon: GiftIcon,
-    price: "$0",
-    cadence: "forever",
-    description: "Full observability for your first pipeline. No credit card required.",
-    cta: { label: "Start for free", to: "/signup" },
-    featured: false,
-    note: "5M traces is a lifetime cap, not monthly. Dashboards stay read-only after you hit it.",
-    features: [
-      { text: "5M traces (lifetime total)", included: true },
-      { text: "1,000 LLM-as-judge evals / month", included: true },
-      { text: "1 seat", included: true },
-      { text: "OpenAI, Anthropic, Gemini, LangChain, LangGraph, CrewAI, Google ADK", included: true },
-      { text: "Trace explorer & live dashboard", included: true },
-      { text: "CI/CD eval gates", included: true },
-      { text: "7-day trace retention", included: true },
-      { text: "fluiq.secure() — security scanning", included: false },
-      { text: "fluiq.optimize() — response caching", included: false },
-      { text: "Community support", included: true },
-    ],
-  },
-  {
-    name: "Starter",
-    icon: UserIcon,
-    price: "$0",
-    originalPrice: "$149",
-    cadence: "per workspace / month",
-    description: "Unlimited tracing for solo developers and small teams who've outgrown the free cap.",
-    cta: { label: "Contact us for free upgrade", to: "/contact" },
-    featured: false,
-    note: null,
-    features: [
-      { text: "Unlimited tracing", included: true },
-      { text: "5,000 LLM-as-judge evals / month", included: true },
-      { text: "3 seats", included: true },
-      { text: "Everything in Free", included: true },
-      { text: "30-day trace retention", included: true },
-      { text: "fluiq.secure() — security scanning", included: false },
-      { text: "fluiq.optimize() — response caching", included: false },
-      { text: "Priority email support", included: true },
-    ],
-  },
-  {
-    name: "Team",
-    icon: RocketIcon,
-    price: "$0",
-    originalPrice: "$499",
-    cadence: "per workspace / month",
-    description: "Security scanning and response caching for teams shipping production-grade AI pipelines.",
-    cta: { label: "Contact us for free upgrade", to: "/contact" },
-    featured: true,
-    note: null,
-    features: [
-      { text: "Unlimited tracing", included: true },
-      { text: "20,000 LLM-as-judge evals / month", included: true },
-      { text: "10 seats ($49 / extra seat)", included: true },
-      { text: "Everything in Starter", included: true },
-      { text: "fluiq.secure() — PII, injection & jailbreak blocking, secret scanning", included: true },
-      { text: "fluiq.optimize() — trace-driven response caching", included: true },
-      { text: "Anomaly alerts to Slack", included: true },
-      { text: "90-day trace retention", included: true },
-      { text: "Priority support", included: true },
-    ],
-  },
-  {
-    name: "Growth",
-    icon: ChartLineData01Icon,
-    price: "$0",
-    originalPrice: "$1,499",
-    cadence: "per workspace / month",
-    description: "Higher eval throughput, longer retention, and custom evaluators for production-scale pipelines.",
-    cta: { label: "Contact us for free upgrade", to: "/contact" },
-    featured: false,
-    note: null,
-    features: [
-      { text: "Unlimited tracing", included: true },
-      { text: "100,000 LLM-as-judge evals / month", included: true },
-      { text: "20 seats ($39 / extra seat)", included: true },
-      { text: "Everything in Team", included: true },
-      { text: "Custom evaluators & metric pipelines", included: true },
-      { text: "180-day trace retention", included: true },
-      { text: "Priority Slack support", included: true },
-    ],
-  },
-  {
-    name: "Enterprise",
-    icon: Building01Icon,
-    price: "$0",
-    originalPrice: "Custom",
-    cadence: "annual contract",
-    description: "Compliance, on-prem deployment, and a dedicated success engineer.",
-    cta: { label: "Talk to sales", to: "#contact" },
-    featured: false,
-    note: null,
-    features: [
-      { text: "Unlimited tracing & evaluations", included: true },
-      { text: "Unlimited seats & workspaces", included: true },
-      { text: "Everything in Growth", included: true },
-      { text: "SSO / SAML & SCIM provisioning", included: true },
-      { text: "VPC or on-prem deployment", included: true },
-      { text: "Custom data retention & residency", included: true },
-      { text: "Audit logs & role-based access", included: true },
-      { text: "Dedicated Slack channel & SLA", included: true },
-    ],
-  },
-]
-*/
+const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
 const powerFeatures = [
   {
@@ -222,72 +97,36 @@ export default function Pricing() {
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
 
-      {/* ── Keyframe styles ─────────────────────────────────────────── */}
+      {/* ── Styles ──────────────────────────────────────────────────────── */}
       <style>{`
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(28px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-        .hero-badge { animation: fadeIn 0.5s ease both; }
-        .hero-h1    { animation: fadeUp 0.7s ease 0.1s both; }
-        .hero-sub   { animation: fadeUp 0.7s ease 0.2s both; }
-        .hero-cta   { animation: fadeUp 0.7s ease 0.3s both; }
-        .hero-note  { animation: fadeUp 0.7s ease 0.4s both; }
-
         [data-animate] {
           opacity: 0;
           transform: translateY(24px);
           transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1),
                       transform 0.65s cubic-bezier(0.16,1,0.3,1);
         }
-        [data-animate][data-visible="true"] {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        [data-animate][data-visible="true"] { opacity: 1; transform: translateY(0); }
         [data-delay="1"] { transition-delay: 0.08s; }
         [data-delay="2"] { transition-delay: 0.16s; }
         [data-delay="3"] { transition-delay: 0.24s; }
         [data-delay="4"] { transition-delay: 0.32s; }
         [data-delay="5"] { transition-delay: 0.40s; }
-
-        .pillar-card {
-          transition: box-shadow 0.2s ease, transform 0.2s ease;
-        }
-        .pillar-card:hover {
-          box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-          transform: translateY(-2px);
-        }
-        .cta-btn {
-          transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        .cta-btn:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-        }
+        .pillar-card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
+        .pillar-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .cta-btn { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        .cta-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
         .cta-btn:active { transform: translateY(0); }
-
         @media (prefers-reduced-motion: reduce) {
-          *, [data-animate], .hero-badge, .hero-h1, .hero-sub, .hero-cta, .hero-note {
-            animation: none !important;
-            transition: none !important;
-            opacity: 1 !important;
-            transform: none !important;
-          }
+          *, [data-animate] { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
         }
       `}</style>
 
-      {/* ── Nav ─────────────────────────────────────────────────────── */}
-      <header
-        className={`sticky top-0 z-50 transition-all duration-300 ${
-          navScrolled
-            ? "bg-[#FAF9F6]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#E5E1D6] dark:border-[#2A2A2A]"
-            : "bg-[#FAF9F6] dark:bg-[#0A0A0A] border-b border-transparent"
-        }`}
-      >
+      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+      <header className={`sticky top-0 z-50 transition-all duration-300 ${
+        navScrolled
+          ? "bg-[#FAF9F6]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#E5E1D6] dark:border-[#2A2A2A]"
+          : "bg-[#FAF9F6] dark:bg-[#0A0A0A] border-b border-transparent"
+      }`}>
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/logo.svg" alt="Fluiq" className="size-7" />
@@ -305,73 +144,94 @@ export default function Pricing() {
               <Link to="/login">Login</Link>
             </Button>
             <Button size="sm" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]" asChild>
-              <Link to="/signup">
-                Get started
-                <HugeiconsIcon icon={ArrowRight02Icon} size={14} />
-              </Link>
+              <Link to="/signup">Get started <HugeiconsIcon icon={ArrowRight02Icon} size={14} /></Link>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-28">
-        <div className="mx-auto max-w-6xl px-6 text-center">
-          <div className="hero-badge mb-6">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9] dark:bg-[#1A1A1A] px-4 py-1.5 text-[12px] font-medium text-[#6B6B66] dark:text-[#9A9A92] tracking-wide">
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden py-28">
+
+        {/* Background: dot grid + blue glow */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute inset-0" style={{
+            backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
+            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
+          }} />
+          <div className="dark:block hidden absolute inset-0" style={{
+            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
+            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
+            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
+          }} />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(24,96,211,0.07) 0%, transparent 65%)" }} />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
+
+          <motion.div className="mb-6"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.05 }}>
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-sm px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#1860D3] dark:text-[#6FA8FF]">
               <span className="size-1.5 rounded-full bg-emerald-500 inline-block" />
               Free while in beta
             </span>
-          </div>
-          <h1 className="hero-h1 font-heading mx-auto max-w-3xl text-5xl font-bold tracking-[-0.03em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.08] md:text-6xl">
-            No credit card.<br className="hidden md:block" /> No limits.
-          </h1>
-          <p className="hero-sub mt-6 mx-auto max-w-lg text-[18px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
+          </motion.div>
+
+          <motion.h1
+            className="font-heading mx-auto max-w-3xl text-5xl font-bold tracking-[-0.03em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.08] md:text-6xl"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.15, ease: EASE_OUT }}>
+            <span className="text-[#1860D3] dark:text-[#6FA8FF]">No credit card.</span><br className="hidden md:block" /> No limits.
+          </motion.h1>
+
+          <motion.p
+            className="mt-6 mx-auto max-w-lg text-[18px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
             Just sign up and start shipping safer AI.
-          </p>
-          <div className="hero-cta mt-10 flex flex-col items-center justify-center gap-4">
-            <Button
-              size="lg"
+          </motion.p>
+
+          <motion.div className="mt-10 flex flex-col items-center justify-center gap-4"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
+            <Button size="lg"
               className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-10 h-13 text-[16px] font-semibold"
-              asChild
-            >
+              asChild>
               <Link to="/signup">
                 Get Started Free
                 <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
               </Link>
             </Button>
-          </div>
-          <p className="hero-note mt-6 text-[13px] text-[#9A9A92] dark:text-[#9A9A92]">
-            Paid plans coming Q4 2026 — early users get locked in at founding rates.
-          </p>
+          </motion.div>
+
+          <motion.p
+            className="mt-6 text-[13px] text-[#9A9A92]"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.45, ease: EASE_OUT }}>
+            Paid plans coming soon — early users get locked in at founding rates.
+          </motion.p>
         </div>
       </section>
 
-      {/* ── Pricing tiers (commented out — everyone is on Team during beta) ── */}
-      {/*
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-5">
-            [tier cards]
-          </div>
-        </div>
-      </section>
-      */}
-
-      {/* ── What's included ──────────────────────────────────────────── */}
+      {/* ── What's included ──────────────────────────────────────────────── */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 bg-[#F2F0E9] dark:bg-[#0A0A0A]">
         <div className="mx-auto max-w-5xl px-6">
           <div data-animate className="mb-12 text-center">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9A9A92] dark:text-[#9A9A92] mb-4">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
               Everything included, free
             </p>
             <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
-              Two calls. Security and speed, handled.
+              Two calls. <span className="text-[#1860D3] dark:text-[#6FA8FF]">Security and speed</span>, handled.
             </h2>
             <p className="mt-4 mx-auto max-w-lg text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
-              <code className="rounded bg-[#F2F0E9] dark:bg-[#252525] px-1.5 py-0.5 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">fluiq.secure()</code>
+              <code className="rounded bg-[#E8F0FD] dark:bg-[#1860D3]/10 px-1.5 py-0.5 font-mono text-[12px] text-[#1860D3] dark:text-[#6FA8FF]">fluiq.secure()</code>
               {" "}and{" "}
-              <code className="rounded bg-[#F2F0E9] dark:bg-[#252525] px-1.5 py-0.5 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">fluiq.optimize()</code>
+              <code className="rounded bg-[#E8F0FD] dark:bg-[#1860D3]/10 px-1.5 py-0.5 font-mono text-[12px] text-[#1860D3] dark:text-[#6FA8FF]">fluiq.optimize()</code>
               {" "}are available to every user — no upgrade required.
             </p>
           </div>
@@ -384,9 +244,8 @@ export default function Pricing() {
                 data-delay={String(i + 1)}
                 className="pillar-card rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] p-7"
               >
-                {/* Header */}
                 <div className="flex items-start gap-4 mb-5">
-                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#F2F0E9] dark:bg-[#252525] text-[#0a0a0a] dark:text-[#FAF9F6]">
+                  <div className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#E8F0FD] dark:bg-[#1860D3]/10 text-[#1860D3] dark:text-[#6FA8FF]">
                     <HugeiconsIcon icon={feature.icon} size={19} />
                   </div>
                   <div>
@@ -398,7 +257,7 @@ export default function Pricing() {
                         {feature.badge}
                       </span>
                     </div>
-                    <p className="text-[12px] font-semibold text-[#9A9A92] dark:text-[#9A9A92] uppercase tracking-wide">
+                    <p className="text-[11px] font-semibold text-[#1860D3] dark:text-[#6FA8FF] uppercase tracking-[0.08em]">
                       {feature.tagline}
                     </p>
                   </div>
@@ -408,14 +267,13 @@ export default function Pricing() {
                   {feature.description}
                 </p>
 
-                {/* Capabilities */}
                 <ul className="space-y-2.5 mb-6">
                   {feature.capabilities.map((cap) => (
                     <li key={cap.label} className="flex items-start gap-2.5">
                       <HugeiconsIcon
                         icon={CheckmarkCircle02Icon}
                         size={13}
-                        className="mt-0.5 shrink-0 text-[#0a0a0a] dark:text-[#FAF9F6]"
+                        className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]"
                       />
                       <div>
                         <span className="text-[12px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">{cap.label}</span>
@@ -425,25 +283,22 @@ export default function Pricing() {
                   ))}
                 </ul>
 
-                {/* Code snippet */}
-                <pre className="rounded-xl bg-[#F2F0E9] dark:bg-[#1A1A1A] px-4 py-3 font-mono text-[11px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed whitespace-pre-wrap break-all">
-                  {feature.code}
-                </pre>
+                <CodeBlock variant="dark">{feature.code}</CodeBlock>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── What every account includes ──────────────────────────────── */}
+      {/* ── What every account includes ──────────────────────────────────── */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
         <div className="mx-auto max-w-3xl px-6">
           <div data-animate className="mb-12 text-center">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9A9A92] dark:text-[#9A9A92] mb-4">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
               Every account
             </p>
             <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
-              Full access. No gates.
+              Full access. <span className="text-[#1860D3] dark:text-[#6FA8FF]">No gates.</span>
             </h2>
             <p className="mt-4 text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
               Every user gets the complete Fluiq platform during the beta.
@@ -469,7 +324,7 @@ export default function Pricing() {
                 <HugeiconsIcon
                   icon={CheckmarkCircle02Icon}
                   size={14}
-                  className="shrink-0 text-[#0a0a0a] dark:text-[#FAF9F6]"
+                  className="shrink-0 text-[#1860D3] dark:text-[#6FA8FF]"
                 />
                 <span className="text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">{item}</span>
               </div>
@@ -478,11 +333,11 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* ── FAQ ──────────────────────────────────────────────────────── */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
         <div className="mx-auto max-w-3xl px-6">
           <div data-animate className="mb-12 text-center">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#9A9A92] dark:text-[#9A9A92] mb-4">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
               FAQ
             </p>
             <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
@@ -507,7 +362,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* ── CTA ──────────────────────────────────────────────────────── */}
+      {/* ── CTA ──────────────────────────────────────────────────────────── */}
       <section className="py-24">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <div data-animate>
@@ -515,32 +370,29 @@ export default function Pricing() {
               <HugeiconsIcon icon={SparklesIcon} size={22} />
             </div>
             <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">
-              Free while in beta.
+              Free while <span className="text-[#1860D3] dark:text-[#6FA8FF]">in beta.</span>
             </h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
               No credit card. No limits. Just sign up and start shipping safer AI.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-8 h-12 text-[15px]" asChild>
-                <Link to="/signup">
-                  Get Started Free
-                  <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
-                </Link>
+                <Link to="/signup">Get Started Free <HugeiconsIcon icon={ArrowRight02Icon} size={16} /></Link>
               </Button>
               <Button size="lg" variant="outline" className="cta-btn border-[#E5E1D6] dark:border-[#333333] text-[#0a0a0a] dark:text-[#FAF9F6] hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A] px-8 h-12 text-[15px]" asChild>
                 <Link to="/documentation">Read the docs</Link>
               </Button>
             </div>
-            <p className="mt-5 text-[12px] text-[#9A9A92] dark:text-[#9A9A92]">
-              Paid plans coming Q4 2026 · early users get locked in at founding rates
+            <p className="mt-5 text-[12px] text-[#9A9A92]">
+              Paid plans coming soon · early users get locked in at founding rates
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── Footer ───────────────────────────────────────────────────── */}
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
       <footer className="border-t border-[#E5E1D6] dark:border-[#2A2A2A] py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-6 text-[13px] text-[#9A9A92] dark:text-[#9A9A92] md:flex-row md:items-center">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-6 text-[13px] text-[#9A9A92] md:flex-row md:items-center">
           <div className="flex items-center gap-2.5">
             <img src="/logo.svg" alt="Fluiq" className="size-6 opacity-60" />
             <span className="font-heading font-semibold text-[#0a0a0a] dark:text-[#FAF9F6] text-[14px]">Fluiq</span>

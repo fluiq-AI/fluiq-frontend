@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useState, type ReactNode } from "react"
 import { Copy01Icon, Tick02Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -9,11 +9,13 @@ export function CodeBlock({
   className,
   preClassName,
   variant = "light",
+  highlighted,
 }: {
   children: string
   className?: string
   preClassName?: string
   variant?: "light" | "dark"
+  highlighted?: ReactNode
 }) {
   const [copied, setCopied] = useState(false)
 
@@ -66,7 +68,7 @@ export function CodeBlock({
           preClassName
         )}
       >
-        <code>{children}</code>
+        <code>{highlighted ?? children}</code>
       </pre>
     </div>
   )
