@@ -8,6 +8,8 @@ import {
   MagicWand01Icon,
   AiSecurity02Icon,
   AiContentGenerator01Icon,
+  FileEditIcon,
+  Settings01Icon,
   TestTube01Icon,
   Rocket02Icon,
   UserCircleIcon,
@@ -45,7 +47,9 @@ const NAV_SECTIONS = [
   {
     section: "Security",
     items: [
-      { to: "/dashboard/security", label: "Security", icon: AiSecurity02Icon },
+      { to: "/dashboard/security",    label: "Security",    icon: AiSecurity02Icon },
+      { to: "/dashboard/guardrails",  label: "Guardrails",  icon: Settings01Icon   },
+      { to: "/dashboard/audit",       label: "Audit Log",   icon: FileEditIcon     },
     ],
   },
   {
@@ -96,7 +100,7 @@ function Dashboard() {
                           cn(
                             "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
                             isActive
-                              ? "bg-muted font-medium text-foreground"
+                              ? "bg-[#EEF3FD] dark:bg-[#1A2A4A]/40 font-medium text-[#1860D3] dark:text-[#6FA8FF]"
                               : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                           )
                         }

@@ -17,7 +17,7 @@ import { TRACES_PAGE_SIZE } from "../Traces/utils/constants"
 
 const SECURITY_PAGE_SIZE = TRACES_PAGE_SIZE * 2
 
-type RiskFlag = "Blocked" | "PII" | "Injection" | "Jailbreak" | "Skeleton Key" | "Secrets"
+type RiskFlag = "Blocked" | "PII" | "Injection" | "Jailbreak" | "Skeleton Key" | "Secrets" | "Crescendo" | "Response Gate"
 
 const FLAG_STYLES: Record<RiskFlag, string> = {
   Blocked: "bg-red-500/15 text-red-600",
@@ -26,6 +26,8 @@ const FLAG_STYLES: Record<RiskFlag, string> = {
   Jailbreak: "bg-yellow-500/15 text-yellow-700",
   "Skeleton Key": "bg-blue-500/15 text-blue-700",
   Secrets: "bg-rose-500/15 text-rose-600",
+  Crescendo: "bg-orange-500/15 text-orange-700",
+  "Response Gate": "bg-red-500/15 text-red-700",
 }
 
 function hasSecurityData(event: Record<string, unknown>): boolean {
@@ -69,6 +71,8 @@ function getRiskFlags(event: Record<string, unknown>): RiskFlag[] {
   if (event["jailbreak_detected"]) flags.push("Jailbreak")
   if (event["skeleton_key_detected"]) flags.push("Skeleton Key")
   if (event["secrets_detected"]) flags.push("Secrets")
+  if (event["crescendo_detected"]) flags.push("Crescendo")
+  if (event["response_gate_blocked"]) flags.push("Response Gate")
   return flags
 }
 
@@ -203,7 +207,32 @@ function SecurityOverview() {
         description="Traces flagged with security risks — PII, injections, jailbreaks, and secrets."
       />
       <div className="px-6 py-6">
-      
+
+      {/* ── Metric cards ── */}
+      {!loading && traces.length > 0 && (() => {
+        const blocked      = traces.filter((t) => t.event["status"] === "blocked").length
+        const gateBlocked  = traces.filter((t) => t.event["response_gate_blocked"]).length
+        const highRisk     = traces.filter((t) => t.event["security_risk_level"] === "high").length
+        const crescendo    = traces.filter((t) => t.event["crescendo_detected"]).length
+        const stats = [
+          { label: "Flagged traces",    value: traces.length,  color: "text-foreground" },
+          { label: "Blocked (pre-call)",value: blocked,         color: "text-red-600" },
+          { label: "Response gate",     value: gateBlocked,    color: "text-red-700" },
+          { label: "High risk",         value: highRisk,        color: "text-yellow-600" },
+          { label: "Crescendo alerts",  value: crescendo,       color: "text-orange-600" },
+        ]
+        return (
+          <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {stats.map(({ label, value, color }) => (
+              <div key={label} className="rounded-lg border border-border/60 bg-card px-4 py-3">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className={`mt-1 font-heading text-2xl font-semibold tabular-nums ${color}`}>{value}</p>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
+
       <Card>
         <CardHeader>
 
@@ -288,7 +317,7 @@ function SecurityOverview() {
                         </td>
                         <td className="max-w-sm px-6 py-3">
                           {prompt ? (
-                            <span className="line-clamp-2 break-words text-xs text-foreground/80">
+                            <span className="line-clamp-2 wrap-break-word text-xs text-foreground/80">
                               {truncate(prompt)}
                             </span>
                           ) : (

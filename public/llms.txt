@@ -8,7 +8,7 @@ Fluiq replaces four separate AI tooling concerns with a single SDK. It auto-inst
 
 - **Observe** (`fluiq.instrument()`) — full span tree for agents, chains, and raw LLM calls; per-node token counts, USD cost at provider rates, p50/p95/p99 latency; streamed live to the dashboard.
 - **Secure** (`fluiq.secure()`) — pre-call jailbreak and prompt-injection blocking; PII detection (credit cards, SSNs, IBAN, emails, phone numbers, IP addresses, names); secret and high-entropy string redaction; semantic attack scoring; warn or block mode.
-- **Optimize** (`fluiq.optimize()`) — trace-driven server-side Redis caching; profile built from real traffic patterns; zero infrastructure to manage; observe mode measures savings without caching; configurable TTL and model scope.
+- **Optimize** (`fluiq.optimize()`) — trace-driven server-side Redis caching for LLM responses; MCP tool result caching (list_tools and call_tool, keyed by server URL and arguments); automatic Anthropic prompt-prefix caching via cache_control injection; cached token tracking for OpenAI and Gemini; all savings visible on the Optimize dashboard.
 - **Evaluate** (`fluiq.eval()`) — LLM-as-judge scoring on every response; six metrics: hallucination, faithfulness, relevance, toxicity, coherence, completeness; warn mode logs scores; block mode raises FluiqEvalError before bad responses reach the user; CI/CD GitHub Actions gate.
 
 ## Supported integrations
@@ -61,7 +61,7 @@ text = prompt.render(ticket_body=raw_text)
 - **Cost analytics** — per-trace and per-agent USD cost; rolled-up totals across nested spans; anomaly alerts to Slack
 - **Security panel** — detected PII types, attack scores, and redacted fields per trace
 - **Evaluations** — per-trace quality scores across all enabled metrics
-- **Optimize dashboard** — cache hit rate, latency savings, estimated cost savings
+- **Optimize dashboard** — Redis cache hit rate by type (LLM, MCP tools, embeddings, vector stores); provider prompt cache card showing Anthropic cache_read/creation tokens and OpenAI/Gemini cached tokens
 - **Agents view** — agent-level aggregation sorted by cost, token count, and latency
 - **Prompts manager** — version history, playground, environment deployments
 - **API key management** — create, reveal, and revoke workspace keys

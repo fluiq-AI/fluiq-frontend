@@ -59,7 +59,7 @@ function AdminLayout() {
                     cn(
                       "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
                       isActive
-                        ? "bg-muted font-medium text-foreground"
+                        ? "bg-[#EEF3FD] dark:bg-[#1A2A4A]/40 font-medium text-[#1860D3] dark:text-[#6FA8FF]"
                         : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                     )
                   }

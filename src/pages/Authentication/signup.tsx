@@ -92,7 +92,7 @@ function Signup() {
                   <HugeiconsIcon
                     icon={CheckmarkCircle02Icon}
                     size={18}
-                    className="mt-0.5 shrink-0 text-foreground"
+                    className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]"
                   />
                   <span className="text-muted-foreground">{p}</span>
                 </li>
@@ -214,9 +214,9 @@ function Signup() {
 
                   <p className="text-center text-xs text-muted-foreground">
                     By signing up you agree to our{" "}
-                    <a href="#" className="underline hover:text-foreground">Terms</a>{" "}
+                    <Link to="/terms" className="text-[#1860D3] dark:text-[#6FA8FF] hover:underline">Terms</Link>{" "}
                     and{" "}
-                    <a href="#" className="underline hover:text-foreground">Privacy Policy</a>.
+                    <Link to="/privacy" className="text-[#1860D3] dark:text-[#6FA8FF] hover:underline">Privacy Policy</Link>.
                   </p>
                 </form>
               </CardContent>
@@ -224,7 +224,7 @@ function Signup() {
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="font-medium text-foreground hover:underline">
+              <Link to="/login" className="font-medium text-[#1860D3] dark:text-[#6FA8FF] hover:underline">
                 Login
               </Link>
             </p>

@@ -1,3 +1,5 @@
+import "@/styles/contact.css";
+import { Helmet } from "react-helmet-async"
 import { useEffect, useState, type FormEvent } from "react"
 import { Link } from "react-router"
 import { motion } from "motion/react"
@@ -62,28 +64,12 @@ export default function Contact() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
-
-      {/* ── Styles ──────────────────────────────────────────────────────── */}
-      <style>{`
-        [data-animate] {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1),
-                      transform 0.65s cubic-bezier(0.16,1,0.3,1);
-        }
-        [data-animate][data-visible="true"] { opacity: 1; transform: translateY(0); }
-        [data-delay="1"] { transition-delay: 0.08s; }
-        [data-delay="2"] { transition-delay: 0.16s; }
-        .cta-btn { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-        .cta-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-        .cta-btn:active { transform: translateY(0); }
-        @media (prefers-reduced-motion: reduce) {
-          *, [data-animate] { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
-        }
-      `}</style>
-
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+    <div className="contact-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <Helmet>
+        <title>Contact — Fluiq</title>
+        <meta name="description" content="Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day." />
+        <link rel="canonical" href="https://getfluiq.com/contact" />
+      </Helmet>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
         navScrolled
           ? "bg-[#FAF9F6]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#E5E1D6] dark:border-[#2A2A2A]"

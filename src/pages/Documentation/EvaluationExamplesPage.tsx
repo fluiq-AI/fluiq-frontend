@@ -1,0 +1,303 @@
+﻿import { Helmet } from "react-helmet-async"
+import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
+import { IntegrationTabs, PageHeading } from "./_docComponents"
+
+const tabs = [
+  {
+    label: "Warn mode",
+    description:
+      "Call fluiq.eval() once after instrument() — every subsequent traced LLM call is scored in the background. Results appear in the Evaluations dashboard; a warning is logged when a score falls below its threshold.",
+    code: `import openai
+import fluiq
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(
+    metrics=["hallucination", "relevance"],  # scored on every LLM call
+    mode="warn",                             # default — never blocks
+    thresholds={"hallucination": 0.8, "relevance": 0.7},
+)
+
+client = openai.OpenAI()
+
+# Evaluation fires automatically after this call
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "What year did World War II end?"}],
+)
+print(response.choices[0].message.content)
+# Scores visible in the Fluiq Evaluations tab`,
+  },
+  {
+    label: "Block mode",
+    description:
+      "In block mode fluiq.eval() runs synchronously after each LLM call and raises FluiqEvalError if any metric falls below its threshold — the response never reaches your application.",
+    code: `import openai
+import fluiq
+from fluiq.exceptions import FluiqEvalError
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(
+    metrics=["hallucination", "toxicity"],
+    mode="block",
+    thresholds={"hallucination": 0.8, "toxicity": 0.9},
+)
+
+client = openai.OpenAI()
+
+try:
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": user_query}],
+    )
+    answer = response.choices[0].message.content
+except FluiqEvalError as e:
+    # Score fell below threshold — handle gracefully
+    print(f"Eval blocked response: {e}")
+    answer = "I can't answer that right now."`,
+  },
+  {
+    label: "All metrics",
+    description: "Fluiq supports six built-in metrics. Mix and match with per-metric thresholds.",
+    code: `import fluiq
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(
+    metrics=[
+        "hallucination",   # is the response grounded in fact?
+        "faithfulness",    # does it stay true to any provided context?
+        "relevance",       # does it address the question?
+        "toxicity",        # does it contain harmful content?
+        "coherence",       # is it logically consistent?
+        "completeness",    # does it fully answer the question?
+    ],
+    thresholds={
+        "hallucination": 0.80,
+        "faithfulness":  0.75,
+        "relevance":     0.70,
+        "toxicity":      0.95,
+        "coherence":     0.70,
+        "completeness":  0.65,
+    },
+    mode="warn",
+    judge_model="claude-haiku-4-5-20251001",  # default judge
+)`,
+  },
+  {
+    label: "LangChain",
+    description:
+      "Evaluation fires automatically on every LangChain LLM call — chains, agents, and direct invocations are all covered.",
+    code: `from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
+import fluiq
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(metrics=["hallucination", "relevance"], mode="warn")
+
+llm = ChatOpenAI(model="gpt-4o")
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant. Be concise and accurate."),
+    ("human", "{question}"),
+])
+chain = prompt | llm
+
+# Every chain invocation is traced and evaluated automatically
+chain.invoke({"question": "Explain the difference between RAG and fine-tuning"})`,
+  },
+  {
+    label: "LangGraph",
+    description:
+      "Each LLM call inside a graph node is evaluated independently — scores are attached to the corresponding span in the trace tree.",
+    code: `from langgraph.graph import StateGraph, END
+from langchain_openai import ChatOpenAI
+import fluiq
+from typing import TypedDict
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(metrics=["hallucination", "relevance"], mode="warn")
+
+llm = ChatOpenAI(model="gpt-4o")
+
+class State(TypedDict):
+    question: str
+    answer: str
+
+def research_node(state: State) -> State:
+    # This LLM call is traced and evaluated automatically
+    response = llm.invoke(f"Research: {state['question']}")
+    return {"answer": response.content}
+
+def refine_node(state: State) -> State:
+    response = llm.invoke(f"Improve this answer: {state['answer']}")
+    return {"answer": response.content}
+
+graph = (
+    StateGraph(State)
+    .add_node("research", research_node)
+    .add_node("refine",   refine_node)
+    .add_edge("research", "refine")
+    .add_edge("refine", END)
+    .set_entry_point("research")
+    .compile()
+)
+
+result = graph.invoke({"question": "What are the benefits of semantic caching?"})`,
+  },
+  {
+    label: "CrewAI",
+    description:
+      "Every LLM call made by a CrewAI agent is evaluated — scores appear as individual spans under the agent in the trace tree.",
+    code: `from crewai import Agent, Task, Crew, Process
+import fluiq
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(metrics=["hallucination", "relevance", "completeness"], mode="warn")
+
+researcher = Agent(
+    role="Research Analyst",
+    goal="Find accurate technical information",
+    backstory="Expert at sourcing and synthesising technical content.",
+    verbose=True,
+)
+writer = Agent(
+    role="Technical Writer",
+    goal="Write clear, concise summaries",
+    backstory="Turns dense research into readable prose.",
+    verbose=True,
+)
+
+research_task = Task(
+    description="Research the topic: {topic}",
+    expected_output="Key findings as bullet points.",
+    agent=researcher,
+)
+write_task = Task(
+    description="Write a two-paragraph summary of the findings.",
+    expected_output="Two clear paragraphs.",
+    agent=writer,
+)
+
+crew = Crew(
+    agents=[researcher, writer],
+    tasks=[research_task, write_task],
+    process=Process.sequential,
+)
+
+# Every agent LLM call is evaluated automatically
+crew.kickoff(inputs={"topic": "LLM observability best practices"})`,
+  },
+  {
+    label: "Google ADK",
+    description:
+      "ADK agent calls are evaluated through the google-genai patch — each Gemini call gets a score attached to its trace span.",
+    code: `from google.adk.agents import Agent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai import types as genai_types
+import fluiq
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(metrics=["hallucination", "relevance", "coherence"], mode="warn")
+
+root_agent = Agent(
+    name="support_agent",
+    model="gemini-2.5-pro",
+    description="A helpful customer support agent.",
+    instruction="Answer customer questions accurately and concisely.",
+)
+
+session_service = InMemorySessionService()
+runner = Runner(
+    agent=root_agent,
+    app_name="support_app",
+    session_service=session_service,
+)
+
+async def ask(user_id: str, question: str):
+    session = await session_service.create_session(
+        app_name="support_app", user_id=user_id
+    )
+    response = runner.run(
+        user_id=user_id,
+        session_id=session.id,
+        new_message=genai_types.Content(
+            role="user",
+            parts=[genai_types.Part(text=question)],
+        ),
+    )
+    async for event in response:
+        if event.is_final_response():
+            return event.response.text
+
+# Gemini call is evaluated automatically; score attached to the trace
+await ask("u1", "How do I upgrade my subscription?")`,
+  },
+  {
+    label: "CI/CD eval gate",
+    description:
+      "Use block mode in CI — set thresholds tight and catch FluiqEvalError to fail the build when response quality regresses.",
+    code: `# evaluate.py — run in your CI pipeline before merging
+import asyncio
+import fluiq
+from fluiq.exceptions import FluiqEvalError
+import openai
+
+fluiq.instrument(api_key="fl_...")
+fluiq.eval(
+    metrics=["hallucination", "relevance", "completeness"],
+    mode="block",
+    thresholds={
+        "hallucination": 0.85,
+        "relevance":     0.80,
+        "completeness":  0.75,
+    },
+)
+
+client = openai.OpenAI()
+
+TEST_CASES = [
+    "What year did World War II end?",
+    "Explain the difference between TCP and UDP.",
+    "What is the capital of Australia?",
+]
+
+async def main():
+    passed = failed = 0
+    for question in TEST_CASES:
+        try:
+            client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": question}],
+            )
+            passed += 1
+        except FluiqEvalError as e:
+            print(f"FAIL [{question[:40]}]: {e}")
+            failed += 1
+
+    print(f"\\nResults: {passed} passed, {failed} failed")
+    if failed:
+        raise SystemExit(f"Eval gate FAILED: {failed} case(s) below threshold")
+    print("✓ Eval gate passed")
+
+asyncio.run(main())`,
+  },
+]
+
+export default function EvaluationExamplesPage() {
+  return (
+    <>
+      <Helmet>
+        <title>Evaluation Examples — Fluiq Docs</title>
+        <meta name="description" content="Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers." />
+        <link rel="canonical" href="https://getfluiq.com/examples/evaluation" />
+      </Helmet>
+    <div className="space-y-6">
+      <PageHeading
+        icon={CheckmarkCircle02Icon}
+        title="Evaluation"
+        description="Call fluiq.eval() once after instrument() — Fluiq runs an LLM-as-judge on every traced LLM response, scores each metric (0–1), and stores results in your dashboard. Use block mode to gate on quality in CI."
+      />
+      <IntegrationTabs tabs={tabs} />
+    </div>
+    </>
+  )
+}

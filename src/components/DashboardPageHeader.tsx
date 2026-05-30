@@ -69,7 +69,7 @@ export function DashboardPageHeader({
               className="inline-flex h-8 w-8 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
               <Avatar className="h-7 w-7">
-                <AvatarFallback className="bg-primary/10 text-[10px] font-semibold text-primary">
+                <AvatarFallback className="bg-[#EEF3FD] dark:bg-[#1A2A4A]/50 text-[10px] font-semibold text-[#1860D3] dark:text-[#6FA8FF]">
                   {initials}
                 </AvatarFallback>
               </Avatar>

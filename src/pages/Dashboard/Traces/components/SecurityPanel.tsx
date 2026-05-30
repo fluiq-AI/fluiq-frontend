@@ -82,6 +82,27 @@ function TagList({ tags }: { tags: string[] }) {
   )
 }
 
+function Sparkline({ scores }: { scores: number[] }) {
+  if (scores.length < 2) return null
+  const W = 80
+  const H = 22
+  const pts = scores
+    .map((s, i) => `${(i / (scores.length - 1)) * W},${H - s * H}`)
+    .join(" ")
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="overflow-visible">
+      <polyline
+        points={pts}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 function RedactedBlock({
   label,
   text,
@@ -155,8 +176,16 @@ secure()  # Team plan required`}</pre>
     ? (ev["security_risk_score"] as number).toFixed(2)
     : null
 
-  const isBlocked   = ev["status"] === "blocked"
-  const blockReason = ev["block_reason"] as string | null | undefined
+  const isBlocked        = ev["status"] === "blocked"
+  const isGateBlocked    = Boolean(ev["response_gate_blocked"])
+  const blockReason      = ev["block_reason"] as string | null | undefined
+
+  const crescendoDetected = Boolean(ev["crescendo_detected"])
+  const crescendoScore    = typeof ev["crescendo_score"] === "number" ? (ev["crescendo_score"] as number) : null
+  const sessionTurns      = typeof ev["session_turns"]  === "number" ? (ev["session_turns"]  as number) : null
+  const riskTrajectory    = Array.isArray(ev["risk_trajectory"])
+    ? (ev["risk_trajectory"] as number[])
+    : null
 
   const attackTypes  = (ev["attack_types"]           as string[] | null) ?? []
   const piiPrompt    = (ev["pii_entities_prompt"]   as string[] | null) ?? []
@@ -186,13 +215,26 @@ secure()  # Team plan required`}</pre>
     <div className="space-y-6 p-4">
       {/* ── Blocked banner ── */}
       {isBlocked && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-[13px] font-semibold text-red-700 mb-0.5">
-            LLM call blocked by fluiq.secure()
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-500/10 px-4 py-3">
+          <p className="text-[13px] font-semibold text-red-700 dark:text-red-400 mb-0.5">
+            LLM call blocked by fluiq.secure() — pre-call
           </p>
           {blockReason && (
-            <p className="text-[12px] text-red-600/80 font-mono break-all">{blockReason}</p>
+            <p className="text-[12px] text-red-600/80 dark:text-red-400/80 font-mono break-all">{blockReason}</p>
           )}
+        </div>
+      )}
+      {isGateBlocked && (
+        <div className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/20 dark:bg-red-500/10 px-4 py-3">
+          <p className="text-[13px] font-semibold text-red-700 dark:text-red-400 mb-0.5">
+            Response blocked by fluiq.secure() — response gate
+          </p>
+          {blockReason && (
+            <p className="text-[12px] text-red-600/80 dark:text-red-400/80 font-mono break-all">{blockReason}</p>
+          )}
+          <p className="text-[11px] text-red-500/70 mt-1">
+            PII or secrets detected in the LLM response before it reached the caller.
+          </p>
         </div>
       )}
 
@@ -212,6 +254,40 @@ secure()  # Team plan required`}</pre>
           </span>
         )}
       </div>
+
+      {(crescendoDetected || (sessionTurns !== null && sessionTurns > 1)) && (
+        <div className={cn(
+          "rounded-lg border px-4 py-3 space-y-2",
+          crescendoDetected
+            ? "border-orange-200 bg-orange-50 dark:border-orange-500/20 dark:bg-orange-500/10"
+            : "border-border/60 bg-muted/30",
+        )}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className={cn(
+                "text-[12px] font-semibold",
+                crescendoDetected ? "text-orange-700 dark:text-orange-400" : "text-foreground",
+              )}>
+                {crescendoDetected ? "Crescendo attack detected" : "Multi-turn session"}
+              </p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {sessionTurns !== null && `${sessionTurns} turn${sessionTurns === 1 ? "" : "s"}`}
+                {crescendoScore !== null && ` · slope ${crescendoScore.toFixed(3)}`}
+              </p>
+            </div>
+            {riskTrajectory && (
+              <span className={cn(crescendoDetected ? "text-orange-500" : "text-muted-foreground")}>
+                <Sparkline scores={riskTrajectory} />
+              </span>
+            )}
+          </div>
+          {crescendoDetected && (
+            <p className="text-[11px] text-orange-600/80 dark:text-orange-400/80">
+              Risk score is consistently escalating across turns. Review the full session for coordinated jailbreak or social engineering patterns.
+            </p>
+          )}
+        </div>
+      )}
 
       {attackTypes.length > 0 && (
         <Section title="Attack Types Detected">

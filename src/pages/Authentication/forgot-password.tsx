@@ -81,7 +81,7 @@ function ForgotPassword() {
                     role="status"
                     className="flex items-start gap-2 rounded-md border border-border bg-muted/50 p-3 text-sm"
                   >
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0" />
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
                     <span>
                       If an account exists for <span className="font-medium">{email}</span>, we
                       sent a reset code that expires in 15 minutes.
@@ -153,7 +153,7 @@ function ForgotPassword() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Remembered it?{" "}
-            <Link to="/login" className="font-medium text-foreground hover:underline">
+            <Link to="/login" className="font-medium text-[#1860D3] dark:text-[#6FA8FF] hover:underline">
               Sign in
             </Link>
           </p>

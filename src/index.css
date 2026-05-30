@@ -155,21 +155,27 @@
   background: #9A9A92;
 }
 
+/* html.dark targets the root page scrollbar (html element itself) */
+/* .dark * targets scrollbars on nested scrollable elements */
+html.dark,
 .dark * {
-  scrollbar-color: #2A2A2A #0A0A0A;
+  scrollbar-color: #3A3A3A #141414;
 }
 
+html.dark::-webkit-scrollbar-track,
 .dark ::-webkit-scrollbar-track {
-  background: #0A0A0A;
+  background: #141414;
 }
 
+html.dark::-webkit-scrollbar-thumb,
 .dark ::-webkit-scrollbar-thumb {
-  background: #2A2A2A;
+  background: #3A3A3A;
   border-radius: 3px;
 }
 
+html.dark::-webkit-scrollbar-thumb:hover,
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #3A3A3A;
+  background: #525252;
 }
 
 /* ── React Flow dark mode overrides ── */

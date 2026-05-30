@@ -94,7 +94,7 @@ function ResetPassword() {
                   role="status"
                   className="flex items-start gap-2 rounded-md border border-border bg-muted/50 p-3 text-sm"
                 >
-                  <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0" />
+                  <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
                   <span>Password updated. Redirecting to sign in…</span>
                 </div>
               ) : (
@@ -184,7 +184,7 @@ function ResetPassword() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Didn't get a code?{" "}
-            <Link to="/forgot-password" className="font-medium text-foreground hover:underline">
+            <Link to="/forgot-password" className="font-medium text-[#1860D3] dark:text-[#6FA8FF] hover:underline">
               Request another
             </Link>
           </p>

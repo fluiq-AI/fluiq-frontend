@@ -206,13 +206,15 @@ function Documentation() {
                   <p className="font-medium">Instrument once at startup</p>
                   <Code>{`import fluiq
 
-fluiq.instrument(api_key="fl_...")
+                      fluiq.instrument(api_key="fl_...") # or set FLUIQ_API_KEY to environment
 
-# Every OpenAI / Anthropic / Gemini / LangChain / MCP
-# call from this point on is traced automatically.
-# Optionally add paid features:
-fluiq.optimize()   # Redis caching — Team+
-fluiq.secure()     # Security scanning — Team+`}</Code>
+                      # Every OpenAI / Anthropic / Gemini / LangChain / MCP
+                      # call from this point on is traced automatically.
+                      # Optionally add paid features:
+                      fluiq.optimize()   # Redis caching — Team+
+                      fluiq.secure()     # Security scanning — Team+`
+                      }
+                  </Code>
                 </div>
               </div>
             </div>
@@ -495,6 +497,61 @@ fluiq.secure(mode="block")`}</Code>
                 </tbody>
               </table>
             </div>
+
+            <p className="font-medium">Audit Logs</p>
+            <p className="text-sm text-muted-foreground">
+              Every action taken by a user or API key through Fluiq — SDK configuration calls, key creation, policy changes — is written to an append-only audit log backed by ClickHouse. Each row is signed with HMAC-SHA256 so tampering can be detected downstream.
+            </p>
+            <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+              <li>
+                <span className="text-foreground">10-year retention</span> — rows are never updated or deleted. Meets requirements under the EU AI Act, China AIGC regulations, and the Colorado AI Act.
+              </li>
+              <li>
+                <span className="text-foreground">Event types logged</span> — <code className="font-mono text-foreground">api_key.created</code>, <code className="font-mono text-foreground">api_key.deleted</code>, <code className="font-mono text-foreground">guardrail.updated</code>, <code className="font-mono text-foreground">eval.configured</code>, <code className="font-mono text-foreground">secure.configured</code>, <code className="font-mono text-foreground">optimize.configured</code>, <code className="font-mono text-foreground">user.invited</code>, <code className="font-mono text-foreground">user.removed</code>, and more.
+              </li>
+              <li>
+                <span className="text-foreground">Dashboard access</span> — browse, filter, and export as CSV at <code className="font-mono text-foreground">/dashboard/audit</code>. The <code className="font-mono text-foreground">row_hash</code> field is shown per event for compliance hand-off.
+              </li>
+              <li>
+                <span className="text-foreground">API access</span> — <code className="font-mono text-foreground">GET /api/v1/audit</code> accepts <code className="font-mono text-foreground">event_type</code>, <code className="font-mono text-foreground">actor</code>, <code className="font-mono text-foreground">limit</code> (max 500), and <code className="font-mono text-foreground">offset</code> query parameters. No SDK change needed — the log is maintained automatically.
+              </li>
+            </ul>
+
+            <p className="font-medium">Guardrail Policies</p>
+            <p className="text-sm text-muted-foreground">
+              Fine-tune exactly what <code className="font-mono text-foreground">fluiq.secure()</code> blocks for your organisation without changing SDK code. Policies are stored per-org in Postgres and cached in-process for 60 seconds — configuration changes propagate to all new calls within one minute.
+            </p>
+            <div className="grid gap-3 text-sm">
+              {[
+                {
+                  name: "Block threshold",
+                  body: 'Set to "high" (default) to block only confirmed high-risk requests, or "medium" to also block medium-risk findings. Warn threshold is configured independently — requests above it are flagged in traces even when not blocked.',
+                },
+                {
+                  name: "Block categories",
+                  body: "Restrict which attack types trigger a block. When empty (default), any detected category blocks. Configure a subset — e.g. only prompt_injection and jailbreak — to warn on PII or secrets without blocking them.",
+                },
+                {
+                  name: "Custom deny / allow lists",
+                  body: "Phrase-level overrides checked before any scanner runs. Prompts matching a deny phrase are always blocked; prompts matching an allow phrase skip all scans and proceed immediately.",
+                },
+                {
+                  name: "Webhook alerts",
+                  body: "POST a structured JSON payload to any HTTPS endpoint (Slack, Teams, PagerDuty, or custom) whenever a block or warn event fires. Retried up to 3 times with exponential backoff. Configure alert_on risk levels to tune alert volume.",
+                },
+              ].map((item) => (
+                <div key={item.name} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+                  <HugeiconsIcon icon={SecurityCheckIcon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{item.name}</p>
+                    <p className="mt-1 text-muted-foreground">{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Configure via the dashboard at <code className="font-mono text-foreground">/dashboard/guardrails</code> or programmatically with <code className="font-mono text-foreground">PUT /api/v1/guardrails</code>.
+            </p>
           </section>
 
           {/* ── EVALUATION ─────────────────────────────────────────────────── */}

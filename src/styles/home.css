@@ -1,0 +1,43 @@
+/*Home CSS*/
+
+.home-page .pipeline-panel {
+  --pp-bg: #FAF9F6; --pp-bg2: #F2F0E9;
+  --pp-bd: #E5E1D6; --pp-bd2: #D4CFC1;
+  --pp-t1: #0A0A0A; --pp-t2: #6B6B66; --pp-t3: #9A9A92;
+  --pp-blue: #1860D3; --pp-blue-soft: #E8F0FD;
+  --pp-green: #2D7A4F; --pp-amber: #B85C2B;
+}
+.dark .home-page .pipeline-panel {
+  --pp-bg: #111111; --pp-bg2: #1A1A1A;
+  --pp-bd: #2A2A2A; --pp-bd2: #333333;
+  --pp-t1: #F2F0E9; --pp-t2: #9A9A92; --pp-t3: #6B6B66;
+  --pp-blue: #6FA8FF; --pp-blue-soft: #18244A;
+  --pp-green: #4ADE80; --pp-amber: #FB923C;
+}
+@keyframes marqueeLeft {
+  from { transform: translateX(0); } to { transform: translateX(-50%); }
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; } 50% { opacity: 0.2; }
+}
+.home-page .marquee-track { animation: marqueeLeft 28s linear infinite; }
+.home-page .live-dot      { animation: pulseDot 2s ease-in-out infinite; }
+.home-page .m-fill { height: 100%; border-radius: 2px; transition: width 1.4s cubic-bezier(0.22,1,0.36,1); }
+.home-page [data-animate] {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1);
+}
+.home-page [data-animate][data-visible="true"] { opacity: 1; transform: translateY(0); }
+.home-page [data-delay="1"] { transition-delay: 0.08s; }
+.home-page [data-delay="2"] { transition-delay: 0.16s; }
+.home-page [data-delay="3"] { transition-delay: 0.24s; }
+.home-page [data-delay="4"] { transition-delay: 0.32s; }
+.home-page .pillar-card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
+.home-page .pillar-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
+.home-page .cta-btn { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.home-page .cta-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+.home-page .cta-btn:active { transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .home-page [data-animate],
+  .home-page .marquee-track { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
+}

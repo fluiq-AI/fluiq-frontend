@@ -19,13 +19,14 @@ export function DrawerTabButton({
       className={cn(
         "px-3 py-2 text-xs font-medium transition-colors",
         active
-          ? "border-b-2 border-foreground text-foreground"
+          ? "border-b-2 border-[#1860D3] dark:border-[#6FA8FF] text-[#1860D3] dark:text-[#6FA8FF]"
           : "border-b-2 border-transparent text-muted-foreground hover:text-foreground",
       )}
     >
       {children}
     </button>
   )
+  
 }
 
 export function DrawerSection({

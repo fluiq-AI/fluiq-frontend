@@ -447,6 +447,72 @@ async def chat(body: dict):
             content={"error": "Your message was flagged by our safety policy."},
         )`,
   },
+  {
+    label: "Audit Log",
+    description:
+      "Every SDK configuration call and API action is automatically written to an append-only, HMAC-signed audit trail. Query it via REST or browse and export it from the dashboard — no extra SDK code needed.",
+    code: `# Query the audit log via REST (server-side code)
+import requests
+
+headers = {"Authorization": f"Bearer {fluiq_api_key}"}
+
+# Fetch the last 50 guardrail-related events
+resp = requests.get(
+    "https://api.getfluiq.com/api/v1/audit",
+    params={
+        "event_type": "guardrail.updated",
+        "limit":      50,
+        "offset":     0,
+    },
+    headers=headers,
+)
+
+for event in resp.json()["events"]:
+    print(event["event_type"], event["actor"], event["created_at"])
+    print("row_hash:", event["row_hash"])   # HMAC-SHA256 for tamper detection
+
+# Filter by actor (email or API key prefix)
+resp = requests.get(
+    "https://api.getfluiq.com/api/v1/audit",
+    params={"actor": "alice@example.com", "limit": 100},
+    headers=headers,
+)`,
+  },
+  {
+    label: "Guardrail policy",
+    description:
+      "Set per-org blocking rules, custom phrase lists, and alert webhooks via the REST API. Changes take effect within 60 seconds — no SDK update or redeployment required.",
+    code: `import requests
+
+headers = {
+    "Authorization": f"Bearer {fluiq_api_key}",
+    "Content-Type": "application/json",
+}
+
+# Configure org-level guardrail policy
+requests.put(
+    "https://api.getfluiq.com/api/v1/guardrails",
+    json={
+        # Block only confirmed high-risk requests (default)
+        "block_threshold": "high",
+        # Warn on medium-risk findings too
+        "warn_threshold": "medium",
+        # Only these categories trigger a block — PII is warn-only
+        "block_categories": ["prompt_injection", "jailbreak", "skeleton_key"],
+        # Exact phrases always blocked before any scan
+        "custom_deny_list": [
+            "ignore previous instructions",
+            "confidential pricing",
+        ],
+        # Phrases that skip all scanning (internal tooling)
+        "custom_allow_list": ["internal-test-harness"],
+        # Webhook for real-time alerts
+        "alert_webhook": "https://hooks.slack.com/services/...",
+        "alert_on": ["high"],   # only alert on confirmed high-risk blocks
+    },
+    headers=headers,
+)`,
+  },
 ]
 
 const evaluationTabs = [

@@ -1,3 +1,5 @@
+import "@/styles/home.css";
+import { Helmet } from "react-helmet-async"
 import React, { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router"
 import { motion, useMotionValue, useSpring } from "motion/react"
@@ -47,14 +49,6 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    const link = document.createElement("link")
-    link.href = "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&display=swap"
-    link.rel = "stylesheet"
-    document.head.appendChild(link)
-    return () => { document.head.removeChild(link) }
-  }, [])
-
-  useEffect(() => {
     const id = setInterval(() => setMetrics({
       cache: 65 + Math.random() * 18, sec: 98.6 + Math.random() * 1.3, eval: 88 + Math.random() * 8,
     }), 3200)
@@ -74,56 +68,14 @@ export default function Home() {
 
   const resetTilt = useCallback(() => { rotYRaw.set(-6); rotXRaw.set(2) }, [rotYRaw, rotXRaw])
 
-  const mono: React.CSSProperties = { fontFamily: "'JetBrains Mono', 'Courier New', monospace" }
-
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+    <div className="home-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <Helmet>
+        <title>Fluiq — The AI Ops Stack for LLM Applications</title>
+        <meta name="description" content="Fluiq is the unified ops layer for LLM applications — security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
+        <link rel="canonical" href="https://getfluiq.com/" />
+      </Helmet>
 
-      {/* ── Styles ──────────────────────────────────────────────────────── */}
-      <style>{`
-        .pipeline-panel {
-          --pp-bg: #FAF9F6; --pp-bg2: #F2F0E9;
-          --pp-bd: #E5E1D6; --pp-bd2: #D4CFC1;
-          --pp-t1: #0A0A0A; --pp-t2: #6B6B66; --pp-t3: #9A9A92;
-          --pp-blue: #1860D3; --pp-blue-soft: #E8F0FD;
-          --pp-green: #2D7A4F; --pp-amber: #B85C2B;
-        }
-        .dark .pipeline-panel {
-          --pp-bg: #111111; --pp-bg2: #1A1A1A;
-          --pp-bd: #2A2A2A; --pp-bd2: #333333;
-          --pp-t1: #F2F0E9; --pp-t2: #9A9A92; --pp-t3: #6B6B66;
-          --pp-blue: #6FA8FF; --pp-blue-soft: #18244A;
-          --pp-green: #4ADE80; --pp-amber: #FB923C;
-        }
-        @keyframes marqueeLeft {
-          from { transform: translateX(0); } to { transform: translateX(-50%); }
-        }
-        @keyframes pulseDot {
-          0%, 100% { opacity: 1; } 50% { opacity: 0.2; }
-        }
-        .marquee-track { animation: marqueeLeft 28s linear infinite; }
-        .live-dot      { animation: pulseDot 2s ease-in-out infinite; }
-        .m-fill { height: 100%; border-radius: 2px; transition: width 1.4s cubic-bezier(0.22,1,0.36,1); }
-        [data-animate] {
-          opacity: 0; transform: translateY(24px);
-          transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1), transform 0.65s cubic-bezier(0.16,1,0.3,1);
-        }
-        [data-animate][data-visible="true"] { opacity: 1; transform: translateY(0); }
-        [data-delay="1"] { transition-delay: 0.08s; }
-        [data-delay="2"] { transition-delay: 0.16s; }
-        [data-delay="3"] { transition-delay: 0.24s; }
-        [data-delay="4"] { transition-delay: 0.32s; }
-        .pillar-card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
-        .pillar-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
-        .cta-btn { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-        .cta-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-        .cta-btn:active { transform: translateY(0); }
-        @media (prefers-reduced-motion: reduce) {
-          *, [data-animate], .marquee-track { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
-        }
-      `}</style>
-
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
         navScrolled
           ? "bg-[#FAF9F6]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#E5E1D6] dark:border-[#2A2A2A]"
@@ -153,7 +105,6 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <div className="absolute inset-0" style={{
@@ -168,7 +119,7 @@ export default function Home() {
             maskImage: "radial-gradient(ellipse 90% 90% at 55% 50%, black 30%, transparent 75%)",
             WebkitMaskImage: "radial-gradient(ellipse 90% 90% at 55% 50%, black 30%, transparent 75%)",
           }} />
-          <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 w-[55vw] h-[55vw] max-w-[660px] max-h-[660px] rounded-full"
+          <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 w-[55vw] h-[55vw] max-w-165 max-h-165 rounded-full"
             style={{ background: "radial-gradient(circle, rgba(24,96,211,0.06) 0%, transparent 65%)" }} />
         </div>
 
@@ -177,9 +128,9 @@ export default function Home() {
             <div className="flex flex-col">
               <motion.div className="flex items-center gap-2.5 mb-8"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.05 }}>
-                <span className="block w-5 h-px flex-shrink-0 bg-[#1860D3] dark:bg-[#6FA8FF]" />
+                <span className="block w-5 h-px shrink-0 bg-[#1860D3] dark:bg-[#6FA8FF]" />
                 <span className="text-[#1860D3] dark:text-[#6FA8FF]"
-                  style={{ ...mono, fontSize: 10, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+                  style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" as const }}>
                   AI Ops Stack · LLM Applications
                 </span>
               </motion.div>
@@ -192,8 +143,8 @@ export default function Home() {
                 <span className="text-[#1860D3] dark:text-[#6FA8FF]">Blind Spots.</span>
               </motion.h1>
 
-              <motion.p className="mb-9 max-w-[440px] leading-[1.82] text-[#6B6B66] dark:text-[#9A9A92]"
-                style={{ ...mono, fontSize: 13, fontWeight: 300 }}
+              <motion.p className="mb-9 max-w-110 leading-[1.82] text-[#6B6B66] dark:text-[#9A9A92]"
+                style={{ fontSize: 13, fontWeight: 300 }}
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
                 FluiqAI is the unified ops layer for LLM applications — security scanning,
@@ -205,9 +156,9 @@ export default function Home() {
                 transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
                 {HERO_PILLARS.map(({ label, dot }) => (
                   <span key={label}
-                    className="inline-flex items-center gap-[7px] px-3 py-[5px] rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] hover:border-[#1860D3] dark:hover:border-[#6FA8FF] transition-colors cursor-default"
-                    style={{ ...mono, fontSize: 10, fontWeight: 500, letterSpacing: "0.05em" }}>
-                    <span className="w-[5px] h-[5px] rounded-full flex-shrink-0"
+                    className="inline-flex items-center gap-1.75 px-3 py-1.25 rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] hover:border-[#1860D3] dark:hover:border-[#6FA8FF] transition-colors cursor-default"
+                    style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.05em" }}>
+                    <span className="w-1.25 h-1.25 rounded-full shrink-0"
                       style={{ background: dot, boxShadow: `0 0 5px ${dot}88` }} />
                     {label}
                   </span>
@@ -255,7 +206,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div data-animate className="mx-auto max-w-3xl text-center">
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">The full picture</p>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] md:text-5xl">
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] md:text-5xl">
               Observability tools tell you what broke.<br />
               <span className="text-[#6B6B66] dark:text-[#9A9A92]">Fluiq helps you <span className="text-[#1860D3] dark:text-[#6FA8FF]">prevent it.</span></span>
             </h2>
@@ -272,10 +223,10 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div data-animate>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={EyeIcon} size={12} />Observability · 01
               </span>
-              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Full trace visibility across every <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM call</span></h2>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Full trace visibility across every <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM call</span></h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns — without changing how you write code.</p>
               <ul className="space-y-2 mb-6">
                 {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Real-time trace streaming"].map(pt => (
@@ -304,10 +255,10 @@ export default function Home() {
               <SecurityMockup />
             </div>
             <div data-animate className="lg:order-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={ShieldIcon} size={12} />Security · 02
               </span>
-              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4"><span className="text-[#1860D3] dark:text-[#6FA8FF]">Block attacks</span> before they reach your model</h2>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4"><span className="text-[#1860D3] dark:text-[#6FA8FF]">Block attacks</span> before they reach your model</h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Pre-call scanning catches jailbreaks, prompt injections, and skeleton-key attacks before the LLM call is made. Post-call scanning redacts PII and secrets from stored traces.</p>
               <ul className="space-y-2 mb-6">
                 {["Pre-call jailbreak + injection blocking", "PII & secret redaction on traces", "No false positives — fails open on errors"].map(pt => (
@@ -330,10 +281,10 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div data-animate>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={ZapIcon} size={12} />Optimization · 03
               </span>
-              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Stop paying for duplicate <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM calls</span></h2>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Stop paying for duplicate <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM calls</span></h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Fluiq analyses your actual trace history to find which prompts repeat, then provisions a dedicated Cache instance for your account. Repeated calls are served from cache automatically.</p>
               <ul className="space-y-2 mb-6">
                 {["Server-side Caching, zero infra to manage", "Profile built from your real traffic patterns", "Configurable TTL and model scope"].map(pt => (
@@ -362,10 +313,10 @@ export default function Home() {
               <EvalMockup />
             </div>
             <div data-animate className="lg:order-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={TestTube01Icon} size={12} />Evaluation · 04
               </span>
-              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Gate responses that fail <span className="text-[#1860D3] dark:text-[#6FA8FF]">quality thresholds</span></h2>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Gate responses that fail <span className="text-[#1860D3] dark:text-[#6FA8FF]">quality thresholds</span></h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge runs server-side after each call. Set per-metric thresholds — warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app.</p>
               <ul className="space-y-2 mb-6">
                 {["hallucination, faithfulness, relevance, toxicity", "Scores stored and visible in the dashboard", "Block mode prevents bad responses reaching users"].map(pt => (
@@ -388,10 +339,10 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div data-animate>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={AiContentGenerator01Icon} size={12} />Prompt Management · 05
               </span>
-              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Write, version, and <span className="text-[#1860D3] dark:text-[#6FA8FF]">deploy prompts</span> like software</h2>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Write, version, and <span className="text-[#1860D3] dark:text-[#6FA8FF]">deploy prompts</span> like software</h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">A dedicated IDE-style editor for your prompt templates — with <code className="font-mono text-[13px] text-[#0a0a0a] dark:text-[#FAF9F6]">{"{{variable}}"}</code> injection, full version history, and per-environment deployment. Iterate directly on real production traces, compare model outputs side-by-side, and ship with confidence.</p>
               <ul className="space-y-2 mb-6">
                 {[
@@ -423,7 +374,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div data-animate className="mb-14 text-center">
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">How it works</p>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
               Four functions. Production-ready in minutes.
             </h2>
           </div>
@@ -496,7 +447,7 @@ response = client.chat.completions.create(
           <div className="grid gap-12 md:grid-cols-2 md:items-center">
             <div data-animate>
               <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">Framework-agnostic</p>
-              <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug mb-4">Works with the stack you already use.</h2>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug mb-4">Works with the stack you already use.</h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-6">
                 Fluiq patches at the function-call level, not the framework level. Any Python function that hits an LLM or vector database becomes a traced span with one decorator.
               </p>
@@ -506,10 +457,10 @@ response = client.chat.completions.create(
                 ))}
               </div>
             </div>
-            <div data-animate data-delay="2" className="rounded-2xl border border-[#1a1a1a] bg-[#0a0a0a] overflow-hidden shadow-xl">
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1e1e1e]">
+            <div data-animate data-delay="2" className="rounded-2xl border border-[#1a1a1a] dark:border-[#2A2A2A] bg-[#0a0a0a] dark:bg-[#1A1A1A] overflow-hidden shadow-xl">
+              <div className="flex items-center gap-2 px-5 py-3 border-b border-[#1e1e1e] dark:border-[#2A2A2A]">
                 <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6B6B66]" />
-                <span className="text-[12px] text-[#6B6B66] font-mono">any_pipeline.py</span>
+                <span className="text-[11px] text-[#6B6B66] font-mono">any_pipeline.py</span>
               </div>
               <CodeBlock variant="dark" highlighted={pipelineHL()}>{`from fluiq import instrument, trace
 
@@ -537,7 +488,7 @@ def answer_question(question: str) -> str:
             <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-[#0a0a0a] dark:bg-[#FAF9F6] text-white dark:text-[#0A0A0A] mb-6">
               <HugeiconsIcon icon={SparklesIcon} size={22} />
             </div>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">Free up to <span className="text-[#1860D3] dark:text-[#6FA8FF]">5M</span> traces.</h2>
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">Free up to <span className="text-[#1860D3] dark:text-[#6FA8FF]">5M</span> traces.</h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
               Start with observability on the free tier. Add security, optimization, and evaluation as your pipeline grows — no code changes required.
             </p>

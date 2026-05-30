@@ -7,6 +7,7 @@ import {
   Loading03Icon,
   MagicWand01Icon,
   RefreshIcon,
+  Coins01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -42,6 +43,16 @@ interface CacheStatsResponse {
   calls: number
   hit_rate: number
   per_kind: CacheKindStats[]
+}
+
+interface PromptCacheStatsResponse {
+  window_hours: number
+  anthropic_cache_read_tokens: number
+  anthropic_cache_creation_tokens: number
+  provider_cached_tokens: number  // OpenAI + Gemini
+  total_cached_tokens: number
+  calls: number
+  calls_with_hit: number
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -103,23 +114,23 @@ function rateInsight(rate: number): { level: InsightLevel; title: string; body: 
   }
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 function Optimize() {
-  const [windowHours, setWindowHours] = useState(24)
-  const [data, setData]               = useState<CacheStatsResponse | null>(null)
-  const [loading, setLoading]         = useState(true)
-  const [error, setError]             = useState<string | null>(null)
+  const [windowHours, setWindowHours]       = useState(24)
+  const [data, setData]                     = useState<CacheStatsResponse | null>(null)
+  const [promptData, setPromptData]         = useState<PromptCacheStatsResponse | null>(null)
+  const [loading, setLoading]               = useState(true)
+  const [error, setError]                   = useState<string | null>(null)
 
-  // Manual refresh — setState calls outside effects are fine.
   const refresh = useCallback(async (hours: number) => {
     setLoading(true)
     setError(null)
     try {
-      const res = await authFetch<CacheStatsResponse>(
-        `/api/v1/optimize/cache-stats?window_hours=${hours}`,
-      )
+      const [res, pRes] = await Promise.all([
+        authFetch<CacheStatsResponse>(`/api/v1/optimize/cache-stats?window_hours=${hours}`),
+        authFetch<PromptCacheStatsResponse>(`/api/v1/optimize/prompt-cache-stats?window_hours=${hours}`).catch(() => null),
+      ])
       setData(res)
+      setPromptData(pRes)
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "Failed to load cache stats")
     } finally {
@@ -133,11 +144,13 @@ function Optimize() {
     let cancelled = false
     ;(async () => {
       try {
-        const res = await authFetch<CacheStatsResponse>(
-          `/api/v1/optimize/cache-stats?window_hours=${windowHours}`,
-        )
+        const [res, pRes] = await Promise.all([
+          authFetch<CacheStatsResponse>(`/api/v1/optimize/cache-stats?window_hours=${windowHours}`),
+          authFetch<PromptCacheStatsResponse>(`/api/v1/optimize/prompt-cache-stats?window_hours=${windowHours}`).catch(() => null),
+        ])
         if (cancelled) return
         setData(res)
+        setPromptData(pRes)
         setError(null)
       } catch (err) {
         if (cancelled) return
@@ -214,6 +227,13 @@ function Optimize() {
           loading={loading && !showStale}
         />
       </div>
+
+      
+      {/* ── Prompt caching section ── */}
+      <div className="my-6">
+        <PromptCacheCard data={promptData} loading={loading && !promptData} windowHours={windowHours} />
+      </div>
+
 
       {/* ── Main 2-column layout ── */}
       <div className="grid gap-6 lg:grid-cols-3">
@@ -412,6 +432,96 @@ function Optimize() {
       </div>
       </div>
     </>
+  )
+}
+
+function PromptCacheCard({
+  data,
+  loading,
+  windowHours,
+}: {
+  data: PromptCacheStatsResponse | null
+  loading: boolean
+  windowHours: number
+}) {
+  const hasData = data != null && data.calls > 0
+  const hitRate = hasData ? data.calls_with_hit / data.calls : 0
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <HugeiconsIcon icon={Coins01Icon} size={16} />
+          <CardTitle className="text-base">Prompt Caching</CardTitle>
+        </div>
+        <CardDescription>
+          Provider-level prefix caching — tokens served from Anthropic or OpenAI&apos;s cache
+          instead of being re-processed, reducing cost and latency.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : !hasData ? (
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">
+              No prompt cache data in the last {windowHours}h.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Call{" "}
+              <code className="font-mono text-foreground">fluiq.optimize()</code>{" "}
+              to enable automatic{" "}
+              <code className="font-mono text-foreground">cache_control</code>{" "}
+              injection on Anthropic calls. OpenAI prompt caching is automatic for
+              prompts ≥ 1 024 tokens.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-3">
+            {/* Total cached tokens */}
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                Cached tokens read
+              </p>
+              <p className="font-heading text-2xl font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">
+                {formatNumber(data!.total_cached_tokens)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Anthropic{" "}
+                <span className="font-mono">{formatNumber(data!.anthropic_cache_read_tokens)}</span>
+                {" · "}OpenAI / Gemini{" "}
+                <span className="font-mono">{formatNumber(data!.provider_cached_tokens)}</span>
+              </p>
+            </div>
+
+            {/* Cache creation overhead (Anthropic only) */}
+            <div className="space-y-1">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                Cache write tokens
+              </p>
+              <p className="font-heading text-2xl font-semibold tabular-nums text-foreground">
+                {formatNumber(data!.anthropic_cache_creation_tokens)}
+              </p>
+              <p className="text-xs text-muted-foreground">Anthropic cache creation overhead</p>
+            </div>
+
+            {/* Hit rate */}
+            <div className="space-y-2">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                Cache hit rate
+              </p>
+              <p className={cn("font-heading text-2xl font-semibold tabular-nums", hitRateTextColor(hitRate))}>
+                {formatPct(hitRate)}
+              </p>
+              <Progress value={Math.round(hitRate * 100)} className={hitRateBarClass(hitRate)} />
+              <p className="text-xs text-muted-foreground">
+                {formatNumber(data!.calls_with_hit)} of {formatNumber(data!.calls)} instrumented calls
+              </p>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

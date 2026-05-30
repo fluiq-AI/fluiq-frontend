@@ -1,3 +1,5 @@
+import "@/styles/pricing.css";
+import { Helmet } from "react-helmet-async"
 import { useState, useEffect } from "react"
 import { Link } from "react-router"
 import { motion } from "motion/react"
@@ -9,10 +11,12 @@ import {
   SparklesIcon,
   ShieldKeyIcon,
   FlashIcon,
+  PythonIcon,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { CodeBlock } from "@/components/code-block"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
+import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -32,7 +36,7 @@ const powerFeatures = [
       { label: "Indirect Injection Detection", desc: "Inspects tool outputs and context documents for second-order injection hidden in retrieved content." },
       { label: "Warn or Block mode", desc: "warn (default) flags risks and attaches security metadata to the trace. block intercepts before the LLM call and raises FluiqSecurityError." },
     ],
-    code: `fluiq.instrument(api_key="fl_...")\nfluiq.secure()  # warn mode — flags risks on the trace\nfluiq.secure(mode="block")  # block mode — pre-call guard`,
+    code: `fluiq.instrument(api_key="fl_...")\nfluiq.secure()  # warn mode flags risks on the trace\nfluiq.secure(mode="block")  # block mode`,
   },
   {
     icon: FlashIcon,
@@ -49,7 +53,7 @@ const powerFeatures = [
       { label: "Zero code changes", desc: "One fluiq.optimize() call after instrument(). The SDK handles connection, profiling, and cache lookup." },
       { label: "Cache hit dashboard", desc: "See hit rates, latency savings, and estimated cost savings in your Fluiq dashboard." },
     ],
-    code: `fluiq.instrument(api_key="fl_...")\nfluiq.optimize()  # cache mode — full interception\nfluiq.optimize(mode="observe")  # observe mode — measure savings`,
+    code: `fluiq.instrument(api_key="fl_...")\nfluiq.optimize()  # cache mode\nfluiq.optimize(mode="observe")  # observe mode`,
   },
 ]
 
@@ -95,33 +99,12 @@ export default function Pricing() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
-
-      {/* ── Styles ──────────────────────────────────────────────────────── */}
-      <style>{`
-        [data-animate] {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 0.65s cubic-bezier(0.16,1,0.3,1),
-                      transform 0.65s cubic-bezier(0.16,1,0.3,1);
-        }
-        [data-animate][data-visible="true"] { opacity: 1; transform: translateY(0); }
-        [data-delay="1"] { transition-delay: 0.08s; }
-        [data-delay="2"] { transition-delay: 0.16s; }
-        [data-delay="3"] { transition-delay: 0.24s; }
-        [data-delay="4"] { transition-delay: 0.32s; }
-        [data-delay="5"] { transition-delay: 0.40s; }
-        .pillar-card { transition: box-shadow 0.2s ease, transform 0.2s ease; }
-        .pillar-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.08); transform: translateY(-2px); }
-        .cta-btn { transition: transform 0.15s ease, box-shadow 0.15s ease; }
-        .cta-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
-        .cta-btn:active { transform: translateY(0); }
-        @media (prefers-reduced-motion: reduce) {
-          *, [data-animate] { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
-        }
-      `}</style>
-
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+    <div className="pricing-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <Helmet>
+        <title>Pricing — Fluiq</title>
+        <meta name="description" content="Start free with 5M lifetime traces. Upgrade to Team for security scanning, intelligent caching, and advanced evaluation. No credit card required." />
+        <link rel="canonical" href="https://getfluiq.com/pricing" />
+      </Helmet>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
         navScrolled
           ? "bg-[#FAF9F6]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#E5E1D6] dark:border-[#2A2A2A]"
@@ -150,7 +133,6 @@ export default function Pricing() {
         </div>
       </header>
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden py-28">
 
         {/* Background: dot grid + blue glow */}
@@ -167,7 +149,7 @@ export default function Pricing() {
             maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
             WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
           }} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full"
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-175 max-h-175 rounded-full"
             style={{ background: "radial-gradient(circle, rgba(24,96,211,0.07) 0%, transparent 65%)" }} />
         </div>
 
@@ -176,7 +158,7 @@ export default function Pricing() {
           <motion.div className="mb-6"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.05 }}>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-sm px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#1860D3] dark:text-[#6FA8FF]">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-sm px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF]">
               <span className="size-1.5 rounded-full bg-emerald-500 inline-block" />
               Free while in beta
             </span>
@@ -225,7 +207,7 @@ export default function Pricing() {
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
               Everything included, free
             </p>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
               Two calls. <span className="text-[#1860D3] dark:text-[#6FA8FF]">Security and speed</span>, handled.
             </h2>
             <p className="mt-4 mx-auto max-w-lg text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
@@ -283,7 +265,13 @@ export default function Pricing() {
                   ))}
                 </ul>
 
-                <CodeBlock variant="dark">{feature.code}</CodeBlock>
+                <div className="rounded-xl border border-[#1a1a1a] dark:border-[#2A2A2A] bg-[#0a0a0a] dark:bg-[#1A1A1A] overflow-hidden">
+                  <div className="flex items-center gap-2 px-5 py-2.5 border-b border-[#1e1e1e] dark:border-[#2A2A2A]">
+                    <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6B6B66]" />
+                    <span className="text-[11px] text-[#6B6B66] font-mono">Python</span>
+                  </div>
+                  <CodeBlock variant="dark" preClassName="whitespace-pre-wrap" highlighted={syntaxHighlight(feature.code)}>{feature.code}</CodeBlock>
+                </div>
               </div>
             ))}
           </div>
@@ -297,7 +285,7 @@ export default function Pricing() {
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
               Every account
             </p>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
               Full access. <span className="text-[#1860D3] dark:text-[#6FA8FF]">No gates.</span>
             </h2>
             <p className="mt-4 text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
@@ -340,7 +328,7 @@ export default function Pricing() {
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
               FAQ
             </p>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
               Frequently asked questions
             </h2>
           </div>
@@ -369,7 +357,7 @@ export default function Pricing() {
             <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-[#0a0a0a] dark:bg-[#FAF9F6] text-white dark:text-[#0A0A0A] mb-6">
               <HugeiconsIcon icon={SparklesIcon} size={22} />
             </div>
-            <h2 className="font-heading text-4xl font-bold tracking-[-0.025em] text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">
               Free while <span className="text-[#1860D3] dark:text-[#6FA8FF]">in beta.</span>
             </h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">

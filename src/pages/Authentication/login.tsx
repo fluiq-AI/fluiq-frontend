@@ -135,7 +135,7 @@ function Login() {
                     </Label>
                     <Link
                       to="/forgot-password"
-                      className="text-xs text-muted-foreground hover:text-foreground"
+                      className="text-xs text-[#1860D3] dark:text-[#6FA8FF] hover:underline"
                     >
                       Forgot password?
                     </Link>
@@ -181,7 +181,7 @@ function Login() {
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/signup" className="font-medium text-foreground hover:underline">
+            <Link to="/signup" className="font-medium text-[#1860D3] dark:text-[#6FA8FF] hover:underline">
               Sign up
             </Link>
           </p>

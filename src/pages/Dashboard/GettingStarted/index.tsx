@@ -132,7 +132,7 @@ function GettingStarted() {
         <button
           type="button"
           onClick={() => navigate("/dashboard/overview", { replace: true })}
-          className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+          className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-[#1860D3] dark:hover:text-[#6FA8FF]"
         >
           Skip to Dashboard
           <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
@@ -183,7 +183,7 @@ function GettingStarted() {
                 <div
                   className={cn(
                     "mt-0.5 shrink-0",
-                    step.done ? "text-foreground" : "text-muted-foreground/30",
+                    step.done ? "text-[#1860D3] dark:text-[#6FA8FF]" : "text-muted-foreground/30",
                   )}
                 >
                   {step.done ? (
@@ -261,7 +261,7 @@ function GettingStarted() {
                         className={cn(
                           "mt-0.5 grid size-5 shrink-0 place-items-center rounded transition-colors",
                           copied === step.copyKey
-                            ? "text-foreground"
+                            ? "text-[#1860D3] dark:text-[#6FA8FF]"
                             : "text-muted-foreground hover:text-foreground",
                         )}
                       >

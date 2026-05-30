@@ -103,7 +103,7 @@ If the security service is unreachable, `fluiq.secure()` fails open — the orig
 
 ## Pillar 3: Optimize (fluiq.optimize)
 
-`fluiq.optimize()` adds server-side response caching. Fluiq hosts the Redis cluster; there is nothing to provision.
+`fluiq.optimize()` adds multiple layers of caching. Fluiq hosts the Redis cluster; there is nothing to provision.
 
 ### Modes
 
@@ -111,26 +111,47 @@ If the security service is unreachable, `fluiq.secure()` fails open — the orig
 - **observe** — forwards all calls to the LLM as normal; records what would have been cache hits; shows projected savings on the Optimize dashboard without actually caching
 
 ```python
-fluiq.optimize(mode="cache", ttl=3600)     # cache responses for 1 hour
-fluiq.optimize(mode="observe")              # measure savings, don't cache
+fluiq.optimize(mode="cache")    # full caching (default)
+fluiq.optimize(mode="observe")  # measure savings, don't cache
 ```
 
-### Configuration options
+### LLM response caching
 
-- `ttl` — cache time-to-live in seconds (default: 86400)
-- `models` — list of model identifiers to cache; omit to cache all
-- `threshold` — similarity threshold for cache hit matching (0.0–1.0)
+Identical `(model, messages, system, tools)` combinations are served from Redis instantly. The cache profile (which models to cache, TTL) is fetched from the Fluiq backend on the first call and updated as traffic patterns evolve.
 
-### How the profile is built
+### MCP tool caching
 
-Fluiq builds a traffic profile from real call patterns observed through `fluiq.instrument()`. The cache stores prompt embeddings alongside responses, so semantically similar (not just identical) prompts can hit the cache. Cache key includes model name, so model upgrades automatically invalidate old entries.
+When MCP servers are used, `fluiq.optimize()` patches `ClientSession` to cache two expensive operations transparently:
+
+- **`list_tools()`** — cached per server URL. Cleared automatically when `session.initialize()` is called (server restart signal).
+- **`call_tool(name, arguments)`** — cached per `(server_url, tool_name, sorted_arguments)`. Error results are never cached.
+
+Cache hits and misses are recorded as `type="mcp"` trace events and appear in the Optimize dashboard's "By cache type" breakdown (kinds: `mcp_list_tools`, `mcp_call`).
+
+### Provider prompt caching
+
+Fluiq surfaces provider-level prefix caching — where the LLM provider itself serves tokens from its own cache rather than reprocessing the full prompt.
+
+**Anthropic (automatic injection when optimize() is active)**
+
+Every `messages.create()` and `messages.stream()` call receives `cache_control: {"type": "ephemeral"}` injected on the system prompt and the last tool definition. Anthropic silently ignores this on blocks below ~1,024 tokens, so injection is always safe. Cached token counts are captured from every response:
+
+- `prompt_cache_read_tokens` — tokens served from Anthropic's cache (billed at ~10% of normal input rate)
+- `prompt_cache_creation_tokens` — tokens used to create the cache entry (billed at ~125%)
+
+**OpenAI (automatic, no injection)**
+
+OpenAI caches prompts ≥ 1,024 tokens automatically without any special configuration. Fluiq captures `usage.prompt_tokens_details.cached_tokens` from every response as `prompt_cached_tokens`.
+
+**Gemini (explicit CachedContent, user-managed)**
+
+Gemini context caching requires creating a `CachedContent` object via the Gemini API. Fluiq does not inject anything but captures `usage_metadata.cached_content_token_count` from every response as `prompt_cached_tokens`.
 
 ### Optimize dashboard
 
-- Cache hit rate: percentage of calls served from cache
-- Latency savings: average time saved per cached call (ms)
-- Cost savings: estimated USD saved by serving cached responses
-- Hit/miss timeseries over the selected date range
+- **Cache performance card** — Redis hit rate per cache type (LLM, embeddings, vector stores, MCP tools, function calls); hits vs misses stacked bar; insights panel
+- **Prompt caching card** — total cached tokens read (Anthropic + OpenAI/Gemini); Anthropic cache creation overhead; hit rate across instrumented calls; per-provider breakdown
+- Time window selector: 1h, 6h, 24h, 7d, 30d
 
 ---
 
@@ -245,8 +266,9 @@ The dashboard includes an LLM-as-judge playground: paste a prompt template, add 
 - Auto-instruments ADK agent runs and tool invocations
 
 **MCP (Model Context Protocol)**
-- Instruments MCP server tool calls
+- Instruments MCP server initialise, tool calls, and list_tools
 - Tool name and arguments captured per span
+- `fluiq.optimize()` caches list_tools() responses and call_tool() results in Redis
 
 ### Vector databases
 
