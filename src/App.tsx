@@ -6,6 +6,13 @@ function ScrollToTop() {
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
   return null
 }
+
+function PrerenderReady() {
+  useEffect(() => {
+    document.dispatchEvent(new Event('app-prerender-ready'))
+  }, [])
+  return null
+}
 import Home from "@/pages/Home/index"
 import Login from "@/pages/Authentication/login"
 import Signup from "@/pages/Authentication/signup"
@@ -48,6 +55,16 @@ import AuditLog from "@/pages/Dashboard/Audit/index"
 import Guardrails from "@/pages/Dashboard/Guardrails/index"
 import Profile from "@/pages/Dashboard/Profile/index"
 
+import IntegrationsIndex from "@/pages/Integrations/index"
+import IntegrationRoute from "@/pages/Integrations/IntegrationRoute"
+
+import LangSmithAlternative from "@/pages/Comparisons/langsmith-alternative"
+import LangfuseAlternative from "@/pages/Comparisons/langfuse-alternative"
+import HeliconeAlternative from "@/pages/Comparisons/helicone-alternative"
+import BraintrustAlternative from "@/pages/Comparisons/braintrust-alternative"
+import PortkeyAlternative from "@/pages/Comparisons/portkey-alternative"
+import LakeraAlternative from "@/pages/Comparisons/lakera-alternative"
+
 import AdminLayout from "@/pages/Admin/admin"
 import AdminOverview from "@/pages/Admin/Overview/index"
 import AdminUsers from "@/pages/Admin/Users/index"
@@ -63,6 +80,7 @@ function App() {
     <ThemeProvider>
       <BrowserRouter>
         <ScrollToTop />
+        <PrerenderReady />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -74,6 +92,18 @@ function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms"   element={<Terms />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+
+          {/* Integration pages */}
+          <Route path="/integrations" element={<IntegrationsIndex />} />
+          <Route path="/integrations/:slug" element={<IntegrationRoute />} />
+
+          {/* Comparison / alternative pages */}
+          <Route path="/langsmith-alternative"  element={<LangSmithAlternative />} />
+          <Route path="/langfuse-alternative"   element={<LangfuseAlternative />} />
+          <Route path="/helicone-alternative"   element={<HeliconeAlternative />} />
+          <Route path="/braintrust-alternative" element={<BraintrustAlternative />} />
+          <Route path="/portkey-alternative"    element={<PortkeyAlternative />} />
+          <Route path="/lakera-alternative"     element={<LakeraAlternative />} />
 
           {/* Documentation */}
           <Route path="/documentation" element={<DocLayout />}>

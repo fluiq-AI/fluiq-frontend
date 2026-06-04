@@ -16,6 +16,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { CodeBlock } from "@/components/code-block"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
+import { SiteFooter } from "@/components/SiteFooter"
+import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
 import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
@@ -117,6 +119,7 @@ export default function Pricing() {
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] md:flex">
             <Link to="/" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</Link>
+            <NavIntegrationsDropdown />
             <Link to="/pricing" className="text-[#0a0a0a] dark:text-[#FAF9F6] font-medium">Pricing</Link>
             <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
             <Link to="/contact" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Contact</Link>
@@ -378,23 +381,7 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-[#E5E1D6] dark:border-[#2A2A2A] py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-6 text-[13px] text-[#9A9A92] md:flex-row md:items-center">
-          <div className="flex items-center gap-2.5">
-            <img src="/logo.svg" alt="Fluiq" className="size-6 opacity-60" />
-            <span className="font-heading font-semibold text-[#0a0a0a] dark:text-[#FAF9F6] text-[14px]">Fluiq</span>
-            <span className="text-[#D4CFC1] dark:text-[#333333]">·</span>
-            <span>Observe, protect, optimize, evaluate.</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link to="/" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</Link>
-            <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
-            <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
-            <Link to="/contact" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
     </div>
   )

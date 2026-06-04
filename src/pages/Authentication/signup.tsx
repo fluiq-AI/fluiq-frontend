@@ -31,7 +31,7 @@ import { API_BASE_URL } from "@/lib/api"
 const perks = [
   "5M free traces total to get started",
   "Tracing, evals, and dashboards out of the box",
-  "Works with LangChain, LlamaIndex, CrewAI, OpenAI, Anthropic & Gemini",
+  "Works with LangChain, LangGraph, CrewAI, OpenAI, Anthropic & Gemini",
 ]
 
 function Signup() {

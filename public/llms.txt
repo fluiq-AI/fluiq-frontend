@@ -16,7 +16,7 @@ Fluiq replaces four separate AI tooling concerns with a single SDK. It auto-inst
 Fluiq patches at the function-call level and is framework-agnostic. Auto-instrumented providers and frameworks:
 
 - **LLM providers**: OpenAI (chat completions, responses, parse, streaming, embeddings, images, audio — sync and async), Anthropic (Messages API and Beta client, sync and async), Google Gemini, Google Vertex AI
-- **Agent frameworks**: LangChain, LangGraph, LlamaIndex, CrewAI, Google ADK, MCP (Model Context Protocol)
+- **Agent frameworks**: LangChain, LangGraph, CrewAI, Google ADK, MCP (Model Context Protocol)
 - **Vector databases**: Pinecone, Chroma, Weaviate, FAISS, Qdrant
 - **Custom code**: `@trace` decorator for any Python function not covered by auto-instrumentation
 

@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet } from "react-router"
+import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import {
@@ -53,6 +54,7 @@ export default function DocLayout() {
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
             <Link to="/" className="hover:text-foreground">Platform</Link>
+            <NavIntegrationsDropdown triggerClassName="hover:text-foreground transition-colors" />
             <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
             <Link to="/documentation" className="font-medium text-foreground">Documentation</Link>
             <Link to="/examples" className="hover:text-foreground">Examples</Link>

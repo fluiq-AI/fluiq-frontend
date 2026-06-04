@@ -254,10 +254,6 @@ The dashboard includes an LLM-as-judge playground: paste a prompt template, add 
 - Auto-instruments node transitions and state updates
 - Each node is a span; edges show control flow
 
-**LlamaIndex**
-- Patches query engines, retrievers, and response synthesizers
-- Retrieval chunks visible per span
-
 **CrewAI**
 - Patches crew runs, agent tasks, and tool calls
 - Task delegation visible in the span tree
@@ -285,7 +281,7 @@ The main marketing page for Fluiq. It explains the product's four pillars (Obser
 Key claims on this page:
 - "Replace four AI tools with one SDK."
 - 2 lines of Python to instrument
-- 13+ supported integrations
+- 14 supported integrations
 - 6 evaluation metrics scored server-side
 - Free to start (5M traces, no card required)
 
@@ -293,7 +289,7 @@ Key claims on this page:
 
 The full SDK reference, organized into eight sections accessible via a sticky sidebar:
 
-1. **Quickstart** — Installation (`pip install fluiq`), API key setup, first trace in under 2 minutes. Includes working code samples for OpenAI, Anthropic, Gemini, LangChain, LangGraph, LlamaIndex, CrewAI, Google ADK, and MCP.
+1. **Quickstart** — Installation (`pip install fluiq`), API key setup, first trace in under 2 minutes. Includes working code samples for OpenAI, Anthropic, Gemini, LangChain, LangGraph, CrewAI, Google ADK, and MCP.
 
 2. **Observability** — How `fluiq.instrument()` works; the @trace decorator; span tree structure; cost calculation; streaming trace support; agent-level aggregation.
 

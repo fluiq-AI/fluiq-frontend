@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button"
 import { CodeBlock } from "@/components/code-block"
 
 import { useScrollReveal } from "./hooks/useScrollReveal"
+import { SiteFooter } from "@/components/SiteFooter"
+import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
 import { AnimatedCounter } from "./components/AnimatedCounter"
 import { PipelineViz } from "./components/PipelineViz"
 import {
@@ -74,6 +76,53 @@ export default function Home() {
         <title>Fluiq — The AI Ops Stack for LLM Applications</title>
         <meta name="description" content="Fluiq is the unified ops layer for LLM applications — security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
         <link rel="canonical" href="https://getfluiq.com/" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "Fluiq",
+          "url": "https://getfluiq.com",
+          "logo": "https://getfluiq.com/logo.svg",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Any",
+          "programmingLanguage": "Python",
+          "description": "Fluiq is the AI Ops stack for production LLM applications. It auto-instruments OpenAI, Anthropic, Gemini, LangChain, LangGraph, Google ADK, CrewAI, MCP, and major vector databases. Two lines of Python add tracing, security scanning, response caching, and LLM-as-judge evaluation to any LLM app.",
+          "featureList": [
+            "Automatic LLM call tracing with full span tree",
+            "Per-node token attribution and USD cost tracking at provider rates",
+            "p50/p95/p99 latency histograms per agent and model",
+            "Real-time trace streaming to dashboard",
+            "Pre-call prompt injection and jailbreak blocking",
+            "PII detection: credit cards, SSNs, IBAN, emails, phone numbers, IP addresses, names",
+            "Secret and high-entropy string redaction",
+            "Semantic attack scoring with warn and block modes",
+            "Trace-driven server-side Redis response caching",
+            "Cache observe mode to measure savings without caching",
+            "Configurable TTL and per-model cache scoping",
+            "LLM-as-judge evaluation: hallucination, faithfulness, relevance, toxicity, coherence, completeness",
+            "Evaluation warn and block modes with configurable thresholds",
+            "CI/CD GitHub Actions eval gates",
+            "Prompt template management with environment-based deployment",
+            "Prompt playground with LLM-as-judge scoring",
+            "Agent-level cost and latency aggregation",
+            "Cost anomaly alerts to Slack",
+            "Dataset management for regression testing",
+            "API key management"
+          ],
+          "applicationSubCategory": "AI Ops, LLM Monitoring, AI Security, LLM Evaluation, Response Caching",
+          "softwareVersion": "latest",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "description": "Free tier: 5 million lifetime traces, 1000 LLM-as-judge evaluations per month, 1 seat, 7-day retention. No credit card required."
+          },
+          "author": {
+            "@type": "Organization",
+            "name": "Fluiq",
+            "url": "https://getfluiq.com"
+          },
+          "sameAs": ["https://github.com/fluiq-AI/fluiq-sdk"]
+        })}</script>
       </Helmet>
 
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
@@ -89,6 +138,9 @@ export default function Home() {
           <nav className="hidden items-center gap-7 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] md:flex">
             <a href="#pillars" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</a>
             <a href="#how-it-works" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">How it works</a>
+
+            <NavIntegrationsDropdown />
+
             <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
             <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
             <Link to="/contact" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Contact</Link>
@@ -505,23 +557,7 @@ def answer_question(question: str) -> str:
         </div>
       </section>
 
-      {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-[#E5E1D6] dark:border-[#2A2A2A] py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-5 px-6 text-[13px] text-[#9A9A92] md:flex-row md:items-center">
-          <div className="flex items-center gap-2.5">
-            <img src="/logo.svg" alt="Fluiq" className="size-6 opacity-60" />
-            <span className="font-heading font-semibold text-[#0a0a0a] dark:text-[#FAF9F6] text-[14px]">Fluiq</span>
-            <span className="text-[#D4CFC1] dark:text-[#333333]">·</span>
-            <span>Observe, protect, optimize, evaluate.</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <a href="#pillars" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</a>
-            <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
-            <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
-            <Link to="/contact" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Contact</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
     </div>
   )
