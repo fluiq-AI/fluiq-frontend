@@ -11,10 +11,13 @@
     <!-- Primary Meta Tags -->
     <title>Fluiq — The AI Ops Stack for LLM Applications</title>
     <meta name="title" content="Fluiq — The AI Ops Stack for LLM Applications" />
-    <meta name="description" content="Fluiq is the AI Ops stack for production LLM apps. Two lines of Python give every LLM call automatic tracing, security scanning, response caching, and quality evaluation across OpenAI, Claude, Gemini, LangChain, LangGraph, CrewAI, and 13+ more." />
+    <!-- Per-route meta description is injected by react-helmet-async (see each page's <Helmet>).
+         Do NOT hardcode a description here — it would duplicate onto every prerendered route. -->
     <meta name="keywords" content="AI Ops, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, LangGraph monitoring, GoogleADK monitoring, CrewAI monitoring, AI security, hallucination detection" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://getfluiq.com/" />
+    <!-- Per-route canonical is injected by react-helmet-async (see each page's <Helmet>).
+         Do NOT hardcode a canonical here — it would emit a duplicate "/" canonical on every
+         prerendered route and Google would collapse all pages onto the homepage. -->
     <meta name="theme-color" content="#0a0a0a" />
     <link rel="preconnect" href="https://www.googletagmanager.com" />
 
@@ -26,9 +29,10 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://getfluiq.com/" />
-    <meta property="og:title" content="Fluiq — The AI Ops Stack for LLM Applications" />
-    <meta property="og:description" content="Fluiq is the AI Ops stack for production LLM apps. Two lines of Python give every LLM call automatic tracing, security scanning, response caching, and quality evaluation across OpenAI, Claude, Gemini, LangChain, LangGraph, CrewAI, and 13+ more." />
+    <!-- Per-route og:url is injected by react-helmet-async (see each page's <Helmet>/<Seo>).
+         Do NOT hardcode og:url here — it would duplicate onto every prerendered route. -->
+    <!-- Per-route og:title / og:description are injected by react-helmet-async (see each page's <Helmet>).
+         Do NOT hardcode them here — they would duplicate onto every prerendered route. -->
     <meta property="og:image" content="https://getfluiq.com/banner.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -37,9 +41,8 @@
 
     <!-- X (Twitter) -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://getfluiq.com/" />
-    <meta property="twitter:title" content="Fluiq — The AI Ops Stack for LLM Applications" />
-    <meta property="twitter:description" content="Fluiq is the AI Ops stack for production LLM apps. Two lines of Python give every LLM call automatic tracing, security scanning, response caching, and quality evaluation across OpenAI, Claude, Gemini, LangChain, LangGraph, CrewAI, and 13+ more." />
+    <!-- twitter:title / twitter:description intentionally omitted — X/Twitter falls back to
+         the per-route og:title / og:description injected by react-helmet-async. -->
     <meta property="twitter:image" content="https://getfluiq.com/banner.png" />
     <meta property="twitter:image:alt" content="Fluiq — The AI Ops Stack for LLM Applications" />
 

@@ -106,6 +106,9 @@ export default function Pricing() {
         <title>Pricing — Fluiq</title>
         <meta name="description" content="Start free with 5M lifetime traces. Upgrade to Team for security scanning, intelligent caching, and advanced evaluation. No credit card required." />
         <link rel="canonical" href="https://getfluiq.com/pricing" />
+        <meta property="og:url" content="https://getfluiq.com/pricing" />
+        <meta property="og:title" content="Pricing — Fluiq" />
+        <meta property="og:description" content="Start free with 5M lifetime traces. Upgrade to Team for security scanning, intelligent caching, and advanced evaluation. No credit card required." />
       </Helmet>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
         navScrolled

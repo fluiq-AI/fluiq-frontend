@@ -10,6 +10,9 @@ export default function EvaluationPage() {
         <title>Evaluation — Fluiq Docs</title>
         <meta name="description" content="Score every LLM response for hallucination, faithfulness, relevance, and toxicity using LLM-as-judge. Warn or block based on configurable per-metric thresholds." />
         <link rel="canonical" href="https://getfluiq.com/documentation/evaluation" />
+        <meta property="og:url" content="https://getfluiq.com/documentation/evaluation" />
+        <meta property="og:title" content="Evaluation — Fluiq Docs" />
+        <meta property="og:description" content="Score every LLM response for hallucination, faithfulness, relevance, and toxicity using LLM-as-judge. Warn or block based on configurable per-metric thresholds." />
       </Helmet>
     <div className="space-y-4">
       <PageHeading

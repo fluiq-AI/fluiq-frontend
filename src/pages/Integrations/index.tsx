@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/ThemeToggle"
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { SiteFooter } from "@/components/SiteFooter"
+import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { INTEGRATIONS, type Category } from "./data"
 
@@ -65,7 +66,7 @@ export default function IntegrationsIndex() {
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] md:flex">
             <Link to="/" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</Link>
-            <Link to="/integrations" className="text-[#0a0a0a] dark:text-[#FAF9F6] font-medium">Integrations</Link>
+            <NavIntegrationsDropdown triggerClassName="text-[#0a0a0a] dark:text-[#FAF9F6] font-medium" />
             <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
             <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
           </nav>

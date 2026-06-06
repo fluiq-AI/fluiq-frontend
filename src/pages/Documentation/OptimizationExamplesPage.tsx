@@ -337,6 +337,9 @@ export default function OptimizationExamplesPage() {
         <title>Optimization Examples — Fluiq Docs</title>
         <meta name="description" content="Code examples for fluiq.optimize(): trace-driven LLM response caching with observe mode, configurable TTL, and per-model scope." />
         <link rel="canonical" href="https://getfluiq.com/examples/optimization" />
+        <meta property="og:url" content="https://getfluiq.com/examples/optimization" />
+        <meta property="og:title" content="Optimization Examples — Fluiq Docs" />
+        <meta property="og:description" content="Code examples for fluiq.optimize(): trace-driven LLM response caching with observe mode, configurable TTL, and per-model scope." />
       </Helmet>
     <div className="space-y-6">
       <PageHeading

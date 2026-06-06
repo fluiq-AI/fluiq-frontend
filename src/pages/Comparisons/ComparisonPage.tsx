@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { CodeBlock } from "@/components/code-block"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
+import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -111,6 +112,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] md:flex">
             <Link to="/" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</Link>
+            <NavIntegrationsDropdown />
             <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
             <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
             <Link to="/contact" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Contact</Link>

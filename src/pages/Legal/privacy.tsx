@@ -57,6 +57,9 @@ export default function Privacy() {
         <title>Privacy Policy — Fluiq</title>
         <meta name="description" content="Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA." />
         <link rel="canonical" href="https://getfluiq.com/privacy" />
+        <meta property="og:url" content="https://getfluiq.com/privacy" />
+        <meta property="og:title" content="Privacy Policy — Fluiq" />
+        <meta property="og:description" content="Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA." />
       </Helmet>
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">

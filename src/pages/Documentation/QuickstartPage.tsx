@@ -14,6 +14,9 @@ export default function QuickstartPage() {
         <title>Quickstart — Fluiq Docs</title>
         <meta name="description" content="Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more." />
         <link rel="canonical" href="https://getfluiq.com/documentation/quickstart" />
+        <meta property="og:url" content="https://getfluiq.com/documentation/quickstart" />
+        <meta property="og:title" content="Quickstart — Fluiq Docs" />
+        <meta property="og:description" content="Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more." />
       </Helmet>
     <div className="space-y-12">
       <div>

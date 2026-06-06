@@ -185,6 +185,9 @@ export default function SecurityExamplesPage() {
         <title>Security Examples — Fluiq Docs</title>
         <meta name="description" content="Code examples for fluiq.secure(): blocking prompt injection, jailbreaks, PII leakage, and skeleton-key attacks across OpenAI, Anthropic, and LangChain." />
         <link rel="canonical" href="https://getfluiq.com/examples/security" />
+        <meta property="og:url" content="https://getfluiq.com/examples/security" />
+        <meta property="og:title" content="Security Examples — Fluiq Docs" />
+        <meta property="og:description" content="Code examples for fluiq.secure(): blocking prompt injection, jailbreaks, PII leakage, and skeleton-key attacks across OpenAI, Anthropic, and LangChain." />
       </Helmet>
     <div className="space-y-6">
       <PageHeading

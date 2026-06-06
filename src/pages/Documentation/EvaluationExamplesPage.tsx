@@ -289,6 +289,9 @@ export default function EvaluationExamplesPage() {
         <title>Evaluation Examples — Fluiq Docs</title>
         <meta name="description" content="Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers." />
         <link rel="canonical" href="https://getfluiq.com/examples/evaluation" />
+        <meta property="og:url" content="https://getfluiq.com/examples/evaluation" />
+        <meta property="og:title" content="Evaluation Examples — Fluiq Docs" />
+        <meta property="og:description" content="Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers." />
       </Helmet>
     <div className="space-y-6">
       <PageHeading

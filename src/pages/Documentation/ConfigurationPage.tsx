@@ -11,6 +11,9 @@ export default function ConfigurationPage() {
         <title>Configuration — Fluiq Docs</title>
         <meta name="description" content="Full reference for Fluiq SDK configuration options — API keys, environment variables, log levels, timeout settings, and per-feature toggles." />
         <link rel="canonical" href="https://getfluiq.com/documentation/configuration" />
+        <meta property="og:url" content="https://getfluiq.com/documentation/configuration" />
+        <meta property="og:title" content="Configuration — Fluiq Docs" />
+        <meta property="og:description" content="Full reference for Fluiq SDK configuration options — API keys, environment variables, log levels, timeout settings, and per-feature toggles." />
       </Helmet>
     <div className="space-y-4">
       <PageHeading

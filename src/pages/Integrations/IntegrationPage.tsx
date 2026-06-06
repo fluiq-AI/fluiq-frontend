@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { CodeBlock } from "@/components/code-block"
 import { SiteFooter } from "@/components/SiteFooter"
+import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { type IntegrationData, type Category, INTEGRATION_META } from "./data"
 
@@ -84,7 +85,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
           </Link>
           <nav className="hidden items-center gap-7 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] md:flex">
             <Link to="/" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</Link>
-            <Link to="/integrations" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Integrations</Link>
+            <NavIntegrationsDropdown />
             <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
             <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
           </nav>

@@ -71,6 +71,9 @@ export default function Contact() {
         <title>Contact — Fluiq</title>
         <meta name="description" content="Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day." />
         <link rel="canonical" href="https://getfluiq.com/contact" />
+        <meta property="og:url" content="https://getfluiq.com/contact" />
+        <meta property="og:title" content="Contact — Fluiq" />
+        <meta property="og:description" content="Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day." />
       </Helmet>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
         navScrolled

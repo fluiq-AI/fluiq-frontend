@@ -17,6 +17,9 @@ export default function PromptsPage() {
         <title>Prompt Management — Fluiq Docs</title>
         <meta name="description" content="Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison." />
         <link rel="canonical" href="https://getfluiq.com/documentation/prompts" />
+        <meta property="og:url" content="https://getfluiq.com/documentation/prompts" />
+        <meta property="og:title" content="Prompt Management — Fluiq Docs" />
+        <meta property="og:description" content="Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison." />
       </Helmet>
     <div className="space-y-4">
       <PageHeading

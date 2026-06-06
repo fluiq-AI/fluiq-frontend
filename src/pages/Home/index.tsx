@@ -76,6 +76,9 @@ export default function Home() {
         <title>Fluiq — The AI Ops Stack for LLM Applications</title>
         <meta name="description" content="Fluiq is the unified ops layer for LLM applications — security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
         <link rel="canonical" href="https://getfluiq.com/" />
+        <meta property="og:url" content="https://getfluiq.com/" />
+        <meta property="og:title" content="Fluiq — The AI Ops Stack for LLM Applications" />
+        <meta property="og:description" content="Fluiq is the unified ops layer for LLM applications — security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",

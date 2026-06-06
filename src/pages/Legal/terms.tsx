@@ -56,6 +56,9 @@ export default function Terms() {
         <title>Terms of Service — Fluiq</title>
         <meta name="description" content="Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements." />
         <link rel="canonical" href="https://getfluiq.com/terms" />
+        <meta property="og:url" content="https://getfluiq.com/terms" />
+        <meta property="og:title" content="Terms of Service — Fluiq" />
+        <meta property="og:description" content="Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements." />
       </Helmet>
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">

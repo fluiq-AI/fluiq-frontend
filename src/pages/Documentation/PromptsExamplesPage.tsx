@@ -173,6 +173,9 @@ export default function PromptsExamplesPage() {
         <title>Prompt Management Examples — Fluiq Docs</title>
         <meta name="description" content="Code examples for Fluiq prompt management: fetching versioned prompt templates by environment, variable injection, and deployment across dev, staging, and production." />
         <link rel="canonical" href="https://getfluiq.com/examples/prompts" />
+        <meta property="og:url" content="https://getfluiq.com/examples/prompts" />
+        <meta property="og:title" content="Prompt Management Examples — Fluiq Docs" />
+        <meta property="og:description" content="Code examples for Fluiq prompt management: fetching versioned prompt templates by environment, variable injection, and deployment across dev, staging, and production." />
       </Helmet>
     <div className="space-y-6">
       <PageHeading

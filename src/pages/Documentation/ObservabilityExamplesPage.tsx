@@ -310,6 +310,9 @@ export default function ObservabilityExamplesPage() {
         <title>Observability Examples — Fluiq Docs</title>
         <meta name="description" content="Code examples for Fluiq observability: tracing OpenAI, Anthropic, LangChain, LangGraph, CrewAI, Google ADK, and vector database calls." />
         <link rel="canonical" href="https://getfluiq.com/examples/observability" />
+        <meta property="og:url" content="https://getfluiq.com/examples/observability" />
+        <meta property="og:title" content="Observability Examples — Fluiq Docs" />
+        <meta property="og:description" content="Code examples for Fluiq observability: tracing OpenAI, Anthropic, LangChain, LangGraph, CrewAI, Google ADK, and vector database calls." />
       </Helmet>
     <div className="space-y-6">
       <PageHeading

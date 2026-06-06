@@ -86,6 +86,9 @@ export default function ObservabilityPage() {
         <title>Observability — Fluiq Docs</title>
         <meta name="description" content="Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency histograms. Real-time streaming to your Fluiq dashboard." />
         <link rel="canonical" href="https://getfluiq.com/documentation/observability" />
+        <meta property="og:url" content="https://getfluiq.com/documentation/observability" />
+        <meta property="og:title" content="Observability — Fluiq Docs" />
+        <meta property="og:description" content="Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency histograms. Real-time streaming to your Fluiq dashboard." />
       </Helmet>
     <div className="space-y-4">
       <PageHeading

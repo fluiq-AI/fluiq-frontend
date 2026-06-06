@@ -11,6 +11,9 @@ export default function SecurityPage() {
         <title>Security — Fluiq Docs</title>
         <meta name="description" content="Block prompt injection, jailbreaks, and PII leakage before they reach your model. fluiq.secure() adds pre-call and post-call scanning with zero false positives." />
         <link rel="canonical" href="https://getfluiq.com/documentation/security" />
+        <meta property="og:url" content="https://getfluiq.com/documentation/security" />
+        <meta property="og:title" content="Security — Fluiq Docs" />
+        <meta property="og:description" content="Block prompt injection, jailbreaks, and PII leakage before they reach your model. fluiq.secure() adds pre-call and post-call scanning with zero false positives." />
       </Helmet>
     <div className="space-y-4">
       <PageHeading

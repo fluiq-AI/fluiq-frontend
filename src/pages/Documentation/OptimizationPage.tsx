@@ -11,6 +11,9 @@ export default function OptimizationPage() {
         <title>Optimization — Fluiq Docs</title>
         <meta name="description" content="Cut LLM costs by caching repeated prompts server-side. fluiq.optimize() analyses your trace history, provisions a cache instance, and serves duplicates automatically." />
         <link rel="canonical" href="https://getfluiq.com/documentation/optimization" />
+        <meta property="og:url" content="https://getfluiq.com/documentation/optimization" />
+        <meta property="og:title" content="Optimization — Fluiq Docs" />
+        <meta property="og:description" content="Cut LLM costs by caching repeated prompts server-side. fluiq.optimize() analyses your trace history, provisions a cache instance, and serves duplicates automatically." />
       </Helmet>
     <div className="space-y-4">
       <PageHeading
