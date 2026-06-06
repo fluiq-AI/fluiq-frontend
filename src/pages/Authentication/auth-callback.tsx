@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router"
 import { useAppDispatch } from "@/store/hooks"
 import { setSession } from "@/store/auth/slice"
 import type { AuthSession } from "@/lib/auth-types"
+import { Helmet } from "react-helmet-async"
 
 /**
  * Landing page after OAuth redirect from the backend.
@@ -43,6 +44,7 @@ function AuthCallback() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30">
+      <Helmet><title>Signing you in… — Fluiq</title></Helmet>
       <div className="flex flex-col items-center gap-3 text-muted-foreground">
         <svg
           className="size-6 animate-spin"

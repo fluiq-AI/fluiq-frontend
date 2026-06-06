@@ -10,10 +10,19 @@ export default function SecurityPage() {
       <Helmet>
         <title>Security — Fluiq Docs</title>
         <meta name="description" content="Block prompt injection, jailbreaks, and PII leakage before they reach your model. fluiq.secure() adds pre-call and post-call scanning with zero false positives." />
+        <meta name="keywords" content="LLM security, prompt injection detection, jailbreak detection, PII redaction, LLM guardrails, secret redaction" />
         <link rel="canonical" href="https://getfluiq.com/documentation/security" />
         <meta property="og:url" content="https://getfluiq.com/documentation/security" />
         <meta property="og:title" content="Security — Fluiq Docs" />
         <meta property="og:description" content="Block prompt injection, jailbreaks, and PII leakage before they reach your model. fluiq.secure() adds pre-call and post-call scanning with zero false positives." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          "headline": "Security — Fluiq Docs",
+          "description": "Block prompt injection, jailbreaks, and PII leakage before they reach your model. fluiq.secure() adds pre-call and post-call scanning with zero false positives.",
+          "url": "https://getfluiq.com/documentation/security",
+          "isPartOf": { "@id": "https://getfluiq.com" },
+        })}</script>
       </Helmet>
     <div className="space-y-4">
       <PageHeading

@@ -75,6 +75,7 @@ export default function Home() {
       <Helmet>
         <title>Fluiq — The AI Ops Stack for LLM Applications</title>
         <meta name="description" content="Fluiq is the unified ops layer for LLM applications — security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
+        <meta name="keywords" content="AI Ops, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, AI security, hallucination detection" />
         <link rel="canonical" href="https://getfluiq.com/" />
         <meta property="og:url" content="https://getfluiq.com/" />
         <meta property="og:title" content="Fluiq — The AI Ops Stack for LLM Applications" />

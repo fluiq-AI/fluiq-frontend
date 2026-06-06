@@ -10,10 +10,19 @@ export default function ConfigurationPage() {
       <Helmet>
         <title>Configuration — Fluiq Docs</title>
         <meta name="description" content="Full reference for Fluiq SDK configuration options — API keys, environment variables, log levels, timeout settings, and per-feature toggles." />
+        <meta name="keywords" content="Fluiq configuration, SDK configuration, API keys, environment variables, LLM SDK settings, feature toggles" />
         <link rel="canonical" href="https://getfluiq.com/documentation/configuration" />
         <meta property="og:url" content="https://getfluiq.com/documentation/configuration" />
         <meta property="og:title" content="Configuration — Fluiq Docs" />
         <meta property="og:description" content="Full reference for Fluiq SDK configuration options — API keys, environment variables, log levels, timeout settings, and per-feature toggles." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          "headline": "Configuration — Fluiq Docs",
+          "description": "Full reference for Fluiq SDK configuration options — API keys, environment variables, log levels, timeout settings, and per-feature toggles.",
+          "url": "https://getfluiq.com/documentation/configuration",
+          "isPartOf": { "@id": "https://getfluiq.com" },
+        })}</script>
       </Helmet>
     <div className="space-y-4">
       <PageHeading

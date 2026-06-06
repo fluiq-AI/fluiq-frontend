@@ -84,6 +84,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
       <Helmet>
         <title>{data.metaTitle}</title>
         <meta name="description" content={data.metaDescription} />
+        <meta name="keywords" content={`${data.name} alternative, Fluiq vs ${data.name}, ${data.name} comparison, ${data.name} pricing, LLM observability, LLM monitoring`} />
         <link rel="canonical" href={`https://getfluiq.com${data.canonicalPath}`} />
         <meta property="og:title" content={data.metaTitle} />
         <meta property="og:description" content={data.metaDescription} />

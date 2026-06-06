@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAppSelector } from "@/store/hooks"
 import { cn } from "@/lib/utils"
 import { NotificationWatcher } from "@/components/NotificationWatcher"
+import { Helmet } from "react-helmet-async"
 
 const NAV_SECTIONS = [
   {
@@ -75,6 +76,7 @@ function Dashboard() {
 
   return (
     <div className="flex min-h-screen bg-muted/30">
+      <Helmet><title>Dashboard — Fluiq</title></Helmet>
       <aside className="sticky top-0 flex h-screen w-60 flex-col border-r border-border/60 bg-background">
         <div className="flex h-16 items-center border-b border-border/60 px-5">
           <Link to="/" className="flex items-center gap-2">

@@ -47,10 +47,19 @@ export default function IntegrationsIndex() {
       <Helmet>
         <title>Fluiq Integrations — LLM Monitoring for OpenAI, LangChain, Pinecone & More</title>
         <meta name="description" content="Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases — OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python." />
+        <meta name="keywords" content="Fluiq integrations, LLM integrations, OpenAI integration, LangChain integration, vector database monitoring, agent framework monitoring, CrewAI integration" />
         <link rel="canonical" href="https://getfluiq.com/integrations" />
         <meta property="og:title" content="Fluiq Integrations — LLM Monitoring for 14 Frameworks" />
         <meta property="og:description" content="Auto-instrument OpenAI, Anthropic, Gemini, LangChain, CrewAI, Pinecone, and more with two lines of Python." />
         <meta property="og:url" content="https://getfluiq.com/integrations" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "CollectionPage",
+          "name": "Fluiq Integrations",
+          "description": "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases — OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python.",
+          "url": "https://getfluiq.com/integrations",
+          "isPartOf": { "@id": "https://getfluiq.com" },
+        })}</script>
       </Helmet>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}

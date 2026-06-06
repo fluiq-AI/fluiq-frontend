@@ -85,10 +85,19 @@ export default function ObservabilityPage() {
       <Helmet>
         <title>Observability — Fluiq Docs</title>
         <meta name="description" content="Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency histograms. Real-time streaming to your Fluiq dashboard." />
+        <meta name="keywords" content="LLM observability, LLM tracing, token attribution, USD cost tracking, latency histograms, span tree, real-time traces" />
         <link rel="canonical" href="https://getfluiq.com/documentation/observability" />
         <meta property="og:url" content="https://getfluiq.com/documentation/observability" />
         <meta property="og:title" content="Observability — Fluiq Docs" />
         <meta property="og:description" content="Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency histograms. Real-time streaming to your Fluiq dashboard." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          "headline": "Observability — Fluiq Docs",
+          "description": "Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency histograms. Real-time streaming to your Fluiq dashboard.",
+          "url": "https://getfluiq.com/documentation/observability",
+          "isPartOf": { "@id": "https://getfluiq.com" },
+        })}</script>
       </Helmet>
     <div className="space-y-4">
       <PageHeading

@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ApiError, apiRequest } from "@/lib/api"
 import type { OkResponse } from "@/lib/auth-types"
+import { Helmet } from "react-helmet-async"
 
 function ForgotPassword() {
   const navigate = useNavigate()
@@ -49,6 +50,7 @@ function ForgotPassword() {
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
+      <Helmet><title>Reset your password — Fluiq</title></Helmet>
       <header className="border-b border-border/60 bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">

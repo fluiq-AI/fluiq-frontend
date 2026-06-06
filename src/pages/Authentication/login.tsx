@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearError, loginThunk } from "@/store/auth/slice"
 import { API_BASE_URL } from "@/lib/api"
+import { Helmet } from "react-helmet-async"
 
 function Login() {
   const dispatch = useAppDispatch()
@@ -59,6 +60,7 @@ function Login() {
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
+      <Helmet><title>Log in — Fluiq</title></Helmet>
       <header className="border-b border-border/60 bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">

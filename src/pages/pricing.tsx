@@ -105,10 +105,19 @@ export default function Pricing() {
       <Helmet>
         <title>Pricing — Fluiq</title>
         <meta name="description" content="Start free with 5M lifetime traces. Upgrade to Team for security scanning, intelligent caching, and advanced evaluation. No credit card required." />
+        <meta name="keywords" content="Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing" />
         <link rel="canonical" href="https://getfluiq.com/pricing" />
         <meta property="og:url" content="https://getfluiq.com/pricing" />
         <meta property="og:title" content="Pricing — Fluiq" />
         <meta property="og:description" content="Start free with 5M lifetime traces. Upgrade to Team for security scanning, intelligent caching, and advanced evaluation. No credit card required." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Fluiq Pricing",
+          "description": "Fluiq pricing plans — start free with 5 million lifetime traces and 1,000 evaluations per month, upgrade for security scanning, caching, and team seats.",
+          "url": "https://getfluiq.com/pricing",
+          "isPartOf": { "@id": "https://getfluiq.com" },
+        })}</script>
       </Helmet>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${
         navScrolled

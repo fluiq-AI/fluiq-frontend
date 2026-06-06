@@ -13,10 +13,19 @@ export default function QuickstartPage() {
       <Helmet>
         <title>Quickstart — Fluiq Docs</title>
         <meta name="description" content="Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more." />
+        <meta name="keywords" content="Fluiq quickstart, LLM observability setup, Python LLM SDK, install Fluiq, LLM tracing tutorial, getting started" />
         <link rel="canonical" href="https://getfluiq.com/documentation/quickstart" />
         <meta property="og:url" content="https://getfluiq.com/documentation/quickstart" />
         <meta property="og:title" content="Quickstart — Fluiq Docs" />
         <meta property="og:description" content="Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          "headline": "Quickstart — Fluiq Docs",
+          "description": "Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more.",
+          "url": "https://getfluiq.com/documentation/quickstart",
+          "isPartOf": { "@id": "https://getfluiq.com" },
+        })}</script>
       </Helmet>
     <div className="space-y-12">
       <div>

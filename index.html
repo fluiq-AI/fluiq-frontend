@@ -9,11 +9,15 @@
     <meta property="og:logo" content="/logo.svg" />
 
     <!-- Primary Meta Tags -->
-    <title>Fluiq — The AI Ops Stack for LLM Applications</title>
-    <meta name="title" content="Fluiq — The AI Ops Stack for LLM Applications" />
+    <!-- Per-route <title> is injected by react-helmet-async (see each page's <Helmet>).
+         Every route — public/prerendered AND authenticated SPA routes (dashboard, auth,
+         admin) — sets its own <title>, so none is hardcoded here. Hardcoding one would
+         either duplicate onto every prerendered route or override the per-route title. -->
     <!-- Per-route meta description is injected by react-helmet-async (see each page's <Helmet>).
          Do NOT hardcode a description here — it would duplicate onto every prerendered route. -->
-    <meta name="keywords" content="AI Ops, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, LangGraph monitoring, GoogleADK monitoring, CrewAI monitoring, AI security, hallucination detection" />
+    <!-- Per-route meta keywords are injected by react-helmet-async (see each page's <Helmet>).
+         Do NOT hardcode keywords here — it would emit the homepage keyword set onto every
+         prerendered route instead of per-page-relevant terms. -->
     <meta name="robots" content="index, follow" />
     <!-- Per-route canonical is injected by react-helmet-async (see each page's <Helmet>).
          Do NOT hardcode a canonical here — it would emit a duplicate "/" canonical on every
@@ -82,46 +86,10 @@
     }
     </script>
 
-    <!-- JSON-LD: WebPage index -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "WebPage",
-          "@id": "https://getfluiq.com/#home",
-          "url": "https://getfluiq.com/",
-          "name": "Fluiq — The AI Ops Stack for LLM Applications",
-          "description": "Product overview: the four pillars of the Fluiq AI Ops stack (Observe, Secure, Optimize, Evaluate), supported integrations, code samples, and getting-started CTA.",
-          "isPartOf": { "@id": "https://getfluiq.com" }
-        },
-        {
-          "@type": "WebPage",
-          "@id": "https://getfluiq.com/#documentation",
-          "url": "https://getfluiq.com/documentation",
-          "name": "Fluiq Documentation — Full SDK Reference",
-          "description": "Complete SDK reference: installation, auto-instrumentation, @trace decorator, agent tracing, security scanning (fluiq.secure), optimization (fluiq.optimize), evaluation (fluiq.eval), prompt management, cost analytics, CI/CD integration, and configuration.",
-          "isPartOf": { "@id": "https://getfluiq.com" }
-        },
-        {
-          "@type": "ContactPage",
-          "@id": "https://getfluiq.com/#contact",
-          "url": "https://getfluiq.com/contact",
-          "name": "Contact Fluiq",
-          "description": "Contact the Fluiq team for sales enquiries, integration support, feature requests, and partnership discussions. Replies within one business day.",
-          "isPartOf": { "@id": "https://getfluiq.com" }
-        },
-        {
-          "@type": "WebPage",
-          "@id": "https://getfluiq.com/#signup",
-          "url": "https://getfluiq.com/signup",
-          "name": "Sign up for Fluiq — Free, No Credit Card Required",
-          "description": "Create a free Fluiq account and get an API key. Free tier includes 5 million lifetime traces and 1000 LLM-as-judge evaluations per month.",
-          "isPartOf": { "@id": "https://getfluiq.com" }
-        }
-      ]
-    }
-    </script>
+    <!-- Per-route WebPage / SoftwareApplication / TechArticle JSON-LD is injected by
+         react-helmet-async (see each page's <Helmet>). Only the site-wide WebSite and
+         Organization graphs above are hardcoded here; a per-page WebPage @graph must NOT
+         be hardcoded or every prerendered route would carry the homepage's structured data. -->
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-FCNNKDRDX6"></script>

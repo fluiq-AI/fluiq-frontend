@@ -10,10 +10,19 @@ export default function OptimizationPage() {
       <Helmet>
         <title>Optimization — Fluiq Docs</title>
         <meta name="description" content="Cut LLM costs by caching repeated prompts server-side. fluiq.optimize() analyses your trace history, provisions a cache instance, and serves duplicates automatically." />
+        <meta name="keywords" content="LLM caching, prompt caching, LLM cost optimization, response caching, Redis LLM cache, reduce LLM costs" />
         <link rel="canonical" href="https://getfluiq.com/documentation/optimization" />
         <meta property="og:url" content="https://getfluiq.com/documentation/optimization" />
         <meta property="og:title" content="Optimization — Fluiq Docs" />
         <meta property="og:description" content="Cut LLM costs by caching repeated prompts server-side. fluiq.optimize() analyses your trace history, provisions a cache instance, and serves duplicates automatically." />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "TechArticle",
+          "headline": "Optimization — Fluiq Docs",
+          "description": "Cut LLM costs by caching repeated prompts server-side. fluiq.optimize() analyses your trace history, provisions a cache instance, and serves duplicates automatically.",
+          "url": "https://getfluiq.com/documentation/optimization",
+          "isPartOf": { "@id": "https://getfluiq.com" },
+        })}</script>
       </Helmet>
     <div className="space-y-4">
       <PageHeading

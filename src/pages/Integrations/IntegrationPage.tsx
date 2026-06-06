@@ -57,6 +57,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
       <Helmet>
         <title>{data.metaTitle}</title>
         <meta name="description" content={data.metaDescription} />
+        <meta name="keywords" content={`${data.name} monitoring, ${data.name} tracing, ${data.name} observability, ${data.name} cost tracking, LLM ${data.category.toLowerCase()} integration, Fluiq ${data.name}`} />
         <link rel="canonical" href={`https://getfluiq.com/integrations/${data.slug}`} />
         <meta property="og:title" content={data.metaTitle} />
         <meta property="og:description" content={data.metaDescription} />

@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { logoutThunk } from "@/store/auth/slice"
 import { cn } from "@/lib/utils"
+import { Helmet } from "react-helmet-async"
 
 const NAV_ITEMS = [
   { to: "/admin/overview", label: "Overview", icon: DashboardSquare01Icon },
@@ -40,6 +41,7 @@ function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-muted/30">
+      <Helmet><title>Admin — Fluiq</title></Helmet>
       <aside className="sticky top-0 flex h-screen w-60 flex-col border-r border-border/60 bg-background">
         <div className="flex h-16 items-center border-b border-border/60 px-5">
           <Link to="/" className="flex items-center gap-2">
