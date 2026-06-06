@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ThemeToggle } from "@/components/ThemeToggle"
+import { SiteNavbar } from "@/components/SiteNavbar"
 import {
   ArrowRight02Icon,
   ChartLineData01Icon,
@@ -1309,31 +1309,7 @@ export default function Examples() {
     <div className="min-h-screen bg-background text-foreground">
 
       {/* ── Nav ── */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/logo.svg" alt="Fluiq" className="size-7" />
-            <span className="font-heading text-lg font-semibold tracking-tight">Fluiq</span>
-            <Badge variant="muted" className="ml-1">Examples</Badge>
-          </Link>
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <Link to="/" className="hover:text-foreground">Platform</Link>
-            <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
-            <Link to="/documentation" className="hover:text-foreground">Docs</Link>
-            <Link to="/examples" className="text-foreground font-medium">Examples</Link>
-            <Link to="/contact" className="hover:text-foreground">Contact</Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button size="sm" asChild>
-              <Link to="/signup">
-                Get API key
-                <HugeiconsIcon icon={ArrowRight02Icon} />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <SiteNavbar variant="docs" badge="Examples" active="developer" />
 
       {/* ── Layout ── */}
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-[220px_1fr]">

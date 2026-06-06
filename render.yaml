@@ -70,6 +70,15 @@ projects:
       - { type: rewrite, source: /lakera-alternative, destination: /lakera-alternative/index.html }
 
       # --------------------------------------------------------------------
+      # Blog: the index plus a wildcard for each prerendered post directory
+      # (dist/blog/<slug>/index.html). Post routes are discovered at build time
+      # from the API (see vite.config.ts) and a publish triggers a rebuild, so
+      # crawlers/curl receive the post's baked-in HTML + meta.
+      # --------------------------------------------------------------------
+      - { type: rewrite, source: /blog, destination: /blog/index.html }
+      - { type: rewrite, source: /blog/*, destination: /blog/:splat/index.html }
+
+      # --------------------------------------------------------------------
       # SPA fallback: everything else (dashboard, auth, admin, etc.) is
       # handled client-side by react-router. MUST stay last.
       # --------------------------------------------------------------------

@@ -8,9 +8,13 @@ function ScrollToTop() {
 }
 
 function PrerenderReady() {
+  const { pathname } = useLocation()
   useEffect(() => {
+    // Data-driven blog pages signal readiness themselves (after their fetch
+    // resolves) so the prerendered HTML contains the real content.
+    if (pathname.startsWith('/blog')) return
     document.dispatchEvent(new Event('app-prerender-ready'))
-  }, [])
+  }, [pathname])
   return null
 }
 import Home from "@/pages/Home/index"
@@ -58,6 +62,9 @@ import Profile from "@/pages/Dashboard/Profile/index"
 import IntegrationsIndex from "@/pages/Integrations/index"
 import IntegrationRoute from "@/pages/Integrations/IntegrationRoute"
 
+import BlogIndex from "@/pages/Blog/index"
+import BlogPost from "@/pages/Blog/BlogPost"
+
 import LangSmithAlternative from "@/pages/Comparisons/langsmith-alternative"
 import LangfuseAlternative from "@/pages/Comparisons/langfuse-alternative"
 import HeliconeAlternative from "@/pages/Comparisons/helicone-alternative"
@@ -70,6 +77,8 @@ import AdminOverview from "@/pages/Admin/Overview/index"
 import AdminUsers from "@/pages/Admin/Users/index"
 import AdminOrganizations from "@/pages/Admin/Organizations/index"
 import AdminPlans from "@/pages/Admin/Plans/index"
+import AdminBlog from "@/pages/Admin/Blog/index"
+import BlogEditor from "@/pages/Admin/Blog/BlogEditor"
 
 import RequireAuth from "@/components/RequireAuth"
 import RequireAdmin from "@/components/RequireAdmin"
@@ -96,6 +105,10 @@ function App() {
           {/* Integration pages */}
           <Route path="/integrations" element={<IntegrationsIndex />} />
           <Route path="/integrations/:slug" element={<IntegrationRoute />} />
+
+          {/* Blog */}
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
 
           {/* Comparison / alternative pages */}
           <Route path="/langsmith-alternative"  element={<LangSmithAlternative />} />
@@ -166,6 +179,9 @@ function App() {
             <Route path="users"         element={<AdminUsers />} />
             <Route path="organizations" element={<AdminOrganizations />} />
             <Route path="plans"         element={<AdminPlans />} />
+            <Route path="blog"          element={<AdminBlog />} />
+            <Route path="blog/new"      element={<BlogEditor />} />
+            <Route path="blog/:postId"  element={<BlogEditor />} />
           </Route>
         </Routes>
       </BrowserRouter>

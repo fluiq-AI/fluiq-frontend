@@ -44,7 +44,33 @@ const PRERENDER_ROUTES = [
   '/braintrust-alternative',
   '/portkey-alternative',
   '/lakera-alternative',
+  '/blog',
 ]
+
+// Blog posts are authored in the admin panel and live in Postgres, so their
+// routes aren't known at code time. Fetch the published slugs from the API at
+// build time and prerender each to static HTML (publishing triggers a rebuild
+// via the Render deploy hook). Fails open — a build never breaks if the API is
+// unreachable; those posts just fall back to client-side rendering until the
+// next successful build.
+async function fetchBlogRoutes(): Promise<string[]> {
+  const base = (process.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+  if (!base) {
+    console.warn('[prerender] VITE_API_BASE_URL unset — skipping blog post prerender')
+    return []
+  }
+  try {
+    const res = await fetch(`${base}/api/v1/blog/slugs`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = (await res.json()) as { slugs?: string[] }
+    const routes = (data.slugs ?? []).map((slug) => `/blog/${slug}`)
+    console.log(`[prerender] discovered ${routes.length} blog post(s)`)
+    return routes
+  } catch (err) {
+    console.warn('[prerender] could not fetch blog slugs:', (err as Error).message)
+    return []
+  }
+}
 
 // Vite 8 (Rolldown) silently drops emitFile for the root index.html when the
 // prerender plugin deletes the original bundle entry. Capture it here and
@@ -63,7 +89,7 @@ const writePrerenderedHomePlugin = {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(async () => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -73,7 +99,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
     prerender({
-      routes: PRERENDER_ROUTES,
+      routes: [...PRERENDER_ROUTES, ...(await fetchBlogRoutes())],
       renderer: '@prerenderer/renderer-puppeteer',
       rendererOptions: {
         renderAfterDocumentEvent: 'app-prerender-ready',
@@ -87,4 +113,4 @@ export default defineConfig({
     }),
     writePrerenderedHomePlugin,
   ],
-})
+}))

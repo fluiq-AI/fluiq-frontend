@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useState } from "react"
 import { Link } from "react-router"
 import { motion, useMotionValue, useSpring } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ThemeToggle } from "@/components/ThemeToggle"
 import {
   ArrowRight02Icon,
   PythonIcon,
@@ -21,7 +20,7 @@ import { CodeBlock } from "@/components/code-block"
 
 import { useScrollReveal } from "./hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
-import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
+import { SiteNavbar } from "@/components/SiteNavbar"
 import { AnimatedCounter } from "./components/AnimatedCounter"
 import { PipelineViz } from "./components/PipelineViz"
 import {
@@ -36,19 +35,12 @@ import { INTEGRATIONS, STATS, HERO_PILLARS, EASE_OUT } from "./utils/constants"
 
 export default function Home() {
   useScrollReveal()
-  const [navScrolled, setNavScrolled] = useState(false)
   const [metrics, setMetrics] = useState({ cache: 73, sec: 99.1, eval: 91 })
   const [rpm, setRpm]         = useState(247)
 
   const rotYRaw = useMotionValue(-6); const rotXRaw = useMotionValue(2)
   const rotY    = useSpring(rotYRaw, { stiffness: 180, damping: 26 })
   const rotX    = useSpring(rotXRaw, { stiffness: 180, damping: 26 })
-
-  useEffect(() => {
-    const onScroll = () => setNavScrolled(window.scrollY > 20)
-    window.addEventListener("scroll", onScroll, { passive: true })
-    return () => window.removeEventListener("scroll", onScroll)
-  }, [])
 
   useEffect(() => {
     const id = setInterval(() => setMetrics({
@@ -129,37 +121,7 @@ export default function Home() {
         })}</script>
       </Helmet>
 
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${
-        navScrolled
-          ? "bg-[#FAF9F6]/90 dark:bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#E5E1D6] dark:border-[#2A2A2A]"
-          : "bg-[#FAF9F6] dark:bg-[#0A0A0A] border-b border-transparent"
-      }`}>
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src="/logo.svg" alt="Fluiq" className="size-7" />
-            <span className="font-heading text-[15px] font-semibold tracking-tight">Fluiq</span>
-          </Link>
-          <nav className="hidden items-center gap-7 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] md:flex">
-            <a href="#pillars" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Platform</a>
-            <a href="#how-it-works" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">How it works</a>
-
-            <NavIntegrationsDropdown />
-
-            <Link to="/pricing" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Pricing</Link>
-            <Link to="/documentation" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Docs</Link>
-            <Link to="/contact" className="hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors">Contact</Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <Button variant="ghost" size="sm" className="text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6]" asChild>
-              <Link to="/login">Login</Link>
-            </Button>
-            <Button size="sm" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]" asChild>
-              <Link to="/signup">Get started <HugeiconsIcon icon={ArrowRight02Icon} size={14} /></Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <SiteNavbar landing />
 
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">

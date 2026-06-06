@@ -14,6 +14,7 @@ const NAV_LINKS = [
   { label: "Integrations",  to: "/integrations" },
   { label: "Pricing",       to: "/pricing" },
   { label: "Docs",          to: "/documentation" },
+  { label: "Blog",          to: "/blog" },
   { label: "Contact",       to: "/contact" },
 ]
 
