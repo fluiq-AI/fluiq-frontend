@@ -1,0 +1,79 @@
+version: "1"
+projects:
+- name: My project
+  environments:
+  - name: Production
+    services:
+    - type: web
+      name: fluiq-frontend
+      runtime: static
+      repo: https://github.com/fluiq-AI/fluiq-frontend
+      envVars:
+      - key: VITE_API_BASE_URL
+        sync: false
+      buildCommand: npm install && npm run build
+      staticPublishPath: ./dist
+      domains:
+      - getfluiq.com
+      - www.getfluiq.com
+      routes:
+      # --------------------------------------------------------------------
+      # Prerendered routes: serve each route's own prerendered index.html so
+      # the baked-in <title>/<canonical>/meta is what crawlers + curl receive.
+      # Without these, the catch-all below rewrites e.g. /langsmith-alternative
+      # to the root /index.html (homepage), so every page served the homepage's
+      # title + canonical to non-JS clients.
+      #
+      # KEEP IN SYNC with PRERENDER_ROUTES in vite.config.ts.
+      # ('/' is omitted — served by the root dist/index.html directly.)
+      # --------------------------------------------------------------------
+      - { type: rewrite, source: /pricing, destination: /pricing/index.html }
+      - { type: rewrite, source: /contact, destination: /contact/index.html }
+      - { type: rewrite, source: /privacy, destination: /privacy/index.html }
+      - { type: rewrite, source: /terms, destination: /terms/index.html }
+
+      - { type: rewrite, source: /documentation/quickstart, destination: /documentation/quickstart/index.html }
+      - { type: rewrite, source: /documentation/observability, destination: /documentation/observability/index.html }
+      - { type: rewrite, source: /documentation/optimization, destination: /documentation/optimization/index.html }
+      - { type: rewrite, source: /documentation/security, destination: /documentation/security/index.html }
+      - { type: rewrite, source: /documentation/evaluation, destination: /documentation/evaluation/index.html }
+      - { type: rewrite, source: /documentation/prompts, destination: /documentation/prompts/index.html }
+      - { type: rewrite, source: /documentation/configuration, destination: /documentation/configuration/index.html }
+
+      - { type: rewrite, source: /examples/observability, destination: /examples/observability/index.html }
+      - { type: rewrite, source: /examples/security, destination: /examples/security/index.html }
+      - { type: rewrite, source: /examples/evaluation, destination: /examples/evaluation/index.html }
+      - { type: rewrite, source: /examples/optimization, destination: /examples/optimization/index.html }
+      - { type: rewrite, source: /examples/prompts, destination: /examples/prompts/index.html }
+
+      - { type: rewrite, source: /integrations, destination: /integrations/index.html }
+      - { type: rewrite, source: /integrations/openai, destination: /integrations/openai/index.html }
+      - { type: rewrite, source: /integrations/anthropic, destination: /integrations/anthropic/index.html }
+      - { type: rewrite, source: /integrations/gemini, destination: /integrations/gemini/index.html }
+      - { type: rewrite, source: /integrations/vertex-ai, destination: /integrations/vertex-ai/index.html }
+      - { type: rewrite, source: /integrations/langchain, destination: /integrations/langchain/index.html }
+      - { type: rewrite, source: /integrations/langgraph, destination: /integrations/langgraph/index.html }
+      - { type: rewrite, source: /integrations/crewai, destination: /integrations/crewai/index.html }
+      - { type: rewrite, source: /integrations/google-adk, destination: /integrations/google-adk/index.html }
+      - { type: rewrite, source: /integrations/mcp, destination: /integrations/mcp/index.html }
+      - { type: rewrite, source: /integrations/pinecone, destination: /integrations/pinecone/index.html }
+      - { type: rewrite, source: /integrations/chroma, destination: /integrations/chroma/index.html }
+      - { type: rewrite, source: /integrations/weaviate, destination: /integrations/weaviate/index.html }
+      - { type: rewrite, source: /integrations/faiss, destination: /integrations/faiss/index.html }
+      - { type: rewrite, source: /integrations/qdrant, destination: /integrations/qdrant/index.html }
+
+      - { type: rewrite, source: /langsmith-alternative, destination: /langsmith-alternative/index.html }
+      - { type: rewrite, source: /langfuse-alternative, destination: /langfuse-alternative/index.html }
+      - { type: rewrite, source: /helicone-alternative, destination: /helicone-alternative/index.html }
+      - { type: rewrite, source: /braintrust-alternative, destination: /braintrust-alternative/index.html }
+      - { type: rewrite, source: /portkey-alternative, destination: /portkey-alternative/index.html }
+      - { type: rewrite, source: /lakera-alternative, destination: /lakera-alternative/index.html }
+
+      # --------------------------------------------------------------------
+      # SPA fallback: everything else (dashboard, auth, admin, etc.) is
+      # handled client-side by react-router. MUST stay last.
+      # --------------------------------------------------------------------
+      - type: rewrite
+        source: /*
+        destination: /index.html
+      autoDeployTrigger: commit
