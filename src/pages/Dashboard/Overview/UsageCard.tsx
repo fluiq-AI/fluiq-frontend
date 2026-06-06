@@ -67,7 +67,7 @@ export function UsageCard() {
           {data ? <Badge variant="outline">{data.tier}</Badge> : null}
         </div>
         <CardDescription>
-          Lifetime traces and evaluations against your tier's limits.
+          Monthly traces and evaluations against your tier's limits.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">

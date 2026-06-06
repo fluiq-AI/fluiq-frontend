@@ -72,12 +72,13 @@ text = prompt.render(ticket_body=raw_text)
 - [Home](https://getfluiq.com/): Product overview — the four pillars, integration list, code samples, stats, and getting-started CTA.
 - [Documentation](https://getfluiq.com/documentation): Full SDK reference covering installation, auto-instrumentation, the @trace decorator, agent tracing, security scanning, optimization, evaluation, prompt management, cost analytics, and configuration.
 - [Contact](https://getfluiq.com/contact): Reach the Fluiq team for sales and pricing enquiries, integration support, feature requests, and partnership discussions. Replies within one business day.
-- [Sign up](https://getfluiq.com/signup): Create a free account (no credit card required) and receive an API key. The free tier includes 5 million lifetime traces and 1,000 LLM-as-judge evaluations per month.
+- [Sign up](https://getfluiq.com/signup): Create a free account (no credit card required) and receive an API key. The free tier includes 50,000 traces per month and 1,000 LLM-as-judge evaluations per month.
 - [Log in](https://getfluiq.com/login): Access the Fluiq dashboard.
 
 ## Key facts
 
-- Free tier: 5M lifetime traces, 1,000 evals/month, 1 seat, 7-day retention — no card required
+- Free tier: 50,000 traces/month, 1,000 evals/month, 1 seat, 14-day retention — no card required
+- Paid plans: Team $49/mo (unlimited traces, caching), Growth $149/mo (security scanning, SSO), Enterprise custom (VPC/on-prem, SAML/SCIM)
 - Install with: `pip install fluiq`
 - SDK language: Python 3.9+
 - Dashboard URL: https://getfluiq.com

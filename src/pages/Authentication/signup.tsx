@@ -30,7 +30,7 @@ import { API_BASE_URL } from "@/lib/api"
 import { Helmet } from "react-helmet-async"
 
 const perks = [
-  "5M free traces total to get started",
+  "50,000 free traces every month to get started",
   "Tracing, evals, and dashboards out of the box",
   "Works with LangChain, LangGraph, CrewAI, OpenAI, Anthropic & Gemini",
 ]
@@ -106,7 +106,7 @@ function Signup() {
             <Card>
               <CardHeader className="text-center">
                 <CardTitle className="font-heading text-2xl">Create your account</CardTitle>
-                <CardDescription>Free up to 5M traces total. No credit card required.</CardDescription>
+                <CardDescription>Free up to 50,000 traces a month. No credit card required.</CardDescription>
               </CardHeader>
 
               <CardContent className="gap-4">

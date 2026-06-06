@@ -362,7 +362,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
             </Button>
           </div>
           <p className="mt-4 text-[12px] text-[#9A9A92]">
-            5 million free traces · 1,000 evals / month · 7-day retention
+            50,000 free traces / month · 1,000 evals / month · 14-day retention
           </p>
         </div>
       </section>

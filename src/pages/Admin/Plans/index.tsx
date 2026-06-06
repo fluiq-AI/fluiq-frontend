@@ -23,7 +23,7 @@ const PLAN_META = [
   {
     plan: "Free",
     icon: RocketIcon,
-    description: "5M traces · 1K evals · 1 API key",
+    description: "50K traces/mo · 1K evals · 1 API key",
   },
   {
     plan: "Team",

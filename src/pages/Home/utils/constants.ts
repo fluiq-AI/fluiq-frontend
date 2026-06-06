@@ -6,7 +6,7 @@ export const INTEGRATIONS = [
 export const STATS = [
   { value: 4, suffix: "", label: "SDK functions to cover your full AI stack" },
   { value: 6, suffix: "", label: "Evaluation metrics scored server-side" },
-  { value: 5, suffix: "M", label: "Traces on the free tier, no card required" },
+  { value: 50, suffix: "K", label: "Free traces every month, no card required" },
   { value: 2, suffix: "", label: "Lines of Python to instrument any pipeline" },
 ]
 

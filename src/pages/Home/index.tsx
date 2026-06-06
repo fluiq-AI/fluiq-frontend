@@ -118,7 +118,7 @@ export default function Home() {
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "USD",
-            "description": "Free tier: 5 million lifetime traces, 1000 LLM-as-judge evaluations per month, 1 seat, 7-day retention. No credit card required."
+            "description": "Free tier: 50,000 traces per month, 1000 LLM-as-judge evaluations per month, 1 seat, 14-day retention. No credit card required."
           },
           "author": {
             "@type": "Organization",
@@ -544,7 +544,7 @@ def answer_question(question: str) -> str:
             <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-[#0a0a0a] dark:bg-[#FAF9F6] text-white dark:text-[#0A0A0A] mb-6">
               <HugeiconsIcon icon={SparklesIcon} size={22} />
             </div>
-            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">Free up to <span className="text-[#1860D3] dark:text-[#6FA8FF]">5M</span> traces.</h2>
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">Free up to <span className="text-[#1860D3] dark:text-[#6FA8FF]">50K</span> traces a month.</h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
               Start with observability on the free tier. Add security, optimization, and evaluation as your pipeline grows — no code changes required.
             </p>

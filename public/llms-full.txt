@@ -283,7 +283,7 @@ Key claims on this page:
 - 2 lines of Python to instrument
 - 14 supported integrations
 - 6 evaluation metrics scored server-side
-- Free to start (5M traces, no card required)
+- Free to start (50,000 traces/month, no card required)
 
 ### Documentation — https://getfluiq.com/documentation
 
@@ -311,7 +311,7 @@ A contact form for reaching the Fluiq team. Accepts: name, email, subject, and m
 
 ### Sign up — https://getfluiq.com/signup
 
-Creates a free Fluiq account. No credit card required. On completion, the user receives a workspace API key (`fl_...`) that can be used immediately with `fluiq.instrument()`. The free tier includes 5 million lifetime traces and 1,000 LLM-as-judge evaluations per month with a 7-day trace retention window.
+Creates a free Fluiq account. No credit card required. On completion, the user receives a workspace API key (`fl_...`) that can be used immediately with `fluiq.instrument()`. The free tier includes 50,000 traces per month and 1,000 LLM-as-judge evaluations per month with a 14-day trace retention window.
 
 ### Log in — https://getfluiq.com/login
 
@@ -351,7 +351,7 @@ A: No. `fluiq.secure()` fails open — if the security service is unreachable, t
 A: Fluiq raises `FluiqEvalError` before the response is returned to the application. The error includes the metric name and the score that triggered the block.
 
 **Q: Is there a free tier?**
-A: Yes. The free tier includes 5 million lifetime traces, 1,000 LLM-as-judge evaluations per month, 1 seat, and 7-day trace retention. No credit card is required to sign up.
+A: Yes. The free tier includes 50,000 traces per month, 1,000 LLM-as-judge evaluations per month, 1 seat, and 14-day trace retention. No credit card is required to sign up. Paid plans: Team ($49/mo) adds unlimited traces and response caching; Growth ($149/mo) unlocks fluiq.secure() security scanning and SSO; Enterprise (custom) adds VPC/on-prem deployment, SAML/SCIM, and audit logs.
 
 **Q: What is the GitHub repository?**
 A: https://github.com/fluiq-AI/fluiq-sdk

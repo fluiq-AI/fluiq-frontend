@@ -1,6 +1,6 @@
 import "@/styles/pricing.css";
 import { Helmet } from "react-helmet-async"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Fragment } from "react"
 import { Link } from "react-router"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -12,6 +12,8 @@ import {
   ShieldKeyIcon,
   FlashIcon,
   PythonIcon,
+  SquareLock02Icon,
+  Cancel01Icon,
 } from "@hugeicons/core-free-icons"
 import { Button } from "@/components/ui/button"
 import { CodeBlock } from "@/components/code-block"
@@ -22,11 +24,170 @@ import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
+type Tier = {
+  name: string
+  price: { monthly: number | "custom"; annual: number | "custom" }
+  traces: string
+  evals: string
+  seats: string
+  retention: string
+  cta: string
+  ctaHref: string
+  highlighted: boolean
+  features: { label: string; included: boolean | "locked"; note?: string }[]
+}
+
+const tiers: Tier[] = [
+  {
+    name: "Free",
+    price: { monthly: 0, annual: 0 },
+    traces: "50,000 traces / month",
+    evals: "1,000 evaluations / month",
+    seats: "1 seat",
+    retention: "14-day trace retention",
+    cta: "Get started",
+    ctaHref: "/signup",
+    highlighted: false,
+    features: [
+      { label: "fluiq.instrument() — full observability", included: true },
+      { label: "Trace explorer & live dashboard", included: true },
+      { label: "Streaming traces", included: true },
+      { label: "Community support", included: true },
+      { label: "fluiq.optimize() — response caching", included: false },
+      { label: "CI/CD eval gates", included: false },
+      { label: "Slack anomaly alerts", included: false },
+      { label: "fluiq.secure() — security scanning", included: "locked", note: "Growth+" },
+    ],
+  },
+  {
+    name: "Team",
+    price: { monthly: 49, annual: 490 },
+    traces: "Unlimited traces",
+    evals: "10,000 evaluations / month",
+    seats: "Up to 5 seats",
+    retention: "90-day trace retention",
+    cta: "Get started",
+    ctaHref: "/signup",
+    highlighted: false,
+    features: [
+      { label: "Everything in Free", included: true },
+      { label: "fluiq.optimize() — response caching", included: true },
+      { label: "CI/CD eval gates", included: true },
+      { label: "Slack anomaly alerts", included: true },
+      { label: "Email support (48h SLA)", included: true },
+      { label: "fluiq.secure() — security scanning", included: "locked", note: "Growth+" },
+    ],
+  },
+  {
+    name: "Growth",
+    price: { monthly: 149, annual: 1490 },
+    traces: "Unlimited traces",
+    evals: "100,000 evaluations / month",
+    seats: "Up to 20 seats",
+    retention: "1-year trace retention",
+    cta: "Get started",
+    ctaHref: "/signup",
+    highlighted: true,
+    features: [
+      { label: "Everything in Team", included: true },
+      { label: "fluiq.secure() — security scanning", included: true },
+      { label: "Prompt injection, PII, jailbreak & secret-leak protection", included: true },
+      { label: "Custom eval thresholds", included: true },
+      { label: "SSO (single sign-on)", included: true },
+      { label: "Priority support (24h SLA)", included: true },
+    ],
+  },
+  {
+    name: "Enterprise",
+    price: { monthly: "custom", annual: "custom" },
+    traces: "Unlimited traces",
+    evals: "Unlimited evaluations",
+    seats: "Unlimited seats",
+    retention: "Custom trace retention",
+    cta: "Talk to us",
+    ctaHref: "/contact",
+    highlighted: false,
+    features: [
+      { label: "Everything in Growth", included: true },
+      { label: "VPC / on-prem deployment", included: true },
+      { label: "Custom SLA & dedicated support", included: true },
+      { label: "Audit logs & compliance exports", included: true },
+      { label: "SAML / SCIM provisioning", included: true },
+      { label: "Dedicated onboarding", included: true },
+    ],
+  },
+]
+
+type Cell = string | boolean
+const comparison: { category: string; rows: { label: string; values: [Cell, Cell, Cell, Cell] }[] }[] = [
+  {
+    category: "Observability",
+    rows: [
+      { label: "Traces / month", values: ["50K", "Unlimited", "Unlimited", "Unlimited"] },
+      { label: "Trace retention", values: ["14 days", "90 days", "1 year", "Custom"] },
+      { label: "Live dashboard", values: [true, true, true, true] },
+      { label: "Trace explorer", values: [true, true, true, true] },
+      { label: "Streaming traces", values: [true, true, true, true] },
+    ],
+  },
+  {
+    category: "Evaluation",
+    rows: [
+      { label: "Evals / month", values: ["1,000", "10,000", "100,000", "Unlimited"] },
+      { label: "LLM-as-judge metrics", values: [true, true, true, true] },
+      { label: "CI/CD eval gates", values: [false, true, true, true] },
+      { label: "Custom eval thresholds", values: [false, false, true, true] },
+    ],
+  },
+  {
+    category: "Security — fluiq.secure()",
+    rows: [
+      { label: "Prompt injection blocking", values: [false, false, true, true] },
+      { label: "PII detection & redaction", values: [false, false, true, true] },
+      { label: "Jailbreak detection", values: [false, false, true, true] },
+      { label: "Secret leak prevention", values: [false, false, true, true] },
+      { label: "Indirect injection detection", values: [false, false, true, true] },
+    ],
+  },
+  {
+    category: "Optimization — fluiq.optimize()",
+    rows: [
+      { label: "Response caching", values: [false, true, true, true] },
+      { label: "Cache hit dashboard", values: [false, true, true, true] },
+    ],
+  },
+  {
+    category: "Team & Access",
+    rows: [
+      { label: "Seats", values: ["1", "5", "20", "Unlimited"] },
+      { label: "SSO", values: [false, false, true, true] },
+      { label: "SAML / SCIM", values: [false, false, false, true] },
+      { label: "Audit logs", values: [false, false, false, true] },
+    ],
+  },
+  {
+    category: "Support",
+    rows: [
+      { label: "Community support", values: [true, true, true, true] },
+      { label: "Email support", values: [false, "48h SLA", "24h SLA", "Dedicated"] },
+      { label: "Slack alerts", values: [false, true, true, true] },
+      { label: "Dedicated onboarding", values: [false, false, false, true] },
+    ],
+  },
+  {
+    category: "Deployment",
+    rows: [
+      { label: "Cloud (managed)", values: [true, true, true, true] },
+      { label: "VPC / on-prem", values: [false, false, false, true] },
+    ],
+  },
+]
+
 const powerFeatures = [
   {
     icon: ShieldKeyIcon,
     name: "fluiq.secure()",
-    badge: "Available to all users",
+    badge: "Included in Growth & Enterprise",
     tagline: "One call. Full pipeline protection.",
     description:
       "Wrap your pipeline with server-side security scanning before any data is stored. Fluiq checks every prompt and response — so attack patterns are never shipped in the public SDK.",
@@ -43,7 +204,7 @@ const powerFeatures = [
   {
     icon: FlashIcon,
     name: "fluiq.optimize()",
-    badge: "Available to all users",
+    badge: "Included in Team & above",
     tagline: "Serve repeated prompts from cache.",
     description:
       "Fluiq analyses your historical traces to find which LLM calls repeat most often and provisions a dedicated Redis cache for your account. Repeated prompts are served instantly — saving both latency and cost.",
@@ -62,7 +223,7 @@ const powerFeatures = [
 const faqs = [
   {
     q: "What counts as a trace?",
-    a: "One traced span — typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5–20 traces depending on how many tools and LLM calls it makes.",
+    a: "One traced span — typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5–20 traces depending on how many tools and LLM calls it makes. The Free plan includes 50,000 traces per month; Team and above are unlimited.",
   },
   {
     q: "Which frameworks does Fluiq support?",
@@ -70,19 +231,19 @@ const faqs = [
   },
   {
     q: "What counts as an evaluation?",
-    a: "One LLM-as-judge scoring call — e.g. a hallucination check on an answer or a relevance score over a retrieved chunk set. Metrics include hallucination, faithfulness, relevance, toxicity, coherence, and completeness. Each retrieval trace runs one evaluation by default; you can disable auto-eval per workspace.",
+    a: "One LLM-as-judge scoring call — e.g. a hallucination check on an answer or a relevance score over a retrieved chunk set. Metrics include hallucination, faithfulness, relevance, toxicity, coherence, and completeness. Free includes 1,000 evals/month, Team 10,000, Growth 100,000, and Enterprise is unlimited.",
   },
   {
-    q: "How does fluiq.secure() work?",
-    a: "fluiq.secure() runs server-side — attack patterns are never shipped in the public SDK. In warn mode (default) it flags risks and attaches security metadata to the trace without blocking execution. In block mode it adds a pre-call guard that raises FluiqSecurityError before the LLM call is made if a HIGH-risk pattern is detected.",
+    q: "When do I need fluiq.secure()?",
+    a: "fluiq.secure() runs server-side security scanning — PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, and indirect-injection detection. It is included on the Growth and Enterprise plans. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
   },
   {
     q: "How does fluiq.optimize() work?",
-    a: "After you call fluiq.optimize(), the SDK fetches your trace-derived cache profile from the Fluiq backend, connects to a dedicated Redis instance provisioned for your account, and begins serving repeated prompts from cache. In observe mode it records what would have been a cache hit so you can review projected savings before enabling full interception.",
+    a: "Available on Team and above. After you call fluiq.optimize(), the SDK fetches your trace-derived cache profile from the Fluiq backend, connects to a dedicated Redis instance provisioned for your account, and begins serving repeated prompts from cache. In observe mode it records what would have been a cache hit so you can review projected savings before enabling full interception.",
   },
   {
     q: "Do you support self-hosting?",
-    a: "VPC and on-prem deployments are on the roadmap for enterprise customers. The SDK is a thin instrumentation layer and can be pointed at your own backend endpoint if you prefer full self-hosting.",
+    a: "Yes — VPC and on-prem deployments are available on the Enterprise plan. The SDK is a thin instrumentation layer and can be pointed at your own backend endpoint if you prefer full self-hosting.",
   },
   {
     q: "Can I switch frameworks later?",
@@ -90,9 +251,21 @@ const faqs = [
   },
 ]
 
+function priceLabel(tier: Tier, annual: boolean) {
+  const value = annual ? tier.price.annual : tier.price.monthly
+  if (value === "custom") return { big: "Custom", suffix: "", sub: "" }
+  if (value === 0) return { big: "$0", suffix: "", sub: "Free forever" }
+  if (annual) {
+    const perMonth = Math.round((value as number) / 12)
+    return { big: `$${value}`, suffix: "/yr", sub: `$${perMonth}/mo billed annually` }
+  }
+  return { big: `$${value}`, suffix: "/mo", sub: "billed monthly" }
+}
+
 export default function Pricing() {
   useScrollReveal()
   const [navScrolled, setNavScrolled] = useState(false)
+  const [annual, setAnnual] = useState(false)
 
   useEffect(() => {
     const onScroll = () => setNavScrolled(window.scrollY > 20)
@@ -104,17 +277,17 @@ export default function Pricing() {
     <div className="pricing-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
       <Helmet>
         <title>Pricing — Fluiq</title>
-        <meta name="description" content="Start free with 5M lifetime traces. Upgrade to Team for security scanning, intelligent caching, and advanced evaluation. No credit card required." />
-        <meta name="keywords" content="Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing" />
+        <meta name="description" content="Fluiq pricing — start free with 50,000 traces/month and 1,000 evaluations. Upgrade to Team ($49/mo) for caching and unlimited traces, Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO & custom SLAs." />
+        <meta name="keywords" content="Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing, LLM security pricing" />
         <link rel="canonical" href="https://getfluiq.com/pricing" />
         <meta property="og:url" content="https://getfluiq.com/pricing" />
         <meta property="og:title" content="Pricing — Fluiq" />
-        <meta property="og:description" content="Start free with 5M lifetime traces. Upgrade to Team for security scanning, intelligent caching, and advanced evaluation. No credit card required." />
+        <meta property="og:description" content="Start free with 50,000 traces/month. Add security and scale as you grow — Team $49/mo, Growth $149/mo, Enterprise custom." />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebPage",
           "name": "Fluiq Pricing",
-          "description": "Fluiq pricing plans — start free with 5 million lifetime traces and 1,000 evaluations per month, upgrade for security scanning, caching, and team seats.",
+          "description": "Fluiq pricing plans — start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($49/mo), Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
           "url": "https://getfluiq.com/pricing",
           "isPartOf": { "@id": "https://getfluiq.com" },
         })}</script>
@@ -148,7 +321,7 @@ export default function Pricing() {
         </div>
       </header>
 
-      <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden py-28">
+      <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden py-24">
 
         {/* Background: dot grid + blue glow */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
@@ -174,8 +347,7 @@ export default function Pricing() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.05 }}>
             <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9]/80 dark:bg-[#1A1A1A]/80 backdrop-blur-sm px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF]">
-              <span className="size-1.5 rounded-full bg-emerald-500 inline-block" />
-              Free while in beta
+              Pricing
             </span>
           </motion.div>
 
@@ -183,53 +355,212 @@ export default function Pricing() {
             className="font-heading mx-auto max-w-3xl text-5xl font-bold tracking-[-0.03em] text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.08] md:text-6xl"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15, ease: EASE_OUT }}>
-            <span className="text-[#1860D3] dark:text-[#6FA8FF]">No credit card.</span><br className="hidden md:block" /> No limits.
+            The right plan for <span className="text-[#1860D3] dark:text-[#6FA8FF]">every team.</span>
           </motion.h1>
 
           <motion.p
-            className="mt-6 mx-auto max-w-lg text-[18px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed"
+            className="mt-6 mx-auto max-w-xl text-[18px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
-            Just sign up and start shipping safer AI.
+            Start free. Add security and scale as you grow. Every plan includes full LLM observability.
           </motion.p>
 
-          <motion.div className="mt-10 flex flex-col items-center justify-center gap-4"
+          {/* Billing toggle */}
+          <motion.div className="mt-10 flex items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
-            <Button size="lg"
-              className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-10 h-13 text-[16px] font-semibold"
-              asChild>
-              <Link to="/signup">
-                Get Started Free
-                <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
-              </Link>
-            </Button>
+            <div className="inline-flex items-center rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9] dark:bg-[#1A1A1A] p-1">
+              <button
+                type="button"
+                onClick={() => setAnnual(false)}
+                className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${
+                  !annual
+                    ? "bg-[#0a0a0a] text-white dark:bg-[#FAF9F6] dark:text-[#0A0A0A]"
+                    : "text-[#6B6B66] dark:text-[#9A9A92]"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnnual(true)}
+                className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${
+                  annual
+                    ? "bg-[#0a0a0a] text-white dark:bg-[#FAF9F6] dark:text-[#0A0A0A]"
+                    : "text-[#6B6B66] dark:text-[#9A9A92]"
+                }`}
+              >
+                Annual
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  annual
+                    ? "bg-white/20 text-white dark:bg-[#0A0A0A]/15 dark:text-[#0A0A0A]"
+                    : "bg-[#E8F0FD] text-[#1860D3] dark:bg-[#1860D3]/15 dark:text-[#6FA8FF]"
+                }`}>Save 17%</span>
+              </button>
+            </div>
           </motion.div>
-
-          <motion.p
-            className="mt-6 text-[13px] text-[#9A9A92]"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.45, ease: EASE_OUT }}>
-            Paid plans coming soon — early users get locked in at founding rates.
-          </motion.p>
         </div>
       </section>
 
-      {/* ── What's included ──────────────────────────────────────────────── */}
+      {/* ── Pricing cards ────────────────────────────────────────────────── */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-6 lg:grid-cols-4 md:grid-cols-2 items-start">
+            {tiers.map((tier, i) => {
+              const p = priceLabel(tier, annual)
+              return (
+                <div
+                  key={tier.name}
+                  data-animate
+                  data-delay={String((i % 4) + 1)}
+                  className={`relative flex flex-col rounded-2xl border p-7 ${
+                    tier.highlighted
+                      ? "border-[#1860D3] dark:border-[#6FA8FF] bg-[#FAF9F6] dark:bg-[#1A1A1A] shadow-xl shadow-[#1860D3]/10 lg:-translate-y-2"
+                      : "border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A]"
+                  }`}
+                >
+                  {tier.highlighted && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-[#1860D3] dark:bg-[#6FA8FF] px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-white dark:text-[#0A0A0A]">
+                      <HugeiconsIcon icon={SparklesIcon} size={11} /> Most Popular
+                    </span>
+                  )}
+
+                  <h3 className="font-heading text-[17px] font-bold text-[#0a0a0a] dark:text-[#FAF9F6] tracking-tight">
+                    {tier.name}
+                  </h3>
+
+                  <div className="mt-4 flex items-end gap-1">
+                    <span className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6]">
+                      {p.big}
+                    </span>
+                    {p.suffix && <span className="mb-1 text-[14px] text-[#6B6B66] dark:text-[#9A9A92]">{p.suffix}</span>}
+                  </div>
+                  <p className="mt-1 h-4 text-[11px] text-[#9A9A92]">{p.sub}</p>
+
+                  <Button
+                    size="sm"
+                    className={`mt-6 w-full cta-btn ${
+                      tier.highlighted
+                        ? "bg-[#1860D3] text-white hover:bg-[#1453b8] dark:bg-[#6FA8FF] dark:text-[#0A0A0A] dark:hover:bg-[#8bb9ff]"
+                        : "bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]"
+                    }`}
+                    asChild
+                  >
+                    <Link to={tier.ctaHref}>{tier.cta} <HugeiconsIcon icon={ArrowRight02Icon} size={14} /></Link>
+                  </Button>
+
+                  <div className="mt-6 space-y-1.5 border-t border-[#E5E1D6] dark:border-[#2A2A2A] pt-5 text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">
+                    <p className="font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">{tier.traces}</p>
+                    <p>{tier.evals}</p>
+                    <p>{tier.retention}</p>
+                    <p>{tier.seats}</p>
+                  </div>
+
+                  <ul className="mt-5 space-y-2.5">
+                    {tier.features.map((f) => (
+                      <li key={f.label} className="flex items-start gap-2.5">
+                        {f.included === true ? (
+                          <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
+                        ) : f.included === "locked" ? (
+                          <HugeiconsIcon icon={SquareLock02Icon} size={14} className="mt-0.5 shrink-0 text-[#B8B3A6] dark:text-[#5A5A52]" />
+                        ) : (
+                          <HugeiconsIcon icon={Cancel01Icon} size={14} className="mt-0.5 shrink-0 text-[#C9C4B8] dark:text-[#4A4A44]" />
+                        )}
+                        <span className={`text-[12px] leading-snug ${
+                          f.included === true
+                            ? "text-[#0a0a0a] dark:text-[#E5E1D6]"
+                            : "text-[#9A9A92] dark:text-[#6B6B66]"
+                        }`}>
+                          {f.label}
+                          {f.included === "locked" && f.note && (
+                            <span className="ml-1.5 inline-flex items-center rounded-full bg-[#E8F0FD] dark:bg-[#1860D3]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#1860D3] dark:text-[#6FA8FF]">🔒 {f.note}</span>
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Comparison table ─────────────────────────────────────────────── */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 bg-[#F2F0E9] dark:bg-[#0A0A0A]">
         <div className="mx-auto max-w-5xl px-6">
           <div data-animate className="mb-12 text-center">
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
-              Everything included, free
+              Compare plans
+            </p>
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
+              Every feature, side by side.
+            </h2>
+          </div>
+
+          <div data-animate className="overflow-x-auto rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A]">
+            <table className="w-full min-w-[640px] border-collapse text-left">
+              <thead>
+                <tr className="border-b border-[#E5E1D6] dark:border-[#2A2A2A]">
+                  <th className="sticky left-0 bg-[#FAF9F6] dark:bg-[#1A1A1A] px-5 py-4 text-[13px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">Features</th>
+                  {tiers.map((t) => (
+                    <th key={t.name} className={`px-5 py-4 text-center text-[13px] font-semibold ${
+                      t.highlighted ? "text-[#1860D3] dark:text-[#6FA8FF]" : "text-[#0a0a0a] dark:text-[#FAF9F6]"
+                    }`}>
+                      {t.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {comparison.map((group) => (
+                  <Fragment key={group.category}>
+                    <tr className="bg-[#F2F0E9] dark:bg-[#0F0F0F]">
+                      <td colSpan={5} className="px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6B6B66] dark:text-[#9A9A92]">
+                        {group.category}
+                      </td>
+                    </tr>
+                    {group.rows.map((row) => (
+                      <tr key={group.category + row.label} className="border-b border-[#EDE9DE] dark:border-[#222]">
+                        <td className="sticky left-0 bg-[#FAF9F6] dark:bg-[#1A1A1A] px-5 py-3 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">{row.label}</td>
+                        {row.values.map((v, idx) => (
+                          <td key={idx} className="px-5 py-3 text-center">
+                            {typeof v === "boolean" ? (
+                              v ? (
+                                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="inline text-[#1860D3] dark:text-[#6FA8FF]" />
+                              ) : (
+                                <HugeiconsIcon icon={Cancel01Icon} size={15} className="inline text-[#C9C4B8] dark:text-[#4A4A44]" />
+                              )
+                            ) : (
+                              <span className="text-[13px] text-[#0a0a0a] dark:text-[#E5E1D6]">{v}</span>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Feature deep-dive (what you unlock) ──────────────────────────── */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div data-animate className="mb-12 text-center">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
+              What you unlock
             </p>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
               Two calls. <span className="text-[#1860D3] dark:text-[#6FA8FF]">Security and speed</span>, handled.
             </h2>
             <p className="mt-4 mx-auto max-w-lg text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
-              <code className="rounded bg-[#E8F0FD] dark:bg-[#1860D3]/10 px-1.5 py-0.5 font-mono text-[12px] text-[#1860D3] dark:text-[#6FA8FF]">fluiq.secure()</code>
-              {" "}and{" "}
               <code className="rounded bg-[#E8F0FD] dark:bg-[#1860D3]/10 px-1.5 py-0.5 font-mono text-[12px] text-[#1860D3] dark:text-[#6FA8FF]">fluiq.optimize()</code>
-              {" "}are available to every user — no upgrade required.
+              {" "}ships with Team, and{" "}
+              <code className="rounded bg-[#E8F0FD] dark:bg-[#1860D3]/10 px-1.5 py-0.5 font-mono text-[12px] text-[#1860D3] dark:text-[#6FA8FF]">fluiq.secure()</code>
+              {" "}unlocks on Growth.
             </p>
           </div>
 
@@ -293,49 +624,6 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* ── What every account includes ──────────────────────────────────── */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
-        <div className="mx-auto max-w-3xl px-6">
-          <div data-animate className="mb-12 text-center">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
-              Every account
-            </p>
-            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
-              Full access. <span className="text-[#1860D3] dark:text-[#6FA8FF]">No gates.</span>
-            </h2>
-            <p className="mt-4 text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
-              Every user gets the complete Fluiq platform during the beta.
-            </p>
-          </div>
-          <div data-animate data-delay="1" className="grid gap-3 sm:grid-cols-2">
-            {[
-              "Unlimited tracing & spans",
-              "Unlimited LLM-as-judge evaluations",
-              "Trace explorer & live dashboard",
-              "CI/CD eval gates",
-              "fluiq.secure() — security scanning",
-              "fluiq.optimize() — response caching",
-              "OpenAI, Anthropic, Gemini, LangChain, LangGraph, CrewAI, Google ADK",
-              "Anomaly alerts to Slack",
-              "90-day trace retention",
-              "Priority support",
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 rounded-xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] px-4 py-3"
-              >
-                <HugeiconsIcon
-                  icon={CheckmarkCircle02Icon}
-                  size={14}
-                  className="shrink-0 text-[#1860D3] dark:text-[#6FA8FF]"
-                />
-                <span className="text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
         <div className="mx-auto max-w-3xl px-6">
@@ -373,21 +661,21 @@ export default function Pricing() {
               <HugeiconsIcon icon={SparklesIcon} size={22} />
             </div>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">
-              Free while <span className="text-[#1860D3] dark:text-[#6FA8FF]">in beta.</span>
+              Ship safer AI, <span className="text-[#1860D3] dark:text-[#6FA8FF]">faster.</span>
             </h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
-              No credit card. No limits. Just sign up and start shipping safer AI.
+              Start free, then add security and scale when you need it.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-8 h-12 text-[15px]" asChild>
-                <Link to="/signup">Get Started Free <HugeiconsIcon icon={ArrowRight02Icon} size={16} /></Link>
+                <Link to="/signup">Start for free <HugeiconsIcon icon={ArrowRight02Icon} size={16} /></Link>
               </Button>
               <Button size="lg" variant="outline" className="cta-btn border-[#E5E1D6] dark:border-[#333333] text-[#0a0a0a] dark:text-[#FAF9F6] hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A] px-8 h-12 text-[15px]" asChild>
-                <Link to="/documentation">Read the docs</Link>
+                <Link to="/contact">Talk to sales</Link>
               </Button>
             </div>
             <p className="mt-5 text-[12px] text-[#9A9A92]">
-              Paid plans coming soon · early users get locked in at founding rates
+              No credit card required on Free and Team plans.
             </p>
           </div>
         </div>
