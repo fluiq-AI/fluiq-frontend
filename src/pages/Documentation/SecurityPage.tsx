@@ -31,6 +31,13 @@ export default function SecurityPage() {
         description="Call fluiq.secure() after instrument() to activate server-side security scanning. Every traced prompt and response is scanned for PII, prompt injection, and leaked secrets on Fluiq infrastructure. High-risk content is automatically redacted before persistence — the raw sensitive text is never written to the database."
       />
 
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
+        <p className="font-medium">Transport &amp; data handling</p>
+        <p className="mt-1 text-muted-foreground">
+          All data is transmitted over TLS 1.2+. The SDK enforces HTTPS and will reject non-HTTPS endpoint overrides. Prompts are transmitted to Fluiq servers where scanning and redaction occur — raw prompts transit the network before redaction. This is expected behavior; the security guarantee is that sensitive content is never written to the database in cleartext.
+        </p>
+      </div>
+
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
         <p className="font-semibold text-amber-700 dark:text-amber-400">Team plan and above</p>
         <p className="mt-1 text-muted-foreground">
@@ -70,7 +77,7 @@ fluiq.secure(mode="block")`}</Code>
           {
             name: `"warn"`,
             badge: "default",
-            body: "Post-call scan only. Security fields are written into the stored trace; HIGH-risk content is redacted before persistence. Your LLM calls are never interrupted.",
+            body: "Post-call scan only. Security fields are written into the stored trace; HIGH-risk content is redacted before persistence. Your LLM calls are never interrupted. Prompts are transmitted to Fluiq servers unredacted — scanning and redaction happen server-side before any persistence.",
           },
           {
             name: `"block"`,
@@ -124,6 +131,13 @@ fluiq.secure(mode="block")`}</Code>
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
+        <p className="font-medium">Fail-open by design</p>
+        <p className="mt-1 text-muted-foreground">
+          If the Fluiq security endpoint is unreachable, LLM calls proceed normally. This is intentional — Fluiq never becomes a single point of failure for your application. Use <code className="font-mono text-foreground">mode="block"</code> only in flows where you prefer to fail closed; in warn mode a backend outage is silent and your users are never affected.
+        </p>
       </div>
 
       <p className="font-medium">Audit Logs</p>
