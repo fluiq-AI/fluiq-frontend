@@ -211,11 +211,23 @@ export default function Home() {
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-6">
           <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9A9A92]">Works with</span>
           <div className="marquee-mask relative min-w-0 flex-1 overflow-hidden">
-            <div className="marquee-track flex w-max gap-10">
-              {[...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
-                <span key={i} className="shrink-0 text-[13px] font-medium text-[#6B6B66] dark:text-[#9A9A92] tracking-wide whitespace-nowrap">{name}</span>
+            {/* Two identical groups, each carrying its own trailing gap (pr-10)
+                so the connecting gap equals the internal gap. Motion drives the
+                track x from 0% → -50% (= exactly one group width) on an infinite
+                linear loop, so it reads as one continuous circular scroll. */}
+            <motion.div
+              className="flex w-max"
+              animate={{ x: ["0%", "-50%"] }}
+              transition={{ duration: 32, ease: "linear", repeat: Infinity }}
+            >
+              {[0, 1].map((dup) => (
+                <ul key={dup} aria-hidden={dup === 1} className="flex shrink-0 items-center gap-10 pr-10">
+                  {INTEGRATIONS.map((name) => (
+                    <li key={name} className="text-[13px] font-medium text-[#6B6B66] dark:text-[#9A9A92] tracking-wide whitespace-nowrap">{name}</li>
+                  ))}
+                </ul>
               ))}
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
