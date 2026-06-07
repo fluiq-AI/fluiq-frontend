@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
@@ -53,8 +53,8 @@ const PRERENDER_ROUTES = [
 // via the Render deploy hook). Fails open — a build never breaks if the API is
 // unreachable; those posts just fall back to client-side rendering until the
 // next successful build.
-async function fetchBlogRoutes(): Promise<string[]> {
-  const base = (process.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+async function fetchBlogRoutes(apiBase: string): Promise<string[]> {
+  const base = apiBase.replace(/\/$/, '')
   if (!base) {
     console.warn('[prerender] VITE_API_BASE_URL unset — skipping blog post prerender')
     return []
@@ -89,7 +89,15 @@ const writePrerenderedHomePlugin = {
 }
 
 // https://vite.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig(async ({ mode }) => {
+  // Vite loads .env files into import.meta.env, NOT process.env — so read the
+  // API base via loadEnv (covers .env.production) with a process.env fallback
+  // for when Render injects it as a real build env var. Without this the blog
+  // prerender silently skipped every post.
+  const env = loadEnv(mode, process.cwd(), '')
+  const apiBase = env.VITE_API_BASE_URL || process.env.VITE_API_BASE_URL || ''
+
+  return {
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -99,7 +107,7 @@ export default defineConfig(async () => ({
     react(),
     tailwindcss(),
     prerender({
-      routes: [...PRERENDER_ROUTES, ...(await fetchBlogRoutes())],
+      routes: [...PRERENDER_ROUTES, ...(await fetchBlogRoutes(apiBase))],
       renderer: '@prerenderer/renderer-puppeteer',
       rendererOptions: {
         renderAfterDocumentEvent: 'app-prerender-ready',
@@ -113,4 +121,5 @@ export default defineConfig(async () => ({
     }),
     writePrerenderedHomePlugin,
   ],
-}))
+  }
+})

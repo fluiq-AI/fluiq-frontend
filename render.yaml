@@ -70,13 +70,26 @@ projects:
       - { type: rewrite, source: /lakera-alternative, destination: /lakera-alternative/index.html }
 
       # --------------------------------------------------------------------
-      # Blog: the index plus a wildcard for each prerendered post directory
-      # (dist/blog/<slug>/index.html). Post routes are discovered at build time
-      # from the API (see vite.config.ts) and a publish triggers a rebuild, so
-      # crawlers/curl receive the post's baked-in HTML + meta.
+      # Blog index: prerendered (dist/blog/index.html), served statically so
+      # crawlers/curl get the post list + meta. KEEP its own rewrite.
+      #
+      # Blog posts: slugs are dynamic and can't be enumerated here. Render
+      # returns a BLANK 404 for a rewrite whose destination file is missing —
+      # it does NOT fall through to the catch-all below — so pointing
+      # /blog/<slug> at a per-post dir blanks every post that wasn't
+      # prerendered at the last build (currently all of them; the build can't
+      # reach the API). Serve the SPA shell instead: the client fetches and
+      # renders the post (Helmet sets per-post <title>/canonical/meta, which
+      # Googlebot reads on JS render), or shows a graceful "Post not found".
+      #
+      # NOTE: this means post pages are client-rendered, not prerendered. To
+      # restore no-JS per-post HTML you'd need the per-slug wildcard back
+      # (`/blog/*` -> /blog/:splat/index.html), which only works once the build
+      # reliably prerenders every published post — and reintroduces a blank
+      # window between publishing and the rebuild finishing. See the build fix.
       # --------------------------------------------------------------------
       - { type: rewrite, source: /blog, destination: /blog/index.html }
-      - { type: rewrite, source: /blog/*, destination: /blog/:splat/index.html }
+      - { type: rewrite, source: /blog/*, destination: /index.html }
 
       # --------------------------------------------------------------------
       # SPA fallback: everything else (dashboard, auth, admin, etc.) is
