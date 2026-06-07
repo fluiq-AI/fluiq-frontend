@@ -79,7 +79,7 @@ fluiq.instrument(api_key="fl_...") # or set FLUIQ_API_KEY to environment
 # call from this point on is traced automatically.
 # Optionally add paid features:
 fluiq.optimize()   # Redis caching — Team+
-fluiq.secure()     # Security scanning — Team+`}</Code>
+fluiq.secure()     # Security scanning — Growth+`}</Code>
             </div>
           </div>
         </div>
