@@ -73,14 +73,16 @@ export default function BlogIndex() {
                 to={`/blog/${featured.slug}`}
                 className="group mb-14 grid gap-6 md:grid-cols-2 md:items-center"
               >
-                <div className="overflow-hidden rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9] dark:bg-[#111111] aspect-[16/10]">
-                  {featured.cover_image_url && (
-                    <img
-                      src={mediaUrl(featured.cover_image_url)}
-                      alt={featured.title}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                    />
-                  )}
+                <div className="rounded-[1.85rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_36px_80px_-34px_rgba(24,96,211,0.22)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:shadow-[0_44px_90px_-32px_rgba(24,96,211,0.3)] dark:bg-white/[0.04] dark:ring-white/10">
+                  <div className="overflow-hidden rounded-[1.35rem] border border-[#E5E1D6] bg-[#F2F0E9] aspect-[16/10] shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)] dark:border-white/[0.06] dark:bg-[#111111] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                    {featured.cover_image_url && (
+                      <img
+                        src={mediaUrl(featured.cover_image_url)}
+                        alt={featured.title}
+                        className="h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03]"
+                      />
+                    )}
+                  </div>
                 </div>
                 <div>
                   <PostMeta post={featured} />

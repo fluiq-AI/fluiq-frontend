@@ -104,7 +104,7 @@ export function SiteNavbar({ variant = "marketing", active, badge, landing }: Si
                 <Link to="/login">Login</Link>
               </Button>
               <Button size="sm" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]" asChild>
-                <Link to="/signup">Get started <HugeiconsIcon icon={ArrowRight02Icon} size={14} /></Link>
+                <Link to="/signup">Start free <HugeiconsIcon icon={ArrowRight02Icon} size={14} /></Link>
               </Button>
             </>
           )}

@@ -3,13 +3,13 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 const data: CompetitorData = {
   slug: "helicone-alternative",
   name: "Helicone",
-  metaTitle: "Fluiq vs Helicone — The Helicone Alternative With No Proxy Overhead",
+  metaTitle: "Fluiq vs Helicone, The Helicone Alternative With No Proxy Overhead",
   metaDescription: "Comparing Fluiq vs Helicone. Fluiq is SDK-based with zero proxy latency, supports 13+ frameworks beyond OpenAI, and adds security scanning and LLM-as-judge evals Helicone doesn't offer.",
   canonicalPath: "/helicone-alternative",
   heroHeadline: "The Helicone Alternative: No Proxy, No Latency Tax",
-  heroSub: "Helicone routes your traffic through a proxy to log requests. Fluiq instruments the SDK directly — zero latency overhead, full agent trace trees, security scanning, and evals for every framework you use.",
+  heroSub: "Helicone routes your traffic through a proxy to log requests. Fluiq instruments the SDK directly, zero latency overhead, full agent trace trees, security scanning, and evals for every framework you use.",
   stats: [
-    { value: "0 ms", label: "proxy latency — SDK-based, not a gateway" },
+    { value: "0 ms", label: "proxy latency, SDK-based, not a gateway" },
     { value: "13+", label: "frameworks beyond OpenAI" },
     { value: "1 call", label: "to add security on every LLM request" },
   ],
@@ -29,20 +29,20 @@ const data: CompetitorData = {
     { feature: "p50/p95/p99 latency histograms", fluiq: "yes", competitor: "yes" },
   ],
   competitorPros: [
-    "Extremely fast setup — change one base_url and you get immediate request logging with no SDK changes.",
+    "Extremely fast setup, change one base_url and you get immediate request logging with no SDK changes.",
     "Works with any HTTP client that targets the OpenAI-compatible API, including non-Python environments.",
     "Clean dashboard with good cost analytics and user session tracking.",
     "Prompt templates and experimentation UI are well-designed for product teams.",
   ],
   fluiqAdvantages: [
-    "No proxy — Fluiq patches the SDK at the import level. There's no extra network hop, no TLS termination latency, no single point of failure in your request path.",
+    "No proxy, Fluiq patches the SDK at the import level. There's no extra network hop, no TLS termination latency, no single point of failure in your request path.",
     "Full agent trace trees: Fluiq traces multi-step LangGraph, CrewAI, and Google ADK pipelines end-to-end, not just individual OpenAI calls.",
-    "Built-in security: prompt injection blocking, PII redaction, jailbreak detection, and secret leak scanning — all server-side, not accessible to attackers via the public SDK.",
+    "Built-in security: prompt injection blocking, PII redaction, jailbreak detection, and secret leak scanning, all server-side, not accessible to attackers via the public SDK.",
     "LLM-as-judge evals run inline on every production call, flagging hallucination and toxicity automatically.",
-    "Trace-driven caching learns from your actual traffic patterns — not a generic proxy cache.",
+    "Trace-driven caching learns from your actual traffic patterns, not a generic proxy cache.",
   ],
   migrationBefore: {
-    label: "Before — Helicone (proxy setup)",
+    label: "Before, Helicone (proxy setup)",
     code: `from openai import OpenAI
 
 # Must override base_url and inject auth header
@@ -59,11 +59,11 @@ response = client.chat.completions.create(
 )`,
   },
   migrationAfter: {
-    label: "After — Fluiq (SDK-based)",
+    label: "After, Fluiq (SDK-based)",
     code: `import fluiq
 fluiq.instrument(api_key="fl_...")
 
-# Standard client — no base_url override, no extra headers
+# Standard client, no base_url override, no extra headers
 from openai import OpenAI
 client = OpenAI()
 

@@ -19,6 +19,7 @@ import { API_BASE_URL, ApiError } from "@/lib/api"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
+import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -58,13 +59,14 @@ export default function Contact() {
 
   return (
     <div className="contact-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <GrainOverlay />
       <Helmet>
-        <title>Contact — Fluiq</title>
+        <title>Contact - Fluiq</title>
         <meta name="description" content="Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day." />
         <meta name="keywords" content="contact Fluiq, Fluiq support, Fluiq sales, LLM observability support, Fluiq integrations, Fluiq partnerships" />
         <link rel="canonical" href="https://getfluiq.com/contact" />
         <meta property="og:url" content="https://getfluiq.com/contact" />
-        <meta property="og:title" content="Contact — Fluiq" />
+        <meta property="og:title" content="Contact - Fluiq" />
         <meta property="og:description" content="Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day." />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
@@ -80,23 +82,7 @@ export default function Contact() {
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden py-24">
 
-        {/* Background: dot grid + blue glow */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="dark:block hidden absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[55vw] h-[55vw] max-w-[640px] max-h-[640px] rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(24,96,211,0.06) 0%, transparent 65%)" }} />
-        </div>
+        <HeroAtmosphere variant="center" />
 
         <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
           <motion.div className="mb-6"
@@ -166,7 +152,8 @@ export default function Contact() {
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3, ease: EASE_OUT }}>
               {success ? (
-                <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] px-8 py-16 text-center">
+                <div className="rounded-[1.85rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-30px_rgba(24,96,211,0.2)] dark:bg-white/[0.04] dark:ring-white/10">
+                <div className="flex h-full min-h-[420px] flex-col items-center justify-center rounded-[1.35rem] border border-[#E5E1D6] bg-[#FAF9F6] px-8 py-16 text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)] dark:border-white/[0.06] dark:bg-[#1A1A1A] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
                   <div className="mb-5 grid size-14 place-items-center rounded-2xl bg-[#E8F0FD] dark:bg-[#1860D3]/10">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={28} className="text-[#1860D3] dark:text-[#6FA8FF]" />
                   </div>
@@ -185,10 +172,12 @@ export default function Contact() {
                     Send another message
                   </Button>
                 </div>
+                </div>
               ) : (
+                <div className="rounded-[1.85rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-30px_rgba(24,96,211,0.2)] dark:bg-white/[0.04] dark:ring-white/10">
                 <form
                   onSubmit={handleSubmit}
-                  className="rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] px-8 py-10 space-y-5"
+                  className="rounded-[1.35rem] border border-[#E5E1D6] bg-[#FAF9F6] px-8 py-10 space-y-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)] dark:border-white/[0.06] dark:bg-[#1A1A1A] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]"
                 >
                   <div className="grid gap-5 sm:grid-cols-2">
                     <div className="space-y-1.5">
@@ -256,28 +245,21 @@ export default function Contact() {
                     </div>
                   ) : null}
 
-                  <Button
+                  <button
                     type="submit"
-                    size="lg"
                     disabled={loading || !name.trim() || !email.trim() || !subject.trim() || !message.trim()}
-                    className="cta-btn w-full bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] h-11 text-[14px] font-medium"
+                    className="group/cta inline-flex h-12 w-full items-center justify-between rounded-full bg-[#0a0a0a] py-1 pl-6 pr-1.5 text-[14px] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.18),0_12px_28px_-14px_rgba(24,96,211,0.5)] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:bg-[#161616] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-50 dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]"
                   >
-                    {loading ? (
-                      <>
-                        <HugeiconsIcon icon={Loading03Icon} size={16} className="animate-spin" />
-                        Sending…
-                      </>
-                    ) : (
-                      <>
-                        Send message
-                        <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
-                      </>
-                    )}
-                  </Button>
+                    <span>{loading ? "Sending…" : "Send message"}</span>
+                    <span className="flex size-9 items-center justify-center rounded-full bg-white/[0.12] transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-px group-hover/cta:scale-105 dark:bg-black/[0.08]">
+                      <HugeiconsIcon icon={loading ? Loading03Icon : ArrowRight02Icon} size={16} className={loading ? "animate-spin" : ""} />
+                    </span>
+                  </button>
                   <p className="text-center text-[12px] text-[#9A9A92]">
                     We'll reply to your email address within one business day.
                   </p>
                 </form>
+                </div>
               )}
             </motion.div>
           </div>

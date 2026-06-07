@@ -29,13 +29,13 @@ export const INTEGRATIONS: IntegrationData[] = [
     name: "OpenAI",
     category: "LLM Provider",
     metaTitle: "OpenAI Monitoring, Cost Tracking & Tracing | Fluiq",
-    metaDescription: "Auto-instrument every OpenAI API call — chat completions, embeddings, images, audio — with two lines of Python. Get full traces, USD cost per call, and security scanning.",
+    metaDescription: "Auto-instrument every OpenAI API call, chat completions, embeddings, images, audio, with two lines of Python. Get full traces, USD cost per call, and security scanning.",
     heroHeadline: "OpenAI Monitoring & Cost Tracking",
-    heroSub: "Two lines of Python give every OpenAI call — chat completions, streaming, embeddings, images, audio — a full trace with token counts, USD cost at OpenAI rates, and security scanning. No wrappers, no decorators.",
+    heroSub: "Two lines of Python give every OpenAI call, chat completions, streaming, embeddings, images, audio, a full trace with token counts, USD cost at OpenAI rates, and security scanning. No wrappers, no decorators.",
     features: [
       { icon: "eye", title: "Full span tree", desc: "Every chat completion, embedding, and image call becomes a structured span with input/output tokens, model version, latency, and USD cost at OpenAI's published rates." },
-      { icon: "zap", title: "Response caching", desc: "Fluiq mines your trace history to find repeated prompts and serves them from Redis — cutting both latency and API spend on high-repetition workloads." },
-      { icon: "shield", title: "Security scanning", desc: "Every prompt passes through Fluiq's server-side guard for prompt injection, jailbreak patterns, PII (SSNs, cards, emails), and secret string detection — before the response is returned." },
+      { icon: "zap", title: "Response caching", desc: "Fluiq mines your trace history to find repeated prompts and serves them from Redis, cutting both latency and API spend on high-repetition workloads." },
+      { icon: "shield", title: "Security scanning", desc: "Every prompt passes through Fluiq's server-side guard for prompt injection, jailbreak patterns, PII (SSNs, cards, emails), and secret string detection, before the response is returned." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches the openai module at import time
@@ -43,7 +43,7 @@ fluiq.instrument(api_key="fl_...")  # patches the openai module at import time
 from openai import OpenAI
 client = OpenAI()
 
-# All of these are traced automatically — no code changes:
+# All of these are traced automatically, no code changes:
 response = client.chat.completions.create(
     model="gpt-4o",
     messages=[{"role": "user", "content": "Hello"}],
@@ -71,11 +71,11 @@ embedding = client.embeddings.create(
     metaTitle: "Anthropic Claude Monitoring & Observability | Fluiq",
     metaDescription: "Monitor every Anthropic Claude API call with two lines of Python. Get prompt cache visibility, input/output token tracking, cost at Claude rates, and security scanning.",
     heroHeadline: "Anthropic Claude Monitoring & Tracing",
-    heroSub: "Auto-instrument every Claude API call — Messages, streaming, and the Beta client — with zero code changes. See prompt cache hits, token costs at Anthropic's rates, and security events on every request.",
+    heroSub: "Auto-instrument every Claude API call, Messages, streaming, and the Beta client, with zero code changes. See prompt cache hits, token costs at Anthropic's rates, and security events on every request.",
     features: [
-      { icon: "eye", title: "Prompt cache visibility", desc: "See exactly how many tokens were served from Anthropic's prompt cache (cache_read vs cache_creation) on every request — and what you saved on each call." },
+      { icon: "eye", title: "Prompt cache visibility", desc: "See exactly how many tokens were served from Anthropic's prompt cache (cache_read vs cache_creation) on every request, and what you saved on each call." },
       { icon: "sparkle", title: "Cost at Claude rates", desc: "Input, output, and cache token costs calculated at Anthropic's published per-token rates for each Claude model, attributed per trace and aggregated by day." },
-      { icon: "shield", title: "Security scanning", desc: "Prompt injection, jailbreak scoring, and PII detection run server-side on every Claude request — in warn mode to flag, or block mode to intercept before the API call." },
+      { icon: "shield", title: "Security scanning", desc: "Prompt injection, jailbreak scoring, and PII detection run server-side on every Claude request, in warn mode to flag, or block mode to intercept before the API call." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches anthropic automatically
@@ -83,7 +83,7 @@ fluiq.instrument(api_key="fl_...")  # patches anthropic automatically
 import anthropic
 client = anthropic.Anthropic()
 
-# Messages API — fully traced with cache visibility:
+# Messages API, fully traced with cache visibility:
 message = client.messages.create(
     model="claude-opus-4-8",
     max_tokens=1024,
@@ -113,10 +113,10 @@ with client.messages.stream(model="claude-opus-4-8", max_tokens=256,
     metaTitle: "Google Gemini Monitoring & Tracing | Fluiq",
     metaDescription: "Auto-instrument every Google Gemini API call with two lines of Python. Full span traces, USD cost at Gemini rates, cached token tracking, and security scanning.",
     heroHeadline: "Google Gemini Monitoring & API Tracing",
-    heroSub: "Auto-instrument every Gemini generate_content call — streaming and non-streaming — with zero code changes. Get token-level traces, cost at Google's published rates, and cached token visibility in your dashboard.",
+    heroSub: "Auto-instrument every Gemini generate_content call, streaming and non-streaming, with zero code changes. Get token-level traces, cost at Google's published rates, and cached token visibility in your dashboard.",
     features: [
       { icon: "eye", title: "Streaming + batch traces", desc: "Both streaming and non-streaming generate_content calls are traced, with per-token counts, model version, latency, and finish reason captured on every request." },
-      { icon: "zap", title: "Cached token tracking", desc: "Gemini cached token usage is tracked per call and surfaced in the Optimize dashboard — see exactly how much you're saving on context caching." },
+      { icon: "zap", title: "Cached token tracking", desc: "Gemini cached token usage is tracked per call and surfaced in the Optimize dashboard, see exactly how much you're saving on context caching." },
       { icon: "sparkle", title: "Cost at Gemini rates", desc: "Token costs calculated at Google's published Gemini rates for each model tier, attributed per trace and visible in aggregate cost analytics." },
     ],
     setupCode: `import fluiq
@@ -126,7 +126,7 @@ import google.generativeai as genai
 genai.configure(api_key="your-gemini-key")
 model = genai.GenerativeModel("gemini-1.5-pro")
 
-# Traced automatically — sync and async:
+# Traced automatically, sync and async:
 response = model.generate_content("Explain LLM observability in one paragraph")
 
 # Streaming is also traced:
@@ -154,7 +154,7 @@ for chunk in model.generate_content("Write a haiku", stream=True):
     features: [
       { icon: "eye", title: "Enterprise-grade traces", desc: "Vertex AI GenerativeModel calls are traced with full span trees, input/output token counts, latency, and safety rating metadata captured on every request." },
       { icon: "sparkle", title: "Cost at Vertex rates", desc: "API costs attributed at Vertex AI's published per-character and per-token rates for each model, surfaced per trace and in aggregate cost analytics." },
-      { icon: "shield", title: "Security scanning", desc: "Prompt injection and PII detection run on every Vertex AI call before responses reach your application — blocking attacks that bypass Google's built-in safety filters." },
+      { icon: "shield", title: "Security scanning", desc: "Prompt injection and PII detection run on every Vertex AI call before responses reach your application, blocking attacks that bypass Google's built-in safety filters." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches vertexai automatically
@@ -186,13 +186,13 @@ response = await model.generate_content_async("Explain AI observability")`,
     name: "LangChain",
     category: "Agent Framework",
     metaTitle: "LangChain Monitoring, Tracing & Observability | Fluiq",
-    metaDescription: "Auto-instrument every LangChain chain, agent, and tool call. Get per-step span trees, cost attribution, LLM-as-judge evals, and security scanning — two lines of Python.",
+    metaDescription: "Auto-instrument every LangChain chain, agent, and tool call. Get per-step span trees, cost attribution, LLM-as-judge evals, and security scanning, two lines of Python.",
     heroHeadline: "LangChain Monitoring & Chain Tracing",
-    heroSub: "Auto-instrument every LangChain chain step — LLM calls, tool use, retriever queries — with zero code changes. Get full span trees, per-step cost attribution, and inline evals on every response.",
+    heroSub: "Auto-instrument every LangChain chain step, LLM calls, tool use, retriever queries, with zero code changes. Get full span trees, per-step cost attribution, and inline evals on every response.",
     features: [
-      { icon: "eye", title: "Per-step span tree", desc: "Every chain step — LLM call, tool invocation, retriever query, embedding — becomes its own span with input, output, token counts, latency, and USD cost." },
-      { icon: "sparkle", title: "Cost attribution", desc: "USD cost broken down per LLM node in the chain, across nested sub-chains and tool calls — know exactly which step in your pipeline is expensive." },
-      { icon: "test", title: "Inline evals", desc: "LLM-as-judge scoring (hallucination, relevance, faithfulness, toxicity) runs automatically on chain outputs — warn mode logs scores, block mode intercepts bad responses." },
+      { icon: "eye", title: "Per-step span tree", desc: "Every chain step, LLM call, tool invocation, retriever query, embedding, becomes its own span with input, output, token counts, latency, and USD cost." },
+      { icon: "sparkle", title: "Cost attribution", desc: "USD cost broken down per LLM node in the chain, across nested sub-chains and tool calls, know exactly which step in your pipeline is expensive." },
+      { icon: "test", title: "Inline evals", desc: "LLM-as-judge scoring (hallucination, relevance, faithfulness, toxicity) runs automatically on chain outputs, warn mode logs scores, block mode intercepts bad responses." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches LangChain automatically
@@ -225,11 +225,11 @@ result = chain.invoke({"text": "Your document content here"})`,
     name: "LangGraph",
     category: "Agent Framework",
     metaTitle: "LangGraph Tracing & Graph Execution Monitoring | Fluiq",
-    metaDescription: "Trace every LangGraph node, edge, and state transition. Get per-node cost attribution, conditional branch visibility, and full agent execution spans — two lines of Python.",
+    metaDescription: "Trace every LangGraph node, edge, and state transition. Get per-node cost attribution, conditional branch visibility, and full agent execution spans, two lines of Python.",
     heroHeadline: "LangGraph Tracing & Node-Level Monitoring",
-    heroSub: "Auto-instrument every LangGraph graph execution — node by node, edge by edge. Get per-node span trees, cost attribution, and full visibility into which path your agent took and why.",
+    heroSub: "Auto-instrument every LangGraph graph execution, node by node, edge by edge. Get per-node span trees, cost attribution, and full visibility into which path your agent took and why.",
     features: [
-      { icon: "eye", title: "Node-level span tree", desc: "Every graph node execution is a separate trace span — see which nodes ran, in what order, how long each took, and what tokens they consumed." },
+      { icon: "eye", title: "Node-level span tree", desc: "Every graph node execution is a separate trace span, see which nodes ran, in what order, how long each took, and what tokens they consumed." },
       { icon: "sparkle", title: "Per-node cost breakdown", desc: "Token and USD cost attributed per graph node. Know exactly which node in your agent graph is expensive, and track cost across long-running multi-turn graphs." },
       { icon: "cpu", title: "Branch & state tracing", desc: "Conditional edges and state transitions are recorded in the trace, making it easy to debug why a graph took a particular execution path." },
     ],
@@ -249,7 +249,7 @@ builder.add_conditional_edges("planner", route_fn, {"execute": "executor", "end"
 builder.set_entry_point("planner")
 graph = builder.compile()
 
-# Each node is a traced span — no code changes needed:
+# Each node is a traced span, no code changes needed:
 result = graph.invoke({"messages": [("user", "Analyse sales data")]})`,
     instrumentedItems: [
       "CompiledGraph.invoke()",
@@ -269,13 +269,13 @@ result = graph.invoke({"messages": [("user", "Analyse sales data")]})`,
     name: "CrewAI",
     category: "Agent Framework",
     metaTitle: "CrewAI Tracing & Multi-Agent Monitoring | Fluiq",
-    metaDescription: "Trace every CrewAI agent, task, and tool call. Get per-agent cost attribution, tool invocation spans, and crew-level cost aggregation — two lines of Python.",
+    metaDescription: "Trace every CrewAI agent, task, and tool call. Get per-agent cost attribution, tool invocation spans, and crew-level cost aggregation, two lines of Python.",
     heroHeadline: "CrewAI Tracing & Multi-Agent Monitoring",
-    heroSub: "Auto-instrument every CrewAI crew execution — agent by agent, task by task. Get per-agent span trees, tool call visibility, and full cost attribution across your multi-agent pipeline.",
+    heroSub: "Auto-instrument every CrewAI crew execution, agent by agent, task by task. Get per-agent span trees, tool call visibility, and full cost attribution across your multi-agent pipeline.",
     features: [
-      { icon: "eye", title: "Per-agent span tree", desc: "Each agent's task execution is a separate span — see which agent consumed the most tokens, took the longest, or called the most tools in a single crew kickoff." },
-      { icon: "cpu", title: "Tool call tracing", desc: "Every tool invocation by a CrewAI agent is a child span with the tool name, input arguments, output, and latency — full visibility into what your agents are actually doing." },
-      { icon: "sparkle", title: "Crew-level cost rollup", desc: "Total token and USD cost aggregated across the entire crew run, broken down by agent and task — know the cost of each kickoff before it hits your billing statement." },
+      { icon: "eye", title: "Per-agent span tree", desc: "Each agent's task execution is a separate span, see which agent consumed the most tokens, took the longest, or called the most tools in a single crew kickoff." },
+      { icon: "cpu", title: "Tool call tracing", desc: "Every tool invocation by a CrewAI agent is a child span with the tool name, input arguments, output, and latency, full visibility into what your agents are actually doing." },
+      { icon: "sparkle", title: "Crew-level cost rollup", desc: "Total token and USD cost aggregated across the entire crew run, broken down by agent and task, know the cost of each kickoff before it hits your billing statement." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches CrewAI automatically
@@ -292,7 +292,7 @@ researcher = Agent(
 task = Task(description="Research LLM observability tools", agent=researcher)
 crew = Crew(agents=[researcher], tasks=[task], verbose=True)
 
-# Per-agent spans with cost attribution — no code changes:
+# Per-agent spans with cost attribution, no code changes:
 result = crew.kickoff()`,
     instrumentedItems: [
       "Crew.kickoff() / kickoff_async()",
@@ -311,13 +311,13 @@ result = crew.kickoff()`,
     name: "Google ADK",
     category: "Agent Framework",
     metaTitle: "Google ADK Agent Monitoring & Tracing | Fluiq",
-    metaDescription: "Trace every Google ADK agent run, step, and tool invocation. Full session visibility, Gemini model call tracing, and cost attribution — two lines of Python.",
+    metaDescription: "Trace every Google ADK agent run, step, and tool invocation. Full session visibility, Gemini model call tracing, and cost attribution, two lines of Python.",
     heroHeadline: "Google ADK Agent Monitoring & Tracing",
     heroSub: "Auto-instrument every Google Agent Development Kit run with zero code changes. Get full agent session traces, per-step tool call spans, and Gemini model costs attributed to each agent turn.",
     features: [
-      { icon: "eye", title: "Agent session tracing", desc: "Full visibility into ADK agent runs — every step, tool call, and model response is a traced span, giving you a complete picture of what your agent did and how long it took." },
-      { icon: "cpu", title: "Tool invocation spans", desc: "Each ADK tool call is a child span with the function name, input arguments, response, and latency — essential for debugging agents that call many tools per turn." },
-      { icon: "sparkle", title: "Gemini costs included", desc: "Underlying Gemini API calls made by ADK agents are traced and costed at Google's published Gemini rates — no separate instrumentation needed." },
+      { icon: "eye", title: "Agent session tracing", desc: "Full visibility into ADK agent runs, every step, tool call, and model response is a traced span, giving you a complete picture of what your agent did and how long it took." },
+      { icon: "cpu", title: "Tool invocation spans", desc: "Each ADK tool call is a child span with the function name, input arguments, response, and latency, essential for debugging agents that call many tools per turn." },
+      { icon: "sparkle", title: "Gemini costs included", desc: "Underlying Gemini API calls made by ADK agents are traced and costed at Google's published Gemini rates, no separate instrumentation needed." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches Google ADK automatically
@@ -359,12 +359,12 @@ response = runner.run(user_id="u1", session_id="s1",
     name: "MCP",
     category: "Agent Framework",
     metaTitle: "MCP Server Monitoring & Tool Call Tracing | Fluiq",
-    metaDescription: "Trace every MCP list_tools and call_tool request. Get tool call latency spans, MCP tool result caching, and server URL attribution — two lines of Python.",
+    metaDescription: "Trace every MCP list_tools and call_tool request. Get tool call latency spans, MCP tool result caching, and server URL attribution, two lines of Python.",
     heroHeadline: "MCP Server Monitoring & Tool Call Tracing",
-    heroSub: "Auto-instrument every Model Context Protocol tool call — list_tools, call_tool, and read_resource — with zero code changes. Fluiq also caches repeated MCP tool results, eliminating redundant server round-trips.",
+    heroSub: "Auto-instrument every Model Context Protocol tool call, list_tools, call_tool, and read_resource, with zero code changes. Fluiq also caches repeated MCP tool results, eliminating redundant server round-trips.",
     features: [
       { icon: "eye", title: "Tool call tracing", desc: "Every call_tool invocation is a traced span with the MCP server URL, tool name, input arguments, response, and end-to-end latency including server processing time." },
-      { icon: "zap", title: "MCP result caching", desc: "Fluiq caches repeated call_tool and list_tools responses keyed by server URL and arguments — identical requests are served instantly without a round-trip to the MCP server." },
+      { icon: "zap", title: "MCP result caching", desc: "Fluiq caches repeated call_tool and list_tools responses keyed by server URL and arguments, identical requests are served instantly without a round-trip to the MCP server." },
       { icon: "cpu", title: "list_tools tracing", desc: "list_tools calls are traced and cached so agents that enumerate available tools on every turn stop paying the network cost after the first request." },
     ],
     setupCode: `import fluiq
@@ -406,13 +406,13 @@ asyncio.run(run())`,
     name: "Pinecone",
     category: "Vector Database",
     metaTitle: "Pinecone Monitoring & Vector Database Tracing | Fluiq",
-    metaDescription: "Trace every Pinecone query, upsert, and fetch. Get query latency spans, RAG pipeline integration, and result count tracking — two lines of Python.",
+    metaDescription: "Trace every Pinecone query, upsert, and fetch. Get query latency spans, RAG pipeline integration, and result count tracking, two lines of Python.",
     heroHeadline: "Pinecone Monitoring & Vector Query Tracing",
-    heroSub: "Auto-instrument every Pinecone index operation — query, upsert, fetch, delete — with zero code changes. Pinecone spans attach as child spans inside your LangChain traces for complete RAG pipeline visibility.",
+    heroSub: "Auto-instrument every Pinecone index operation, query, upsert, fetch, delete, with zero code changes. Pinecone spans attach as child spans inside your LangChain traces for complete RAG pipeline visibility.",
     features: [
       { icon: "eye", title: "Query latency tracing", desc: "Every index.query() call is a traced span with the number of results, filter metadata, namespace, and end-to-end latency including network time." },
-      { icon: "sparkle", title: "RAG pipeline child spans", desc: "Pinecone spans automatically attach as children of LangChain traces — cost and latency roll up to the parent pipeline without any extra configuration." },
-      { icon: "zap", title: "Upsert & fetch tracing", desc: "Index upsert, fetch, and delete operations are traced with vector counts and timing — monitor your data pipeline performance alongside query performance." },
+      { icon: "sparkle", title: "RAG pipeline child spans", desc: "Pinecone spans automatically attach as children of LangChain traces, cost and latency roll up to the parent pipeline without any extra configuration." },
+      { icon: "zap", title: "Upsert & fetch tracing", desc: "Index upsert, fetch, and delete operations are traced with vector counts and timing, monitor your data pipeline performance alongside query performance." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches Pinecone client automatically
@@ -448,13 +448,13 @@ results = index.query(
     name: "Chroma",
     category: "Vector Database",
     metaTitle: "Chroma (ChromaDB) Monitoring & Tracing | Fluiq",
-    metaDescription: "Trace every ChromaDB query, add, and update operation. Get collection query spans, RAG pipeline integration, and result count tracking — two lines of Python.",
+    metaDescription: "Trace every ChromaDB query, add, and update operation. Get collection query spans, RAG pipeline integration, and result count tracking, two lines of Python.",
     heroHeadline: "Chroma (ChromaDB) Monitoring & Query Tracing",
-    heroSub: "Auto-instrument every ChromaDB collection operation — query, add, update, get — with zero code changes. Chroma spans integrate as child spans inside LangChain traces for complete RAG observability.",
+    heroSub: "Auto-instrument every ChromaDB collection operation, query, add, update, get, with zero code changes. Chroma spans integrate as child spans inside LangChain traces for complete RAG observability.",
     features: [
       { icon: "eye", title: "Collection query tracing", desc: "Every collection.query() call is traced with the query text, n_results, where filters, and end-to-end latency including embedding generation time." },
-      { icon: "sparkle", title: "RAG pipeline integration", desc: "Chroma spans automatically appear as children inside LangChain traces — full end-to-end RAG pipeline visibility without extra code." },
-      { icon: "cpu", title: "Add & update tracing", desc: "Document addition, update, and deletion operations are traced with record counts and timing — monitor ingestion performance alongside query performance." },
+      { icon: "sparkle", title: "RAG pipeline integration", desc: "Chroma spans automatically appear as children inside LangChain traces, full end-to-end RAG pipeline visibility without extra code." },
+      { icon: "cpu", title: "Add & update tracing", desc: "Document addition, update, and deletion operations are traced with record counts and timing, monitor ingestion performance alongside query performance." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches ChromaDB automatically
@@ -494,13 +494,13 @@ results = collection.query(
     name: "Weaviate",
     category: "Vector Database",
     metaTitle: "Weaviate Monitoring & Vector Search Tracing | Fluiq",
-    metaDescription: "Trace every Weaviate query, insert, and batch operation. Get near-text and near-vector search spans, RAG pipeline integration, and latency tracking — two lines of Python.",
+    metaDescription: "Trace every Weaviate query, insert, and batch operation. Get near-text and near-vector search spans, RAG pipeline integration, and latency tracking, two lines of Python.",
     heroHeadline: "Weaviate Monitoring & Vector Search Tracing",
-    heroSub: "Auto-instrument every Weaviate query and insert — near-text, near-vector, batch operations — with zero code changes. Weaviate spans integrate as child spans inside LangChain traces for full RAG pipeline visibility.",
+    heroSub: "Auto-instrument every Weaviate query and insert, near-text, near-vector, batch operations, with zero code changes. Weaviate spans integrate as child spans inside LangChain traces for full RAG pipeline visibility.",
     features: [
       { icon: "eye", title: "Vector search tracing", desc: "Weaviate query.get() and near-text/near-vector searches are traced with the class, properties, filters, and end-to-end latency including Weaviate server time." },
-      { icon: "sparkle", title: "Batch insert tracing", desc: "Bulk inserts via client.batch are traced with item counts, batch size, and total latency — monitor data pipeline throughput alongside query performance." },
-      { icon: "cpu", title: "RAG child spans", desc: "Weaviate spans automatically appear as children of LangChain traces — see retrieval latency, result counts, and cost attribution rolled up into the parent RAG trace." },
+      { icon: "sparkle", title: "Batch insert tracing", desc: "Bulk inserts via client.batch are traced with item counts, batch size, and total latency, monitor data pipeline throughput alongside query performance." },
+      { icon: "cpu", title: "RAG child spans", desc: "Weaviate spans automatically appear as children of LangChain traces, see retrieval latency, result counts, and cost attribution rolled up into the parent RAG trace." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches Weaviate client automatically
@@ -539,13 +539,13 @@ with client.batch.dynamic() as batch:
     name: "FAISS",
     category: "Vector Database",
     metaTitle: "FAISS Index Monitoring & Search Tracing | Fluiq",
-    metaDescription: "Trace every FAISS index search, add, and batch operation. Get search latency spans, k-NN result tracking, and RAG pipeline integration — two lines of Python.",
+    metaDescription: "Trace every FAISS index search, add, and batch operation. Get search latency spans, k-NN result tracking, and RAG pipeline integration, two lines of Python.",
     heroHeadline: "FAISS Index Monitoring & Search Tracing",
-    heroSub: "Auto-instrument every FAISS index operation — search, add, and batch queries — with zero code changes. FAISS spans integrate as child spans inside LangChain traces for complete in-memory RAG pipeline observability.",
+    heroSub: "Auto-instrument every FAISS index operation, search, add, and batch queries, with zero code changes. FAISS spans integrate as child spans inside LangChain traces for complete in-memory RAG pipeline observability.",
     features: [
       { icon: "eye", title: "Index search tracing", desc: "Every index.search() call is a traced span with the number of query vectors, k value, index type, and end-to-end latency for profiling in-memory search performance." },
-      { icon: "zap", title: "Add operation tracing", desc: "index.add() and index.add_with_ids() are traced with vector counts and timing — measure ingestion throughput as your index grows." },
-      { icon: "sparkle", title: "RAG pipeline child spans", desc: "FAISS spans appear as children inside LangChain traces — see how in-memory retrieval latency compares to LLM call time in your RAG pipeline." },
+      { icon: "zap", title: "Add operation tracing", desc: "index.add() and index.add_with_ids() are traced with vector counts and timing, measure ingestion throughput as your index grows." },
+      { icon: "sparkle", title: "RAG pipeline child spans", desc: "FAISS spans appear as children inside LangChain traces, see how in-memory retrieval latency compares to LLM call time in your RAG pipeline." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches FAISS index operations
@@ -579,13 +579,13 @@ distances, indices = index.search(query, k=5)`,
     name: "Qdrant",
     category: "Vector Database",
     metaTitle: "Qdrant Monitoring & Vector Database Tracing | Fluiq",
-    metaDescription: "Trace every Qdrant search, upsert, and scroll operation. Get search latency spans, payload filter tracing, and RAG pipeline integration — two lines of Python.",
+    metaDescription: "Trace every Qdrant search, upsert, and scroll operation. Get search latency spans, payload filter tracing, and RAG pipeline integration, two lines of Python.",
     heroHeadline: "Qdrant Monitoring & Vector Search Tracing",
-    heroSub: "Auto-instrument every Qdrant search, upsert, and scroll call — with zero code changes. Qdrant spans integrate as child spans inside LangChain traces for full RAG pipeline visibility.",
+    heroSub: "Auto-instrument every Qdrant search, upsert, and scroll call, with zero code changes. Qdrant spans integrate as child spans inside LangChain traces for full RAG pipeline visibility.",
     features: [
-      { icon: "eye", title: "Search & scroll tracing", desc: "client.search() and client.scroll() are traced with collection name, filter params, limit, latency, and result counts — full visibility into retrieval performance." },
-      { icon: "cpu", title: "Upsert tracing", desc: "Batch upsert operations are traced with point counts, vector dimensionality, and total timing — monitor ingestion throughput alongside query performance." },
-      { icon: "sparkle", title: "RAG pipeline child spans", desc: "Qdrant spans appear as children inside LangChain traces — cost and latency roll up to the parent RAG trace automatically." },
+      { icon: "eye", title: "Search & scroll tracing", desc: "client.search() and client.scroll() are traced with collection name, filter params, limit, latency, and result counts, full visibility into retrieval performance." },
+      { icon: "cpu", title: "Upsert tracing", desc: "Batch upsert operations are traced with point counts, vector dimensionality, and total timing, monitor ingestion throughput alongside query performance." },
+      { icon: "sparkle", title: "RAG pipeline child spans", desc: "Qdrant spans appear as children inside LangChain traces, cost and latency roll up to the parent RAG trace automatically." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches Qdrant client automatically

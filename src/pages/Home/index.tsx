@@ -1,11 +1,9 @@
 import "@/styles/home.css";
 import { Helmet } from "react-helmet-async"
-import React, { useCallback, useEffect, useState } from "react"
-import { Link } from "react-router"
-import { motion, useMotionValue, useSpring } from "motion/react"
+import React, { useCallback } from "react"
+import { motion, useMotionValue, useSpring, useReducedMotion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  ArrowRight02Icon,
   PythonIcon,
   CheckmarkCircle02Icon,
   EyeIcon,
@@ -15,14 +13,14 @@ import {
   SparklesIcon,
   AiContentGenerator01Icon,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
 import { CodeBlock } from "@/components/code-block"
 
 import { useScrollReveal } from "./hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
+import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 import { AnimatedCounter } from "./components/AnimatedCounter"
-import { PipelineViz } from "./components/PipelineViz"
+import { IslandCta } from "@/components/IslandCta"
 import {
   TracesMockup,
   SecurityMockup,
@@ -31,28 +29,28 @@ import {
   PromptsMockup,
 } from "./components/DashboardMockups"
 import { setupHL, pipelineHL } from "./utils/highlightCode"
-import { INTEGRATIONS, STATS, HERO_PILLARS, EASE_OUT } from "./utils/constants"
+import { INTEGRATIONS, STATS, EASE_OUT } from "./utils/constants"
+
+/* Hero code-artifact: cobalt for the fluiq signal, muted for comments. */
+const CC = { sig: "#6FA8FF", str: "#8FBF9E", com: "#7E7E76", base: "#D7D3C7" }
+const HERO_CODE: Array<Array<[string, string]>> = [
+  [["import ", CC.sig], ["fluiq, openai", CC.base]],
+  [],
+  [["fluiq", CC.sig], [".instrument(api_key=", CC.base], ["\"fl_...\"", CC.str], [")", CC.base]],
+  [["fluiq", CC.sig], [".secure(mode=", CC.base], ["\"block\"", CC.str], [")", CC.base]],
+  [["fluiq", CC.sig], [".optimize()", CC.base]],
+  [["fluiq", CC.sig], [".eval(thresholds=", CC.base], ["{\"hallucination\": 0.8}", CC.base], [")", CC.base]],
+  [],
+  [["# every call: traced, scanned, cached, scored", CC.com]],
+]
 
 export default function Home() {
   useScrollReveal()
-  const [metrics, setMetrics] = useState({ cache: 73, sec: 99.1, eval: 91 })
-  const [rpm, setRpm]         = useState(247)
+  const reduce = useReducedMotion()
 
   const rotYRaw = useMotionValue(-6); const rotXRaw = useMotionValue(2)
   const rotY    = useSpring(rotYRaw, { stiffness: 180, damping: 26 })
   const rotX    = useSpring(rotXRaw, { stiffness: 180, damping: 26 })
-
-  useEffect(() => {
-    const id = setInterval(() => setMetrics({
-      cache: 65 + Math.random() * 18, sec: 98.6 + Math.random() * 1.3, eval: 88 + Math.random() * 8,
-    }), 3200)
-    return () => clearInterval(id)
-  }, [])
-
-  useEffect(() => {
-    const id = setInterval(() => setRpm(Math.floor(220 + Math.random() * 55)), 2800)
-    return () => clearInterval(id)
-  }, [])
 
   const handleTilt = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
@@ -64,14 +62,15 @@ export default function Home() {
 
   return (
     <div className="home-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <GrainOverlay />
       <Helmet>
-        <title>Fluiq — The AI Ops Stack for LLM Applications</title>
-        <meta name="description" content="Fluiq is the unified ops layer for LLM applications — security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
+        <title>Fluiq: The AI Ops Stack for LLM Applications</title>
+        <meta name="description" content="Fluiq is the unified ops layer for LLM applications: security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
         <meta name="keywords" content="AI Ops, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, AI security, hallucination detection" />
         <link rel="canonical" href="https://getfluiq.com/" />
         <meta property="og:url" content="https://getfluiq.com/" />
-        <meta property="og:title" content="Fluiq — The AI Ops Stack for LLM Applications" />
-        <meta property="og:description" content="Fluiq is the unified ops layer for LLM applications — security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
+        <meta property="og:title" content="Fluiq: The AI Ops Stack for LLM Applications" />
+        <meta property="og:description" content="Fluiq is the unified ops layer for LLM applications: security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
@@ -124,27 +123,13 @@ export default function Home() {
       <SiteNavbar landing />
 
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 90% 90% at 55% 50%, black 30%, transparent 75%)",
-            WebkitMaskImage: "radial-gradient(ellipse 90% 90% at 55% 50%, black 30%, transparent 75%)",
-          }} />
-          <div className="dark:block hidden absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 90% 90% at 55% 50%, black 30%, transparent 75%)",
-            WebkitMaskImage: "radial-gradient(ellipse 90% 90% at 55% 50%, black 30%, transparent 75%)",
-          }} />
-          <div className="absolute right-[-5%] top-1/2 -translate-y-1/2 w-[55vw] h-[55vw] max-w-165 max-h-165 rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(24,96,211,0.06) 0%, transparent 65%)" }} />
-        </div>
+        <HeroAtmosphere variant="offset" />
 
         <div className="relative z-10 mx-auto max-w-6xl px-6 py-24 md:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
-            <div className="flex flex-col">
-              <motion.div className="flex items-center gap-2.5 mb-8"
+          <div className="relative grid grid-cols-1 items-center gap-14 lg:grid-cols-12 lg:gap-8">
+            {/* Giant editorial statement, left */}
+            <div className="flex flex-col lg:col-span-6">
+              <motion.div className="flex items-center gap-2.5 mb-7"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.05 }}>
                 <span className="block w-5 h-px shrink-0 bg-[#1860D3] dark:bg-[#6FA8FF]" />
                 <span className="text-[#1860D3] dark:text-[#6FA8FF]"
@@ -154,54 +139,67 @@ export default function Home() {
               </motion.div>
 
               <motion.h1
-                className="font-heading text-5xl md:text-6xl xl:text-7xl font-bold tracking-[-0.038em] leading-[1.03] text-[#0A0A0A] dark:text-[#FAF9F6] mb-7"
+                className="font-heading text-[2.75rem] sm:text-6xl lg:text-7xl xl:text-[5rem] font-bold tracking-[-0.04em] leading-[0.98] text-[#0A0A0A] dark:text-[#FAF9F6] mb-7"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.15, ease: EASE_OUT }}>
-                Production AI<br />Without the<br />
-                <span className="text-[#1860D3] dark:text-[#6FA8FF]">Blind Spots.</span>
+                Production AI,<br />without the<br /><span className="text-[#1860D3] dark:text-[#6FA8FF]">blind spots.</span>
               </motion.h1>
 
-              <motion.p className="mb-9 max-w-110 leading-[1.82] text-[#6B6B66] dark:text-[#9A9A92]"
-                style={{ fontSize: 13, fontWeight: 300 }}
+              <motion.p className="mb-9 max-w-[30rem] text-[15px] leading-[1.7] text-[#6B6B66] dark:text-[#9A9A92]"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
-                FluiqAI is the unified ops layer for LLM applications — security scanning,
-                intelligent caching, deep observability, and automated evaluation on every single request.
+                FluiqAI is the unified ops layer for LLM applications: security scanning,
+                intelligent caching, deep observability, and automated evaluation on every request.
               </motion.p>
 
-              <motion.div className="flex flex-wrap gap-2 mb-11"
+              <motion.div className="flex flex-wrap items-center gap-3"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
-                {HERO_PILLARS.map(({ label, dot }) => (
-                  <span key={label}
-                    className="inline-flex items-center gap-1.75 px-3 py-1.25 rounded-full border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] hover:border-[#1860D3] dark:hover:border-[#6FA8FF] transition-colors cursor-default"
-                    style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.05em" }}>
-                    <span className="w-1.25 h-1.25 rounded-full shrink-0"
-                      style={{ background: dot, boxShadow: `0 0 5px ${dot}88` }} />
-                    {label}
-                  </span>
-                ))}
-              </motion.div>
-
-              <motion.div className="flex items-center gap-3"
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.45, ease: EASE_OUT }}>
-                <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-6 h-11" asChild>
-                  <Link to="/signup">Start Free <HugeiconsIcon icon={ArrowRight02Icon} size={16} /></Link>
-                </Button>
-                <Button size="lg" variant="outline"
-                  className="cta-btn border-[#E5E1D6] dark:border-[#333333] text-[#0a0a0a] dark:text-[#FAF9F6] hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A] hover:border-[#1860D3] dark:hover:border-[#6FA8FF] px-6 h-11" asChild>
-                  <Link to="/documentation">Read Docs</Link>
-                </Button>
+                <IslandCta to="/signup">Start free</IslandCta>
+                <IslandCta to="/documentation" variant="ghost">Read the docs</IslandCta>
               </motion.div>
             </div>
 
+            {/* Code artifact, same row, right column */}
             <motion.div
-              initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.9, delay: 0.3, ease: EASE_OUT }}
+              className="lg:col-span-6 lg:col-start-7"
+              initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, delay: 0.35, ease: EASE_OUT }}
               onMouseMove={handleTilt} onMouseLeave={resetTilt}>
-              <motion.div style={{ rotateY: rotY, rotateX: rotX, transformPerspective: 1400 }}>
-                <PipelineViz rpm={rpm} metrics={metrics} />
+              {/* Double-bezel: aluminium tray (outer shell) cradling the glass editor (inner core) */}
+              <motion.div
+                className="relative mx-auto w-full max-w-[472px] rounded-[1.75rem] bg-black/[0.05] p-2 ring-1 ring-black/[0.06] shadow-[0_2px_8px_rgba(0,0,0,0.06),0_30px_70px_-18px_rgba(24,96,211,0.26)] lg:mx-0 lg:ml-auto dark:bg-white/[0.05] dark:ring-white/10"
+                style={{ rotateY: rotY, rotateX: rotX, transformPerspective: 1400 }}>
+                <div className="overflow-hidden rounded-[1.25rem] border border-white/[0.07] bg-[#0C0C0C] shadow-[inset_0_1px_1px_rgba(255,255,255,0.14)]">
+                {/* Editor window chrome */}
+                <div className="flex items-center gap-1.5 border-b border-white/10 bg-[#161616] px-3.5 py-2.5">
+                  <span className="size-2.5 rounded-full bg-white/15" />
+                  <span className="size-2.5 rounded-full bg-white/15" />
+                  <span className="size-2.5 rounded-full bg-white/15" />
+                  <span className="ml-3 inline-flex items-center gap-1.5 font-mono text-[11px] text-white/45">
+                    <HugeiconsIcon icon={PythonIcon} size={12} /> app.py
+                  </span>
+                </div>
+                {/* Code, revealed line by line */}
+                <motion.pre
+                  className="overflow-x-auto px-5 py-5 font-mono text-[12.5px] leading-[1.9]"
+                  variants={reduce ? undefined : { hidden: {}, show: { transition: { staggerChildren: 0.12, delayChildren: 0.55 } } }}
+                  initial={reduce ? false : "hidden"} animate={reduce ? false : "show"}>
+                  {HERO_CODE.map((tokens, i) => (
+                    <motion.div key={i}
+                      variants={reduce ? undefined : { hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.22, ease: EASE_OUT } } }}>
+                      {tokens.length === 0
+                        ? " "
+                        : tokens.map(([text, color], j) => (
+                            <span key={j} style={{ color }}>{text}</span>
+                          ))}
+                      {i === HERO_CODE.length - 1 && !reduce && (
+                        <span className="ml-1 inline-block h-[1.05em] w-[2px] translate-y-[2px] animate-pulse bg-[#6FA8FF] align-middle" />
+                      )}
+                    </motion.div>
+                  ))}
+                </motion.pre>
+                </div>
               </motion.div>
             </motion.div>
           </div>
@@ -210,11 +208,14 @@ export default function Home() {
 
       {/* ── Integration marquee ──────────────────────────────────────────── */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-6 overflow-hidden">
-        <div className="flex">
-          <div className="marquee-track flex shrink-0 gap-8 pr-8">
-            {[...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
-              <span key={i} className="shrink-0 text-[13px] font-medium text-[#9A9A92] dark:text-[#9A9A92] tracking-wide whitespace-nowrap px-2">{name}</span>
-            ))}
+        <div className="mx-auto flex max-w-6xl items-center gap-6 px-6">
+          <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9A9A92]">Works with</span>
+          <div className="marquee-mask relative min-w-0 flex-1 overflow-hidden">
+            <div className="marquee-track flex w-max gap-10">
+              {[...INTEGRATIONS, ...INTEGRATIONS].map((name, i) => (
+                <span key={i} className="shrink-0 text-[13px] font-medium text-[#6B6B66] dark:text-[#9A9A92] tracking-wide whitespace-nowrap">{name}</span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -223,14 +224,13 @@ export default function Home() {
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20" id="pillars">
         <div className="mx-auto max-w-6xl px-6">
           <div data-animate className="mx-auto max-w-3xl text-center">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">The full picture</p>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] md:text-5xl">
               Observability tools tell you what broke.<br />
               <span className="text-[#6B6B66] dark:text-[#9A9A92]">Fluiq helps you <span className="text-[#1860D3] dark:text-[#6FA8FF]">prevent it.</span></span>
             </h2>
             <p className="mt-5 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
               Most platforms stop at tracing. Fluiq adds a security layer, a caching layer,
-              and a quality gate — so you catch problems before your users do.
+              and a quality gate, so you catch problems before your users do.
             </p>
           </div>
         </div>
@@ -241,11 +241,11 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div data-animate>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={EyeIcon} size={12} />Observability · 01
+              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+                <HugeiconsIcon icon={EyeIcon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Full trace visibility across every <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM call</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns — without changing how you write code.</p>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns, without changing how you write code.</p>
               <ul className="space-y-2 mb-6">
                 {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Real-time trace streaming"].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
@@ -273,13 +273,13 @@ export default function Home() {
               <SecurityMockup />
             </div>
             <div data-animate className="lg:order-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={ShieldIcon} size={12} />Security · 02
+              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+                <HugeiconsIcon icon={ShieldIcon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4"><span className="text-[#1860D3] dark:text-[#6FA8FF]">Block attacks</span> before they reach your model</h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Pre-call scanning catches jailbreaks, prompt injections, and skeleton-key attacks before the LLM call is made. Post-call scanning redacts PII and secrets from stored traces.</p>
               <ul className="space-y-2 mb-6">
-                {["Pre-call jailbreak + injection blocking", "PII & secret redaction on traces", "No false positives — fails open on errors"].map(pt => (
+                {["Pre-call jailbreak + injection blocking", "PII & secret redaction on traces", "No false positives, fails open on errors"].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
                     {pt}
@@ -294,30 +294,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3 · Optimization */}
+      {/* 3 · Optimization - full-width feature (breaks the zigzag rhythm) */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={ZapIcon} size={12} />Optimization · 03
-              </span>
-              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Stop paying for duplicate <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM calls</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Fluiq analyses your actual trace history to find which prompts repeat, then provisions a dedicated Cache instance for your account. Repeated calls are served from cache automatically.</p>
-              <ul className="space-y-2 mb-6">
-                {["Server-side Caching, zero infra to manage", "Profile built from your real traffic patterns", "Configurable TTL and model scope"].map(pt => (
-                  <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
-                    {pt}
-                  </li>
-                ))}
-              </ul>
-              <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
-                fluiq.optimize()&nbsp;&nbsp;&nbsp;# "cache" | "observe"
+          <div data-animate className="max-w-2xl">
+            <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+              <HugeiconsIcon icon={ZapIcon} size={16} />
+            </span>
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Stop paying for duplicate <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM calls</span></h2>
+            <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">Fluiq analyses your actual trace history to find which prompts repeat, then provisions a dedicated cache instance for your account. Repeated calls are served from cache automatically.</p>
+          </div>
+          <div data-animate data-delay="1" className="mt-10 grid gap-8 sm:grid-cols-3 max-w-3xl">
+            {[
+              "Server-side caching, zero infra to manage",
+              "Profile built from your real traffic patterns",
+              "Configurable TTL and model scope",
+            ].map(pt => (
+              <div key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
+                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
+                {pt}
               </div>
-            </div>
-            <div data-animate data-delay="2">
-              <OptimizationMockup />
+            ))}
+          </div>
+          <div data-animate data-delay="2" className="mt-10 mx-auto max-w-4xl">
+            <OptimizationMockup />
+          </div>
+          <div data-animate className="mt-8 flex justify-center">
+            <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
+              fluiq.optimize()&nbsp;&nbsp;&nbsp;# "cache" | "observe"
             </div>
           </div>
         </div>
@@ -331,11 +335,11 @@ export default function Home() {
               <EvalMockup />
             </div>
             <div data-animate className="lg:order-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={TestTube01Icon} size={12} />Evaluation · 04
+              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+                <HugeiconsIcon icon={TestTube01Icon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Gate responses that fail <span className="text-[#1860D3] dark:text-[#6FA8FF]">quality thresholds</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge runs server-side after each call. Set per-metric thresholds — warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app.</p>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge runs server-side after each call. Set per-metric thresholds. Warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app.</p>
               <ul className="space-y-2 mb-6">
                 {["hallucination, faithfulness, relevance, toxicity", "Scores stored and visible in the dashboard", "Block mode prevents bad responses reaching users"].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
@@ -357,18 +361,18 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div data-animate>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-widest text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={AiContentGenerator01Icon} size={12} />Prompt Management · 05
+              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+                <HugeiconsIcon icon={AiContentGenerator01Icon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Write, version, and <span className="text-[#1860D3] dark:text-[#6FA8FF]">deploy prompts</span> like software</h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">A dedicated IDE-style editor for your prompt templates — with <code className="font-mono text-[13px] text-[#0a0a0a] dark:text-[#FAF9F6]">{"{{variable}}"}</code> injection, full version history, and per-environment deployment. Iterate directly on real production traces, compare model outputs side-by-side, and ship with confidence.</p>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">A dedicated IDE-style editor for your prompt templates, with <code className="font-mono text-[13px] text-[#0a0a0a] dark:text-[#FAF9F6]">{"{{variable}}"}</code> injection, full version history, and per-environment deployment. Iterate directly on real production traces, compare model outputs side-by-side, and ship with confidence.</p>
               <ul className="space-y-2 mb-6">
                 {[
-                  "{{variable}} template syntax — define slots, fill at runtime via SDK",
-                  "Version history — save, browse, and restore any past version instantly",
-                  "One-click deployment to dev → staging → production environments",
-                  "Side-by-side model comparison — same prompt, multiple models",
-                  "Pull directly from live traces — iterate on real-world prompts",
+                  "{{variable}} template syntax: define slots, fill at runtime via SDK",
+                  "Version history: save, browse, and restore any past version instantly",
+                  "One-click deployment to dev, staging, and production environments",
+                  "Side-by-side model comparison with the same prompt across models",
+                  "Pull directly from live traces and iterate on real-world prompts",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
@@ -410,8 +414,9 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <div data-animate className="mt-10 rounded-2xl border border-[#1a1a1a] dark:border-[#2A2A2A] bg-[#0a0a0a] dark:bg-[#1A1A1A] overflow-hidden shadow-xl">
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-[#1e1e1e] dark:border-[#2A2A2A]">
+          <div data-animate className="mt-10 rounded-[1.75rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-22px_rgba(24,96,211,0.2)] dark:bg-white/[0.04] dark:ring-white/10">
+          <div className="overflow-hidden rounded-[1.25rem] border border-white/[0.07] bg-[#0a0a0a] dark:bg-[#141414] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+            <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
               <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6B6B66]" />
               <span className="text-[11px] text-[#6B6B66] font-mono">Complete setup</span>
             </div>
@@ -439,6 +444,7 @@ response = client.chat.completions.create(
     messages=[{"role": "user", "content": "..."}],
 )
 # ↑ Traced, scanned, cached, and evaluated automatically`}</CodeBlock>
+          </div>
           </div>
         </div>
       </section>
@@ -475,8 +481,9 @@ response = client.chat.completions.create(
                 ))}
               </div>
             </div>
-            <div data-animate data-delay="2" className="rounded-2xl border border-[#1a1a1a] dark:border-[#2A2A2A] bg-[#0a0a0a] dark:bg-[#1A1A1A] overflow-hidden shadow-xl">
-              <div className="flex items-center gap-2 px-5 py-3 border-b border-[#1e1e1e] dark:border-[#2A2A2A]">
+            <div data-animate data-delay="2" className="rounded-[1.75rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-22px_rgba(24,96,211,0.2)] dark:bg-white/[0.04] dark:ring-white/10">
+              <div className="overflow-hidden rounded-[1.25rem] border border-white/[0.07] bg-[#0a0a0a] dark:bg-[#141414] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+              <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
                 <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6B6B66]" />
                 <span className="text-[11px] text-[#6B6B66] font-mono">any_pipeline.py</span>
               </div>
@@ -490,10 +497,11 @@ def answer_question(question: str) -> str:
     return llm.invoke(prompt(question, docs))
 
 # Every call is now:
-# → Traced with cost + latency
-# → Security-scanned
-# → Cached if repeated
-# → Evaluated for quality`}</CodeBlock>
+# Traced with cost + latency
+# Security-scanned
+# Cached if repeated
+# Evaluated for quality`}</CodeBlock>
+              </div>
             </div>
           </div>
         </div>
@@ -508,17 +516,13 @@ def answer_question(question: str) -> str:
             </div>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">Free up to <span className="text-[#1860D3] dark:text-[#6FA8FF]">50K</span> traces a month.</h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
-              Start with observability on the free tier. Add security, optimization, and evaluation as your pipeline grows — no code changes required.
+              Start with observability on the free tier. Add security, optimization, and evaluation as your pipeline grows. No code changes required.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-8 h-12 text-[15px]" asChild>
-                <Link to="/signup">Start for free <HugeiconsIcon icon={ArrowRight02Icon} size={16} /></Link>
-              </Button>
-              <Button size="lg" variant="outline" className="cta-btn border-[#E5E1D6] dark:border-[#333333] text-[#0a0a0a] dark:text-[#FAF9F6] hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A] px-8 h-12 text-[15px]" asChild>
-                <Link to="/documentation">Read the docs</Link>
-              </Button>
+              <IslandCta to="/signup">Start free</IslandCta>
+              <IslandCta to="/documentation" variant="ghost">Read the docs</IslandCta>
             </div>
-            <p className="mt-5 text-[12px] text-[#9A9A92]">No credit card required · pip install fluiq · instrument in 60 seconds</p>
+            <p className="mt-5 text-[12px] text-[#9A9A92]">No credit card required. pip install fluiq, instrument in 60 seconds.</p>
           </div>
         </div>
       </section>

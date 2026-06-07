@@ -13,10 +13,11 @@ import {
   AiContentGenerator01Icon,
   CheckmarkCircle02Icon,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
+import { IslandCta } from "@/components/IslandCta"
 import { CodeBlock } from "@/components/code-block"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
+import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { type IntegrationData, type Category, INTEGRATION_META } from "./data"
 
@@ -45,6 +46,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <GrainOverlay />
       <Helmet>
         <title>{data.metaTitle}</title>
         <meta name="description" content={data.metaDescription} />
@@ -69,22 +71,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 md:py-28">
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="dark:block hidden absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full"
-            style={{ background: `radial-gradient(circle, ${cat.glow} 0%, transparent 65%)` }} />
-        </div>
+        <HeroAtmosphere variant="center" />
 
         <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
           {/* Breadcrumb */}
@@ -122,18 +109,8 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
           <motion.div className="mt-8 flex flex-wrap items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
-            <Button size="lg"
-              className="bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-8 h-12 text-[15px] font-semibold"
-              asChild>
-              <Link to="/signup">
-                Get started free <HugeiconsIcon icon={ArrowRight02Icon} size={15} />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline"
-              className="border-[#E5E1D6] dark:border-[#2A2A2A] text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] h-12 px-8 text-[15px]"
-              asChild>
-              <Link to="/documentation">Read the docs</Link>
-            </Button>
+            <IslandCta to="/signup">Get started free</IslandCta>
+            <IslandCta to="/documentation" variant="ghost">Read the docs</IslandCta>
           </motion.div>
 
           <motion.p className="mt-4 text-[12px] text-[#9A9A92]"
@@ -191,8 +168,10 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
               </div>
             </div>
           </div>
-          <div className="rounded-2xl border border-[#2A2A2A] bg-[#111111] overflow-hidden">
-            <CodeBlock variant="dark">{data.setupCode}</CodeBlock>
+          <div className="rounded-[1.75rem] bg-white/[0.04] p-2 ring-1 ring-white/10 shadow-[0_30px_70px_-28px_rgba(111,168,255,0.25)]">
+            <div className="rounded-[1.25rem] border border-white/[0.07] bg-[#111111] overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+              <CodeBlock variant="dark">{data.setupCode}</CodeBlock>
+            </div>
           </div>
         </div>
       </section>
@@ -205,7 +184,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
               What Fluiq instruments in {data.name}
             </h2>
             <p className="mt-2 text-[14px] text-[#6B6B66] dark:text-[#9A9A92]">
-              Every call to these methods is automatically traced — no decorators, no wrappers, no manual spans.
+              Every call to these methods is automatically traced, no decorators, no wrappers, no manual spans.
             </p>
           </div>
 
@@ -263,11 +242,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
             Free tier. No credit card. Full traces, security scanning, and evals on your first {data.name} call.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg"
-              className="bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-10 h-12 text-[15px] font-semibold"
-              asChild>
-              <Link to="/signup">Start free <HugeiconsIcon icon={ArrowRight02Icon} size={16} /></Link>
-            </Button>
+            <IslandCta to="/signup">Start free</IslandCta>
           </div>
           <p className="mt-4 text-[12px] text-[#9A9A92]">
             50,000 free traces / month · 1,000 evals / month · 14-day retention

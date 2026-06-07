@@ -3,9 +3,10 @@ import { Link } from "react-router"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
+import { IslandCta } from "@/components/IslandCta"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
+import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { INTEGRATIONS, type Category } from "./data"
 
@@ -20,9 +21,9 @@ const CATEGORY_STYLES: Record<Category, { badge: string; dot: string }> = {
 }
 
 const CATEGORY_DESC: Record<Category, string> = {
-  "LLM Provider":    "OpenAI, Anthropic, Gemini, Vertex AI — every provider call traced with token counts and USD cost.",
-  "Agent Framework": "LangChain, LangGraph, CrewAI, Google ADK, MCP — full agent span trees.",
-  "Vector Database": "Pinecone, Chroma, Weaviate, FAISS, Qdrant — query latency and RAG pipeline child spans.",
+  "LLM Provider":    "OpenAI, Anthropic, Gemini, Vertex AI, every provider call traced with token counts and USD cost.",
+  "Agent Framework": "LangChain, LangGraph, CrewAI, Google ADK, MCP, full agent span trees.",
+  "Vector Database": "Pinecone, Chroma, Weaviate, FAISS, Qdrant, query latency and RAG pipeline child spans.",
 }
 
 export default function IntegrationsIndex() {
@@ -35,19 +36,20 @@ export default function IntegrationsIndex() {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <GrainOverlay />
       <Helmet>
-        <title>Fluiq Integrations — LLM Monitoring for OpenAI, LangChain, Pinecone & More</title>
-        <meta name="description" content="Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases — OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python." />
+        <title>Fluiq Integrations, LLM Monitoring for OpenAI, LangChain, Pinecone & More</title>
+        <meta name="description" content="Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases, OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python." />
         <meta name="keywords" content="Fluiq integrations, LLM integrations, OpenAI integration, LangChain integration, vector database monitoring, agent framework monitoring, CrewAI integration" />
         <link rel="canonical" href="https://getfluiq.com/integrations" />
-        <meta property="og:title" content="Fluiq Integrations — LLM Monitoring for 14 Frameworks" />
+        <meta property="og:title" content="Fluiq Integrations, LLM Monitoring for 14 Frameworks" />
         <meta property="og:description" content="Auto-instrument OpenAI, Anthropic, Gemini, LangChain, CrewAI, Pinecone, and more with two lines of Python." />
         <meta property="og:url" content="https://getfluiq.com/integrations" />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "CollectionPage",
           "name": "Fluiq Integrations",
-          "description": "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases — OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python.",
+          "description": "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases, OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python.",
           "url": "https://getfluiq.com/integrations",
           "isPartOf": { "@id": "https://getfluiq.com" },
         })}</script>
@@ -58,22 +60,7 @@ export default function IntegrationsIndex() {
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 md:py-28">
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="dark:block hidden absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(24,96,211,0.07) 0%, transparent 65%)" }} />
-        </div>
+        <HeroAtmosphere variant="center" />
 
         <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
           <motion.div className="mb-5"
@@ -96,22 +83,14 @@ export default function IntegrationsIndex() {
             className="mt-5 mx-auto max-w-xl text-[17px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2, ease: EASE_OUT }}>
-            Fluiq auto-instruments every major LLM provider, agent framework, and vector database with two lines of Python — zero decorators, zero wrappers, zero code changes to your existing code.
+            Fluiq auto-instruments every major LLM provider, agent framework, and vector database with two lines of Python, zero decorators, zero wrappers, zero code changes to your existing code.
           </motion.p>
 
           <motion.div className="mt-8 flex flex-wrap items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3, ease: EASE_OUT }}>
-            <Button size="lg"
-              className="bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-8 h-12 text-[15px] font-semibold"
-              asChild>
-              <Link to="/signup">Get started free <HugeiconsIcon icon={ArrowRight02Icon} size={15} /></Link>
-            </Button>
-            <Button size="lg" variant="outline"
-              className="border-[#E5E1D6] dark:border-[#2A2A2A] text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] h-12 px-8 text-[15px]"
-              asChild>
-              <Link to="/documentation/quickstart">Quickstart guide</Link>
-            </Button>
+            <IslandCta to="/signup">Get started free</IslandCta>
+            <IslandCta to="/documentation/quickstart" variant="ghost">Quickstart guide</IslandCta>
           </motion.div>
         </div>
       </section>
@@ -171,19 +150,11 @@ export default function IntegrationsIndex() {
             Don't see your framework?
           </h2>
           <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
-            Use the <code className="font-mono text-[14px] bg-[#F2F0E9] dark:bg-[#1A1A1A] px-1.5 py-0.5 rounded">@trace</code> decorator to manually instrument any Python function. Or reach out — new integrations ship regularly.
+            Use the <code className="font-mono text-[14px] bg-[#F2F0E9] dark:bg-[#1A1A1A] px-1.5 py-0.5 rounded">@trace</code> decorator to manually instrument any Python function. Or reach out, new integrations ship regularly.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg"
-              className="bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-10 h-12 text-[15px] font-semibold"
-              asChild>
-              <Link to="/signup">Start free <HugeiconsIcon icon={ArrowRight02Icon} size={16} /></Link>
-            </Button>
-            <Button size="lg" variant="outline"
-              className="border-[#E5E1D6] dark:border-[#2A2A2A] text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] h-12 px-8 text-[15px]"
-              asChild>
-              <Link to="/contact">Request an integration</Link>
-            </Button>
+            <IslandCta to="/signup">Start free</IslandCta>
+            <IslandCta to="/contact" variant="ghost">Request an integration</IslandCta>
           </div>
         </div>
       </section>

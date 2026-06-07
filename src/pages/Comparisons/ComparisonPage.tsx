@@ -1,17 +1,16 @@
 import { Helmet } from "react-helmet-async"
-import { Link } from "react-router"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  ArrowRight02Icon,
   CheckmarkCircle02Icon,
   SparklesIcon,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
+import { IslandCta } from "@/components/IslandCta"
 import { CodeBlock } from "@/components/code-block"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
+import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -72,6 +71,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <GrainOverlay />
       <Helmet>
         <title>{data.metaTitle}</title>
         <meta name="description" content={data.metaDescription} />
@@ -96,22 +96,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24 md:py-32">
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="dark:block hidden absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-[700px] max-h-[700px] rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(24,96,211,0.07) 0%, transparent 65%)" }} />
-        </div>
+        <HeroAtmosphere variant="center" />
 
         <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
           <motion.div className="mb-6"
@@ -141,18 +126,8 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
           <motion.div className="mt-9 flex flex-wrap items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
-            <Button size="lg"
-              className="bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-8 h-12 text-[15px] font-semibold"
-              asChild>
-              <Link to="/signup">
-                Get started free <HugeiconsIcon icon={ArrowRight02Icon} size={15} />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline"
-              className="border-[#E5E1D6] dark:border-[#2A2A2A] text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] h-12 px-8 text-[15px]"
-              asChild>
-              <Link to="/documentation">Read the docs</Link>
-            </Button>
+            <IslandCta to="/signup">Get started free</IslandCta>
+            <IslandCta to="/documentation" variant="ghost">Read the docs</IslandCta>
           </motion.div>
 
           <motion.p className="mt-5 text-[12px] text-[#9A9A92]"
@@ -212,7 +187,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
           </div>
 
           <p className="mt-4 text-center text-[12px] text-[#9A9A92]">
-            ~ = partial support &nbsp;·&nbsp; — = not available
+~ = partial support &nbsp;·&nbsp; - = not available
           </p>
         </div>
       </section>
@@ -223,7 +198,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
           <div className="mb-10 text-center" data-animate>
             <h2 className="font-heading text-3xl font-bold tracking-tight">An honest take</h2>
             <p className="mt-3 text-[15px] text-[#6B6B66] dark:text-[#9A9A92]">
-              We'll be straight — here's where {data.name} genuinely excels, and where Fluiq goes further.
+              We'll be straight. Here's where {data.name} genuinely excels, and where Fluiq goes further.
             </p>
           </div>
 
@@ -287,20 +262,24 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
               <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[#6B6B66]">
                 {data.migrationBefore.label}
               </p>
-              <div className="rounded-xl border border-[#2A2A2A] bg-[#111111] overflow-hidden">
-                <CodeBlock variant="dark">
-                  {data.migrationBefore.code}
-                </CodeBlock>
+              <div className="rounded-[1.5rem] bg-white/[0.04] p-2 ring-1 ring-white/10">
+                <div className="rounded-[1rem] border border-white/[0.07] bg-[#111111] overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
+                  <CodeBlock variant="dark">
+                    {data.migrationBefore.code}
+                  </CodeBlock>
+                </div>
               </div>
             </div>
             <div>
               <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[#6FA8FF]">
                 {data.migrationAfter.label}
               </p>
-              <div className="rounded-xl border border-[#1860D3]/30 bg-[#111111] overflow-hidden">
-                <CodeBlock variant="dark">
-                  {data.migrationAfter.code}
-                </CodeBlock>
+              <div className="rounded-[1.5rem] bg-[#1860D3]/[0.12] p-2 ring-1 ring-[#6FA8FF]/25">
+                <div className="rounded-[1rem] border border-[#1860D3]/30 bg-[#111111] overflow-hidden shadow-[inset_0_1px_1px_rgba(111,168,255,0.12)]">
+                  <CodeBlock variant="dark">
+                    {data.migrationAfter.code}
+                  </CodeBlock>
+                </div>
               </div>
             </div>
           </div>
@@ -317,13 +296,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
             Free tier. No credit card. Full observability, security, and evals on your first LLM call.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg"
-              className="bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-10 h-13 text-[16px] font-semibold"
-              asChild>
-              <Link to="/signup">
-                Start free <HugeiconsIcon icon={ArrowRight02Icon} size={16} />
-              </Link>
-            </Button>
+            <IslandCta to="/signup">Start free</IslandCta>
           </div>
           <p className="mt-4 text-[12px] text-[#9A9A92]">
             50,000 free traces / month · 1,000 evals / month · 14-day retention

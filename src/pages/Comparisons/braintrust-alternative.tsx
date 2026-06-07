@@ -3,14 +3,14 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 const data: CompetitorData = {
   slug: "braintrust-alternative",
   name: "Braintrust",
-  metaTitle: "Fluiq vs Braintrust — The Braintrust Alternative With Observability + Security",
-  metaDescription: "Comparing Fluiq vs Braintrust. Fluiq adds production LLM tracing, security scanning, and response caching alongside evals — everything Braintrust covers, plus the ops layer it doesn't.",
+  metaTitle: "Fluiq vs Braintrust, The Braintrust Alternative With Observability + Security",
+  metaDescription: "Comparing Fluiq vs Braintrust. Fluiq adds production LLM tracing, security scanning, and response caching alongside evals, everything Braintrust covers, plus the ops layer it doesn't.",
   canonicalPath: "/braintrust-alternative",
   heroHeadline: "The Braintrust Alternative: Evals Plus the Full Ops Stack",
-  heroSub: "Braintrust is a strong evaluation platform. Fluiq adds production tracing, security scanning, and response caching alongside evals — all from two lines of Python, with no manual scoring scaffolding.",
+  heroSub: "Braintrust is a strong evaluation platform. Fluiq adds production tracing, security scanning, and response caching alongside evals, all from two lines of Python, with no manual scoring scaffolding.",
   stats: [
     { value: "Inline", label: "evals on every production LLM call" },
-    { value: "Auto", label: "tracing — no @traced decorators needed" },
+    { value: "Auto", label: "tracing, no @traced decorators needed" },
     { value: "Built-in", label: "security on top of evals" },
   ],
   features: [
@@ -29,20 +29,20 @@ const data: CompetitorData = {
     { feature: "Prompt management", fluiq: "yes", competitor: "yes" },
   ],
   competitorPros: [
-    "Best-in-class evaluation UX — Braintrust's playground and scoring interface are genuinely excellent for prompt iteration.",
+    "Best-in-class evaluation UX, Braintrust's playground and scoring interface are genuinely excellent for prompt iteration.",
     "Strong human-in-the-loop annotation workflows with side-by-side diff views.",
     "Dataset versioning and regression testing suite are mature and well thought-out.",
     "Good CI integration with the ability to gate on eval thresholds.",
   ],
   fluiqAdvantages: [
-    "Production-first: Fluiq auto-instruments every LLM call at the SDK level — you get full trace trees, latency histograms, and cost attribution without writing a single logging call.",
+    "Production-first: Fluiq auto-instruments every LLM call at the SDK level, you get full trace trees, latency histograms, and cost attribution without writing a single logging call.",
     "Inline eval modes: fluiq.eval(mode='warn') flags low-scoring responses on the trace; mode='block' intercepts them before they reach users.",
-    "Security included: prompt injection blocking, PII redaction, jailbreak scoring, and secret leak prevention run on every production call — not just in eval scripts.",
+    "Security included: prompt injection blocking, PII redaction, jailbreak scoring, and secret leak prevention run on every production call, not just in eval scripts.",
     "Response caching: trace-driven Redis caching serves repeated prompts instantly, cutting LLM spend without any code changes.",
-    "Two lines replace an entire boilerplate setup — no manual span context, no custom scorers to wire up.",
+    "Two lines replace an entire boilerplate setup, no manual span context, no custom scorers to wire up.",
   ],
   migrationBefore: {
-    label: "Before — Braintrust",
+    label: "Before, Braintrust",
     code: `import braintrust
 from braintrust import traced, init_logger
 
@@ -60,7 +60,7 @@ def run_pipeline(query: str) -> str:
     return result`,
   },
   migrationAfter: {
-    label: "After — Fluiq",
+    label: "After, Fluiq",
     code: `import fluiq
 fluiq.instrument(api_key="fl_...")
 fluiq.eval(mode="warn")   # automatic LLM-as-judge on every call

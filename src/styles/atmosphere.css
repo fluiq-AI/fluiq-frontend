@@ -1,0 +1,10 @@
+/* Shared brand atmosphere: cobalt aurora drift. Used by SiteBackdrop. */
+@keyframes auroraDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(2%, -1.5%, 0) scale(1.06); }
+}
+.fx-aurora { animation: auroraDrift 18s ease-in-out infinite; will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-aurora { animation: none !important; transform: none !important; }
+}

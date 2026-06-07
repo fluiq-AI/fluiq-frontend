@@ -1,11 +1,9 @@
 import "@/styles/pricing.css";
 import { Helmet } from "react-helmet-async"
 import { useState, Fragment } from "react"
-import { Link } from "react-router"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
-  ArrowRight02Icon,
   CheckmarkCircle02Icon,
   SparklesIcon,
   ShieldKeyIcon,
@@ -14,11 +12,12 @@ import {
   SquareLock02Icon,
   Cancel01Icon,
 } from "@hugeicons/core-free-icons"
-import { Button } from "@/components/ui/button"
+import { IslandCta } from "@/components/IslandCta"
 import { CodeBlock } from "@/components/code-block"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
+import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
@@ -44,18 +43,18 @@ const tiers: Tier[] = [
     evals: "1,000 evaluations / month",
     seats: "1 seat",
     retention: "14-day trace retention",
-    cta: "Get started",
+    cta: "Start free",
     ctaHref: "/signup",
     highlighted: false,
     features: [
-      { label: "fluiq.instrument() — full observability", included: true },
+      { label: "fluiq.instrument(): full observability", included: true },
       { label: "Trace explorer & live dashboard", included: true },
       { label: "Streaming traces", included: true },
       { label: "Community support", included: true },
-      { label: "fluiq.optimize() — response caching", included: false },
+      { label: "fluiq.optimize(): response caching", included: false },
       { label: "CI/CD eval gates", included: false },
       { label: "Slack anomaly alerts", included: false },
-      { label: "fluiq.secure() — security scanning", included: "locked", note: "Growth+" },
+      { label: "fluiq.secure(): security scanning", included: "locked", note: "Growth+" },
     ],
   },
   {
@@ -65,16 +64,16 @@ const tiers: Tier[] = [
     evals: "10,000 evaluations / month",
     seats: "Up to 5 seats",
     retention: "90-day trace retention",
-    cta: "Get started",
+    cta: "Start free",
     ctaHref: "/signup",
     highlighted: false,
     features: [
       { label: "Everything in Free", included: true },
-      { label: "fluiq.optimize() — response caching", included: true },
+      { label: "fluiq.optimize(): response caching", included: true },
       { label: "CI/CD eval gates", included: true },
       { label: "Slack anomaly alerts", included: true },
       { label: "Email support (48h SLA)", included: true },
-      { label: "fluiq.secure() — security scanning", included: "locked", note: "Growth+" },
+      { label: "fluiq.secure(): security scanning", included: "locked", note: "Growth+" },
     ],
   },
   {
@@ -84,12 +83,12 @@ const tiers: Tier[] = [
     evals: "100,000 evaluations / month",
     seats: "Up to 20 seats",
     retention: "1-year trace retention",
-    cta: "Get started",
+    cta: "Start free",
     ctaHref: "/signup",
     highlighted: true,
     features: [
       { label: "Everything in Team", included: true },
-      { label: "fluiq.secure() — security scanning", included: true },
+      { label: "fluiq.secure(): security scanning", included: true },
       { label: "Prompt injection, PII, jailbreak & secret-leak protection", included: true },
       { label: "Custom eval thresholds", included: true },
       { label: "SSO (single sign-on)", included: true },
@@ -139,7 +138,7 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
     ],
   },
   {
-    category: "Security — fluiq.secure()",
+    category: "Security: fluiq.secure()",
     rows: [
       { label: "Prompt injection blocking", values: [false, false, true, true] },
       { label: "PII detection & redaction", values: [false, false, true, true] },
@@ -149,7 +148,7 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
     ],
   },
   {
-    category: "Optimization — fluiq.optimize()",
+    category: "Optimization: fluiq.optimize()",
     rows: [
       { label: "Response caching", values: [false, true, true, true] },
       { label: "Cache hit dashboard", values: [false, true, true, true] },
@@ -189,9 +188,9 @@ const powerFeatures = [
     badge: "Included in Growth & Enterprise",
     tagline: "One call. Full pipeline protection.",
     description:
-      "Wrap your pipeline with server-side security scanning before any data is stored. Fluiq checks every prompt and response — so attack patterns are never shipped in the public SDK.",
+      "Wrap your pipeline with server-side security scanning before any data is stored. Fluiq checks every prompt and response, so attack patterns are never shipped in the public SDK.",
     capabilities: [
-      { label: "PII Detection & Redaction", desc: "Names, emails, phone numbers, SSNs, credit cards — detected and redacted before persistence." },
+      { label: "PII Detection & Redaction", desc: "Names, emails, phone numbers, SSNs, and credit cards, detected and redacted before persistence." },
       { label: "Prompt Injection Blocking", desc: "Catches injection patterns, jailbreak attempts, and skeleton key attacks in real time." },
       { label: "Jailbreak & Semantic Attack Scoring", desc: "Semantic similarity scoring against known attack vectors, even when phrasing varies." },
       { label: "Secret Leak Prevention", desc: "Scans LLM outputs for leaked API keys, tokens, and high-entropy credential strings." },
@@ -206,12 +205,12 @@ const powerFeatures = [
     badge: "Included in Team & above",
     tagline: "Serve repeated prompts from cache.",
     description:
-      "Fluiq analyses your historical traces to find which LLM calls repeat most often and provisions a dedicated Redis cache for your account. Repeated prompts are served instantly — saving both latency and cost.",
+      "Fluiq analyses your historical traces to find which LLM calls repeat most often and provisions a dedicated Redis cache for your account. Repeated prompts are served instantly, saving both latency and cost.",
     capabilities: [
-      { label: "Trace-Driven Cache Profiling", desc: "The backend mines your trace history to build a cache profile — no manual configuration needed." },
+      { label: "Trace-Driven Cache Profiling", desc: "The backend mines your trace history to build a cache profile, no manual configuration needed." },
       { label: "Automatic Cache Population", desc: "Real LLM responses are stored automatically on the first call; subsequent matches are served from Redis." },
       { label: "Cache mode", desc: "Full interception: matching prompts never reach the LLM API." },
-      { label: "Observe mode", desc: "Records what would have been a cache hit without intercepting — review your savings before opting in." },
+      { label: "Observe mode", desc: "Records what would have been a cache hit without intercepting: review your savings before opting in." },
       { label: "Zero code changes", desc: "One fluiq.optimize() call after instrument(). The SDK handles connection, profiling, and cache lookup." },
       { label: "Cache hit dashboard", desc: "See hit rates, latency savings, and estimated cost savings in your Fluiq dashboard." },
     ],
@@ -222,7 +221,7 @@ const powerFeatures = [
 const faqs = [
   {
     q: "What counts as a trace?",
-    a: "One traced span — typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5–20 traces depending on how many tools and LLM calls it makes. The Free plan includes 50,000 traces per month; Team and above are unlimited.",
+    a: "One traced span, typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5-20 traces depending on how many tools and LLM calls it makes. The Free plan includes 50,000 traces per month; Team and above are unlimited.",
   },
   {
     q: "Which frameworks does Fluiq support?",
@@ -230,11 +229,11 @@ const faqs = [
   },
   {
     q: "What counts as an evaluation?",
-    a: "One LLM-as-judge scoring call — e.g. a hallucination check on an answer or a relevance score over a retrieved chunk set. Metrics include hallucination, faithfulness, relevance, toxicity, coherence, and completeness. Free includes 1,000 evals/month, Team 10,000, Growth 100,000, and Enterprise is unlimited.",
+    a: "One LLM-as-judge scoring call: e.g. a hallucination check on an answer or a relevance score over a retrieved chunk set. Metrics include hallucination, faithfulness, relevance, toxicity, coherence, and completeness. Free includes 1,000 evals/month, Team 10,000, Growth 100,000, and Enterprise is unlimited.",
   },
   {
     q: "When do I need fluiq.secure()?",
-    a: "fluiq.secure() runs server-side security scanning — PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, and indirect-injection detection. It is included on the Growth and Enterprise plans. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
+    a: "fluiq.secure() runs server-side security scanning: PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, and indirect-injection detection. It is included on the Growth and Enterprise plans. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
   },
   {
     q: "How does fluiq.optimize() work?",
@@ -242,7 +241,7 @@ const faqs = [
   },
   {
     q: "Do you support self-hosting?",
-    a: "Yes — VPC and on-prem deployments are available on the Enterprise plan. The SDK is a thin instrumentation layer and can be pointed at your own backend endpoint if you prefer full self-hosting.",
+    a: "Yes. VPC and on-prem deployments are available on the Enterprise plan. The SDK is a thin instrumentation layer and can be pointed at your own backend endpoint if you prefer full self-hosting.",
   },
   {
     q: "Can I switch frameworks later?",
@@ -267,19 +266,20 @@ export default function Pricing() {
 
   return (
     <div className="pricing-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
+      <GrainOverlay />
       <Helmet>
-        <title>Pricing — Fluiq</title>
-        <meta name="description" content="Fluiq pricing — start free with 50,000 traces/month and 1,000 evaluations. Upgrade to Team ($49/mo) for caching and unlimited traces, Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO & custom SLAs." />
+        <title>Pricing - Fluiq</title>
+        <meta name="description" content="Fluiq pricing: start free with 50,000 traces/month and 1,000 evaluations. Upgrade to Team ($49/mo) for caching and unlimited traces, Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO & custom SLAs." />
         <meta name="keywords" content="Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing, LLM security pricing" />
         <link rel="canonical" href="https://getfluiq.com/pricing" />
         <meta property="og:url" content="https://getfluiq.com/pricing" />
-        <meta property="og:title" content="Pricing — Fluiq" />
-        <meta property="og:description" content="Start free with 50,000 traces/month. Add security and scale as you grow — Team $49/mo, Growth $149/mo, Enterprise custom." />
+        <meta property="og:title" content="Pricing - Fluiq" />
+        <meta property="og:description" content="Start free with 50,000 traces/month. Add security and scale as you grow: Team $49/mo, Growth $149/mo, Enterprise custom." />
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebPage",
           "name": "Fluiq Pricing",
-          "description": "Fluiq pricing plans — start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($49/mo), Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
+          "description": "Fluiq pricing plans: start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($49/mo), Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
           "url": "https://getfluiq.com/pricing",
           "isPartOf": { "@id": "https://getfluiq.com" },
         })}</script>
@@ -288,23 +288,7 @@ export default function Pricing() {
 
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden py-24">
 
-        {/* Background: dot grid + blue glow */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="dark:block hidden absolute inset-0" style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)",
-            backgroundSize: "36px 36px",
-            maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 70%)",
-          }} />
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] max-w-175 max-h-175 rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(24,96,211,0.07) 0%, transparent 65%)" }} />
-        </div>
+        <HeroAtmosphere variant="center" />
 
         <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
 
@@ -402,17 +386,14 @@ export default function Pricing() {
                   </div>
                   <p className="mt-1 h-4 text-[11px] text-[#9A9A92]">{p.sub}</p>
 
-                  <Button
-                    size="sm"
-                    className={`mt-6 w-full cta-btn ${
-                      tier.highlighted
-                        ? "bg-[#1860D3] text-white hover:bg-[#1453b8] dark:bg-[#6FA8FF] dark:text-[#0A0A0A] dark:hover:bg-[#8bb9ff]"
-                        : "bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]"
-                    }`}
-                    asChild
+                  <IslandCta
+                    to={tier.ctaHref}
+                    variant={tier.highlighted ? "accent" : "primary"}
+                    fullWidth
+                    className="mt-6"
                   >
-                    <Link to={tier.ctaHref}>{tier.cta} <HugeiconsIcon icon={ArrowRight02Icon} size={14} /></Link>
-                  </Button>
+                    {tier.cta}
+                  </IslandCta>
 
                   <div className="mt-6 space-y-1.5 border-t border-[#E5E1D6] dark:border-[#2A2A2A] pt-5 text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <p className="font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">{tier.traces}</p>
@@ -463,7 +444,8 @@ export default function Pricing() {
             </h2>
           </div>
 
-          <div data-animate className="overflow-x-auto rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A]">
+          <div data-animate className="rounded-[1.75rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-28px_rgba(24,96,211,0.18)] dark:bg-white/[0.04] dark:ring-white/10">
+          <div className="overflow-x-auto rounded-[1.25rem] border border-[#E5E1D6] bg-[#FAF9F6] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)] dark:border-white/[0.06] dark:bg-[#1A1A1A] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-[#E5E1D6] dark:border-[#2A2A2A]">
@@ -507,6 +489,7 @@ export default function Pricing() {
                 ))}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       </section>
@@ -570,7 +553,7 @@ export default function Pricing() {
                       />
                       <div>
                         <span className="text-[12px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">{cap.label}</span>
-                        <span className="text-[12px] text-[#6B6B66] dark:text-[#9A9A92]"> — {cap.desc}</span>
+                        <span className="text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">: {cap.desc}</span>
                       </div>
                     </li>
                   ))}
@@ -632,12 +615,8 @@ export default function Pricing() {
               Start free, then add security and scale when you need it.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Button size="lg" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9] px-8 h-12 text-[15px]" asChild>
-                <Link to="/signup">Start for free <HugeiconsIcon icon={ArrowRight02Icon} size={16} /></Link>
-              </Button>
-              <Button size="lg" variant="outline" className="cta-btn border-[#E5E1D6] dark:border-[#333333] text-[#0a0a0a] dark:text-[#FAF9F6] hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A] px-8 h-12 text-[15px]" asChild>
-                <Link to="/contact">Talk to sales</Link>
-              </Button>
+              <IslandCta to="/signup">Start free</IslandCta>
+              <IslandCta to="/contact" variant="ghost">Talk to sales</IslandCta>
             </div>
             <p className="mt-5 text-[12px] text-[#9A9A92]">
               No credit card required on Free and Team plans.
