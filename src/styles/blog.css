@@ -11,6 +11,19 @@
   margin-top: 1.25em;
 }
 
+.blog-content h1 {
+  font-family: var(--font-heading, inherit);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-top: 1.5em;
+  margin-bottom: 0.6em;
+  line-height: 1.2;
+}
+.blog-content h1:first-child {
+  margin-top: 0;
+}
+
 .blog-content h2 {
   font-family: var(--font-heading, inherit);
   font-size: 1.6rem;
@@ -38,6 +51,15 @@
 
 .blog-content p {
   margin: 0;
+}
+
+/* Preserve intentional blank lines: the editor serializes a double-Enter as an
+   empty <p></p>, which would otherwise collapse to zero height in the viewer.
+   A non-breaking space gives it a full line box so the blank line is shown.
+   (In the editor itself, empty paragraphs carry a <br>, so they aren't :empty
+   and this rule doesn't double up.) */
+.blog-content p:empty::before {
+  content: "\00a0";
 }
 
 .blog-content a {
@@ -81,25 +103,96 @@
   border-radius: 0.35rem;
 }
 
+/* Code blocks match the site-wide dark code surface (see Documentation `Code`
+   and the shared CodeBlock dark variant): #0a0a0a panel, #d4d4d4 text, soft
+   shadow, p-5, mono 13px / 1.8. */
 .blog-content pre {
-  background: #0d1117;
-  color: #e6edf3;
+  background: #0a0a0a;
+  color: #d4d4d4;
+  border: 1px solid #1a1a1a;
   border-radius: 0.75rem;
-  padding: 1.1em 1.25em;
+  padding: 1.25rem;
   overflow-x: auto;
-  font-size: 0.875rem;
-  line-height: 1.6;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+.dark .blog-content pre {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
 }
 .blog-content pre code {
   background: transparent;
   padding: 0;
   font-size: inherit;
   color: inherit;
+  font-family: inherit;
 }
 
 .blog-content hr {
   border: 0;
   border-top: 1px solid var(--border);
+}
+
+/* ── Tables (shared by the TipTap editor and the rendered viewer) ──────── */
+.blog-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0;
+  font-size: 0.95em;
+}
+.blog-content th,
+.blog-content td {
+  border: 1px solid var(--border);
+  padding: 0.5em 0.75em;
+  vertical-align: top;
+  text-align: left;
+  box-sizing: border-box;
+  min-width: 1em;
+  position: relative;
+}
+.blog-content th {
+  background: var(--muted);
+  font-weight: 600;
+}
+
+/* Editor affordances: fixed layout for resizable columns, cell selection
+   highlight, and the draggable column-resize handle. */
+.blog-content.tiptap table {
+  table-layout: fixed;
+}
+.blog-content .tableWrapper {
+  overflow-x: auto;
+}
+.blog-content .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(24, 96, 211, 0.12);
+  pointer-events: none;
+  z-index: 2;
+}
+.blog-content .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: -2px;
+  width: 4px;
+  background: #1860d3;
+  pointer-events: none;
+}
+.blog-content.tiptap.resize-cursor {
+  cursor: col-resize;
+}
+
+/* Viewer only: GitHub-style horizontal scroll so wide tables never break the
+   article width (the editor uses its own .tableWrapper for this). */
+.blog-content:not(.tiptap) table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 /* TipTap editor placeholder */

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowLeft02Icon, Loading03Icon, ImageUploadIcon, Delete02Icon } from "@hugeicons/core-free-icons"
+import { ArrowLeft02Icon, Loading03Icon, ImageUploadIcon, Delete02Icon, File01Icon } from "@hugeicons/core-free-icons"
+import { marked } from "marked"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,6 +44,7 @@ export default function BlogEditor() {
   const [error, setError] = useState<string | null>(null)
   const [coverUploading, setCoverUploading] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
+  const mdInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!postId) return
@@ -78,6 +80,20 @@ export default function BlogEditor() {
       setError(err instanceof ApiError ? err.detail : "Cover upload failed")
     } finally {
       setCoverUploading(false)
+    }
+  }
+
+  async function onMarkdownFile(file: File) {
+    setError(null)
+    if (form.body_html.trim() && !window.confirm("Replace the current body with the imported Markdown file?")) {
+      return
+    }
+    try {
+      const text = await file.text()
+      const html = (await marked.parse(text)).trim()
+      patch({ body_html: html })
+    } catch {
+      setError("Couldn't read that Markdown file.")
     }
   }
 
@@ -179,7 +195,24 @@ export default function BlogEditor() {
           </div>
 
           <div>
-            <Label>Body</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label>Body</Label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => mdInputRef.current?.click()}
+                title="Replace the body with the contents of a Markdown (.md) file"
+              >
+                <HugeiconsIcon icon={File01Icon} size={14} /> Import .md
+              </Button>
+              <input
+                ref={mdInputRef}
+                type="file"
+                accept=".md,.markdown,text/markdown"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) onMarkdownFile(f); e.target.value = "" }}
+              />
+            </div>
             <div className="mt-1.5">
               <RichTextEditor
                 value={form.body_html}

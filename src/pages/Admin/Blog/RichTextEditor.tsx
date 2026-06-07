@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Image from "@tiptap/extension-image"
 import Placeholder from "@tiptap/extension-placeholder"
+import { TableKit } from "@tiptap/extension-table"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   TextBoldIcon,
@@ -19,6 +20,12 @@ import {
   ArrowTurnBackwardIcon,
   ArrowTurnForwardIcon,
   Loading03Icon,
+  TableIcon,
+  ColumnInsertIcon,
+  ColumnDeleteIcon,
+  RowInsertIcon,
+  RowDeleteIcon,
+  Delete02Icon,
 } from "@hugeicons/core-free-icons"
 
 import { cn } from "@/lib/utils"
@@ -45,6 +52,7 @@ export function RichTextEditor({ value, onChange, onUploadError }: Props) {
       }),
       Image.configure({ HTMLAttributes: { loading: "lazy" } }),
       Placeholder.configure({ placeholder: "Write your post…" }),
+      TableKit.configure({ table: { resizable: true } }),
     ],
     content: value || "",
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
@@ -89,8 +97,8 @@ export function RichTextEditor({ value, onChange, onUploadError }: Props) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60 bg-background">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-border/60 bg-muted/40 px-2 py-1.5">
+    <div className="overflow-clip rounded-lg border border-border/60 bg-background">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 border-b border-border/60 bg-muted/95 px-2 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-muted/80">
         <ToolbarButton icon={TextBoldIcon} title="Bold"
           active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} />
         <ToolbarButton icon={TextItalicIcon} title="Italic"
@@ -126,6 +134,25 @@ export function RichTextEditor({ value, onChange, onUploadError }: Props) {
           onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} />
         <ToolbarButton icon={ArrowTurnForwardIcon} title="Redo"
           onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} />
+
+        <Divider />
+        <ToolbarButton icon={TableIcon} title="Insert table"
+          active={editor.isActive("table")}
+          onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()} />
+        {editor.isActive("table") && (
+          <>
+            <ToolbarButton icon={ColumnInsertIcon} title="Add column"
+              onClick={() => editor.chain().focus().addColumnAfter().run()} />
+            <ToolbarButton icon={ColumnDeleteIcon} title="Delete column"
+              onClick={() => editor.chain().focus().deleteColumn().run()} />
+            <ToolbarButton icon={RowInsertIcon} title="Add row"
+              onClick={() => editor.chain().focus().addRowAfter().run()} />
+            <ToolbarButton icon={RowDeleteIcon} title="Delete row"
+              onClick={() => editor.chain().focus().deleteRow().run()} />
+            <ToolbarButton icon={Delete02Icon} title="Delete table"
+              onClick={() => editor.chain().focus().deleteTable().run()} />
+          </>
+        )}
 
         <input
           ref={fileInputRef}
