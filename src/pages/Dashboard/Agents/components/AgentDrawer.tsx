@@ -25,11 +25,16 @@ import {
   isRunning,
 } from "@/pages/Dashboard/Traces/utils"
 import { ArchitectureView } from "@/pages/Dashboard/Traces/components/ArchitectureView"
-import { DrawerTabButton } from "@/pages/Dashboard/Traces/components/DrawerPrimitives"
+import {
+  DrawerTabButton,
+  LeftViewToggle,
+  type LeftView,
+} from "@/pages/Dashboard/Traces/components/DrawerPrimitives"
 import { EvaluationsSection } from "@/pages/Dashboard/Traces/components/EvaluationsSection"
 import { JsonView } from "@/pages/Dashboard/Traces/components/JsonView"
 import { SecurityPanel } from "@/pages/Dashboard/Traces/components/SecurityPanel"
 import { TraceUiView } from "@/pages/Dashboard/Traces/components/TraceUiView"
+import { SpanTimeline } from "@/pages/Dashboard/Prompts/components/SpanTimeline"
 
 import type { AgentRow } from "../utils/types"
 import { KIND_CLASS, KIND_LABEL } from "./AgentTable"
@@ -51,6 +56,8 @@ export function AgentDrawer({
   const [traceSpansRoot, setTraceSpansRoot] = useState<TraceRecord | null>(null)
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("ui")
   const [traceSpans, setTraceSpans] = useState<TraceRecord[]>([])
+  const [leftView, setLeftView] = useState<LeftView>("architecture")
+  const isTree = leftView === "tree"
 
   // Fetch the recent runs list (root traces only) for the left panel.
   useEffect(() => {
@@ -124,7 +131,15 @@ export function AgentDrawer({
       className="fixed inset-0 z-50 flex"
     >
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="flex h-full w-full max-w-[95vw] flex-col border-l border-border/60 bg-background shadow-xl">
+      <div
+        className={cn(
+          "flex h-full w-full flex-col border-l border-border/60 bg-background shadow-xl",
+          // Responsive: nearly full width on small screens, tapering on larger
+          // viewports, capped so the dark overlay stays visible on wide monitors.
+          "sm:w-[96vw] lg:w-[92vw] xl:w-[88vw]",
+          isTree ? "max-w-[120rem]" : "max-w-[110rem]",
+        )}
+      >
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-border/60 px-6 py-4">
@@ -265,13 +280,43 @@ export function AgentDrawer({
             )}
           </div>
 
-          {/* Architecture View */}
-          <div className="flex min-w-0 flex-3 flex-col px-6 py-4">
-            <ArchitectureView
-              group={selectedGroup}
-              selectedNodeId={selectedNodeId}
-              onSelectTrace={setSelectedTrace}
-            />
+          {/* Architecture / Trace Tree */}
+          <div
+            className={cn(
+              "flex min-w-0 flex-col",
+              // Trace Tree is a compact list, so this panel stays narrow and the
+              // details panel gets maximum width. Architecture needs room for
+              // the flow graph, so it takes the larger share.
+              isTree ? "w-72 shrink-0 lg:w-80" : "flex-3",
+            )}
+          >
+            <div className="flex items-center justify-between gap-2 px-4 pt-3">
+              <LeftViewToggle value={leftView} onChange={setLeftView} />
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col px-2 pb-4 pt-3">
+              {isTree ? (
+                selectedTrace ? (
+                  <SpanTimeline
+                    group={selectedGroup}
+                    selectedTrace={selectedTrace}
+                    onSelectTrace={setSelectedTrace}
+                    bare
+                  />
+                ) : (
+                  <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">
+                    Select a run to see its trace tree
+                  </div>
+                )
+              ) : (
+                <div className="flex min-h-0 flex-1 flex-col px-4">
+                  <ArchitectureView
+                    group={selectedGroup}
+                    selectedNodeId={selectedNodeId}
+                    onSelectTrace={setSelectedTrace}
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Details panel */}

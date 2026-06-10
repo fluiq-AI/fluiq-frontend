@@ -1,12 +1,15 @@
+import { useState } from "react"
 import { Alert02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { DrawerTabButton } from "./DrawerPrimitives"
+import { cn } from "@/lib/utils"
+import { DrawerTabButton, LeftViewToggle, type LeftView } from "./DrawerPrimitives"
 import { EvaluationsSection } from "./EvaluationsSection"
 import { JsonView } from "./JsonView"
 import { SecurityPanel } from "./SecurityPanel"
 import { TraceUiView } from "./TraceUiView"
 import { ArchitectureView } from "./ArchitectureView"
+import { SpanTimeline } from "@/pages/Dashboard/Prompts/components/SpanTimeline"
 import { synthesizeAggregatedEvent } from "../helpers/aggregation"
 import { findGroupForTrace } from "../helpers/treeBuilder"
 import type { DrawerTab, TraceRecord } from "../utils/types"
@@ -29,6 +32,8 @@ export function TraceDrawer({
   onClose: () => void
   onFocusTrace: (t: TraceRecord) => void
 }) {
+  const [leftView, setLeftView] = useState<LeftView>("architecture")
+  const isTree = leftView === "tree"
   return (
     <div
       role="dialog"
@@ -37,7 +42,15 @@ export function TraceDrawer({
       className="fixed inset-0 z-50 flex"
     >
       <div className="flex-1 bg-black/40" onClick={onClose} />
-      <div className="flex h-full w-full max-w-352 flex-col border-l border-border/60 bg-background shadow-xl">
+      <div
+        className={cn(
+          "flex h-full w-full flex-col border-l border-border/60 bg-background shadow-xl",
+          // Responsive: nearly full width on small screens, tapering on larger
+          // viewports, capped so the dark overlay stays visible on wide monitors.
+          "sm:w-[95vw] lg:w-[90vw] xl:w-[85vw]",
+          isTree ? "max-w-440" : "max-w-352",
+        )}
+      >
         <div className="flex items-start justify-between gap-4 border-b border-border/60 px-6 py-4">
           <div>
             <div className="flex items-center gap-2">
@@ -91,12 +104,36 @@ export function TraceDrawer({
           </div>
         </div>
         <div className="flex min-h-0 flex-1">
-          <div className="flex min-w-0 flex-3 flex-col px-6 py-4">
-            <ArchitectureView
-              group={group}
-              selectedNodeId={selectedNodeId}
-              onSelectTrace={onFocusTrace}
-            />
+          <div
+            className={cn(
+              "flex min-w-0 flex-col",
+              // Trace Tree is a compact list, so the left panel stays narrow and
+              // the right (detail) panel gets maximum width. Architecture needs
+              // room for the flow graph, so it takes the larger share.
+              isTree ? "w-72 shrink-0 lg:w-80" : "flex-3",
+            )}
+          >
+            <div className="flex items-center justify-between gap-2 px-4 pt-3">
+              <LeftViewToggle value={leftView} onChange={setLeftView} />
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col px-2 pb-4 pt-3">
+              {isTree ? (
+                <SpanTimeline
+                  group={group}
+                  selectedTrace={trace}
+                  onSelectTrace={onFocusTrace}
+                  bare
+                />
+              ) : (
+                <div className="flex min-h-0 flex-1 flex-col px-4">
+                  <ArchitectureView
+                    group={group}
+                    selectedNodeId={selectedNodeId}
+                    onSelectTrace={onFocusTrace}
+                  />
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex min-w-70 flex-1 flex-col border-l border-border/60">
             <div className="flex items-center gap-1 border-b border-border/60 px-4 pt-3">

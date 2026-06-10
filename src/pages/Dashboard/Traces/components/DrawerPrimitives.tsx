@@ -1,7 +1,49 @@
-import { Alert02Icon } from "@hugeicons/core-free-icons"
+import {
+  Alert02Icon,
+  ListViewIcon,
+  WorkflowSquare01Icon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
+
+export type LeftView = "architecture" | "tree"
+
+// Segmented control that toggles a drawer's left visualization between the
+// architecture flow graph and the compact trace tree. Shared by the Traces
+// and Agents drawers.
+export function LeftViewToggle({
+  value,
+  onChange,
+}: {
+  value: LeftView
+  onChange: (v: LeftView) => void
+}) {
+  const options: { id: LeftView; label: string; icon: typeof WorkflowSquare01Icon }[] = [
+    { id: "architecture", label: "Architecture", icon: WorkflowSquare01Icon },
+    { id: "tree", label: "Trace Tree", icon: ListViewIcon },
+  ]
+  return (
+    <div className="inline-flex items-center rounded-md border border-border/60 bg-muted/30 p-0.5 text-xs">
+      {options.map((opt) => (
+        <button
+          key={opt.id}
+          type="button"
+          onClick={() => onChange(opt.id)}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-medium transition-colors",
+            value === opt.id
+              ? "bg-background text-foreground shadow-xs"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <HugeiconsIcon icon={opt.icon} size={13} />
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 export function DrawerTabButton({
   active,
