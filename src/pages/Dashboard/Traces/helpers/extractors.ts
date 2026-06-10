@@ -239,18 +239,29 @@ export function extractLlmToolCallNames(
 
 export function extractThinking(event: Record<string, unknown>): string[] {
   const raw = event["thinking"]
+  if (typeof raw === "string") return raw.length > 0 ? [raw] : []
   if (!Array.isArray(raw)) return []
   const out: string[] = []
+  // Runs of plain string tokens (e.g. streamed thinking deltas) are
+  // concatenated into a single block. The tokens already carry their own
+  // spacing, so they are joined with "" rather than " ".
+  let buffer = ""
+  const flush = () => {
+    if (buffer.length > 0) out.push(buffer)
+    buffer = ""
+  }
   for (const item of raw) {
     if (typeof item === "string") {
-      if (item.length > 0) out.push(item)
+      buffer += item
       continue
     }
+    flush()
     if (!item || typeof item !== "object") continue
     const rec = item as Record<string, unknown>
     const text = rec["thinking"] ?? rec["text"]
     if (typeof text === "string" && text.length > 0) out.push(text)
   }
+  flush()
   return out
 }
 
