@@ -22,6 +22,18 @@ export function getStr(event: Record<string, unknown>, key: string): string | nu
   return null
 }
 
+// Stable identity for a selected embedded tool: the parent LLM's trace_id (or
+// its tree-node id as a fallback) plus the tool name. Built identically at the
+// click site and the highlight site so selection state lines up across views.
+export function toolSelectionKey(
+  parentEvent: Record<string, unknown>,
+  fallbackId: string,
+  name: string,
+): string {
+  const tid = getStr(parentEvent, "trace_id") ?? fallbackId
+  return `${tid}::${name}`
+}
+
 export function getLanggraphNode(event: Record<string, unknown>): string | null {
   const lg = event["langgraph"]
   if (!lg || typeof lg !== "object") return null

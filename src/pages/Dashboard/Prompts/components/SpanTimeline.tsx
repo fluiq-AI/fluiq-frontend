@@ -24,8 +24,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import type { TraceGroup, TraceNode, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
-import { formatLatency, isFailed } from "@/pages/Dashboard/Traces/utils"
+import type { ToolIO, ToolSelectFn, TraceGroup, TraceNode, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
+import { formatLatency, isFailed, toolSelectionKey } from "@/pages/Dashboard/Traces/utils"
+import {
+  extractMcpToolCalls,
+  extractResponseToolCalls,
+  formatToolIOList,
+  indexGroupMcpResults,
+  indexGroupToolIO,
+} from "@/pages/Dashboard/Traces/helpers/extractors"
 
 // ── Icon helpers ──────────────────────────────────────────────────────────────
 
@@ -91,6 +98,81 @@ function collectTypes(node: TraceNode, out: Set<string>) {
   node.children.forEach((c) => collectTypes(c, out))
 }
 
+// Embedded tool / MCP calls aren't trace spans, so they don't show up via
+// collectTypes. Detect them so the "Tool"/"MCP" filter chips and the synthetic
+// rows below appear even when no decorated span exists.
+function hasEmbeddedToolCalls(node: TraceNode): boolean {
+  if (extractResponseToolCalls(node.trace.event).length > 0) return true
+  return node.children.some(hasEmbeddedToolCalls)
+}
+
+function hasMcpCalls(node: TraceNode): boolean {
+  if (extractMcpToolCalls(node.trace.event).length > 0) return true
+  return node.children.some(hasMcpCalls)
+}
+
+// ── CallRow ─────────────────────────────────────────────────────────────────
+// A synthetic row for an embedded tool or MCP call. Shows the name (+ server
+// for MCP), a hover tooltip with input/output, and selects the call's detail
+// on click. Shared by both the tool and MCP paths.
+
+function CallRow({
+  name,
+  input,
+  output,
+  server,
+  depth,
+  selected,
+  icon,
+  badge,
+  onClick,
+}: {
+  name: string
+  input: unknown
+  output: unknown
+  server?: string
+  depth: number
+  selected: boolean
+  icon: typeof ToolsIcon
+  badge: string
+  onClick: () => void
+}) {
+  const inputStr = formatToolIOList([input], 800)
+  const outputStr = output !== undefined && output !== null ? formatToolIOList([output], 800) : null
+  const title =
+    [inputStr ? `input:\n${inputStr}` : null, outputStr ? `output:\n${outputStr}` : null]
+      .filter(Boolean)
+      .join("\n\n") || undefined
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(ev) => { if (ev.key === "Enter" || ev.key === " ") onClick() }}
+      title={title}
+      className={cn(
+        "flex min-w-0 cursor-pointer items-center gap-1.5 rounded-sm py-1 pr-2 text-xs transition-colors",
+        selected
+          ? "bg-primary/10 font-medium text-primary"
+          : "text-muted-foreground hover:bg-muted/40",
+      )}
+      style={{ paddingLeft: `${8 + depth * 14}px` }}
+    >
+      <span className="w-3.5 shrink-0" />
+      <HugeiconsIcon icon={icon} size={12} className="shrink-0 text-muted-foreground/70" />
+      <span className="min-w-0 flex-1 truncate leading-none">{name}</span>
+      {server ? (
+        <span className="shrink-0 truncate font-mono text-[9px] text-muted-foreground/60">
+          {server}
+        </span>
+      ) : null}
+      <span className="shrink-0 rounded-full bg-muted px-1 py-0.5 text-[9px] uppercase tracking-wide text-muted-foreground/70">
+        {badge}
+      </span>
+    </div>
+  )
+}
+
 // ── SpanNode ──────────────────────────────────────────────────────────────────
 
 function SpanNode({
@@ -100,6 +182,10 @@ function SpanNode({
   onSelect,
   searchQuery,
   hiddenTypes,
+  toolIO,
+  mcpResults,
+  onSelectTool,
+  selectedToolKey,
 }: {
   node: TraceNode
   depth: number
@@ -107,6 +193,10 @@ function SpanNode({
   onSelect: (trace: TraceRecord) => void
   searchQuery: string
   hiddenTypes: Set<string>
+  toolIO: Map<string, ToolIO> | null
+  mcpResults: Map<string, unknown> | null
+  onSelectTool: ToolSelectFn
+  selectedToolKey: string | null
 }) {
   const [collapsed, setCollapsed] = useState(false)
 
@@ -123,6 +213,21 @@ function SpanNode({
   const failed = isFailed(e)
   const isSelected = node.trace === selectedTrace
   const hasChildren = node.children.length > 0
+
+  // Embedded tool / MCP calls made by this LLM span (no separate span exists).
+  const q = searchQuery.toLowerCase()
+  const embeddedToolCalls =
+    type === "llm" && !hiddenTypes.has("tool")
+      ? extractResponseToolCalls(e).filter(
+          (c) => !q || c.name.toLowerCase().includes(q),
+        )
+      : []
+  const mcpCalls =
+    type === "llm" && !hiddenTypes.has("mcp")
+      ? extractMcpToolCalls(e, mcpResults ?? undefined).filter(
+          (c) => !q || c.name.toLowerCase().includes(q),
+        )
+      : []
 
   return (
     <div>
@@ -177,8 +282,46 @@ function SpanNode({
           <span className="truncate font-mono">{model}</span>
         </div>
       ) : null}
-      {!collapsed
-        ? node.children.map((child) => (
+      {!collapsed ? (
+        <>
+          {embeddedToolCalls.map((call, i) => {
+            const key = toolSelectionKey(e, node.id, call.name)
+            const io = toolIO?.get(call.name)
+            const output = io
+              ? io.outputs.length === 1 ? io.outputs[0] : io.outputs
+              : undefined
+            return (
+              <CallRow
+                key={call.id ?? `tool-${call.name}-${i}`}
+                name={call.name}
+                input={call.arguments}
+                output={output}
+                depth={depth + 1}
+                selected={selectedToolKey != null && selectedToolKey === key}
+                icon={ToolsIcon}
+                badge="tool"
+                onClick={() => onSelectTool(node.trace, call.name, call.arguments, output)}
+              />
+            )
+          })}
+          {mcpCalls.map((call, i) => {
+            const key = toolSelectionKey(e, node.id, call.name)
+            return (
+              <CallRow
+                key={call.id ?? `mcp-${call.name}-${i}`}
+                name={call.name}
+                input={call.input}
+                output={call.output}
+                server={call.server}
+                depth={depth + 1}
+                selected={selectedToolKey != null && selectedToolKey === key}
+                icon={McpServerIcon}
+                badge="mcp"
+                onClick={() => onSelectTool(node.trace, call.name, call.input, call.output, call.server)}
+              />
+            )
+          })}
+          {node.children.map((child) => (
             <SpanNode
               key={child.id}
               node={child}
@@ -187,9 +330,14 @@ function SpanNode({
               onSelect={onSelect}
               searchQuery={searchQuery}
               hiddenTypes={hiddenTypes}
+              toolIO={toolIO}
+              mcpResults={mcpResults}
+              onSelectTool={onSelectTool}
+              selectedToolKey={selectedToolKey}
             />
-          ))
-        : null}
+          ))}
+        </>
+      ) : null}
     </div>
   )
 }
@@ -200,6 +348,8 @@ export function SpanTimeline({
   group,
   selectedTrace,
   onSelectTrace,
+  onSelectTool = () => {},
+  selectedToolKey = null,
   sticky = true,
   bare = false,
   onClose,
@@ -207,6 +357,8 @@ export function SpanTimeline({
   group: TraceGroup | null
   selectedTrace: TraceRecord
   onSelectTrace: (trace: TraceRecord) => void
+  onSelectTool?: ToolSelectFn
+  selectedToolKey?: string | null
   sticky?: boolean
   bare?: boolean
   onClose?: () => void
@@ -229,8 +381,17 @@ export function SpanTimeline({
     if (!group) return new Set<string>()
     const types = new Set<string>()
     collectTypes(group.root, types)
+    // Surface the "Tool"/"MCP" chips when embedded (non-span) calls exist, even
+    // if no decorated span is present in the tree.
+    if (hasEmbeddedToolCalls(group.root)) types.add("tool")
+    if (hasMcpCalls(group.root)) types.add("mcp")
     return types
   }, [group])
+
+  // Correlated input/output for synthetic rows: tools by name, MCP results by
+  // call id. Feed the hover tooltips and the selection detail.
+  const toolIO = useMemo(() => (group ? indexGroupToolIO(group) : null), [group])
+  const mcpResults = useMemo(() => (group ? indexGroupMcpResults(group) : null), [group])
 
   const treeContent = group ? (
     <div className="space-y-1.5">
@@ -271,6 +432,10 @@ export function SpanTimeline({
           onSelect={onSelectTrace}
           searchQuery={searchQuery}
           hiddenTypes={hiddenTypes}
+          toolIO={toolIO}
+          mcpResults={mcpResults}
+          onSelectTool={onSelectTool}
+          selectedToolKey={selectedToolKey}
         />
       </div>
     </div>

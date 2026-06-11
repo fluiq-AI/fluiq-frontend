@@ -1,5 +1,56 @@
 export type DrawerTab = "ui" | "json" | "evaluation" | "security"
-export type RequestMessage = { role: string; content: unknown }
+// A tool/function call carried directly on a chat message (OpenAI shape:
+// message.tool_calls[*].function.{name, arguments}). `arguments` is usually a
+// JSON-encoded string from the provider; the renderer parses it best-effort.
+export type MessageToolCall = { id?: string; name: string; arguments: unknown }
+// A tool's returned output, harvested from a later turn's message history.
+export type ToolResult = { id?: string; name?: string; content: unknown }
+// Aggregated inputs/outputs for a single tool name across a whole trace group.
+export type ToolIO = { inputs: unknown[]; outputs: unknown[] }
+// A resolved MCP tool invocation: OpenAI `mcp_call` items are self-contained;
+// Anthropic `mcp_tool_use` blocks have their output correlated by id from
+// `mcp_tool_result` blocks elsewhere in the conversation.
+export type McpCall = {
+  id?: string
+  name: string
+  server?: string
+  input: unknown
+  output: unknown
+}
+
+// An embedded tool call promoted to a selectable entity. Embedded tool calls
+// aren't trace spans, so the drawer keeps `selectedTrace` on the parent LLM
+// (preserving the flow graph / tree) and overlays the selected tool here to
+// drive the right-hand detail panel. `key` (parentTraceId::name) drives the
+// node/row highlight. This is the seam tool-level evals/security will attach to.
+export type SelectedTool = {
+  key: string
+  name: string
+  input: unknown
+  output: unknown
+  // For MCP calls: the server the call was routed through (shown in the detail).
+  server?: string
+}
+
+// Promote an embedded tool/MCP call to a selection. Implemented by the Traces
+// page; threaded through the drawer to the Architecture and Trace Tree views.
+export type ToolSelectFn = (
+  parentTrace: TraceRecord,
+  name: string,
+  input: unknown,
+  output: unknown,
+  server?: string,
+) => void
+export type RequestMessage = {
+  role: string
+  content: unknown
+  // tool-role messages: which tool produced this result, and the call it answers
+  name?: string
+  toolCallId?: string
+  // assistant messages: provider-native reasoning trace and outgoing tool calls
+  reasoningContent?: string
+  toolCalls?: MessageToolCall[]
+}
 export type TokenUsage = { prompt?: number; completion?: number; total?: number }
 export type FunctionView = { name: string; input: string; output: string }
 export type ToolDef = { name: string; description?: string; input_schema?: unknown }

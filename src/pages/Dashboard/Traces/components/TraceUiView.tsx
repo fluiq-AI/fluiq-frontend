@@ -5,19 +5,23 @@ import {
   extractMcpCalls,
   extractMcpServers,
   extractRequestMessages,
+  extractResponseToolCalls,
   extractSystemInstruction,
   extractThinking,
   extractTokens,
   extractToolLatencies,
   extractTools,
 } from "../helpers/extractors"
+import type { RequestMessage, ToolLatencyMap } from "../utils/types"
 import { getLanggraphNode, isContentEmpty, safeStringify } from "../utils"
 import {
   DrawerSection,
   EmptyBlock,
   ErrorSection,
 } from "./DrawerPrimitives"
-import { SmartContent } from "./SmartContent"
+import { JsonBlock, MessageToolCallCard, SmartContent } from "./SmartContent"
+// MessageToolCallCard renders both history-turn calls (MessageCard) and the
+// current turn's response tool calls (Response section).
 
 export function TraceUiView({ event }: { event: Record<string, unknown> }) {
   const errorView = extractErrorView(event)
@@ -36,6 +40,7 @@ export function TraceUiView({ event }: { event: Record<string, unknown> }) {
 
   const requestMessages = extractRequestMessages(event)
   const responseContent = event["response"]
+  const responseToolCalls = extractResponseToolCalls(event)
   const tokens = extractTokens(event)
   const systemInstruction = extractSystemInstruction(event)
   const tools = extractTools(event)
@@ -65,15 +70,7 @@ export function TraceUiView({ event }: { event: Record<string, unknown> }) {
         ) : (
           <div className="space-y-2">
             {requestMessages.map((m, idx) => (
-              <div
-                key={idx}
-                className="rounded-md border border-border/60 bg-muted/30 p-3"
-              >
-                <div className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {m.role}
-                </div>
-                <SmartContent value={m.content} latencies={toolLatencies} />
-              </div>
+              <MessageCard key={idx} message={m} latencies={toolLatencies} />
             ))}
           </div>
         )}
@@ -97,50 +94,76 @@ export function TraceUiView({ event }: { event: Record<string, unknown> }) {
       ) : null}
 
       <DrawerSection title="Response">
-        {isContentEmpty(responseContent) ? (
+        {isContentEmpty(responseContent) && responseToolCalls.length === 0 ? (
           <EmptyBlock>No response.</EmptyBlock>
         ) : (
-          <div className="rounded-md border border-border/60 bg-muted/30 p-3">
-            <SmartContent value={responseContent} latencies={toolLatencies} />
+          <div className="space-y-2">
+            {!isContentEmpty(responseContent) ? (
+              <div className="rounded-md border border-border/60 bg-muted/30 p-3">
+                <SmartContent value={responseContent} latencies={toolLatencies} />
+              </div>
+            ) : null}
+            {responseToolCalls.map((call, idx) => (
+              <MessageToolCallCard key={idx} call={call} latencies={toolLatencies} />
+            ))}
           </div>
         )}
       </DrawerSection>
 
       {tools.length > 0 ? (
-        <DrawerSection title="Tools available">
-          <div className="space-y-2">
+        <DrawerSection title={`Tools available (${tools.length})`}>
+          {/* Accordion: each tool collapses so a long list of large JSON
+              schemas doesn't force-scroll the panel. Name + a description
+              preview stay visible; the schema expands on demand. */}
+          <div className="space-y-1.5">
             {tools.map((t, idx) => (
-              <div
+              <details
                 key={idx}
-                className="rounded-md border border-border/60 bg-muted/30 p-3"
+                className="group rounded-md border border-border/60 bg-muted/30"
               >
-                <div className="font-mono text-xs font-medium">{t.name}</div>
-                {t.description ? (
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {t.description}
-                  </div>
-                ) : null}
-                {t.input_schema !== undefined ? (
-                  <pre className="mt-2 overflow-x-auto rounded bg-muted/60 p-2 font-mono text-[11px] leading-relaxed">
-                    {safeStringify(t.input_schema)}
-                  </pre>
-                ) : null}
-              </div>
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 select-none">
+                  <span className="text-[10px] text-muted-foreground transition-transform group-open:rotate-90">
+                    {"▶"}
+                  </span>
+                  <span className="font-mono text-xs font-medium">{t.name}</span>
+                  {t.description ? (
+                    <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground group-open:hidden">
+                      {t.description}
+                    </span>
+                  ) : null}
+                </summary>
+                <div className="px-3 pb-3">
+                  {t.description ? (
+                    <div className="mb-2 text-xs text-muted-foreground">
+                      {t.description}
+                    </div>
+                  ) : null}
+                  {t.input_schema !== undefined ? (
+                    <JsonBlock value={t.input_schema} />
+                  ) : null}
+                </div>
+              </details>
             ))}
           </div>
         </DrawerSection>
       ) : null}
 
       {mcpServers.length > 0 ? (
-        <DrawerSection title="MCP servers">
-          <div className="space-y-2">
+        <DrawerSection title={`MCP servers (${mcpServers.length})`}>
+          {/* Accordion mirrors "Tools available": the server header (name,
+              version, type, tool count) stays visible; url + exposed tools
+              expand on demand so a server with many tools stays compact. */}
+          <div className="space-y-1.5">
             {mcpServers.map((s, idx) => (
-              <div
+              <details
                 key={idx}
-                className="rounded-md border border-border/60 bg-muted/30 p-3"
+                className="group rounded-md border border-border/60 bg-muted/30"
               >
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="font-mono text-xs font-medium">{s.name}</div>
+                <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 select-none">
+                  <span className="text-[10px] text-muted-foreground transition-transform group-open:rotate-90">
+                    {"▶"}
+                  </span>
+                  <span className="font-mono text-xs font-medium">{s.name}</span>
                   {s.version ? (
                     <span className="font-mono text-[10px] text-muted-foreground">
                       v{s.version}
@@ -151,35 +174,44 @@ export function TraceUiView({ event }: { event: Record<string, unknown> }) {
                       {s.type}
                     </span>
                   ) : null}
-                </div>
-                {s.url ? (
-                  <div className="mt-1 wrap-break-word font-mono text-[11px] text-muted-foreground">
-                    {s.url}
-                  </div>
-                ) : null}
-                {s.tools && s.tools.length > 0 ? (
-                  <div className="mt-2 space-y-1.5">
-                    <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-                      Tools ({s.tools.length})
+                  {s.tools && s.tools.length > 0 ? (
+                    <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">
+                      {s.tools.length} tool{s.tools.length === 1 ? "" : "s"}
+                    </span>
+                  ) : null}
+                </summary>
+                <div className="px-3 pb-3">
+                  {s.url ? (
+                    <div className="mb-2 wrap-break-word font-mono text-[11px] text-muted-foreground">
+                      {s.url}
                     </div>
-                    {s.tools.map((t, tIdx) => (
-                      <div
-                        key={tIdx}
-                        className="rounded-md border border-border/60 bg-background p-2"
-                      >
-                        <div className="font-mono text-[11px] font-medium">
-                          {t.name}
-                        </div>
-                        {t.description ? (
-                          <div className="mt-1 whitespace-pre-wrap wrap-break-word text-[11px] text-muted-foreground">
-                            {t.description}
+                  ) : null}
+                  {s.tools && s.tools.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {s.tools.map((t, tIdx) => (
+                        <div
+                          key={tIdx}
+                          className="rounded-md border border-border/60 bg-background p-2"
+                        >
+                          <div className="font-mono text-[11px] font-medium">
+                            {t.name}
                           </div>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
+                          {t.description ? (
+                            <div className="mt-1 whitespace-pre-wrap wrap-break-word text-[11px] text-muted-foreground">
+                              {t.description}
+                            </div>
+                          ) : null}
+                          {t.input_schema !== undefined ? (
+                            <div className="mt-1.5">
+                              <JsonBlock value={t.input_schema} />
+                            </div>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </details>
             ))}
           </div>
         </DrawerSection>
@@ -228,6 +260,66 @@ export function TraceUiView({ event }: { event: Record<string, unknown> }) {
   )
 }
 
+// A single request-prompt message. Beyond plain content it surfaces the
+// provider-native extras that the flat {role, content} model used to drop:
+// assistant `reasoning_content`, outgoing `tool_calls`, and the
+// name/tool_call_id linkage on tool-result messages. Without these, OpenAI
+// tool-calling turns (content === null) rendered as empty boxes.
+function MessageCard({
+  message,
+  latencies,
+}: {
+  message: RequestMessage
+  latencies?: ToolLatencyMap
+}) {
+  const hasContent = !isContentEmpty(message.content)
+  const hasToolCalls = (message.toolCalls?.length ?? 0) > 0
+  return (
+    <div className="rounded-md border border-border/60 bg-muted/30 p-3">
+      <div className="mb-1 flex flex-wrap items-center gap-2">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          {message.role}
+        </span>
+        {message.name ? (
+          <span className="rounded bg-foreground/10 px-1.5 py-0.5 font-mono text-[10px] text-foreground">
+            {message.name}
+          </span>
+        ) : null}
+        {message.toolCallId ? (
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {message.toolCallId}
+          </span>
+        ) : null}
+      </div>
+
+      {message.reasoningContent ? (
+        <div className="mb-2 rounded border-l-2 border-border/60 bg-background/60 px-2.5 py-1.5">
+          <div className="mb-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+            Reasoning
+          </div>
+          <div className="whitespace-pre-wrap wrap-break-word text-xs text-muted-foreground">
+            {message.reasoningContent}
+          </div>
+        </div>
+      ) : null}
+
+      {hasContent ? (
+        <SmartContent value={message.content} latencies={latencies} />
+      ) : !message.reasoningContent && !hasToolCalls ? (
+        <div className="text-xs text-muted-foreground">(no content)</div>
+      ) : null}
+
+      {hasToolCalls ? (
+        <div className="mt-2 space-y-2">
+          {message.toolCalls!.map((call, idx) => (
+            <MessageToolCallCard key={idx} call={call} latencies={latencies} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function FunctionUiView({
   view,
   errorView,
@@ -263,9 +355,7 @@ function FunctionUiView({
       <DrawerSection title="Input">
         {view.input ? (
           <div className="rounded-md border border-border/60 bg-muted/30 p-3">
-            <div className="whitespace-pre-wrap wrap-break-word font-mono text-xs">
-              {view.input}
-            </div>
+            <SmartContent value={view.input} />
           </div>
         ) : (
           <EmptyBlock>No input.</EmptyBlock>
@@ -275,9 +365,7 @@ function FunctionUiView({
       <DrawerSection title="Output">
         {view.output ? (
           <div className="rounded-md border border-border/60 bg-muted/30 p-3">
-            <div className="whitespace-pre-wrap wrap-break-word text-xs">
-              {view.output}
-            </div>
+            <SmartContent value={view.output} />
           </div>
         ) : (
           <EmptyBlock>No output.</EmptyBlock>

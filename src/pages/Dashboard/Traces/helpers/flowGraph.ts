@@ -16,9 +16,13 @@ import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "../utils/constants"
 import {
   extractLlmToolCallNames,
   extractMcpServers,
+  extractMcpToolCalls,
   extractTokens,
+  formatToolIOList,
+  indexGroupMcpResults,
+  indexGroupToolIO,
 } from "./extractors"
-import type { TokenUsage, TraceGroup, TraceNode, TraceRecord } from "../utils/types"
+import type { ToolIO, ToolSelectFn, TokenUsage, TraceGroup, TraceNode, TraceRecord } from "../utils/types"
 import { isGoogleAdkAgent, isGoogleAdkLeafAgent } from "./treeBuilder"
 import {
   extractTooltipIO,
@@ -26,6 +30,7 @@ import {
   getStr,
   isFailed,
   isRunning,
+  toolSelectionKey,
 } from "../utils"
 
 export type CacheEntry = {
@@ -331,6 +336,7 @@ export function buildFlowElements(
   group: TraceGroup,
   selectedNodeId: string | null,
   onSelectTrace: (t: TraceRecord) => void,
+  toolSel?: { selectedToolKey: string | null; onSelectTool: ToolSelectFn },
 ): { nodes: TraceFlowNode[]; edges: RFEdge[] } {
   type ViewOverride = {
     label: string
@@ -352,11 +358,26 @@ export function buildFlowElements(
     iterations: TraceNode[]
     view?: ViewOverride
     startStats?: StartStats
+    ioOverride?: { request: string | null; response: string | null }
+    toolSelect?: {
+      key: string
+      parentTrace: TraceRecord
+      name: string
+      input: unknown
+      output: unknown
+      server?: string
+    }
     cacheEntries?: CacheEntry[]
     rerankerEntries?: RerankerEntry[]
     nodeHeight?: number
   }
   const buckets = new Map<string, Bucket>()
+  // Tool input/output correlated across the group's llm spans, keyed by tool
+  // name. Lets synthetic embedded-tool nodes (which carry the LLM's trace, not
+  // a tool span) show the call's arguments and its returned result.
+  const toolIO = indexGroupToolIO(group)
+  // MCP tool results keyed by call id (Anthropic results arrive separately).
+  const mcpResults = indexGroupMcpResults(group)
   const order: string[] = []
   const orderIndex = new Map<string, number>()
   const edgeKeys = new Set<string>()
@@ -557,7 +578,76 @@ export function buildFlowElements(
         sublabel: "Tool",
         icon: Wrench01Icon as typeof Folder01Icon,
       })
+      // Attach the call's arguments (input) and its correlated result (output)
+      // so the node's hover tooltip is as useful as a real tool span's, and
+      // make the node selectable (clicking opens the tool's detail panel).
+      const io: ToolIO | undefined = toolIO.get(name)
+      const b = buckets.get(flowId)
+      if (b) {
+        if (io) {
+          b.ioOverride = {
+            request: formatToolIOList(io.inputs),
+            response: formatToolIOList(io.outputs),
+          }
+        }
+        b.toolSelect = {
+          key: toolSelectionKey(node.trace.event, node.id, name),
+          parentTrace: node.trace,
+          name,
+          input: io ? (io.inputs.length === 1 ? io.inputs[0] : io.inputs) : undefined,
+          output: io ? (io.outputs.length === 1 ? io.outputs[0] : io.outputs) : undefined,
+        }
+      }
       recordEdge(parentFlowId, flowId)
+    }
+  }
+
+  // MCP tool calls invoked by an LLM call (OpenAI `mcp_call` items / Anthropic
+  // `mcp_tool_use` blocks). Like embedded tool calls these aren't trace spans,
+  // so we surface each as its own selectable node (input = call arguments,
+  // output = the MCP result). Each call nests UNDER its MCP server node (the
+  // integration point created by expandMcpServers) when that node exists,
+  // matching the user's mental model of "server → calls"; otherwise it falls
+  // back to attaching directly under the LLM so nothing disappears.
+  const expandMcpToolCalls = (
+    node: TraceNode,
+    parentFlowId: string,
+  ): void => {
+    for (const call of extractMcpToolCalls(node.trace.event, mcpResults)) {
+      const flowId = `mcptool:${parentFlowId}:${call.name}`
+      const synthetic: TraceNode = {
+        id: `${node.id}__mcptool__${call.name}`,
+        trace: node.trace,
+        children: [],
+      }
+      recordNode(flowId, synthetic, {
+        label: call.name,
+        sublabel: call.server ? `MCP · ${call.server}` : "MCP tool",
+        icon: CloudServerIcon as typeof Folder01Icon,
+      })
+      const b = buckets.get(flowId)
+      if (b) {
+        b.ioOverride = {
+          request: formatToolIOList([call.input]),
+          response: call.output !== undefined ? formatToolIOList([call.output]) : null,
+        }
+        b.toolSelect = {
+          key: toolSelectionKey(node.trace.event, node.id, call.name),
+          parentTrace: node.trace,
+          name: call.name,
+          input: call.input,
+          output: call.output,
+          server: call.server,
+        }
+      }
+      // Nest under the matching server node when present (expandMcpServers runs
+      // first in `visit`), else fall back to the LLM.
+      const serverFlowId = call.server
+        ? `mcp:${parentFlowId}:${call.server}`
+        : undefined
+      const attachTo =
+        serverFlowId && buckets.has(serverFlowId) ? serverFlowId : parentFlowId
+      recordEdge(attachTo, flowId)
     }
   }
 
@@ -608,6 +698,7 @@ export function buildFlowElements(
     // two chat.completions.create calls). The SDK never emits a `tool`
     // span for those, so the call is otherwise invisible in the flow.
     expandLlmToolCalls(node, myFlowId)
+    expandMcpToolCalls(node, myFlowId)
 
     // A compound reranker (e.g. hybrid) that contains sub-reranker children
     // (bm25, cross-encoder, mmr …) is treated as opaque: the children are
@@ -684,6 +775,7 @@ export function buildFlowElements(
           continue
         }
         expandLlmToolCalls(c, cFlowId)
+        expandMcpToolCalls(c, cFlowId)
         for (const gc of c.children) visit(gc, cFlowId, cFlowId)
       }
       return
@@ -1185,6 +1277,11 @@ export function buildFlowElements(
       if (b.startStats.request !== null) reqParts.push(b.startStats.request)
       if (b.startStats.response !== null) resParts.push(b.startStats.response)
       tokens = b.startStats.tokens
+    } else if (b.ioOverride) {
+      // Synthetic embedded-tool node: use the correlated tool IO rather than
+      // the underlying LLM trace's IO (which extractTooltipIO would return).
+      if (b.ioOverride.request !== null) reqParts.push(b.ioOverride.request)
+      if (b.ioOverride.response !== null) resParts.push(b.ioOverride.response)
     } else if (b.view === undefined) {
       // Append every iteration's IO so loops surface each call instead of
       // hiding all but the latest behind the merged box. Synthetic nodes
@@ -1202,6 +1299,16 @@ export function buildFlowElements(
     const response = resParts.length > 0 ? resParts.join("\n\n") : null
     const label = isStart ? "START NODE" : view.label
     const isMergedNode = b.cacheEntries !== undefined || b.rerankerEntries !== undefined
+    // Synthetic tool nodes select the tool (overlay detail); all others select
+    // their underlying trace. Tool selection is highlighted by key match.
+    const ts = b.toolSelect
+    const selected = ts
+      ? toolSel?.selectedToolKey != null && toolSel.selectedToolKey === ts.key
+      : selectedNodeId !== null && b.traceIds.has(selectedNodeId)
+    const onSelect =
+      ts && toolSel
+        ? () => toolSel.onSelectTool(ts.parentTrace, ts.name, ts.input, ts.output, ts.server)
+        : () => onSelectTrace(b.latest.trace)
     return {
       id: flowId,
       type: "trace",
@@ -1215,13 +1322,12 @@ export function buildFlowElements(
         failed: b.failed,
         running: b.running && !b.failed,
         count: b.count,
-        selected:
-          selectedNodeId !== null && b.traceIds.has(selectedNodeId),
+        selected,
         request,
         response,
         tokens,
         suppressTooltip: isMergedNode,
-        onSelect: () => onSelectTrace(b.latest.trace),
+        onSelect,
         cacheEntries: b.cacheEntries,
         rerankerEntries: b.rerankerEntries,
         nodeHeight: b.nodeHeight,

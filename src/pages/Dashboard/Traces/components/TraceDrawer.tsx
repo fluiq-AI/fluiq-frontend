@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { Alert02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
+import { useMemo, useState } from "react"
+import { Alert02Icon, Cancel01Icon, Wrench01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
@@ -12,28 +12,56 @@ import { ArchitectureView } from "./ArchitectureView"
 import { SpanTimeline } from "@/pages/Dashboard/Prompts/components/SpanTimeline"
 import { synthesizeAggregatedEvent } from "../helpers/aggregation"
 import { findGroupForTrace } from "../helpers/treeBuilder"
-import type { DrawerTab, TraceRecord } from "../utils/types"
+import type { DrawerTab, SelectedTool, ToolSelectFn, TraceRecord } from "../utils/types"
 import { formatCost, formatDate, formatLatency, getStr, isFailed } from "../utils"
 
 export function TraceDrawer({
   trace,
   group,
   selectedNodeId,
+  selectedTool,
   tab,
   onChangeTab,
   onClose,
   onFocusTrace,
+  onFocusTool,
+  onClearTool,
 }: {
   trace: TraceRecord
   group: ReturnType<typeof findGroupForTrace>
   selectedNodeId: string | null
+  selectedTool: SelectedTool | null
   tab: DrawerTab
   onChangeTab: (tab: DrawerTab) => void
   onClose: () => void
   onFocusTrace: (t: TraceRecord) => void
+  onFocusTool: ToolSelectFn
+  onClearTool: () => void
 }) {
   const [leftView, setLeftView] = useState<LeftView>("architecture")
   const isTree = leftView === "tree"
+
+  // When a tool is selected, the right-hand detail renders the tool's own
+  // input/output (as a synthetic `tool`-type event routed through the normal
+  // tab bar) while the left panel keeps showing the parent LLM's flow/tree.
+  // Evaluation/Security tabs are intentionally wired but empty until tool-level
+  // scoring lands.
+  const detailTrace = useMemo<TraceRecord>(() => {
+    if (!selectedTool) return trace
+    return {
+      ...trace,
+      event: {
+        type: "tool",
+        integration: selectedTool.server ?? "TOOL",
+        function: selectedTool.name,
+        input: selectedTool.input,
+        output: selectedTool.output,
+      },
+      evaluations: [],
+    }
+  }, [selectedTool, trace])
+  const evalCount =
+    detailTrace.evaluations?.filter((e) => e.evaluator !== "fluiq.security").length ?? 0
   return (
     <div
       role="dialog"
@@ -44,11 +72,12 @@ export function TraceDrawer({
       <div className="flex-1 bg-black/40" onClick={onClose} />
       <div
         className={cn(
-          "flex h-full w-full flex-col border-l border-border/60 bg-background shadow-xl",
-          // Responsive: nearly full width on small screens, tapering on larger
-          // viewports, capped so the dark overlay stays visible on wide monitors.
-          "sm:w-[95vw] lg:w-[90vw] xl:w-[85vw]",
-          isTree ? "max-w-440" : "max-w-352",
+          "flex h-full flex-col border-l border-border/60 bg-background shadow-xl",
+          // Near-fullscreen on every screen size: the drawer always spans the
+          // full viewport minus a fixed 100px, leaving a clickable strip of the
+          // dark overlay to dismiss it. No max-width cap, so it scales the same
+          // on laptops and ultrawide monitors alike.
+          "w-[calc(100vw_-_100px)] max-w-none",
         )}
       >
         <div className="flex items-start justify-between gap-4 border-b border-border/60 px-6 py-4">
@@ -122,6 +151,8 @@ export function TraceDrawer({
                   group={group}
                   selectedTrace={trace}
                   onSelectTrace={onFocusTrace}
+                  onSelectTool={onFocusTool}
+                  selectedToolKey={selectedTool?.key ?? null}
                   bare
                 />
               ) : (
@@ -130,12 +161,43 @@ export function TraceDrawer({
                     group={group}
                     selectedNodeId={selectedNodeId}
                     onSelectTrace={onFocusTrace}
+                    onSelectTool={onFocusTool}
+                    selectedToolKey={selectedTool?.key ?? null}
                   />
                 </div>
               )}
             </div>
           </div>
           <div className="flex min-w-70 flex-1 flex-col border-l border-border/60">
+            {selectedTool ? (
+              <div className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-4 py-2 text-xs">
+                <button
+                  type="button"
+                  onClick={onClearTool}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {getStr(trace.event, "model") ?? "LLM call"}
+                </button>
+                <span className="text-muted-foreground/50">/</span>
+                <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                  <HugeiconsIcon icon={Wrench01Icon} size={12} />
+                  <span className="font-mono">{selectedTool.name}</span>
+                  {selectedTool.server ? (
+                    <span className="font-mono text-muted-foreground">
+                      {"·"} {selectedTool.server}
+                    </span>
+                  ) : null}
+                </span>
+                <button
+                  type="button"
+                  onClick={onClearTool}
+                  aria-label="Back to LLM call"
+                  className="ml-auto inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} size={12} />
+                </button>
+              </div>
+            ) : null}
             <div className="flex items-center gap-1 border-b border-border/60 px-4 pt-3">
               <DrawerTabButton active={tab === "ui"} onClick={() => onChangeTab("ui")}>
                 UI
@@ -149,9 +211,9 @@ export function TraceDrawer({
               >
                 <span className="flex items-center gap-1">
                   EVALUATION
-                  {(trace.evaluations?.filter((e) => e.evaluator !== "fluiq.security").length ?? 0) > 0 ? (
+                  {evalCount > 0 ? (
                     <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1 font-mono text-[9px] font-medium text-muted-foreground tabular-nums">
-                      {trace.evaluations!.filter((e) => e.evaluator !== "fluiq.security").length}
+                      {evalCount}
                     </span>
                   ) : null}
                 </span>
@@ -165,15 +227,15 @@ export function TraceDrawer({
             </div>
             <div className="flex-1 overflow-auto px-4 py-4">
               {tab === "json" ? (
-                <JsonView value={trace.event} />
+                <JsonView value={detailTrace.event} />
               ) : tab === "ui" ? (
-                <TraceUiView event={synthesizeAggregatedEvent(trace, group)} />
+                <TraceUiView event={synthesizeAggregatedEvent(detailTrace, group)} />
               ) : tab === "evaluation" ? (
                 <EvaluationsSection
-                  evaluations={trace.evaluations?.filter((e) => e.evaluator !== "fluiq.security")}
+                  evaluations={detailTrace.evaluations?.filter((e) => e.evaluator !== "fluiq.security")}
                 />
               ) : (
-                <SecurityPanel trace={trace} />
+                <SecurityPanel trace={detailTrace} />
               )}
             </div>
           </div>

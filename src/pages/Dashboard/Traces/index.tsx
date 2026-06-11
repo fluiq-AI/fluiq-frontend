@@ -22,9 +22,9 @@ import { authFetch } from "@/lib/authFetch"
 import { useAppSelector } from "@/store/hooks"
 
 import { ALL_KEYS, TRACES_PAGE_SIZE } from "@/pages/Dashboard/Traces/utils/constants"
-import type { DrawerTab, TraceFilters, TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
+import type { DrawerTab, SelectedTool, TraceFilters, TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
 import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/helpers/treeBuilder"
-import { getStr } from "@/pages/Dashboard/Traces/utils"
+import { getStr, toolSelectionKey } from "@/pages/Dashboard/Traces/utils"
 import { TraceTreeRows } from "@/pages/Dashboard/Traces/components/TraceTable"
 import { TraceDrawer } from "@/pages/Dashboard/Traces/components/TraceDrawer"
 import { FilterBar } from "@/pages/Dashboard/Traces/components/FilterBar"
@@ -56,6 +56,7 @@ function Traces() {
   const [loadOffset, setLoadOffset] = useState(TRACES_PAGE_SIZE)
   const [error, setError] = useState<string | null>(null)
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null)
+  const [selectedTool, setSelectedTool] = useState<SelectedTool | null>(null)
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("ui")
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [fetchedSpanRoots, setFetchedSpanRoots] = useState<Set<string>>(new Set())
@@ -206,12 +207,32 @@ function Traces() {
   const openTrace = useCallback((t: TraceRecord) => {
     setDrawerTab("ui")
     setSelectedTrace(t)
+    setSelectedTool(null)
     const tid = getStr(t.event, "trace_id")
     if (tid) void expandRoot(tid)
   }, [expandRoot])
 
   const focusTrace = useCallback((t: TraceRecord) => {
     setSelectedTrace(t)
+    setSelectedTool(null)
+  }, [])
+
+  // Select an embedded tool call: keep the parent LLM as the focused trace (so
+  // the flow graph and tree stay intact) and overlay the tool so the detail
+  // panel shows its input/output. Reset to the UI tab so the switch is visible.
+  const focusTool = useCallback<
+    (parentTrace: TraceRecord, name: string, input: unknown, output: unknown, server?: string) => void
+  >((parentTrace, name, input, output, server) => {
+    const fallbackId = getStr(parentTrace.event, "trace_id") ?? ""
+    setSelectedTrace(parentTrace)
+    setSelectedTool({
+      key: toolSelectionKey(parentTrace.event, fallbackId, name),
+      name,
+      input,
+      output,
+      server,
+    })
+    setDrawerTab("ui")
   }, [])
 
   const handleKeyChange = useCallback((next: string) => {
@@ -398,10 +419,13 @@ function Traces() {
           trace={effectiveSelectedTrace}
           group={selectedGroup}
           selectedNodeId={selectedNodeId}
+          selectedTool={selectedTool}
           tab={drawerTab}
           onChangeTab={setDrawerTab}
-          onClose={() => setSelectedTrace(null)}
+          onClose={() => { setSelectedTrace(null); setSelectedTool(null) }}
           onFocusTrace={focusTrace}
+          onFocusTool={focusTool}
+          onClearTool={() => setSelectedTool(null)}
         />
       ) : null}
     </>

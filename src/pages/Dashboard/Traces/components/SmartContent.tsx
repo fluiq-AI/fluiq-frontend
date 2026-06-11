@@ -1,5 +1,99 @@
-import type { ToolLatencyMap } from "../utils/types"
+import type { MessageToolCall, ToolLatencyMap } from "../utils/types"
 import { formatLatency, safeStringify } from "../utils"
+
+// Provider tool results (and some message contents) arrive as a JSON-encoded
+// string — e.g. the USITC schedule rows returned by `fetch_hts_details`. When a
+// string parses as a non-trivial JSON object/array, return the parsed value so
+// callers can pretty-print it; otherwise return null and render it as plain
+// text. Short scalars ("42", "true") are deliberately left as text.
+function tryParseJson(value: string): unknown | null {
+  const trimmed = value.trim()
+  if (trimmed.length < 2) return null
+  const first = trimmed[0]
+  if (first !== "{" && first !== "[") return null
+  try {
+    const parsed = JSON.parse(trimmed)
+    return parsed && typeof parsed === "object" ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+// Pretty-printed JSON in a collapsible block. Large payloads (the common case
+// for tool results) collapse by default so a single result can't bury the rest
+// of the conversation; the summary keeps a one-line preview visible.
+export function JsonBlock({ value }: { value: unknown }) {
+  const text = safeStringify(value)
+  const lineCount = text.length - text.replace(/\n/g, "").length + 1
+  const big = text.length > 1200
+  const preview = Array.isArray(value)
+    ? `Array · ${value.length} item${value.length === 1 ? "" : "s"}`
+    : `Object · ${Object.keys(value as object).length} keys`
+  return (
+    <details open={!big} className="group rounded bg-muted/60">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-2 py-1 text-[10px] text-muted-foreground select-none">
+        <span className="transition-transform group-open:rotate-90">{"▶"}</span>
+        <span className="font-mono">{preview}</span>
+        <span className="text-muted-foreground/60">· {lineCount} lines</span>
+      </summary>
+      <pre className="max-h-120 overflow-auto px-2 pb-2 font-mono text-[11px] leading-relaxed">
+        {text}
+      </pre>
+    </details>
+  )
+}
+
+// Render a string as pretty JSON when it parses, otherwise as wrapped text.
+function TextOrJson({ value }: { value: string }) {
+  const parsed = tryParseJson(value)
+  if (parsed !== null) return <JsonBlock value={parsed} />
+  return (
+    <div className="whitespace-pre-wrap wrap-break-word text-xs">{value}</div>
+  )
+}
+
+// Card for a tool call carried on a chat message (OpenAI `tool_calls`). Shares
+// the visual language of the Anthropic `tool_use` content block.
+export function MessageToolCallCard({
+  call,
+  latencies,
+}: {
+  call: MessageToolCall
+  latencies?: ToolLatencyMap
+}) {
+  const latency =
+    latencies?.[call.name] ?? (call.id ? latencies?.[call.id] : undefined)
+  return (
+    <div className="rounded-md border border-border/60 bg-background p-2.5">
+      <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wide">
+        <span className="rounded bg-foreground/10 px-1.5 py-0.5 font-medium">
+          tool_call
+        </span>
+        <span className="font-mono normal-case text-foreground">{call.name}</span>
+        {typeof latency === "number" ? (
+          <span className="normal-case text-muted-foreground">
+            {formatLatency(latency)}
+          </span>
+        ) : null}
+      </div>
+      {call.id ? (
+        <div className="mb-1.5 font-mono text-[10px] text-muted-foreground">
+          {call.id}
+        </div>
+      ) : null}
+      <div className="text-[10px] text-muted-foreground">arguments</div>
+      <div className="mt-1">
+        {typeof call.arguments === "string" ? (
+          <pre className="overflow-x-auto rounded bg-muted/60 p-2 font-mono text-[11px] leading-relaxed">
+            {call.arguments}
+          </pre>
+        ) : (
+          <JsonBlock value={call.arguments} />
+        )}
+      </div>
+    </div>
+  )
+}
 
 export function SmartContent({
   value,
@@ -9,9 +103,7 @@ export function SmartContent({
   latencies?: ToolLatencyMap
 }) {
   if (typeof value === "string") {
-    return (
-      <div className="whitespace-pre-wrap wrap-break-word text-xs">{value}</div>
-    )
+    return <TextOrJson value={value} />
   }
   if (Array.isArray(value)) {
     if (value.length === 0) {
@@ -41,9 +133,7 @@ function SmartBlock({
   latencies?: ToolLatencyMap
 }) {
   if (typeof item === "string") {
-    return (
-      <div className="whitespace-pre-wrap wrap-break-word text-xs">{item}</div>
-    )
+    return <TextOrJson value={item} />
   }
   if (Array.isArray(item)) {
     return <SmartContent value={item} latencies={latencies} />
@@ -144,6 +234,11 @@ function SmartBlock({
     )
   }
 
+  // OpenAI Responses API self-contained MCP call:
+  //   { type: "mcp_call", name, server_label, arguments (JSON string), output, error }
+  if (type === "mcp_call") {
+    return <McpCallBlock rec={rec} />
+  }
   if (type === "mcp_list_tools") {
     return <McpListToolsBlock rec={rec} />
   }
@@ -158,6 +253,58 @@ function SmartBlock({
   }
   if (type === "tool_result") {
     return <ToolResultBlock rec={rec} />
+  }
+
+  // OpenAI Responses API function call output item:
+  //   { type: "function_call", name, arguments (JSON string), call_id, id }
+  if (type === "function_call") {
+    const name = typeof rec["name"] === "string" ? (rec["name"] as string) : "(unnamed)"
+    const id =
+      typeof rec["call_id"] === "string"
+        ? (rec["call_id"] as string)
+        : typeof rec["id"] === "string"
+          ? (rec["id"] as string)
+          : undefined
+    const rawArgs = rec["arguments"]
+    let args: unknown = rawArgs
+    if (typeof rawArgs === "string") {
+      try {
+        args = JSON.parse(rawArgs)
+      } catch {
+        args = rawArgs
+      }
+    }
+    return (
+      <MessageToolCallCard call={{ id, name, arguments: args }} latencies={latencies} />
+    )
+  }
+
+  // OpenAI Responses API function result item:
+  //   { type: "function_call_output", call_id, output }
+  if (type === "function_call_output") {
+    const id =
+      typeof rec["call_id"] === "string" ? (rec["call_id"] as string) : undefined
+    const output = rec["output"]
+    return (
+      <div className="rounded-md border border-border/60 bg-background p-2.5">
+        <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wide">
+          <span className="rounded bg-foreground/10 px-1.5 py-0.5 font-medium">
+            tool_result
+          </span>
+          {id ? (
+            <span className="font-mono normal-case text-muted-foreground">{id}</span>
+          ) : null}
+        </div>
+        <div className="text-[10px] text-muted-foreground">output</div>
+        <div className="mt-1">
+          {typeof output === "string" ? (
+            <TextOrJson value={output} />
+          ) : (
+            <JsonBlock value={output} />
+          )}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -284,7 +431,6 @@ function ToolResultBlock({ rec }: { rec: Record<string, unknown> }) {
       ? (rec["tool_use_id"] as string)
       : undefined
   const content = rec["content"]
-  const text = typeof content === "string" ? content : safeStringify(content)
   return (
     <div className="rounded-md border border-border/60 bg-background p-2.5">
       <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wide">
@@ -298,9 +444,79 @@ function ToolResultBlock({ rec }: { rec: Record<string, unknown> }) {
         ) : null}
       </div>
       <div className="text-[10px] text-muted-foreground">output</div>
-      <pre className="mt-1 overflow-x-auto whitespace-pre-wrap wrap-break-word rounded bg-muted/60 p-2 font-mono text-[11px] leading-relaxed">
-        {text}
-      </pre>
+      <div className="mt-1">
+        {typeof content === "string" ? (
+          <TextOrJson value={content} />
+        ) : (
+          <JsonBlock value={content} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function McpCallBlock({ rec }: { rec: Record<string, unknown> }) {
+  const name = typeof rec["name"] === "string" ? (rec["name"] as string) : "(unnamed)"
+  const server =
+    typeof rec["server_label"] === "string" ? (rec["server_label"] as string) : undefined
+  const id = typeof rec["id"] === "string" ? (rec["id"] as string) : undefined
+  const rawArgs = rec["arguments"]
+  let args: unknown = rawArgs
+  if (typeof rawArgs === "string") {
+    try {
+      args = JSON.parse(rawArgs)
+    } catch {
+      args = rawArgs
+    }
+  }
+  const output = rec["output"]
+  const error = rec["error"]
+  return (
+    <div className="rounded-md border border-border/60 bg-background p-2.5">
+      <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wide">
+        <span className="rounded bg-foreground/10 px-1.5 py-0.5 font-medium">
+          mcp_call
+        </span>
+        <span className="font-mono normal-case text-foreground">{name}</span>
+        {server ? (
+          <span className="rounded border border-border/60 px-1.5 py-0.5 normal-case text-muted-foreground">
+            {server}
+          </span>
+        ) : null}
+        {error ? (
+          <span className="rounded bg-destructive/15 px-1.5 py-0.5 font-medium text-destructive">
+            error
+          </span>
+        ) : null}
+      </div>
+      {id ? (
+        <div className="mb-1.5 font-mono text-[10px] text-muted-foreground">{id}</div>
+      ) : null}
+      <div className="text-[10px] text-muted-foreground">input</div>
+      <div className="mt-1 mb-2">
+        {typeof args === "string" ? (
+          <pre className="overflow-x-auto rounded bg-muted/60 p-2 font-mono text-[11px] leading-relaxed">
+            {args}
+          </pre>
+        ) : (
+          <JsonBlock value={args} />
+        )}
+      </div>
+      {output !== undefined && output !== null && output !== "" ? (
+        <>
+          <div className="text-[10px] text-muted-foreground">output</div>
+          <div className="mt-1">
+            {typeof output === "string" ? (
+              <TextOrJson value={output} />
+            ) : (
+              <JsonBlock value={output} />
+            )}
+          </div>
+        </>
+      ) : null}
+      {error ? (
+        <div className="mt-1 text-[11px] text-destructive">{String(error)}</div>
+      ) : null}
     </div>
   )
 }

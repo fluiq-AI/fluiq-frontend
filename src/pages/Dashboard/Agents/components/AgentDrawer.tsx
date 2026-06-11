@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   Alert02Icon,
   Cancel01Icon,
   Loading03Icon,
+  Wrench01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -13,6 +14,8 @@ import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/help
 import { synthesizeAggregatedEvent } from "@/pages/Dashboard/Traces/helpers/aggregation"
 import type {
   DrawerTab,
+  SelectedTool,
+  ToolSelectFn,
   TraceListResponse,
   TraceRecord,
 } from "@/pages/Dashboard/Traces/utils/types"
@@ -23,6 +26,7 @@ import {
   getStr,
   isFailed,
   isRunning,
+  toolSelectionKey,
 } from "@/pages/Dashboard/Traces/utils"
 import { ArchitectureView } from "@/pages/Dashboard/Traces/components/ArchitectureView"
 import {
@@ -57,7 +61,29 @@ export function AgentDrawer({
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("ui")
   const [traceSpans, setTraceSpans] = useState<TraceRecord[]>([])
   const [leftView, setLeftView] = useState<LeftView>("architecture")
+  const [selectedTool, setSelectedTool] = useState<SelectedTool | null>(null)
   const isTree = leftView === "tree"
+
+  // Selecting a node clears any selected tool so the detail returns to the
+  // trace; selecting a tool keeps its parent trace focused (so the left panel
+  // stays intact) and overlays the tool's input/output in the detail.
+  const selectNode = useCallback((t: TraceRecord) => {
+    setSelectedTrace(t)
+    setSelectedTool(null)
+  }, [])
+
+  const focusTool = useCallback<ToolSelectFn>((parentTrace, name, input, output, server) => {
+    const fallbackId = getStr(parentTrace.event, "trace_id") ?? ""
+    setSelectedTrace(parentTrace)
+    setSelectedTool({
+      key: toolSelectionKey(parentTrace.event, fallbackId, name),
+      name,
+      input,
+      output,
+      server,
+    })
+    setDrawerTab("ui")
+  }, [])
 
   // Fetch the recent runs list (root traces only) for the left panel.
   useEffect(() => {
@@ -123,6 +149,27 @@ export function AgentDrawer({
     [selectedTrace],
   )
 
+  // When a tool is selected, the detail panel renders the tool's own
+  // input/output via a synthetic `tool`-type event through the normal tab bar
+  // (Evaluation/Security wired but empty until tool-level scoring lands).
+  const detailTrace = useMemo<TraceRecord | null>(() => {
+    if (!selectedTrace) return null
+    if (!selectedTool) return selectedTrace
+    return {
+      ...selectedTrace,
+      event: {
+        type: "tool",
+        integration: selectedTool.server ?? "TOOL",
+        function: selectedTool.name,
+        input: selectedTool.input,
+        output: selectedTool.output,
+      },
+      evaluations: [],
+    }
+  }, [selectedTrace, selectedTool])
+  const evalCount =
+    detailTrace?.evaluations?.filter((e) => e.evaluator !== "fluiq.security").length ?? 0
+
   return (
     <div
       role="dialog"
@@ -133,11 +180,12 @@ export function AgentDrawer({
       <div className="flex-1 bg-black/40" onClick={onClose} />
       <div
         className={cn(
-          "flex h-full w-full flex-col border-l border-border/60 bg-background shadow-xl",
-          // Responsive: nearly full width on small screens, tapering on larger
-          // viewports, capped so the dark overlay stays visible on wide monitors.
-          "sm:w-[96vw] lg:w-[92vw] xl:w-[88vw]",
-          isTree ? "max-w-[120rem]" : "max-w-[110rem]",
+          "flex h-full flex-col border-l border-border/60 bg-background shadow-xl",
+          // Near-fullscreen on every screen size: the drawer always spans the
+          // full viewport minus a fixed ~40px, leaving just a thin clickable
+          // sliver of the dark overlay to dismiss it. No max-width cap, so it
+          // scales the same on laptops and ultrawide monitors alike.
+          "w-[calc(100vw_-_40px)] max-w-none",
         )}
       >
 
@@ -243,6 +291,7 @@ export function AgentDrawer({
                     onClick={() => {
                       setSelectedTrace(t)
                       setTraceSpansRoot(t)
+                      setSelectedTool(null)
                       setDrawerTab("ui")
                     }}
                     className={cn(
@@ -299,7 +348,9 @@ export function AgentDrawer({
                   <SpanTimeline
                     group={selectedGroup}
                     selectedTrace={selectedTrace}
-                    onSelectTrace={setSelectedTrace}
+                    onSelectTrace={selectNode}
+                    onSelectTool={focusTool}
+                    selectedToolKey={selectedTool?.key ?? null}
                     bare
                   />
                 ) : (
@@ -312,7 +363,9 @@ export function AgentDrawer({
                   <ArchitectureView
                     group={selectedGroup}
                     selectedNodeId={selectedNodeId}
-                    onSelectTrace={setSelectedTrace}
+                    onSelectTrace={selectNode}
+                    onSelectTool={focusTool}
+                    selectedToolKey={selectedTool?.key ?? null}
                   />
                 </div>
               )}
@@ -321,8 +374,37 @@ export function AgentDrawer({
 
           {/* Details panel */}
           <div className="flex min-w-70 flex-1 flex-col border-l border-border/60">
-            {selectedTrace ? (
+            {selectedTrace && detailTrace ? (
               <>
+                {selectedTool ? (
+                  <div className="flex items-center gap-2 border-b border-border/60 bg-muted/30 px-4 py-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTool(null)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      {getStr(selectedTrace.event, "model") ?? "Trace"}
+                    </button>
+                    <span className="text-muted-foreground/50">/</span>
+                    <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                      <HugeiconsIcon icon={Wrench01Icon} size={12} />
+                      <span className="font-mono">{selectedTool.name}</span>
+                      {selectedTool.server ? (
+                        <span className="font-mono text-muted-foreground">
+                          {"·"} {selectedTool.server}
+                        </span>
+                      ) : null}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTool(null)}
+                      aria-label="Back to trace"
+                      className="ml-auto inline-flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <HugeiconsIcon icon={Cancel01Icon} size={12} />
+                    </button>
+                  </div>
+                ) : null}
                 <div className="flex items-center gap-1 border-b border-border/60 px-4 pt-3">
                   <DrawerTabButton
                     active={drawerTab === "ui"}
@@ -342,9 +424,9 @@ export function AgentDrawer({
                   >
                     <span className="flex items-center gap-1">
                       EVALUATION
-                      {(selectedTrace.evaluations?.filter(e => e.evaluator !== "fluiq.security").length ?? 0) > 0 ? (
+                      {evalCount > 0 ? (
                         <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-muted px-1 font-mono text-[9px] font-medium text-muted-foreground tabular-nums">
-                          {selectedTrace.evaluations!.filter(e => e.evaluator !== "fluiq.security").length}
+                          {evalCount}
                         </span>
                       ) : null}
                     </span>
@@ -358,14 +440,14 @@ export function AgentDrawer({
                 </div>
                 <div className="flex-1 overflow-auto px-4 py-4">
                   {drawerTab === "json" ? (
-                    <JsonView value={selectedTrace.event} />
+                    <JsonView value={detailTrace.event} />
                   ) : drawerTab === "evaluation" ? (
-                    <EvaluationsSection evaluations={selectedTrace.evaluations?.filter(e => e.evaluator !== "fluiq.security")} />
+                    <EvaluationsSection evaluations={detailTrace.evaluations?.filter(e => e.evaluator !== "fluiq.security")} />
                   ) : drawerTab === "security" ? (
-                    <SecurityPanel trace={selectedTrace} />
+                    <SecurityPanel trace={detailTrace} />
                   ) : (
                     <TraceUiView
-                      event={synthesizeAggregatedEvent(selectedTrace, selectedGroup)}
+                      event={synthesizeAggregatedEvent(detailTrace, selectedGroup)}
                     />
                   )}
                 </div>

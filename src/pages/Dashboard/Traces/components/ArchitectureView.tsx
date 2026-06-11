@@ -25,7 +25,7 @@ import "@xyflow/react/dist/style.css"
 
 import { cn } from "@/lib/utils"
 import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "../utils/constants"
-import type { TraceGroup, TraceRecord } from "../utils/types"
+import type { ToolSelectFn, TraceGroup, TraceRecord } from "../utils/types"
 import {
   buildFlowElements,
   layoutFlowNodes,
@@ -365,10 +365,14 @@ export function ArchitectureView({
   group,
   selectedNodeId,
   onSelectTrace,
+  onSelectTool = () => {},
+  selectedToolKey = null,
 }: {
   group: TraceGroup | null
   selectedNodeId: string | null
   onSelectTrace: (t: TraceRecord) => void
+  onSelectTool?: ToolSelectFn
+  selectedToolKey?: string | null
 }) {
   const [hoveredFlowId, setHoveredFlowId] = useState<string | null>(null)
   const [nodes, setNodes, onNodesChange] = useNodesState<TraceFlowNode>([])
@@ -385,7 +389,10 @@ export function ArchitectureView({
       builtRef.current = null
       return
     }
-    const built = buildFlowElements(group, selectedNodeId, onSelectTrace)
+    const built = buildFlowElements(group, selectedNodeId, onSelectTrace, {
+      selectedToolKey,
+      onSelectTool,
+    })
     builtRef.current = built
     const laid = layoutFlowNodes(built.nodes, built.edges)
     setNodes((prev) => {
@@ -396,7 +403,7 @@ export function ArchitectureView({
       }))
     })
     setEdges(built.edges)
-  }, [group, selectedNodeId, onSelectTrace, setNodes, setEdges])
+  }, [group, selectedNodeId, onSelectTrace, onSelectTool, selectedToolKey, setNodes, setEdges])
 
   const rearrange = useCallback(() => {
     if (!builtRef.current) return
