@@ -23,7 +23,6 @@ User-agent: Google-Extended
 User-agent: CCBot
 User-agent: Applebot-Extended
 User-agent: Bytespider
-Disallow: /pricing
 Disallow: /dashboard/
 Disallow: /admin/
 Disallow: /auth/
