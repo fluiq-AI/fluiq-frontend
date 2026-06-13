@@ -24,7 +24,11 @@ import {
 import "@xyflow/react/dist/style.css"
 
 import { cn } from "@/lib/utils"
-import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "../utils/constants"
+import {
+  FLOW_NODE_HEIGHT,
+  FLOW_NODE_WIDTH,
+  FLOW_TOOL_ROWS_MAX,
+} from "../utils/constants"
 import type { ToolSelectFn, TraceGroup, TraceRecord } from "../utils/types"
 import {
   buildFlowElements,
@@ -52,12 +56,14 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
     onSelect,
     cacheEntries,
     rerankerEntries,
+    toolEntries,
     nodeHeight,
   } = data
   const hoveredId = useContext(HoveredFlowIdContext)
   const isMergedCache = Array.isArray(cacheEntries) && cacheEntries.length > 0
   const isMergedReranker = Array.isArray(rerankerEntries) && rerankerEntries.length > 0
-  const isMergedNode = isMergedCache || isMergedReranker
+  const isMergedTools = Array.isArray(toolEntries) && toolEntries.length > 0
+  const isMergedNode = isMergedCache || isMergedReranker || isMergedTools
   const effectiveHeight = nodeHeight ?? FLOW_NODE_HEIGHT
   const hasTokens =
     tokens !== null &&
@@ -117,6 +123,14 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
                   {label}
                 </div>
               </div>
+              {isMergedTools ? (
+                <span
+                  aria-label={`${toolEntries!.length} tools`}
+                  className="shrink-0 rounded-full bg-primary/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-primary"
+                >
+                  {toolEntries!.length}
+                </span>
+              ) : null}
               {running ? (
                 <HugeiconsIcon
                   icon={Loading03Icon}
@@ -214,6 +228,49 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
                     </div>
                   )
                 })}
+              </div>
+            ) : null}
+            {/* Tools invoked across a collapsed agentic loop. Each row stays
+                individually selectable (preserving tool-level selection) and
+                stops propagation so it doesn't also trigger the node's own
+                select handler. */}
+            {isMergedTools ? (
+              <div className="flex flex-col px-1.5 py-1">
+                {toolEntries!.slice(0, FLOW_TOOL_ROWS_MAX).map((entry) => (
+                  <button
+                    key={`${entry.kind}:${entry.name}`}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      entry.onSelect?.()
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 rounded px-1.5 py-1 text-left transition-colors hover:bg-muted",
+                      entry.selected
+                        ? "bg-primary/10 ring-1 ring-primary/40"
+                        : undefined,
+                    )}
+                  >
+                    <HugeiconsIcon
+                      icon={entry.kind === "mcp" ? CloudServerIcon : Wrench01Icon}
+                      size={11}
+                      className="shrink-0 text-muted-foreground"
+                    />
+                    <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground">
+                      {entry.name}
+                    </span>
+                    {entry.count > 1 ? (
+                      <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                        {`×${entry.count}`}
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+                {toolEntries!.length > FLOW_TOOL_ROWS_MAX ? (
+                  <div className="px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                    +{toolEntries!.length - FLOW_TOOL_ROWS_MAX} more
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </>

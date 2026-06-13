@@ -12,7 +12,12 @@ import {
 } from "@hugeicons/core-free-icons"
 import { Position, type Edge as RFEdge, type Node as RFNode } from "@xyflow/react"
 
-import { FLOW_NODE_HEIGHT, FLOW_NODE_WIDTH } from "../utils/constants"
+import {
+  FLOW_LOOP_MIN_ITERATIONS,
+  FLOW_NODE_HEIGHT,
+  FLOW_NODE_WIDTH,
+  FLOW_TOOL_ROWS_MAX,
+} from "../utils/constants"
 import {
   extractLlmToolCallNames,
   extractMcpServers,
@@ -48,6 +53,18 @@ export type RerankerEntry = {
   outputCount: number | null
 }
 
+// One tool row inside a collapsed loop's "Tools" node: how many of the loop's
+// iterations invoked it, whether it's a plain tool or an MCP call, and the
+// selection wiring so the row stays clickable (preserving tool-level selection).
+export type ToolEntry = {
+  name: string
+  count: number
+  kind: "tool" | "mcp"
+  server?: string
+  selected: boolean
+  onSelect?: () => void
+}
+
 export type FlowNodeData = {
   label: string
   sublabel: string | null
@@ -63,6 +80,7 @@ export type FlowNodeData = {
   onSelect: () => void
   cacheEntries?: CacheEntry[]
   rerankerEntries?: RerankerEntry[]
+  toolEntries?: ToolEntry[]
   nodeHeight?: number
 }
 
@@ -369,6 +387,7 @@ export function buildFlowElements(
     }
     cacheEntries?: CacheEntry[]
     rerankerEntries?: RerankerEntry[]
+    toolEntries?: ToolEntry[]
     nodeHeight?: number
   }
   const buckets = new Map<string, Bucket>()
@@ -651,6 +670,176 @@ export function buildFlowElements(
     }
   }
 
+  // Agentic (ReAct / tool-use) loop: an agent that drives many same-model LLM
+  // calls, each firing a tool, then loops. Fanned out one-box-per-call this is
+  // an unreadable horizontal rank of 30+ tiny boxes. Instead we collapse the
+  // iterations into a single "LLM ×N" box and roll every tool they invoked into
+  // one "Tools" node, wired LLM → Tools → (loop-back) LLM. Returns the leftover
+  // children the caller should still visit normally, or null when the node
+  // isn't a homogeneous loop (in which case the normal layout applies).
+  const expandLlmLoop = (
+    node: TraceNode,
+    myFlowId: string,
+  ): TraceNode[] | null => {
+    const isChatLlm = (n: TraceNode): boolean =>
+      getStr(n.trace.event, "type") === "llm" &&
+      getStr(n.trace.event, "api") !== "embeddings"
+    // A leaf the loop treats as a tool: an explicit tool span, or a childless
+    // @trace function (the SDK records user tool functions as type "function").
+    const isLeafToolLike = (n: TraceNode): boolean => {
+      const t = getStr(n.trace.event, "type")
+      if (t === "tool") return true
+      return (
+        t === "function" &&
+        n.children.length === 0 &&
+        getStr(n.trace.event, "function") !== null
+      )
+    }
+    const llmKids = node.children.filter(isChatLlm)
+    if (llmKids.length < FLOW_LOOP_MIN_ITERATIONS) return null
+    // Only collapse a homogeneous loop (one model/integration); a mixed-model
+    // fan-out keeps the normal per-call layout so distinct models stay visible.
+    const sig = (n: TraceNode): string =>
+      getStr(n.trace.event, "model") ??
+      getStr(n.trace.event, "integration") ??
+      "llm"
+    const sig0 = sig(llmKids[0])
+    if (!llmKids.every((n) => sig(n) === sig0)) return null
+
+    // Merge the iterations under one flow id: the bucket accumulates the ×N
+    // count and every iteration's IO, and (with no view override) describeNode
+    // labels the box by model — so it reuses the existing LLM-node treatment.
+    const llmFlowId = `loopllm:${myFlowId}:${sig0}`
+    for (const c of llmKids) recordNode(llmFlowId, c)
+    recordEdge(myFlowId, llmFlowId)
+
+    // Tally every tool the loop invoked: embedded tool calls, MCP calls, and
+    // any real tool spans nested under the iterations or sitting as siblings.
+    // `count` is how many distinct invocations referenced the tool.
+    type Agg = {
+      count: number
+      kind: "tool" | "mcp"
+      server?: string
+      parentTrace: TraceRecord
+      anchorId: string
+      input: unknown
+      output: unknown
+    }
+    const agg = new Map<string, Agg>()
+    const bump = (
+      name: string,
+      kind: "tool" | "mcp",
+      parentTrace: TraceRecord,
+      anchorId: string,
+      input: unknown,
+      output: unknown,
+      server?: string,
+    ): void => {
+      const cur = agg.get(name)
+      if (cur) {
+        cur.count += 1
+        return
+      }
+      agg.set(name, { count: 1, kind, server, parentTrace, anchorId, input, output })
+    }
+    const bumpToolSpan = (t: TraceNode): void => {
+      const fn = getStr(t.trace.event, "function") ?? "tool"
+      bump(
+        fn,
+        "tool",
+        t.trace,
+        t.id,
+        t.trace.event["input"],
+        t.trace.event["output"],
+      )
+    }
+    const walkToolSpans = (n: TraceNode): void => {
+      for (const gc of n.children) {
+        if (isLeafToolLike(gc)) bumpToolSpan(gc)
+        else walkToolSpans(gc)
+      }
+    }
+    for (const c of llmKids) {
+      const ev = c.trace.event
+      for (const name of extractLlmToolCallNames(ev)) {
+        const io = toolIO.get(name)
+        bump(
+          name,
+          "tool",
+          c.trace,
+          c.id,
+          io ? (io.inputs.length === 1 ? io.inputs[0] : io.inputs) : undefined,
+          io ? (io.outputs.length === 1 ? io.outputs[0] : io.outputs) : undefined,
+        )
+      }
+      for (const call of extractMcpToolCalls(ev, mcpResults)) {
+        bump(call.name, "mcp", c.trace, c.id, call.input, call.output, call.server)
+      }
+      walkToolSpans(c)
+    }
+    for (const c of node.children) {
+      if (!isChatLlm(c) && isLeafToolLike(c)) bumpToolSpan(c)
+    }
+
+    if (agg.size > 0) {
+      const entries: ToolEntry[] = [...agg.entries()]
+        .sort((a, b) => b[1].count - a[1].count)
+        .map(([name, a]) => {
+          const key = toolSelectionKey(a.parentTrace.event, a.anchorId, name)
+          return {
+            name,
+            count: a.count,
+            kind: a.kind,
+            server: a.server,
+            selected:
+              toolSel?.selectedToolKey != null &&
+              toolSel.selectedToolKey === key,
+            onSelect: toolSel
+              ? () =>
+                  toolSel.onSelectTool(
+                    a.parentTrace,
+                    name,
+                    a.input,
+                    a.output,
+                    a.server,
+                  )
+              : undefined,
+          }
+        })
+      const shown = Math.min(entries.length, FLOW_TOOL_ROWS_MAX)
+      const hasMore = entries.length > FLOW_TOOL_ROWS_MAX
+      const nodeHeight = Math.max(
+        FLOW_NODE_HEIGHT,
+        34 + shown * 22 + (hasMore ? 18 : 0),
+      )
+      const toolsFlowId = `looptools:${myFlowId}`
+      const synthetic: TraceNode = {
+        id: `${node.id}__looptools__`,
+        trace: node.trace,
+        children: [],
+      }
+      recordNode(toolsFlowId, synthetic, {
+        label: "Tools",
+        sublabel: null,
+        icon: Wrench01Icon as typeof Folder01Icon,
+      })
+      const b = buckets.get(toolsFlowId)
+      if (b) {
+        b.toolEntries = entries
+        b.nodeHeight = nodeHeight
+      }
+      recordEdge(llmFlowId, toolsFlowId)
+      // Loop-back: the LLM was recorded first, so this resolves to a dashed,
+      // right-routed loop edge in recordEdge.
+      recordEdge(toolsFlowId, llmFlowId)
+    }
+
+    // The LLM iterations (and the tool-like leaves we folded in) are accounted
+    // for; hand back anything else (e.g. a nested sub-agent or a final
+    // formatting chain) so visit lays it out normally.
+    return node.children.filter((c) => !isChatLlm(c) && !isLeafToolLike(c))
+  }
+
   const visit = (
     node: TraceNode,
     parentFlowId: string | null,
@@ -748,6 +937,15 @@ export function buildFlowElements(
           prevFlowId = exp.flowId
         }
       }
+      return
+    }
+
+    // Collapse an agentic tool-use loop (many same-model LLM calls + tools)
+    // into one LLM ×N box and one Tools node before falling back to the
+    // generic per-child layout that would otherwise fan them across one rank.
+    const loopRemainder = expandLlmLoop(node, myFlowId)
+    if (loopRemainder !== null) {
+      for (const c of loopRemainder) visit(c, myFlowId, myFlowId)
       return
     }
 
@@ -1298,7 +1496,10 @@ export function buildFlowElements(
     const request = reqParts.length > 0 ? reqParts.join("\n\n") : null
     const response = resParts.length > 0 ? resParts.join("\n\n") : null
     const label = isStart ? "START NODE" : view.label
-    const isMergedNode = b.cacheEntries !== undefined || b.rerankerEntries !== undefined
+    const isMergedNode =
+      b.cacheEntries !== undefined ||
+      b.rerankerEntries !== undefined ||
+      b.toolEntries !== undefined
     // Synthetic tool nodes select the tool (overlay detail); all others select
     // their underlying trace. Tool selection is highlighted by key match.
     const ts = b.toolSelect
@@ -1330,6 +1531,7 @@ export function buildFlowElements(
         onSelect,
         cacheEntries: b.cacheEntries,
         rerankerEntries: b.rerankerEntries,
+        toolEntries: b.toolEntries,
         nodeHeight: b.nodeHeight,
       },
     }
