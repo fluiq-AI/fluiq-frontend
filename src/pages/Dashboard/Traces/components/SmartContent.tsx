@@ -1,5 +1,6 @@
 import type { MessageToolCall, ToolLatencyMap } from "../utils/types"
 import { formatLatency, safeStringify } from "../utils"
+import { tryParsePyLiteral } from "../utils/pyRepr"
 
 // Provider tool results (and some message contents) arrive as a JSON-encoded
 // string — e.g. the USITC schedule rows returned by `fetch_hts_details`. When a
@@ -43,10 +44,16 @@ export function JsonBlock({ value }: { value: unknown }) {
   )
 }
 
-// Render a string as pretty JSON when it parses, otherwise as wrapped text.
+// Render a string as a structured block when it parses, otherwise as wrapped
+// text. We try JSON first (provider tool results), then Python repr — the shape
+// the @trace decorator records for general function input/output (single-quoted
+// dicts, None/ObjectId(…), `(args,){kwargs}`). Only object/array results use
+// JsonBlock; a bare scalar falls through to text rendering of the original.
 function TextOrJson({ value }: { value: string }) {
   const parsed = tryParseJson(value)
   if (parsed !== null) return <JsonBlock value={parsed} />
+  const py = tryParsePyLiteral(value)
+  if (py !== null && typeof py === "object") return <JsonBlock value={py} />
   return (
     <div className="whitespace-pre-wrap wrap-break-word text-xs">{value}</div>
   )
