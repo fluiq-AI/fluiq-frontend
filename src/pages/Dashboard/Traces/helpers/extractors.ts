@@ -464,15 +464,21 @@ export function extractTools(event: Record<string, unknown>): ToolDef[] {
       }
       continue
     }
-    const name = rec["name"]
+    // OpenAI wrapper: { type: "function", function: { name, description, parameters } }.
+    // Name/description/schema are nested under `function`, not at the top level.
+    const fn =
+      rec["function"] && typeof rec["function"] === "object"
+        ? (rec["function"] as Record<string, unknown>)
+        : rec
+    const name = fn["name"]
     if (typeof name !== "string") continue
     out.push({
       name,
       description:
-        typeof rec["description"] === "string"
-          ? (rec["description"] as string)
+        typeof fn["description"] === "string"
+          ? (fn["description"] as string)
           : undefined,
-      input_schema: rec["input_schema"],
+      input_schema: fn["parameters"] ?? fn["input_schema"],
     })
   }
   return out
