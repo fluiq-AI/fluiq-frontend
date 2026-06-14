@@ -8,7 +8,7 @@ frontend:
         # Google Chrome (dnf resolves its system libs). PUPPETEER_EXECUTABLE_PATH
         # + PUPPETEER_SKIP_DOWNLOAD are set as Amplify env vars so puppeteer uses
         # this binary instead of downloading its own.
-        - dnf install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+        - sudo dnf install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
         - npm ci
     build:
       commands:
