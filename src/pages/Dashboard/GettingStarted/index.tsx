@@ -16,8 +16,10 @@ import { cn } from "@/lib/utils"
 
 const STORAGE_KEY = "fluiq.onboarding"
 
+type SdkLang = "python" | "typescript"
+
 interface StoredState {
-  sdk_lang: "python" | null
+  sdk_lang: SdkLang | null
   sdk_copied: boolean
   trace_copied: boolean
   dismissed: boolean
@@ -37,8 +39,19 @@ function persist(s: StoredState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(s))
 }
 
-const INSTALL_CODE = `pip install fluiq`
-const TRACE_CODE = `import fluiq\n\nfluiq.instrument(api_key="fl_...")\n# Traces appear in your dashboard`
+const INSTALL_CODE: Record<SdkLang, string> = {
+  python: `pip install fluiq`,
+  typescript: `npm install @fluiq/sdk`,
+}
+const TRACE_CODE: Record<SdkLang, string> = {
+  python: `import fluiq\n\nfluiq.instrument(api_key="fl_...")\n# Traces appear in your dashboard`,
+  typescript: `import fluiq from "@fluiq/sdk";\n\nfluiq.instrument({ apiKey: "fl_..." });\n// Traces appear in your dashboard`,
+}
+
+const LANG_LABEL: Record<SdkLang, string> = {
+  python: "Python",
+  typescript: "TypeScript",
+}
 
 export const VISITED_KEY = "fluiq.visited"
 
@@ -55,11 +68,15 @@ function GettingStarted() {
 
   const hasApiKey = (organization?.api_keys.length ?? 0) > 0
 
+  const activeLang: SdkLang = stored.sdk_lang ?? "python"
+
   const steps = [
     {
       id: "lang",
       label: "Choose your SDK",
-      description: stored.sdk_lang ? "Python selected." : "Pick the language for your integration.",
+      description: stored.sdk_lang
+        ? `${LANG_LABEL[stored.sdk_lang]} selected — switch any time to revisit the steps in the other language.`
+        : "Pick the language for your integration.",
       done: stored.sdk_lang !== null,
     },
     {
@@ -77,9 +94,9 @@ function GettingStarted() {
     {
       id: "install",
       label: "Install the SDK",
-      description: "Add Fluiq to your Python environment.",
+      description: activeLang === "typescript" ? "Add Fluiq to your Node.js project." : "Add Fluiq to your Python environment.",
       done: stored.sdk_copied,
-      code: INSTALL_CODE,
+      code: INSTALL_CODE[activeLang],
       copyKey: "sdk" as const,
     },
     {
@@ -87,7 +104,7 @@ function GettingStarted() {
       label: "Instrument your first call",
       description: "One line. Traces start streaming immediately.",
       done: stored.trace_copied,
-      code: TRACE_CODE,
+      code: TRACE_CODE[activeLang],
       copyKey: "trace" as const,
     },
   ]
@@ -95,9 +112,17 @@ function GettingStarted() {
   const completedCount = steps.filter((s) => s.done).length
   const allDone = completedCount === steps.length
 
-  function selectLang(lang: "python") {
+  function selectLang(lang: SdkLang) {
     setStored((prev) => {
-      const next = { ...prev, sdk_lang: lang }
+      // Switching to a different language re-opens the install + instrument
+      // steps so the user can walk through them again with that language's commands.
+      const switching = prev.sdk_lang !== null && prev.sdk_lang !== lang
+      const next: StoredState = {
+        ...prev,
+        sdk_lang: lang,
+        sdk_copied: switching ? false : prev.sdk_copied,
+        trace_copied: switching ? false : prev.trace_copied,
+      }
       persist(next)
       return next
     })
@@ -211,32 +236,38 @@ function GettingStarted() {
                     {step.description}
                   </p>
 
-                  {/* SDK language selector */}
-                  {step.id === "lang" && !step.done && (
+                  {/* SDK language selector — stays visible after selection so the
+                      user can switch language and revisit the remaining steps. */}
+                  {step.id === "lang" && (
                     <div className="mt-2.5 flex items-center gap-2">
-                      {/* Python */}
-                      <button
-                        onClick={() => selectLang("python")}
-                        className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-[12px] font-medium text-foreground transition-colors hover:bg-muted"
-                      >
-                        <span className="rounded bg-muted px-1 py-0.5 font-mono text-[9px] font-bold text-muted-foreground">
-                          PY
-                        </span>
-                        Python
-                      </button>
-
-                      {/* TypeScript — coming soon */}
-                      <div className="flex cursor-not-allowed items-center gap-2 rounded-lg border border-border/40 bg-muted/30 px-3 py-1.5 opacity-50">
-                        <span className="rounded bg-muted px-1 py-0.5 font-mono text-[9px] font-bold text-muted-foreground">
-                          TS
-                        </span>
-                        <span className="text-[12px] font-medium text-muted-foreground">
-                          TypeScript
-                        </span>
-                        <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-                          Coming soon
-                        </span>
-                      </div>
+                      {(["python", "typescript"] as const).map((l) => {
+                        const active = stored.sdk_lang === l
+                        return (
+                          <button
+                            key={l}
+                            onClick={() => selectLang(l)}
+                            aria-pressed={active}
+                            className={cn(
+                              "flex items-center gap-2 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors",
+                              active
+                                ? "border-[#1860D3] bg-[#1860D3]/5 text-[#1860D3] dark:border-[#6FA8FF] dark:bg-[#6FA8FF]/10 dark:text-[#6FA8FF]"
+                                : "border-border bg-background text-foreground hover:bg-muted",
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "rounded px-1 py-0.5 font-mono text-[9px] font-bold",
+                                active
+                                  ? "bg-[#1860D3]/10 text-[#1860D3] dark:bg-[#6FA8FF]/15 dark:text-[#6FA8FF]"
+                                  : "bg-muted text-muted-foreground",
+                              )}
+                            >
+                              {l === "python" ? "PY" : "TS"}
+                            </span>
+                            {LANG_LABEL[l]}
+                          </button>
+                        )
+                      })}
                     </div>
                   )}
 

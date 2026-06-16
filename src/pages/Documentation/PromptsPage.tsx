@@ -4,13 +4,18 @@ import {
   CheckmarkCircle02Icon,
   FileScriptIcon,
   PythonIcon,
+  Typescript01Icon,
   RocketIcon,
   SparklesIcon,
   WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 import { Code, PageHeading } from "./_docComponents"
+import { useDocLang, byLang } from "./LanguageContext"
 
 export default function PromptsPage() {
+  const { lang } = useDocLang()
+  const isTs = lang === "typescript"
+  const fetchName = isTs ? "fluiq.fetchPrompt()" : "fluiq.fetch_prompt()"
   return (
     <>
       <Helmet>
@@ -34,7 +39,7 @@ export default function PromptsPage() {
       <PageHeading
         icon={FileScriptIcon}
         title="Prompts"
-        description="The Prompts dashboard turns every LLM trace into a managed prompt template. Discover prompts from production traffic, edit them with {{variable}} substitution, run LLM-as-judge evaluations in the playground, then promote them to named environments so your SDK can fetch the right version at runtime — with no redeploy required."
+        description={`The Prompts dashboard turns every LLM trace into a managed prompt template. Discover prompts from production traffic, edit them with ${isTs ? "{variable}" : "{{variable}}"} substitution, run LLM-as-judge evaluations in the playground, then promote them to named environments so your SDK can fetch the right version at runtime — with no redeploy required.`}
       />
 
       <div className="flex items-center gap-2 pt-2">
@@ -43,7 +48,7 @@ export default function PromptsPage() {
       </div>
       <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
         <li><span className="text-foreground">Discover</span> — the Prompts page surfaces every LLM call from your traces as a row. Click any row to open it in the evaluation playground alongside its full trace tree.</li>
-        <li><span className="text-foreground">Edit</span> — refine the template in the editor. Add <code className="font-mono text-foreground">{"{{variable}}"}</code> placeholders; the UI detects them and renders input fields for test values.</li>
+        <li><span className="text-foreground">Edit</span> — refine the template in the editor. Add <code className="font-mono text-foreground">{isTs ? "{variable}" : "{{variable}}"}</code> placeholders; the UI detects them and renders input fields for test values.</li>
         <li><span className="text-foreground">Evaluate</span> — run LLM-as-judge metrics (hallucination, faithfulness, relevance …) on the template + response pair. Results appear inline as scored cards.</li>
         <li><span className="text-foreground">Save</span> — give the prompt a name and a unique slug. Every subsequent edit creates a version snapshot so you can restore any previous state.</li>
         <li><span className="text-foreground">Promote</span> — deploy to <span className="font-medium text-blue-500">development</span>, <span className="font-medium text-amber-500">staging</span>, and <span className="font-medium text-emerald-500">production</span> independently. Each environment stores a full snapshot of the template at promote time, so rolling back is one click.</li>
@@ -54,11 +59,17 @@ export default function PromptsPage() {
         <p className="font-medium">Template variables</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Wrap any dynamic value in double curly braces. Variable names must start with a letter or underscore and contain only alphanumeric characters and underscores.
+        Wrap any dynamic value in {isTs ? "single" : "double"} curly braces. Variable names must start with a letter or underscore and contain only alphanumeric characters and underscores.
       </p>
-      <Code>{`# Prompt template stored in the dashboard:
+      <Code>{byLang(
+        lang,
+        `# Prompt template stored in the dashboard:
 You are a helpful assistant for {{company}}.
-Answer the following question in {{language}}: {{question}}`}</Code>
+Answer the following question in {{language}}: {{question}}`,
+        `// Prompt template stored in the dashboard:
+You are a helpful assistant for {company}.
+Answer the following question in {language}: {question}`,
+      )}</Code>
       <p className="text-sm text-muted-foreground">
         The playground detects variables automatically and renders a labeled input for each one so you can test substitutions before promoting.
       </p>
@@ -85,32 +96,34 @@ Answer the following question in {{language}}: {{question}}`}</Code>
               <td className="px-4 py-2 font-medium text-blue-600 dark:text-blue-400">development</td>
               <td className="px-4 py-2"><span className="rounded border border-blue-500/30 bg-blue-500/10 px-1.5 py-0.5 font-mono text-[10px] text-blue-600 dark:text-blue-400">dev</span></td>
               <td className="px-4 py-2 text-muted-foreground">Local iteration and unit tests</td>
-              <td className="px-4 py-2 font-mono text-muted-foreground text-xs">fetch_prompt(slug, env="development")</td>
+              <td className="px-4 py-2 font-mono text-muted-foreground text-xs">{isTs ? `fetchPrompt(slug, { env: "development" })` : `fetch_prompt(slug, env="development")`}</td>
             </tr>
             <tr>
               <td className="px-4 py-2 font-medium text-amber-600 dark:text-amber-400">staging</td>
               <td className="px-4 py-2"><span className="rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-600 dark:text-amber-400">stg</span></td>
               <td className="px-4 py-2 text-muted-foreground">Integration and regression testing</td>
-              <td className="px-4 py-2 font-mono text-muted-foreground text-xs">fetch_prompt(slug, env="staging")</td>
+              <td className="px-4 py-2 font-mono text-muted-foreground text-xs">{isTs ? `fetchPrompt(slug, { env: "staging" })` : `fetch_prompt(slug, env="staging")`}</td>
             </tr>
             <tr>
               <td className="px-4 py-2 font-medium text-emerald-600 dark:text-emerald-400">production</td>
               <td className="px-4 py-2"><span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-600 dark:text-emerald-400">prod</span></td>
               <td className="px-4 py-2 text-muted-foreground">Live traffic — the default</td>
-              <td className="px-4 py-2 font-mono text-muted-foreground text-xs">fetch_prompt(slug)</td>
+              <td className="px-4 py-2 font-mono text-muted-foreground text-xs">{isTs ? "fetchPrompt(slug)" : "fetch_prompt(slug)"}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div className="flex items-center gap-2 pt-4">
-        <HugeiconsIcon icon={PythonIcon} size={16} />
+        <HugeiconsIcon icon={isTs ? Typescript01Icon : PythonIcon} size={16} />
         <p className="font-medium">SDK fetch</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Call <code className="font-mono text-foreground">fluiq.fetch_prompt()</code> anywhere in your application to retrieve the deployed template for an environment. The call is authenticated with your API key and returns the snapshot that was promoted — not the current editor draft.
+        Call <code className="font-mono text-foreground">{fetchName}</code> anywhere in your application to retrieve the deployed template for an environment. The call is authenticated with your API key and returns the snapshot that was promoted — not the current editor draft.
       </p>
-      <Code>{`import fluiq
+      <Code>{byLang(
+        lang,
+        `import fluiq
 
 fluiq.instrument(api_key="fl_...")
 
@@ -129,7 +142,28 @@ filled = prompt.render(
 response = client.chat.completions.create(
     model=prompt.model or "gpt-4o",
     messages=[{"role": "user", "content": filled}],
-)`}</Code>
+)`,
+        `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+// Fetch the production snapshot (default):
+let prompt = await fluiq.fetchPrompt("customer-support-reply");
+
+// Fetch a specific environment:
+prompt = await fluiq.fetchPrompt("customer-support-reply", { env: "staging" });
+
+// Fill template variables and call your LLM:
+const filled = prompt.render({
+  company: "Acme Corp",
+  language: "French",
+  question: userInput,
+});
+const response = await client.chat.completions.create({
+  model: prompt.model ?? "gpt-4o",
+  messages: [{ role: "user", content: filled }],
+});`,
+      )}</Code>
 
       <p className="text-sm text-muted-foreground">The returned object exposes:</p>
       <div className="overflow-x-auto rounded-xl border border-border/60">
@@ -142,7 +176,7 @@ response = client.chat.completions.create(
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
-            {[
+            {byLang(lang, [
               ["slug",        "str",        "Unique identifier used to fetch the prompt"],
               ["name",        "str",        "Human-readable display name"],
               ["template",    "str",        "Raw template string with {{variable}} placeholders"],
@@ -151,7 +185,15 @@ response = client.chat.completions.create(
               ["version",     "int",        "Version number of this environment's snapshot"],
               ["environment", "str",        "Environment this snapshot was fetched from"],
               ["deployed_at", "str",        "ISO timestamp of when this version was promoted"],
-            ].map(([attr, type, desc]) => (
+            ], [
+              ["slug",        "string",        "Unique identifier used to fetch the prompt"],
+              ["name",        "string",        "Human-readable display name"],
+              ["template",    "string",        "Raw template string with {variable} placeholders"],
+              ["model",       "string | null", "Suggested model saved with the prompt, if any"],
+              ["variables",   "string[]",      "Declared variable names in the template"],
+              ["version",     "number",        "Version number of this environment's snapshot"],
+              ["environment", "string",        "Environment this snapshot was fetched from"],
+            ]).map(([attr, type, desc]) => (
               <tr key={attr}>
                 <td className="px-4 py-2 font-mono text-foreground">{attr}</td>
                 <td className="px-4 py-2 font-mono text-muted-foreground text-xs">{type}</td>
@@ -176,7 +218,7 @@ response = client.chat.completions.create(
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
         <p className="font-medium">Decoupled from your deploy pipeline</p>
         <p className="mt-1 text-muted-foreground">
-          Because <code className="font-mono text-foreground">fluiq.fetch_prompt()</code> fetches at runtime, you can update a production prompt — fix a hallucination-prone instruction, add a guardrail, tweak tone — in the dashboard without touching your codebase or triggering a new deployment. The change is live the next time your SDK calls <code className="font-mono text-foreground">fetch_prompt()</code>.
+          Because <code className="font-mono text-foreground">{fetchName}</code> fetches at runtime, you can update a production prompt — fix a hallucination-prone instruction, add a guardrail, tweak tone — in the dashboard without touching your codebase or triggering a new deployment. The change is live the next time your SDK calls <code className="font-mono text-foreground">{isTs ? "fetchPrompt()" : "fetch_prompt()"}</code>.
         </p>
       </div>
     </div>

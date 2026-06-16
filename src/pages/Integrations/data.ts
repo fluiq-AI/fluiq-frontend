@@ -621,6 +621,382 @@ results = client.search("my-collection",
   },
 ]
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TypeScript SDK equivalents.
+//
+// Keyed by slug. Only integrations supported by @fluiq/sdk appear here — Python
+// has more integrations than TypeScript, so e.g. CrewAI is intentionally absent
+// and its page stays Python-only (no language toggle is shown).
+// ─────────────────────────────────────────────────────────────────────────────
+export interface IntegrationTs {
+  setupCode: string
+  instrumentedItems: string[]
+}
+
+export const INTEGRATION_TS: Record<string, IntegrationTs> = {
+  openai: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches the openai package
+
+import OpenAI from "openai";
+const client = new OpenAI();
+
+// All of these are traced automatically — no code changes:
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Hello" }],
+});
+const embedding = await client.embeddings.create({
+  model: "text-embedding-3-small",
+  input: "Hello world",
+});`,
+    instrumentedItems: [
+      "client.chat.completions.create()",
+      "client.chat.completions.stream()",
+      "client.responses.create()",
+      "client.beta.chat.completions.parse()",
+      "client.embeddings.create()",
+      "client.images.generate()",
+      "client.audio.transcriptions.create()",
+      "client.audio.speech.create()",
+    ],
+  },
+
+  anthropic: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches @anthropic-ai/sdk
+
+import Anthropic from "@anthropic-ai/sdk";
+const client = new Anthropic();
+
+// Messages API, fully traced with cache visibility:
+const message = await client.messages.create({
+  model: "claude-opus-4-8",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Summarise this document" }],
+});
+
+// Streaming is also traced:
+const stream = client.messages.stream({
+  model: "claude-opus-4-8",
+  max_tokens: 256,
+  messages: [{ role: "user", content: "Hello" }],
+});
+for await (const event of stream) {
+  if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+    process.stdout.write(event.delta.text);
+  }
+}`,
+    instrumentedItems: [
+      "client.messages.create()",
+      "client.messages.stream()",
+      "client.beta.messages.create()",
+      "client.beta.messages.stream()",
+      "client.messages.countTokens()",
+    ],
+  },
+
+  gemini: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches @google/genai
+
+import { GoogleGenAI } from "@google/genai";
+const ai = new GoogleGenAI({ apiKey: "your-gemini-key" });
+
+// Traced automatically, sync and streaming:
+const response = await ai.models.generateContent({
+  model: "gemini-2.5-pro",
+  contents: "Explain LLM observability in one paragraph",
+});
+
+// Streaming is also traced:
+const stream = await ai.models.generateContentStream({
+  model: "gemini-2.5-pro",
+  contents: "Write a haiku",
+});
+for await (const chunk of stream) {
+  process.stdout.write(chunk.text ?? "");
+}`,
+    instrumentedItems: [
+      "ai.models.generateContent()",
+      "ai.models.generateContentStream()",
+      "ai.models.embedContent()",
+      "ai.models.countTokens()",
+    ],
+  },
+
+  "vertex-ai": {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches @google/genai (Vertex mode)
+
+import { GoogleGenAI } from "@google/genai";
+const ai = new GoogleGenAI({
+  vertexai: true,
+  project: "my-gcp-project",
+  location: "us-central1",
+});
+
+// Traced automatically with cost at Vertex AI rates:
+const response = await ai.models.generateContent({
+  model: "gemini-2.5-pro",
+  contents: "Summarise this enterprise document",
+});`,
+    instrumentedItems: [
+      "ai.models.generateContent() (Vertex mode)",
+      "ai.models.generateContentStream()",
+      "ai.models.embedContent()",
+      "ai.models.countTokens()",
+    ],
+  },
+
+  langchain: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches LangChain
+
+import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+
+const llm = new ChatOpenAI({ model: "gpt-4o" });
+const prompt = ChatPromptTemplate.fromTemplate("Summarise this: {text}");
+const chain = prompt.pipe(llm).pipe(new StringOutputParser());
+
+// Every step is a separate trace span with cost:
+const result = await chain.invoke({ text: "Your document content here" });`,
+    instrumentedItems: [
+      "BaseChatModel.invoke() / stream()",
+      "Runnable.invoke() / batch()",
+      "RunnableSequence.invoke()",
+      "Tool.invoke()",
+      "BaseRetriever.invoke()",
+      "Embeddings.embedDocuments()",
+      "Embeddings.embedQuery()",
+    ],
+  },
+
+  langgraph: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches LangGraph
+
+import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
+
+const AgentState = Annotation.Root({
+  messages: Annotation<string[]>(),
+});
+
+const graph = new StateGraph(AgentState)
+  .addNode("planner", plannerNode)
+  .addNode("executor", executorNode)
+  .addConditionalEdges("planner", routeFn, { execute: "executor", end: END })
+  .addEdge(START, "planner")
+  .compile();
+
+// Each node is a traced span — no code changes needed:
+const result = await graph.invoke({ messages: ["Analyse sales data"] });`,
+    instrumentedItems: [
+      "CompiledGraph.invoke()",
+      "CompiledGraph.stream()",
+      "Node function calls (any addNode target)",
+      "Conditional edge routing functions",
+      "Checkpointer (MemorySaver) operations",
+      "Subgraph invocations",
+    ],
+  },
+
+  "google-adk": {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches @google/adk + @google/genai
+
+import { LlmAgent } from "@google/adk";
+
+function getWeather(city: string) {
+  return { temperature: 22, condition: "Sunny" };
+}
+
+const agent = new LlmAgent({
+  name: "weather-agent",
+  model: "gemini-2.5-pro",
+  instruction: "You are a helpful weather assistant.",
+  tools: [getWeather],
+});
+
+// Every ADK agent step, tool call, and underlying Gemini request
+// is traced automatically — no manual spans required.`,
+    instrumentedItems: [
+      "LlmAgent run + step events",
+      "Agent tool function calls",
+      "@google/genai generateContent() (underlying model)",
+      "Session service operations",
+      "Memory service operations",
+    ],
+  },
+
+  mcp: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches the MCP client
+fluiq.optimize();                       // also caches repeated tool results
+
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+
+const transport = new StdioClientTransport({ command: "node", args: ["server.js"] });
+const client = new Client({ name: "my-app", version: "1.0.0" });
+await client.connect(transport);
+
+// listTools is traced + cached after first call:
+const tools = await client.listTools();
+
+// callTool is traced + cached by (tool name, args):
+const result = await client.callTool({
+  name: "search",
+  arguments: { query: "LLM observability" },
+});`,
+    instrumentedItems: [
+      "client.connect() (initialize)",
+      "client.listTools()",
+      "client.callTool()",
+      "client.listResources()",
+      "client.readResource()",
+      "client.listPrompts()",
+    ],
+  },
+
+  pinecone: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches @pinecone-database/pinecone
+
+import { Pinecone } from "@pinecone-database/pinecone";
+const pc = new Pinecone({ apiKey: "your-pinecone-key" });
+const index = pc.index("my-index");
+
+// All operations traced with latency and result counts:
+await index.upsert([{ id: "id1", values: vector, metadata: { source: "doc" } }]);
+
+const results = await index.query({
+  vector,
+  topK: 5,
+  includeMetadata: true,
+});`,
+    instrumentedItems: [
+      "index.query()",
+      "index.upsert()",
+      "index.fetch()",
+      "index.update()",
+      "index.deleteMany() / deleteOne()",
+      "index.describeIndexStats()",
+    ],
+  },
+
+  chroma: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches chromadb
+
+import { ChromaClient } from "chromadb";
+const client = new ChromaClient();
+const collection = await client.getOrCreateCollection({ name: "my-docs" });
+
+// Add is traced with record count:
+await collection.add({
+  ids: ["doc1"],
+  documents: ["LLM observability is critical for production AI"],
+  metadatas: [{ source: "guide" }],
+});
+
+// Query is traced with latency and result count:
+const results = await collection.query({
+  queryTexts: ["What is LLM monitoring?"],
+  nResults: 5,
+});`,
+    instrumentedItems: [
+      "collection.query()",
+      "collection.add()",
+      "collection.update()",
+      "collection.upsert()",
+      "collection.get()",
+      "collection.delete()",
+      "collection.count()",
+    ],
+  },
+
+  weaviate: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches weaviate-client
+
+import weaviate from "weaviate-client";
+const client = await weaviate.connectToLocal();
+const articles = client.collections.get("Article");
+
+// Near-text search is traced with latency and result counts:
+const result = await articles.query.nearText(
+  ["AI observability", "LLM monitoring"],
+  { limit: 5, returnMetadata: ["distance"] },
+);
+
+// Batch insert is traced with item count:
+await articles.data.insertMany([
+  { title: "Fluiq Guide", content: "..." },
+]);`,
+    instrumentedItems: [
+      "collection.query.nearText()",
+      "collection.query.nearVector()",
+      "collection.query.fetchObjects()",
+      "collection.data.insert()",
+      "collection.data.insertMany()",
+      "collection.data.deleteMany()",
+    ],
+  },
+
+  faiss: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches faiss-node
+
+import { IndexFlatL2 } from "faiss-node";
+
+const dimension = 1536; // text-embedding-3-small output size
+const index = new IndexFlatL2(dimension);
+
+// Add is traced with vector count and timing:
+index.add(embedding);
+
+// Search is traced with k, latency, and index type:
+const { distances, labels } = index.search(query, 5);`,
+    instrumentedItems: [
+      "IndexFlatL2.search()",
+      "IndexFlatL2.add()",
+      "IndexFlatIP.search()",
+      "Index.mergeFrom()",
+      "Index.write() / read()",
+    ],
+  },
+
+  qdrant: {
+    setupCode: `import fluiq from "@fluiq/sdk";
+fluiq.instrument({ apiKey: "fl_..." }); // patches @qdrant/js-client-rest
+
+import { QdrantClient } from "@qdrant/js-client-rest";
+const client = new QdrantClient({ url: "http://localhost:6333" });
+
+// Upsert is traced with point count:
+await client.upsert("my-collection", {
+  points: [{ id: 1, vector, payload: { source: "doc1" } }],
+});
+
+// Search is traced with filters, limit, and latency:
+const results = await client.search("my-collection", {
+  vector: query,
+  limit: 5,
+});`,
+    instrumentedItems: [
+      "client.search()",
+      "client.query()",
+      "client.upsert()",
+      "client.scroll()",
+      "client.retrieve()",
+      "client.delete()",
+    ],
+  },
+}
+
 // Lookup map slug → { name, category } used by related-integration cards
 export const INTEGRATION_META: Record<string, { name: string; category: Category }> = Object.fromEntries(
   INTEGRATIONS.map((i) => [i.slug, { name: i.name, category: i.category }])

@@ -1,8 +1,8 @@
 ﻿import { Helmet } from "react-helmet-async"
 import { ChartLineData01Icon } from "@hugeicons/core-free-icons"
-import { IntegrationTabs, PageHeading } from "./_docComponents"
+import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 
-const tabs = [
+const pythonTabs: CodeTab[] = [
   {
     label: "OpenAI",
     description: "Patches chat completions, streaming, embeddings, images, and audio — sync and async.",
@@ -303,6 +303,237 @@ asyncio.run(answer("What is RAG?"))`,
   },
 ]
 
+const typescriptTabs: CodeTab[] = [
+  {
+    label: "OpenAI",
+    description: "Patches chat completions, the responses API, structured outputs, streaming, embeddings, images, and audio.",
+    code: `import OpenAI from "openai";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const client = new OpenAI();
+
+// Chat completions — traced automatically
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Summarise this document" }],
+});
+
+// Streaming — also traced
+const stream = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "Write a haiku" }],
+  stream: true,
+});
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content ?? "");
+}
+
+// Embeddings
+await client.embeddings.create({
+  model: "text-embedding-3-small",
+  input: ["Hello", "World"],
+});`,
+  },
+  {
+    label: "Anthropic",
+    description: "Patches the Messages API and the Beta client — including streaming and countTokens.",
+    code: `import Anthropic from "@anthropic-ai/sdk";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const client = new Anthropic();
+
+// Messages — traced automatically
+const response = await client.messages.create({
+  model: "claude-sonnet-4-6",
+  max_tokens: 512,
+  system: "You are a concise technical writer.",
+  messages: [{ role: "user", content: "Explain RAG in one paragraph" }],
+});
+console.log(response.content[0].type === "text" && response.content[0].text);
+
+// Streaming
+const stream = client.messages.stream({
+  model: "claude-sonnet-4-6",
+  max_tokens: 512,
+  messages: [{ role: "user", content: "Write a haiku" }],
+});
+for await (const event of stream) {
+  if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+    process.stdout.write(event.delta.text);
+  }
+}`,
+  },
+  {
+    label: "Gemini",
+    description: "Patches @google/genai and Vertex AI — generation, streaming, countTokens, and embeddings.",
+    code: `import { GoogleGenAI } from "@google/genai";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const client = new GoogleGenAI({});
+
+// Text generation — traced automatically
+const response = await client.models.generateContent({
+  model: "gemini-2.5-pro",
+  contents: "Explain quantum entanglement in simple terms",
+});
+console.log(response.text);
+
+// Streaming
+const stream = await client.models.generateContentStream({
+  model: "gemini-2.5-pro",
+  contents: "Tell me a short story",
+});
+for await (const chunk of stream) {
+  process.stdout.write(chunk.text ?? "");
+}
+
+// Token counting — also traced
+const count = await client.models.countTokens({
+  model: "gemini-2.5-pro",
+  contents: "How many tokens is this sentence?",
+});`,
+  },
+  {
+    label: "LangChain",
+    description: "Patches the LangChain runtime so chains, agents, and retrievers emit traces automatically.",
+    code: `import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const llm = new ChatOpenAI({ model: "gpt-4o" });
+
+// Direct invocation
+await llm.invoke("What is observability?");
+
+// Full chain — every step is a traced span
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant. Be concise."],
+  ["human", "{question}"],
+]);
+const chain = prompt.pipe(llm);
+await chain.invoke({ question: "What is Fluiq?" });
+
+// Streaming chain
+const stream = await chain.stream({ question: "Explain LangChain in one line" });
+for await (const chunk of stream) {
+  process.stdout.write(chunk.content as string);
+}`,
+  },
+  {
+    label: "MCP",
+    description: "Wraps the MCP client so tool calls flowing through Model Context Protocol servers are traced.",
+    code: `import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const transport = new StdioClientTransport({
+  command: "node",
+  args: ["my_mcp_server.js"],
+});
+
+const client = new Client({ name: "my-app", version: "1.0.0" });
+await client.connect(transport); // ← Fluiq hooks here
+
+const tools = await client.listTools();
+const result = await client.callTool({
+  name: "search",
+  arguments: { query: "AI observability" },
+});
+console.log(result);`,
+  },
+  {
+    label: "LangGraph",
+    description: "Every node execution in a LangGraph StateGraph is captured as a traced span automatically.",
+    code: `import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
+import { ChatOpenAI } from "@langchain/openai";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const llm = new ChatOpenAI({ model: "gpt-4o" });
+
+const State = Annotation.Root({
+  question: Annotation<string>(),
+  answer: Annotation<string>(),
+});
+
+async function researchNode(state: typeof State.State) {
+  const response = await llm.invoke(\`Research: \${state.question}\`);
+  return { answer: response.content as string };
+}
+
+async function refineNode(state: typeof State.State) {
+  const response = await llm.invoke(\`Improve this answer: \${state.answer}\`);
+  return { answer: response.content as string };
+}
+
+const graph = new StateGraph(State)
+  .addNode("research", researchNode)
+  .addNode("refine", refineNode)
+  .addEdge(START, "research")
+  .addEdge("research", "refine")
+  .addEdge("refine", END)
+  .compile();
+
+// All node calls traced automatically — visible in the trace tree
+const result = await graph.invoke({ question: "What is semantic caching?" });
+console.log(result.answer);`,
+  },
+  {
+    label: "Google ADK",
+    description: "Google ADK agents are traced through the underlying Gemini calls captured by Fluiq's @google/genai patch.",
+    code: `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." }); // patches @google/genai used by ADK
+
+// @google/adk agent, model, and tool calls are traced automatically.
+// Each model call appears as a span in the Fluiq trace tree, with the
+// agent run grouped as the parent — no extra instrumentation required.`,
+  },
+  {
+    label: "trace() wrapper",
+    description: "Wrap any function — sync or async — to record inputs, outputs, latency, and errors as a named span.",
+    code: `import fluiq from "@fluiq/sdk";
+import OpenAI from "openai";
+
+fluiq.instrument({ apiKey: "fl_..." });
+const client = new OpenAI();
+
+// Custom retrieval step — its own span in the trace tree
+const retrieve = fluiq.trace((question: string): string[] => {
+  return vectorStore.similaritySearch(question, 4);
+});
+
+const answer = fluiq.trace(
+  async (question: string): Promise<string> => {
+    const docs = retrieve(question);          // nested child span
+    const context = docs.join("\\n");
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: \`Context:\\n\${context}\` },
+        { role: "user", content: question },
+      ],
+    });
+    return response.choices[0].message.content ?? "";
+  },
+  { name: "rag_agent" },
+);
+
+await answer("What is RAG?");`,
+  },
+]
+
 export default function ObservabilityExamplesPage() {
   return (
     <>
@@ -329,7 +560,7 @@ export default function ObservabilityExamplesPage() {
         title="Observability"
         description="Fluiq auto-instruments every supported library after a single instrument() call. Select an integration below to see how traces flow into your dashboard."
       />
-      <IntegrationTabs tabs={tabs} />
+      <IntegrationTabs tabs={{ python: pythonTabs, typescript: typescriptTabs }} />
     </div>
     </>
   )

@@ -2,8 +2,11 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { CheckmarkCircle02Icon, WorkflowSquare01Icon } from "@hugeicons/core-free-icons"
 import { Code, PageHeading } from "./_docComponents"
+import { useDocLang, byLang } from "./LanguageContext"
 
 export default function EvaluationPage() {
+  const { lang } = useDocLang()
+  const isTs = lang === "typescript"
   return (
     <>
       <Helmet>
@@ -30,7 +33,9 @@ export default function EvaluationPage() {
         description="Add one line to score every LLM response with Fluiq's server-side judge. Set per-metric thresholds and choose whether failures log a warning or block the call from reaching your application."
       />
 
-      <Code>{`import fluiq
+      <Code>{byLang(
+        lang,
+        `import fluiq
 
 fluiq.instrument(api_key="fl_...")
 fluiq.eval(
@@ -42,7 +47,21 @@ fluiq.eval(
     },
     mode="warn",                # "warn" | "block"
     judge_model="gpt-4o-mini",  # judge model Fluiq uses server-side
-)`}</Code>
+)`,
+        `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.eval({
+  thresholds: {
+    hallucination: 0.8,  // score 0–1; 1 = no hallucination
+    faithfulness: 0.7,   // grounded in provided context
+    relevance: 0.75,     // response addresses the question
+    toxicity: 0.9,       // 1 = completely safe
+  },
+  mode: "warn",                            // "warn" | "block"
+  judgeModel: "claude-haiku-4-5-20251001", // judge model Fluiq uses server-side
+});`,
+      )}</Code>
 
       <p className="font-medium">Supported metrics</p>
       <div className="overflow-x-auto rounded-xl border border-border/60">
@@ -80,7 +99,7 @@ fluiq.eval(
           <div>
             <p className="font-mono text-sm text-foreground">mode="warn" <span className="font-sans text-muted-foreground font-normal">(default)</span></p>
             <p className="mt-1 text-muted-foreground">
-              Evaluation runs in a background thread after the LLM responds. Your application receives the response immediately. A Python warning is logged for every metric that falls below its threshold — visible in your logs and in the Fluiq dashboard's Quality column.
+              Evaluation runs {isTs ? "in the background" : "in a background thread"} after the LLM responds. Your application receives the response immediately. A warning is logged for every metric that falls below its threshold — visible in your logs and in the Fluiq dashboard's Quality column.
             </p>
           </div>
         </div>
@@ -89,20 +108,36 @@ fluiq.eval(
           <div>
             <p className="font-mono text-sm text-foreground">mode="block"</p>
             <p className="mt-1 text-muted-foreground">
-              Evaluation runs synchronously before returning the response. If any metric is below its threshold, a <code className="font-mono text-foreground">FluiqEvalError</code> is raised instead — the low-quality response never reaches your application. Use in staging or for safety-critical flows.
+              Evaluation runs synchronously before returning the response. If any metric is below its threshold, a <code className="font-mono text-foreground">FluiqEvalError</code> is {isTs ? "thrown" : "raised"} instead — the low-quality response never reaches your application. Use in staging or for safety-critical flows.
             </p>
           </div>
         </div>
       </div>
 
-      <Code>{`from fluiq.exceptions import FluiqEvalError
+      <Code>{byLang(
+        lang,
+        `from fluiq.exceptions import FluiqEvalError
 
 try:
     response = client.chat.completions.create(...)
 except FluiqEvalError as e:
     print(e.failures)   # {"hallucination": 0.42, "relevance": 0.61}
     print(e.scores)     # all metric scores
-    # fallback logic here`}</Code>
+    # fallback logic here`,
+        `import { FluiqEvalError } from "@fluiq/sdk";
+
+try {
+  const response = await client.chat.completions.create(/* ... */);
+} catch (e) {
+  if (e instanceof FluiqEvalError) {
+    console.log(e.failures); // { hallucination: 0.42, relevance: 0.61 }
+    console.log(e.scores);   // all metric scores
+    // fallback logic here
+  } else {
+    throw e;
+  }
+}`,
+      )}</Code>
 
       <div className="flex items-center gap-2 pt-4">
         <HugeiconsIcon icon={WorkflowSquare01Icon} size={16} />
@@ -111,7 +146,9 @@ except FluiqEvalError as e:
       <p className="text-sm text-muted-foreground">
         Gate every PR on quality scores stored during your test suite. The workflow below runs your tests (which generate traces evaluated by Fluiq), waits briefly for async evals to land, then queries the Fluiq API and fails the build if any score is below the threshold.
       </p>
-      <Code>{`# .github/workflows/fluiq-eval-gate.yml
+      <Code>{byLang(
+        lang,
+        `# .github/workflows/fluiq-eval-gate.yml
 name: Fluiq Eval Gate
 
 on:
@@ -166,7 +203,63 @@ jobs:
                       print(f"  FAIL  {e['metric']}: {e['score']:.2f}  trace={e['trace_id']}")
               sys.exit(1)
           print(f"All scores above threshold ({threshold}).")
-          PYEOF`}</Code>
+          PYEOF`,
+        `# .github/workflows/fluiq-eval-gate.yml
+name: Fluiq Eval Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  eval-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run test suite
+        env:
+          FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
+        run: npm test
+
+      - name: Wait for evaluations
+        run: sleep 30
+
+      - name: Check evaluation scores
+        env:
+          FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
+          THRESHOLD: \${{ vars.FLUIQ_EVAL_THRESHOLD || '0.7' }}
+        run: |
+          node --input-type=module - <<'EOF'
+          const threshold = parseFloat(process.env.THRESHOLD || "0.7");
+          const url = "https://api.getfluiq.com/api/v1/optimize/evals"
+            + \`?window_minutes=10&threshold=\${threshold}\`;
+          const resp = await fetch(url, {
+            headers: { "x-api-key": process.env.FLUIQ_API_KEY },
+          });
+          const data = await resp.json();
+          if (data.total === 0) {
+            console.log("No evaluations found — skipping gate.");
+            process.exit(0);
+          }
+          console.log(\`Evals: \${data.total} total, \${data.passed} passed, \${data.failed} failed\`);
+          if (data.failed > 0) {
+            for (const e of data.entries) {
+              if (e.score !== null && e.score < threshold) {
+                console.log(\`  FAIL  \${e.metric}: \${e.score.toFixed(2)}  trace=\${e.trace_id}\`);
+              }
+            }
+            process.exit(1);
+          }
+          console.log(\`All scores above threshold (\${threshold}).\`);
+          EOF`,
+      )}</Code>
 
       <p className="font-medium">Quotas</p>
       <p className="text-sm text-muted-foreground">

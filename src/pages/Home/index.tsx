@@ -1,10 +1,11 @@
 import "@/styles/home.css";
 import { Helmet } from "react-helmet-async"
-import React, { useCallback } from "react"
+import React, { useCallback, useState } from "react"
 import { motion, useMotionValue, useSpring, useReducedMotion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PythonIcon,
+  Typescript01Icon,
   CheckmarkCircle02Icon,
   EyeIcon,
   ShieldIcon,
@@ -14,6 +15,7 @@ import {
   AiContentGenerator01Icon,
 } from "@hugeicons/core-free-icons"
 import { CodeBlock } from "@/components/code-block"
+import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
 
 import { useScrollReveal } from "./hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
@@ -28,8 +30,113 @@ import {
   EvalMockup,
   PromptsMockup,
 } from "./components/DashboardMockups"
-import { setupHL, pipelineHL } from "./utils/highlightCode"
 import { INTEGRATIONS, STATS, EASE_OUT } from "./utils/constants"
+
+type CodeLang = "python" | "typescript"
+
+/* Complete-setup sample — Python + TypeScript. */
+const SETUP_PY = `import fluiq, openai
+
+# 1. Wire instrumentation once at startup
+fluiq.instrument(api_key="fl_...")
+
+# 2. Block attacks before they reach the model (Team+)
+fluiq.secure(mode="block")
+
+# 3. Cache repeated prompts (Team+)
+fluiq.optimize()
+
+# 4. Score and gate every response (all tiers)
+fluiq.eval(
+    thresholds={"hallucination": 0.8, "relevance": 0.75},
+    mode="warn",          # "block" raises FluiqEvalError
+)
+
+# Your code is unchanged from here
+client = openai.OpenAI()
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": "..."}],
+)
+# ↑ Traced, scanned, cached, and evaluated automatically`
+
+const SETUP_TS = `import fluiq from "@fluiq/sdk";
+import OpenAI from "openai";
+
+// 1. Wire instrumentation once at startup
+fluiq.instrument({ apiKey: "fl_..." });
+
+// 2. Block attacks before they reach the model (Team+)
+fluiq.secure({ mode: "block" });
+
+// 3. Cache repeated prompts (Team+)
+fluiq.optimize();
+
+// 4. Score and gate every response (all tiers)
+fluiq.eval({
+  thresholds: { hallucination: 0.8, relevance: 0.75 },
+  mode: "warn", // "block" throws FluiqEvalError
+});
+
+// Your code is unchanged from here
+const client = new OpenAI();
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "..." }],
+});
+// ↑ Traced, scanned, cached, and evaluated automatically`
+
+/* Framework-agnostic sample — Python + TypeScript. */
+const PIPE_PY = `from fluiq import instrument, trace
+
+instrument(api_key="fl_...")
+
+@trace
+def answer_question(question: str) -> str:
+    docs = vector_store.search(question, k=5)
+    return llm.invoke(prompt(question, docs))
+
+# Every call is now:
+# Traced with cost + latency
+# Security-scanned
+# Cached if repeated
+# Evaluated for quality`
+
+const PIPE_TS = `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const answerQuestion = fluiq.trace((question: string): string => {
+  const docs = vectorStore.search(question, 5);
+  return llm.invoke(prompt(question, docs));
+});
+
+// Every call is now:
+// Traced with cost + latency
+// Security-scanned
+// Cached if repeated
+// Evaluated for quality`
+
+/* Python / TypeScript switch shown in a code block's top-right header. */
+function CodeLangToggle({ lang, onChange }: { lang: CodeLang; onChange: (l: CodeLang) => void }) {
+  return (
+    <div className="flex gap-0.5 rounded-lg border border-white/[0.07] bg-white/[0.04] p-0.5">
+      {(["python", "typescript"] as const).map((l) => (
+        <button
+          key={l}
+          type="button"
+          onClick={() => onChange(l)}
+          aria-pressed={lang === l}
+          className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+            lang === l ? "bg-[#6FA8FF] text-[#0A0A0A]" : "text-[#9A9A92] hover:text-white"
+          }`}
+        >
+          {l === "python" ? "Python" : "TypeScript"}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 /* Hero code-artifact: cobalt for the fluiq signal, muted for comments. */
 const CC = { sig: "#6FA8FF", str: "#8FBF9E", com: "#7E7E76", base: "#D7D3C7" }
@@ -47,6 +154,10 @@ const HERO_CODE: Array<Array<[string, string]>> = [
 export default function Home() {
   useScrollReveal()
   const reduce = useReducedMotion()
+
+  // Shared Python/TypeScript toggle for the code blocks below.
+  const [codeLang, setCodeLang] = useState<CodeLang>("python")
+  const isTs = codeLang === "typescript"
 
   const rotYRaw = useMotionValue(-6); const rotXRaw = useMotionValue(2)
   const rotY    = useSpring(rotYRaw, { stiffness: 180, damping: 26 })
@@ -428,34 +539,14 @@ export default function Home() {
           </div>
           <div data-animate className="mt-10 rounded-[1.75rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-22px_rgba(24,96,211,0.2)] dark:bg-white/[0.04] dark:ring-white/10">
           <div className="overflow-hidden rounded-[1.25rem] border border-white/[0.07] bg-[#0a0a0a] dark:bg-[#141414] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
-            <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
-              <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6B6B66]" />
-              <span className="text-[11px] text-[#6B6B66] font-mono">Complete setup</span>
+            <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-white/10">
+              <span className="flex items-center gap-2 text-[11px] text-[#6B6B66] font-mono">
+                <HugeiconsIcon icon={isTs ? Typescript01Icon : PythonIcon} size={13} />
+                Complete setup
+              </span>
+              <CodeLangToggle lang={codeLang} onChange={setCodeLang} />
             </div>
-            <CodeBlock variant="dark" highlighted={setupHL()}>{`import fluiq, openai
-
-# 1. Wire instrumentation once at startup
-fluiq.instrument(api_key="fl_...")
-
-# 2. Block attacks before they reach the model (Team+)
-fluiq.secure(mode="block")
-
-# 3. Cache repeated prompts (Team+)
-fluiq.optimize()
-
-# 4. Score and gate every response (all tiers)
-fluiq.eval(
-    thresholds={"hallucination": 0.8, "relevance": 0.75},
-    mode="warn",          # "block" raises FluiqEvalError
-)
-
-# Your code is unchanged from here
-client = openai.OpenAI()
-response = client.chat.completions.create(
-    model="gpt-4o",
-    messages=[{"role": "user", "content": "..."}],
-)
-# ↑ Traced, scanned, cached, and evaluated automatically`}</CodeBlock>
+            <CodeBlock variant="dark" highlighted={syntaxHighlight(isTs ? SETUP_TS : SETUP_PY, codeLang)}>{isTs ? SETUP_TS : SETUP_PY}</CodeBlock>
           </div>
           </div>
         </div>
@@ -485,7 +576,7 @@ response = client.chat.completions.create(
               <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">Framework-agnostic</p>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug mb-4">Works with the stack you already use.</h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-6">
-                Fluiq patches at the function-call level, not the framework level. Any Python function that hits an LLM or vector database becomes a traced span with one decorator.
+                Fluiq patches at the function-call level, not the framework level. Any {isTs ? "" : "Python "}function that hits an LLM or vector database becomes a traced span with one {isTs ? "wrapper" : "decorator"}.
               </p>
               <div className="flex flex-wrap gap-2">
                 {INTEGRATIONS.map((f) => (
@@ -495,24 +586,14 @@ response = client.chat.completions.create(
             </div>
             <div data-animate data-delay="2" className="rounded-[1.75rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-22px_rgba(24,96,211,0.2)] dark:bg-white/[0.04] dark:ring-white/10">
               <div className="overflow-hidden rounded-[1.25rem] border border-white/[0.07] bg-[#0a0a0a] dark:bg-[#141414] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
-              <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
-                <HugeiconsIcon icon={PythonIcon} size={13} className="text-[#6B6B66]" />
-                <span className="text-[11px] text-[#6B6B66] font-mono">any_pipeline.py</span>
+              <div className="flex items-center justify-between gap-2 px-5 py-3 border-b border-white/10">
+                <span className="flex items-center gap-2 text-[11px] text-[#6B6B66] font-mono">
+                  <HugeiconsIcon icon={isTs ? Typescript01Icon : PythonIcon} size={13} />
+                  any_pipeline.{isTs ? "ts" : "py"}
+                </span>
+                <CodeLangToggle lang={codeLang} onChange={setCodeLang} />
               </div>
-              <CodeBlock variant="dark" highlighted={pipelineHL()}>{`from fluiq import instrument, trace
-
-instrument(api_key="fl_...")
-
-@trace
-def answer_question(question: str) -> str:
-    docs = vector_store.search(question, k=5)
-    return llm.invoke(prompt(question, docs))
-
-# Every call is now:
-# Traced with cost + latency
-# Security-scanned
-# Cached if repeated
-# Evaluated for quality`}</CodeBlock>
+              <CodeBlock variant="dark" highlighted={syntaxHighlight(isTs ? PIPE_TS : PIPE_PY, codeLang)}>{isTs ? PIPE_TS : PIPE_PY}</CodeBlock>
               </div>
             </div>
           </div>

@@ -12,6 +12,7 @@ import {
   ZapIcon,
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
+import { LanguageProvider, LanguageToggle } from "./LanguageContext"
 
 const NAV = [
   {
@@ -40,12 +41,14 @@ const NAV = [
 
 export default function DocLayout() {
   return (
+    <LanguageProvider>
     <div className="min-h-screen bg-background text-foreground">
       <SiteNavbar variant="docs" badge="Docs" active="developer" />
 
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-8 md:grid-cols-[220px_1fr]">
         <aside className="hidden md:block">
           <nav className="sticky top-24 flex flex-col gap-0.5 text-sm">
+            <LanguageToggle />
             {NAV.map((group) => (
               <div key={group.section} className="mb-5">
                 <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50">
@@ -87,5 +90,6 @@ export default function DocLayout() {
         </main>
       </div>
     </div>
+    </LanguageProvider>
   )
 }

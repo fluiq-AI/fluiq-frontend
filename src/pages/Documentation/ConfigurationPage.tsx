@@ -3,8 +3,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { CheckmarkCircle02Icon, ZapIcon } from "@hugeicons/core-free-icons"
 import { Badge } from "@/components/ui/badge"
 import { Code, PageHeading } from "./_docComponents"
+import { useDocLang, byLang } from "./LanguageContext"
 
 export default function ConfigurationPage() {
+  const { lang } = useDocLang()
+  const isTs = lang === "typescript"
   return (
     <>
       <Helmet>
@@ -32,19 +35,33 @@ export default function ConfigurationPage() {
       />
 
       <p className="font-medium">fluiq.instrument()</p>
-      <Code>{`fluiq.instrument(
+      <Code>{byLang(
+        lang,
+        `fluiq.instrument(
     api_key  = "fl_...",          # required — or set FLUIQ_API_KEY env var
     endpoint = "https://...",     # optional — override for self-hosted
     version  = "v1",              # optional — pin for stable schema
-)`}</Code>
+)`,
+        `fluiq.instrument({
+  apiKey: "fl_...",        // required — or set FLUIQ_API_KEY env var
+  endpoint: "https://...", // optional — override for self-hosted
+  version: "v1",           // optional — pin for stable schema
+});`,
+      )}</Code>
       <p className="text-sm text-muted-foreground">
         The SDK reads <code className="font-mono text-foreground">FLUIQ_API_KEY</code> and <code className="font-mono text-foreground">FLUIQ_API_ENDPOINT</code> from the environment automatically, so <code className="font-mono text-foreground">instrument()</code> can be called with no arguments in CI and production environments that set those variables.
       </p>
 
       <p className="font-medium mt-2">fluiq.optimize()</p>
-      <Code>{`fluiq.optimize(
+      <Code>{byLang(
+        lang,
+        `fluiq.optimize(
     mode = "cache",    # "cache" (default) | "observe"
-)`}</Code>
+)`,
+        `fluiq.optimize({
+  mode: "cache", // "cache" (default) | "observe"
+});`,
+      )}</Code>
       <div className="grid gap-3 text-sm">
         <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
           <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
@@ -63,9 +80,15 @@ export default function ConfigurationPage() {
       </div>
 
       <p className="font-medium mt-2">fluiq.secure()</p>
-      <Code>{`fluiq.secure(
+      <Code>{byLang(
+        lang,
+        `fluiq.secure(
     mode = "warn",     # "warn" (default) | "block"
-)`}</Code>
+)`,
+        `fluiq.secure({
+  mode: "warn", // "warn" (default) | "block"
+});`,
+      )}</Code>
       <div className="grid gap-3 text-sm">
         <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
           <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
@@ -83,30 +106,46 @@ export default function ConfigurationPage() {
         </div>
       </div>
 
-      <p className="font-medium mt-2">fluiq.fetch_prompt()</p>
-      <Code>{`fluiq.fetch_prompt(
+      <p className="font-medium mt-2">{isTs ? "fluiq.fetchPrompt()" : "fluiq.fetch_prompt()"}</p>
+      <Code>{byLang(
+        lang,
+        `fluiq.fetch_prompt(
     slug  = "my-prompt",       # required — the unique identifier
     env   = "production",      # optional — "development" | "staging" | "production" (default)
-)`}</Code>
+)`,
+        `fluiq.fetchPrompt(
+  "my-prompt",           // required — the unique identifier
+  { env: "production" }, // optional — "development" | "staging" | "production" (default)
+);`,
+      )}</Code>
       <div className="grid gap-3 text-sm">
         <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
           <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
           <div>
             <p className="font-mono text-sm text-foreground">slug / env</p>
             <p className="mt-1 text-muted-foreground">
-              Fetches the environment snapshot promoted via the Prompts dashboard. Requires <code className="font-mono text-foreground">instrument()</code> to have been called first (uses the same API key). Returns a prompt object with <code className="font-mono text-foreground">.template</code>, <code className="font-mono text-foreground">.model</code>, <code className="font-mono text-foreground">.variables</code>, <code className="font-mono text-foreground">.version</code>, and a <code className="font-mono text-foreground">.render(**kwargs)</code> method for variable substitution.
+              Fetches the environment snapshot promoted via the Prompts dashboard. Requires <code className="font-mono text-foreground">instrument()</code> to have been called first (uses the same API key). Returns {isTs ? "a promise resolving to " : ""}a prompt object with <code className="font-mono text-foreground">.template</code>, <code className="font-mono text-foreground">.model</code>, <code className="font-mono text-foreground">.variables</code>, <code className="font-mono text-foreground">.version</code>, and a <code className="font-mono text-foreground">{isTs ? ".render(variables)" : ".render(**kwargs)"}</code> method for variable substitution.
             </p>
           </div>
         </div>
       </div>
 
       <p className="font-medium mt-2">fluiq.eval()</p>
-      <Code>{`fluiq.eval(
+      <Code>{byLang(
+        lang,
+        `fluiq.eval(
     thresholds   = {"hallucination": 0.8, "relevance": 0.7},
     metrics      = ["hallucination", "relevance", "toxicity"],
     mode         = "warn",          # "warn" (default) | "block"
     judge_model  = "gpt-4o-mini",
-)`}</Code>
+)`,
+        `fluiq.eval({
+  thresholds: { hallucination: 0.8, relevance: 0.7 },
+  metrics: ["hallucination", "relevance", "toxicity"],
+  mode: "warn", // "warn" (default) | "block"
+  judgeModel: "claude-haiku-4-5-20251001",
+});`,
+      )}</Code>
       <div className="grid gap-3 text-sm">
         <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
           <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />

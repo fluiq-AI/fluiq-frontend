@@ -3,8 +3,10 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { SecurityCheckIcon } from "@hugeicons/core-free-icons"
 import { Badge } from "@/components/ui/badge"
 import { Code, PageHeading } from "./_docComponents"
+import { useDocLang, byLang } from "./LanguageContext"
 
 export default function SecurityPage() {
+  const { lang } = useDocLang()
   return (
     <>
       <Helmet>
@@ -46,14 +48,25 @@ export default function SecurityPage() {
       </div>
 
       <p className="font-medium">Setup</p>
-      <Code>{`import fluiq
+      <Code>{byLang(
+        lang,
+        `import fluiq
 
 fluiq.instrument(api_key="fl_...")
 fluiq.secure()
 
 # All LLM calls are now traced and scanned server-side.
 # Use mode="block" to reject malicious prompts before the LLM call:
-fluiq.secure(mode="block")`}</Code>
+fluiq.secure(mode="block")`,
+        `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.secure();
+
+// All LLM calls are now traced and scanned server-side.
+// Use mode "block" to reject malicious prompts before the LLM call:
+fluiq.secure({ mode: "block" });`,
+      )}</Code>
       <p className="text-sm text-muted-foreground">
         No extra packages — scanning runs on Fluiq infrastructure, not in your process. Detection patterns are never shipped in the SDK and are improved continuously without requiring an update.
       </p>

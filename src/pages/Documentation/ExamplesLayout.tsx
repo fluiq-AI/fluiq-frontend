@@ -10,6 +10,7 @@ import {
   SecurityCheckIcon,
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
+import { LanguageProvider, LanguageToggle } from "./LanguageContext"
 
 const NAV = [
   { to: "/examples/observability", label: "Observability", icon: ChartLineData01Icon },
@@ -21,12 +22,14 @@ const NAV = [
 
 export default function ExamplesLayout() {
   return (
+    <LanguageProvider>
     <div className="min-h-screen bg-background text-foreground">
       <SiteNavbar variant="docs" badge="Examples" active="developer" />
 
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-8 md:grid-cols-[220px_1fr]">
         <aside className="hidden md:block">
           <nav className="sticky top-24 flex flex-col gap-0.5 text-sm">
+            <LanguageToggle />
             <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/50">
               Examples
             </p>
@@ -64,5 +67,6 @@ export default function ExamplesLayout() {
         </main>
       </div>
     </div>
+    </LanguageProvider>
   )
 }

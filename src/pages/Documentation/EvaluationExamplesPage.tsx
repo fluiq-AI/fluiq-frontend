@@ -1,8 +1,8 @@
 ﻿import { Helmet } from "react-helmet-async"
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
-import { IntegrationTabs, PageHeading } from "./_docComponents"
+import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 
-const tabs = [
+const pythonTabs: CodeTab[] = [
   {
     label: "Warn mode",
     description:
@@ -282,6 +282,217 @@ asyncio.run(main())`,
   },
 ]
 
+const typescriptTabs: CodeTab[] = [
+  {
+    label: "Warn mode",
+    description:
+      "Call fluiq.eval() once after instrument() — every subsequent traced LLM call is scored in the background. Results appear in the Evaluations dashboard; a warning is logged when a score falls below its threshold.",
+    code: `import OpenAI from "openai";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.eval({
+  metrics: ["hallucination", "relevance"], // scored on every LLM call
+  mode: "warn",                            // default — never blocks
+  thresholds: { hallucination: 0.8, relevance: 0.7 },
+});
+
+const client = new OpenAI();
+
+// Evaluation fires automatically after this call
+const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [{ role: "user", content: "What year did World War II end?" }],
+});
+console.log(response.choices[0].message.content);
+// Scores visible in the Fluiq Evaluations tab`,
+  },
+  {
+    label: "Block mode",
+    description:
+      "In block mode fluiq.eval() runs synchronously after each LLM call and throws FluiqEvalError if any metric falls below its threshold — the response never reaches your application.",
+    code: `import OpenAI from "openai";
+import fluiq, { FluiqEvalError } from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.eval({
+  metrics: ["hallucination", "toxicity"],
+  mode: "block",
+  thresholds: { hallucination: 0.8, toxicity: 0.9 },
+});
+
+const client = new OpenAI();
+
+let answer: string;
+try {
+  const response = await client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: userQuery }],
+  });
+  answer = response.choices[0].message.content ?? "";
+} catch (e) {
+  if (e instanceof FluiqEvalError) {
+    // Score fell below threshold — handle gracefully
+    console.log(\`Eval blocked response: \${e.message}\`);
+    answer = "I can't answer that right now.";
+  } else {
+    throw e;
+  }
+}`,
+  },
+  {
+    label: "All metrics",
+    description: "Fluiq supports six built-in metrics. Mix and match with per-metric thresholds.",
+    code: `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.eval({
+  metrics: [
+    "hallucination", // is the response grounded in fact?
+    "faithfulness",  // does it stay true to any provided context?
+    "relevance",     // does it address the question?
+    "toxicity",      // does it contain harmful content?
+    "coherence",     // is it logically consistent?
+    "completeness",  // does it fully answer the question?
+  ],
+  thresholds: {
+    hallucination: 0.8,
+    faithfulness: 0.75,
+    relevance: 0.7,
+    toxicity: 0.95,
+    coherence: 0.7,
+    completeness: 0.65,
+  },
+  mode: "warn",
+  judgeModel: "claude-haiku-4-5-20251001", // default judge
+});`,
+  },
+  {
+    label: "LangChain",
+    description:
+      "Evaluation fires automatically on every LangChain LLM call — chains, agents, and direct invocations are all covered.",
+    code: `import { ChatOpenAI } from "@langchain/openai";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.eval({ metrics: ["hallucination", "relevance"], mode: "warn" });
+
+const llm = new ChatOpenAI({ model: "gpt-4o" });
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are a helpful assistant. Be concise and accurate."],
+  ["human", "{question}"],
+]);
+const chain = prompt.pipe(llm);
+
+// Every chain invocation is traced and evaluated automatically
+await chain.invoke({ question: "Explain the difference between RAG and fine-tuning" });`,
+  },
+  {
+    label: "LangGraph",
+    description:
+      "Each LLM call inside a graph node is evaluated independently — scores are attached to the corresponding span in the trace tree.",
+    code: `import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
+import { ChatOpenAI } from "@langchain/openai";
+import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.eval({ metrics: ["hallucination", "relevance"], mode: "warn" });
+
+const llm = new ChatOpenAI({ model: "gpt-4o" });
+
+const State = Annotation.Root({
+  question: Annotation<string>(),
+  answer: Annotation<string>(),
+});
+
+async function researchNode(state: typeof State.State) {
+  // This LLM call is traced and evaluated automatically
+  const response = await llm.invoke(\`Research: \${state.question}\`);
+  return { answer: response.content as string };
+}
+
+async function refineNode(state: typeof State.State) {
+  const response = await llm.invoke(\`Improve this answer: \${state.answer}\`);
+  return { answer: response.content as string };
+}
+
+const graph = new StateGraph(State)
+  .addNode("research", researchNode)
+  .addNode("refine", refineNode)
+  .addEdge(START, "research")
+  .addEdge("research", "refine")
+  .addEdge("refine", END)
+  .compile();
+
+const result = await graph.invoke({
+  question: "What are the benefits of semantic caching?",
+});`,
+  },
+  {
+    label: "Google ADK",
+    description:
+      "ADK agent calls are evaluated through the @google/genai patch — each Gemini call gets a score attached to its trace span.",
+    code: `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.eval({ metrics: ["hallucination", "relevance", "coherence"], mode: "warn" });
+
+// @google/adk agents call Gemini under the hood. Every model call is traced
+// through Fluiq's @google/genai patch and evaluated automatically — no extra
+// code is required. Scores are attached to each Gemini span in the trace tree.`,
+  },
+  {
+    label: "CI/CD eval gate",
+    description:
+      "Use block mode in CI — set thresholds tight and catch FluiqEvalError to fail the build when response quality regresses.",
+    code: `// evaluate.ts — run in your CI pipeline before merging
+import fluiq, { FluiqEvalError } from "@fluiq/sdk";
+import OpenAI from "openai";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.eval({
+  metrics: ["hallucination", "relevance", "completeness"],
+  mode: "block",
+  thresholds: { hallucination: 0.85, relevance: 0.8, completeness: 0.75 },
+});
+
+const client = new OpenAI();
+
+const TEST_CASES = [
+  "What year did World War II end?",
+  "Explain the difference between TCP and UDP.",
+  "What is the capital of Australia?",
+];
+
+let passed = 0;
+let failed = 0;
+for (const question of TEST_CASES) {
+  try {
+    await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: question }],
+    });
+    passed++;
+  } catch (e) {
+    if (e instanceof FluiqEvalError) {
+      console.log(\`FAIL [\${question.slice(0, 40)}]: \${e.message}\`);
+      failed++;
+    } else {
+      throw e;
+    }
+  }
+}
+
+console.log(\`\\nResults: \${passed} passed, \${failed} failed\`);
+if (failed > 0) {
+  console.error(\`Eval gate FAILED: \${failed} case(s) below threshold\`);
+  process.exit(1);
+}
+console.log("Eval gate passed");`,
+  },
+]
+
 export default function EvaluationExamplesPage() {
   return (
     <>
@@ -308,7 +519,7 @@ export default function EvaluationExamplesPage() {
         title="Evaluation"
         description="Call fluiq.eval() once after instrument() — Fluiq runs an LLM-as-judge on every traced LLM response, scores each metric (0–1), and stores results in your dashboard. Use block mode to gate on quality in CI."
       />
-      <IntegrationTabs tabs={tabs} />
+      <IntegrationTabs tabs={{ python: pythonTabs, typescript: typescriptTabs }} />
     </div>
     </>
   )

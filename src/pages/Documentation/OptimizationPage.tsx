@@ -3,8 +3,11 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { MagicWand01Icon, ZapIcon } from "@hugeicons/core-free-icons"
 import { Badge } from "@/components/ui/badge"
 import { Code, PageHeading } from "./_docComponents"
+import { useDocLang, byLang } from "./LanguageContext"
 
 export default function OptimizationPage() {
+  const { lang } = useDocLang()
+  const isTs = lang === "typescript"
   return (
     <>
       <Helmet>
@@ -39,14 +42,25 @@ export default function OptimizationPage() {
       </div>
 
       <p className="font-medium">Setup</p>
-      <Code>{`import fluiq
+      <Code>{byLang(
+        lang,
+        `import fluiq
 
 fluiq.instrument(api_key="fl_...")
 fluiq.optimize()
 
 # All LLM calls from this point are transparently intercepted.
 # Repeated (model, messages) pairs are served from Redis instantly —
-# no LLM API call is made and your spend drops accordingly.`}</Code>
+# no LLM API call is made and your spend drops accordingly.`,
+        `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+fluiq.optimize();
+
+// All LLM calls from this point are transparently intercepted.
+// Repeated (model, messages) pairs are served from Redis instantly —
+// no LLM API call is made and your spend drops accordingly.`,
+      )}</Code>
 
       <p className="font-medium">How it works</p>
       <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
@@ -83,8 +97,13 @@ fluiq.optimize()
           </div>
         ))}
       </div>
-      <Code>{`fluiq.optimize(mode="observe")   # review savings first
-fluiq.optimize(mode="cache")     # then enable full caching`}</Code>
+      <Code>{byLang(
+        lang,
+        `fluiq.optimize(mode="observe")   # review savings first
+fluiq.optimize(mode="cache")     # then enable full caching`,
+        `fluiq.optimize({ mode: "observe" }); // review savings first
+fluiq.optimize({ mode: "cache" });   // then enable full caching`,
+      )}</Code>
 
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
         <p className="font-medium">Fail-open by design</p>
@@ -95,20 +114,22 @@ fluiq.optimize(mode="cache")     # then enable full caching`}</Code>
 
       <p className="font-medium">MCP tool caching</p>
       <p className="text-sm text-muted-foreground">
-        When MCP servers are in use, <code className="font-mono text-foreground">fluiq.optimize()</code> transparently caches two expensive operations on every <code className="font-mono text-foreground">ClientSession</code>:
+        When MCP servers are in use, <code className="font-mono text-foreground">fluiq.optimize()</code> transparently caches two expensive operations on every MCP <code className="font-mono text-foreground">{isTs ? "Client" : "ClientSession"}</code>:
       </p>
       <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
         <li>
-          <code className="font-mono text-foreground">list_tools()</code> — response cached in Redis keyed by server URL. Automatically invalidated when <code className="font-mono text-foreground">session.initialize()</code> is called (server restart).
+          <code className="font-mono text-foreground">{isTs ? "listTools()" : "list_tools()"}</code> — response cached in Redis keyed by server URL. Automatically invalidated when <code className="font-mono text-foreground">{isTs ? "client.connect()" : "session.initialize()"}</code> is called (server restart).
         </li>
         <li>
-          <code className="font-mono text-foreground">call_tool(name, arguments)</code> — result cached keyed by <code className="font-mono text-foreground">(server_url, tool_name, sorted_arguments)</code>. Error results are never cached.
+          <code className="font-mono text-foreground">{isTs ? "callTool({ name, arguments })" : "call_tool(name, arguments)"}</code> — result cached keyed by <code className="font-mono text-foreground">(server_url, tool_name, sorted_arguments)</code>. Error results are never cached.
         </li>
       </ul>
       <p className="text-sm text-muted-foreground">
         Hit and miss counts appear in the Optimize dashboard under <strong className="text-foreground">mcp_list_tools</strong> and <strong className="text-foreground">mcp_call</strong> in the "By cache type" breakdown.
       </p>
-      <Code>{`# No extra code required — MCP caching is transparent once optimize() is called.
+      <Code>{byLang(
+        lang,
+        `# No extra code required — MCP caching is transparent once optimize() is called.
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
@@ -116,7 +137,22 @@ async with streamablehttp_client("https://your-mcp-server/mcp") as (r, w, _):
     async with ClientSession(r, w) as session:
         await session.initialize()
         tools = await session.list_tools()   # cached after first call
-        result = await session.call_tool("search", {"query": "fluiq"})  # cached`}</Code>
+        result = await session.call_tool("search", {"query": "fluiq"})  # cached`,
+        `// No extra code required — MCP caching is transparent once optimize() is called.
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
+const transport = new StreamableHTTPClientTransport(
+  new URL("https://your-mcp-server/mcp"),
+);
+const client = new Client({ name: "my-app", version: "1.0.0" });
+await client.connect(transport);
+const tools = await client.listTools();              // cached after first call
+const result = await client.callTool({               // cached
+  name: "search",
+  arguments: { query: "fluiq" },
+});`,
+      )}</Code>
 
       <p className="font-medium">Provider prompt caching</p>
       <p className="text-sm text-muted-foreground">
@@ -138,7 +174,7 @@ async with streamablehttp_client("https://your-mcp-server/mcp") as (r, w, _):
           {
             provider: "Gemini",
             detail: "explicit CachedContent (user-managed)",
-            body: "Create a CachedContent object via the Gemini API and pass it to generate_content. Fluiq captures usage_metadata.cached_content_token_count from every response as prompt_cached_tokens.",
+            body: `Create a CachedContent object via the Gemini API and pass it to ${isTs ? "generateContent" : "generate_content"}. Fluiq captures the cached content token count from every response as prompt_cached_tokens.`,
           },
         ].map((p) => (
           <div key={p.provider} className="rounded-xl border border-border/60 bg-muted/30 p-3">

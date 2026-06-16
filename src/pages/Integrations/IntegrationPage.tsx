@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Helmet } from "react-helmet-async"
 import { Link } from "react-router"
 import { motion } from "motion/react"
@@ -12,6 +13,8 @@ import {
   FlashIcon,
   AiContentGenerator01Icon,
   CheckmarkCircle02Icon,
+  PythonIcon,
+  Typescript01Icon,
 } from "@hugeicons/core-free-icons"
 import { IslandCta } from "@/components/IslandCta"
 import { CodeBlock } from "@/components/code-block"
@@ -19,7 +22,10 @@ import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
-import { type IntegrationData, type Category, INTEGRATION_META } from "./data"
+import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
+import { type IntegrationData, type Category, INTEGRATION_META, INTEGRATION_TS } from "./data"
+
+type SetupLang = "python" | "typescript"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -43,6 +49,14 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
   useScrollReveal()
 
   const cat = CATEGORY_STYLES[data.category]
+
+  // TypeScript equivalent exists only for SDK-supported integrations (Python has more).
+  const ts = INTEGRATION_TS[data.slug]
+  const [lang, setLang] = useState<SetupLang>("python")
+  const activeLang: SetupLang = ts ? lang : "python"
+  const setupCode = activeLang === "typescript" && ts ? ts.setupCode : data.setupCode
+  const instrumentedItems =
+    activeLang === "typescript" && ts ? ts.instrumentedItems : data.instrumentedItems
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
@@ -170,7 +184,33 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
           </div>
           <div className="rounded-[1.75rem] bg-white/[0.04] p-2 ring-1 ring-white/10 shadow-[0_30px_70px_-28px_rgba(111,168,255,0.25)]">
             <div className="rounded-[1.25rem] border border-white/[0.07] bg-[#111111] overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.08)]">
-              <CodeBlock variant="dark">{data.setupCode}</CodeBlock>
+              {/* Language toggle — top right of the code block (only when a TS sample exists) */}
+              <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-2.5">
+                <span className="flex items-center gap-1.5 font-mono text-[11px] text-[#6B6B66]">
+                  <HugeiconsIcon icon={activeLang === "typescript" ? Typescript01Icon : PythonIcon} size={13} />
+                  {activeLang === "typescript" ? "TypeScript" : "Python"}
+                </span>
+                {ts && (
+                  <div className="flex gap-0.5 rounded-lg border border-white/[0.07] bg-white/[0.04] p-0.5">
+                    {(["python", "typescript"] as const).map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => setLang(l)}
+                        aria-pressed={activeLang === l}
+                        className={`rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                          activeLang === l
+                            ? "bg-[#6FA8FF] text-[#0A0A0A]"
+                            : "text-[#9A9A92] hover:text-white"
+                        }`}
+                      >
+                        {l === "python" ? "Python" : "TypeScript"}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <CodeBlock variant="dark" highlighted={syntaxHighlight(setupCode, activeLang)}>{setupCode}</CodeBlock>
             </div>
           </div>
         </div>
@@ -189,7 +229,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
           </div>
 
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2" data-animate data-delay="1">
-            {data.instrumentedItems.map((item, i) => (
+            {instrumentedItems.map((item, i) => (
               <div key={i} className="flex items-center gap-3 rounded-xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9]/40 dark:bg-[#111111]/40 px-4 py-3">
                 <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="shrink-0 text-emerald-600 dark:text-emerald-500" />
                 <code className="font-mono text-[13px] text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">{item}</code>

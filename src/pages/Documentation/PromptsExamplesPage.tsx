@@ -1,8 +1,8 @@
 ﻿import { Helmet } from "react-helmet-async"
 import { FileScriptIcon } from "@hugeicons/core-free-icons"
-import { IntegrationTabs, PageHeading } from "./_docComponents"
+import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 
-const tabs = [
+const pythonTabs: CodeTab[] = [
   {
     label: "Basic usage",
     description: "Fetch a deployed prompt template by slug and render it with variables before calling your LLM.",
@@ -166,6 +166,170 @@ print(prompt.template[:200])`,
   },
 ]
 
+const typescriptTabs: CodeTab[] = [
+  {
+    label: "Basic usage",
+    description: "Fetch a deployed prompt template by slug and render it with variables before calling your LLM.",
+    code: `import fluiq from "@fluiq/sdk";
+import OpenAI from "openai";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const client = new OpenAI();
+
+// Fetch the production snapshot (default)
+const prompt = await fluiq.fetchPrompt("customer-support-reply");
+
+// Fill template variables and call your LLM
+const filled = prompt.render({
+  company: "Acme Corp",
+  language: "English",
+  question: userInput,
+});
+
+const response = await client.chat.completions.create({
+  model: prompt.model ?? "gpt-4o",
+  messages: [{ role: "user", content: filled }],
+});
+console.log(response.choices[0].message.content);`,
+  },
+  {
+    label: "Environments",
+    description: "Fetch a prompt from a specific environment — development, staging, or production. Each environment stores an independent snapshot.",
+    code: `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+// Production snapshot (default)
+const prodPrompt = await fluiq.fetchPrompt("summariser");
+
+// Staging — test changes before promoting to prod
+const stagingPrompt = await fluiq.fetchPrompt("summariser", { env: "staging" });
+
+// Development — iterate locally without touching staging
+const devPrompt = await fluiq.fetchPrompt("summariser", { env: "development" });
+
+console.log(\`prod v\${prodPrompt.version}  →  \${prodPrompt.template.slice(0, 60)}...\`);
+console.log(\`stg  v\${stagingPrompt.version}  →  \${stagingPrompt.template.slice(0, 60)}...\`);
+console.log(\`dev  v\${devPrompt.version}  →  \${devPrompt.template.slice(0, 60)}...\`);`,
+  },
+  {
+    label: "Anthropic",
+    description: "Use fetchPrompt() with Anthropic — the prompt object exposes the suggested model so your code stays model-agnostic.",
+    code: `import fluiq from "@fluiq/sdk";
+import Anthropic from "@anthropic-ai/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const client = new Anthropic();
+
+const prompt = await fluiq.fetchPrompt("technical-explainer");
+
+const filled = prompt.render({ topic: userQuestion, audience: "engineers" });
+
+const response = await client.messages.create({
+  model: prompt.model ?? "claude-sonnet-4-6",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: filled }],
+});
+console.log(response.content[0].type === "text" && response.content[0].text);`,
+  },
+  {
+    label: "Template variables",
+    description: "Inspect declared variables before rendering — useful for validation or building dynamic UIs.",
+    code: `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const prompt = await fluiq.fetchPrompt("onboarding-email");
+
+// Variables declared on the prompt
+console.log(prompt.variables); // ["first_name", "product", "tier"]
+
+// Validate all required variables are present before rendering
+const provided = { first_name: "Alice", product: "Fluiq", tier: "Team" };
+
+const missing = prompt.variables.filter((v) => !(v in provided));
+if (missing.length > 0) {
+  throw new Error(\`Missing template variables: \${missing.join(", ")}\`);
+}
+
+const filled = prompt.render(provided);
+console.log(filled);`,
+  },
+  {
+    label: "Hot-swap",
+    description: "Call fetchPrompt() per request to pick up promoted changes instantly — no code change or redeploy needed.",
+    code: `import fluiq from "@fluiq/sdk";
+import OpenAI from "openai";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const client = new OpenAI();
+
+async function handleRequest(userMessage: string): Promise<string> {
+  // Fetched fresh every call — promotions appear immediately
+  const prompt = await fluiq.fetchPrompt("chat-system-prompt");
+
+  const response = await client.chat.completions.create({
+    model: prompt.model ?? "gpt-4o",
+    messages: [
+      { role: "system", content: prompt.template },
+      { role: "user", content: userMessage },
+    ],
+  });
+  return response.choices[0].message.content ?? "";
+}
+
+// Edit the prompt in the dashboard → promote to production
+// → next request picks up the new version automatically
+// → no code change, no redeploy`,
+  },
+  {
+    label: "Express handler",
+    description: "fetchPrompt() is async — await it inside any Express, Fastify, or Next.js route handler.",
+    code: `import express from "express";
+import fluiq from "@fluiq/sdk";
+import OpenAI from "openai";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const app = express();
+app.use(express.json());
+const client = new OpenAI();
+
+app.post("/support", async (req, res) => {
+  const prompt = await fluiq.fetchPrompt("support-agent");
+  const filled = prompt.render({ question: req.body.message });
+
+  const response = await client.chat.completions.create({
+    model: prompt.model ?? "gpt-4o",
+    messages: [{ role: "user", content: filled }],
+  });
+  res.json({ reply: response.choices[0].message.content });
+});`,
+  },
+  {
+    label: "Version info",
+    description: "Inspect version and deployment metadata of a fetched prompt — useful for logging and debugging.",
+    code: `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." });
+
+const prompt = await fluiq.fetchPrompt("product-description");
+
+console.log(\`slug:         \${prompt.slug}\`);
+console.log(\`name:         \${prompt.name}\`);
+console.log(\`version:      v\${prompt.version}\`);
+console.log(\`environment:  \${prompt.environment}\`);
+console.log(\`model:        \${prompt.model ?? "(not set)"}\`);
+console.log(\`variables:    \${prompt.variables.join(", ")}\`);
+console.log();
+console.log("template preview:");
+console.log(prompt.template.slice(0, 200));`,
+  },
+]
+
 export default function PromptsExamplesPage() {
   return (
     <>
@@ -192,7 +356,7 @@ export default function PromptsExamplesPage() {
         title="Prompts"
         description="fluiq.fetch_prompt() fetches a versioned template from the Prompts dashboard at runtime. Edit and promote prompts without touching your code or triggering a redeploy."
       />
-      <IntegrationTabs tabs={tabs} />
+      <IntegrationTabs tabs={{ python: pythonTabs, typescript: typescriptTabs }} />
     </div>
     </>
   )

@@ -6,8 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Code } from "./_docComponents"
+import { useDocLang, byLang } from "./LanguageContext"
 
 export default function QuickstartPage() {
+  const { lang } = useDocLang()
+  const isTs = lang === "typescript"
   return (
     <>
       <Helmet>
@@ -34,10 +37,10 @@ export default function QuickstartPage() {
           SDK reference
         </Badge>
         <h1 className="font-heading text-4xl font-semibold tracking-tight md:text-5xl">
-          Fluiq Python SDK
+          Fluiq {isTs ? "TypeScript" : "Python"} SDK
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Two lines of Python instrument any AI agent or LLM pipeline. Auto-traced integrations for OpenAI, Anthropic, Gemini, LangChain, and MCP, plus a <code className="font-mono text-foreground">@trace</code> decorator for everything else. Server-side security scanning, Redis caching, and LLM-as-judge evaluations are one method call each — all on Fluiq infrastructure, nothing to deploy.
+          Two lines of {isTs ? "TypeScript" : "Python"} instrument any AI agent or LLM pipeline. Auto-traced integrations for OpenAI, Anthropic, Gemini, LangChain, and MCP, plus a <code className="font-mono text-foreground">{isTs ? "trace()" : "@trace"}</code> {isTs ? "wrapper" : "decorator"} for everything else. Server-side security scanning, Redis caching, and LLM-as-judge evaluations are one method call each — all on Fluiq infrastructure, nothing to deploy.
         </p>
       </div>
 
@@ -54,7 +57,7 @@ export default function QuickstartPage() {
             <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold">1</span>
             <div className="grow">
               <p className="font-medium">Install</p>
-              <Code>{`pip install fluiq`}</Code>
+              <Code>{byLang(lang, `pip install fluiq`, `npm install @fluiq/sdk`)}</Code>
             </div>
           </div>
           <div className="flex items-start gap-3">
@@ -71,7 +74,9 @@ export default function QuickstartPage() {
             <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold">3</span>
             <div className="grow">
               <p className="font-medium">Instrument once at startup</p>
-              <Code>{`import fluiq
+              <Code>{byLang(
+                lang,
+                `import fluiq
 
 fluiq.instrument(api_key="fl_...") # or set FLUIQ_API_KEY to environment
 
@@ -79,7 +84,17 @@ fluiq.instrument(api_key="fl_...") # or set FLUIQ_API_KEY to environment
 # call from this point on is traced automatically.
 # Optionally add paid features:
 fluiq.optimize()   # Redis caching — Team+
-fluiq.secure()     # Security scanning — Growth+`}</Code>
+fluiq.secure()     # Security scanning — Growth+`,
+                `import fluiq from "@fluiq/sdk";
+
+fluiq.instrument({ apiKey: "fl_..." }); // or set FLUIQ_API_KEY in your environment
+
+// Every OpenAI / Anthropic / Gemini / LangChain / MCP
+// call from this point on is traced automatically.
+// Optionally add paid features:
+fluiq.optimize(); // Redis caching — Team+
+fluiq.secure();   // Security scanning — Growth+`,
+              )}</Code>
             </div>
           </div>
         </div>
