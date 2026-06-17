@@ -26,8 +26,6 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
-import type { TraceListResponse } from "@/pages/Dashboard/Traces/utils/types"
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Provider = "all" | "openai" | "anthropic" | "google"
@@ -43,16 +41,21 @@ interface DayCost {
   google: number
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function detectProvider(model: unknown): "openai" | "anthropic" | "google" | "other" {
-  if (typeof model !== "string" || !model) return "other"
-  const m = model.toLowerCase()
-  if (m.startsWith("gpt-") || m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4") || m.startsWith("text-embedding") || m.includes("openai")) return "openai"
-  if (m.startsWith("claude-") || m.includes("anthropic")) return "anthropic"
-  if (m.startsWith("gemini-") || m.includes("google")) return "google"
-  return "other"
+// Daily spend already aggregated by provider on the server. The chart pulls
+// this (≤30 rows) instead of ~1000 fully-joined trace rows.
+interface SpendingDay {
+  date: string
+  all: number
+  openai: number
+  anthropic: number
+  google: number
+  other: number
 }
+interface SpendingResponse {
+  days: SpendingDay[]
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function generateDateRange(days: number): { date: string; label: string }[] {
   const result = []
@@ -92,7 +95,7 @@ const CHART_CONFIG = {
 // ── Card ──────────────────────────────────────────────────────────────────────
 
 export function SpendingChartCard() {
-  const [traces, setTraces] = useState<TraceListResponse["traces"]>([])
+  const [spending, setSpending] = useState<SpendingDay[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [period, setPeriod] = useState<Period>(30)
@@ -103,8 +106,10 @@ export function SpendingChartCard() {
     let cancelled = false
     ;(async () => {
       try {
-        const data = await authFetch<TraceListResponse>("/api/v1/traces?limit=1000")
-        if (!cancelled) setTraces(data.traces)
+        // Server returns the full 30-day window pre-aggregated by provider; the
+        // period toggle just slices it client-side, so no refetch on change.
+        const data = await authFetch<SpendingResponse>("/api/v1/traces/spending?days=30")
+        if (!cancelled) setSpending(data.days)
       } catch (err) {
         if (!cancelled) setError(err instanceof ApiError ? err.detail : "Failed to load spending data")
       } finally {
@@ -120,16 +125,16 @@ export function SpendingChartCard() {
     for (const { date, label } of dateRange) {
       byDate[date] = { date, label, all: 0, openai: 0, anthropic: 0, google: 0 }
     }
-    for (const t of traces) {
-      if (!t.cost || t.cost <= 0) continue
-      const date = t.ingested_at.slice(0, 10)
-      if (!byDate[date]) continue
-      const prov = detectProvider(t.event["model"])
-      byDate[date].all += t.cost
-      if (prov !== "other") byDate[date][prov] += t.cost
+    for (const d of spending) {
+      const slot = byDate[d.date]
+      if (!slot) continue
+      slot.all += d.all
+      slot.openai += d.openai
+      slot.anthropic += d.anthropic
+      slot.google += d.google
     }
     return dateRange.map(({ date }) => byDate[date])
-  }, [traces, period])
+  }, [spending, period])
 
   const totalSpend = useMemo(
     () => chartData.reduce((s, d) => s + d[provider], 0),

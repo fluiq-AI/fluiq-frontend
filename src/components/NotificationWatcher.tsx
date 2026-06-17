@@ -12,6 +12,9 @@ const COOLDOWN_5MIN   = 5  * 60 * 1000
 const COOLDOWN_1HOUR  = 60 * 60 * 1000
 const COOLDOWN_24HOUR = 24 * 60 * 60 * 1000
 const CACHE_POLL_MS   = 15 * 60 * 1000
+// Background notification checks wait this long after mount so their fetches
+// don't contend with the dashboard's first-paint queries.
+const NOTIFY_DEFER_MS = 4000
 
 function lastNotifiedAt(key: string): number {
   return parseInt(localStorage.getItem(key) ?? "0", 10)
@@ -134,7 +137,12 @@ export function NotificationWatcher() {
   useEffect(() => {
     if (!cooldownExpired("fluiq.notify.evals", COOLDOWN_1HOUR)) return
 
-    authFetch<TraceListResponse>("/api/v1/traces?limit=200")
+    // This is a background check, not first-paint data — defer it so its
+    // (heavy, fully-joined) trace fetch doesn't compete with the dashboard's
+    // initial render, and cap the sample at 100 recent traces (regression
+    // needs only ≥3 scores per metric).
+    const timer = setTimeout(() => {
+    authFetch<TraceListResponse>("/api/v1/traces?limit=100")
       .then((data) => {
         const totals: Record<string, { sum: number; count: number }> = {}
         for (const trace of data.traces) {
@@ -165,6 +173,8 @@ export function NotificationWatcher() {
         }
       })
       .catch(() => {})
+    }, NOTIFY_DEFER_MS)
+    return () => clearTimeout(timer)
   }, [dispatch])
 
   // ── 3. Cache hit rate (on mount + poll every 15 min, 1-hour notification cooldown) ──
@@ -192,9 +202,10 @@ export function NotificationWatcher() {
         .catch(() => {})
     }
 
-    checkCache()
+    // Defer the first check past first paint; keep the steady-state poll.
+    const initial = setTimeout(checkCache, NOTIFY_DEFER_MS)
     const timer = setInterval(checkCache, CACHE_POLL_MS)
-    return () => clearInterval(timer)
+    return () => { clearTimeout(initial); clearInterval(timer) }
   }, [dispatch])
 
   // ── 4. Security: real-time SSE (no cooldown for blocked; 5-min for enriched) ─

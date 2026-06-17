@@ -16,7 +16,6 @@ import {
   FLOW_LOOP_MIN_ITERATIONS,
   FLOW_NODE_HEIGHT,
   FLOW_NODE_WIDTH,
-  FLOW_TOOL_ROWS_MAX,
 } from "../utils/constants"
 import {
   extractLlmToolCallNames,
@@ -806,11 +805,11 @@ export function buildFlowElements(
               : undefined,
           }
         })
-      const shown = Math.min(entries.length, FLOW_TOOL_ROWS_MAX)
-      const hasMore = entries.length > FLOW_TOOL_ROWS_MAX
+      // Size the node to fit every tool row so none get clipped behind a
+      // fixed height — the header (~34px) plus one ~22px row per tool.
       const nodeHeight = Math.max(
         FLOW_NODE_HEIGHT,
-        34 + shown * 22 + (hasMore ? 18 : 0),
+        34 + entries.length * 22,
       )
       const toolsFlowId = `looptools:${myFlowId}`
       const synthetic: TraceNode = {

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import type { TraceNode, TraceRecord } from "../utils/types"
 import {
   countSubtree,
+  hasBlockedDescendant,
   hasFailedDescendant,
   minSubtreeScore,
   minTraceScore,
@@ -64,6 +65,7 @@ export function TraceTreeRows({
   const blocked = isBlocked(t.event)
   const running = isRunning(t.event)
   const subtreeFailed = hasFailedDescendant(node)
+  const subtreeBlocked = hasBlockedDescendant(node)
   const displayCount =
     typeof subtreeCount === "number" ? subtreeCount : countSubtree(node)
   const subtreeCost = hasChildren ? sumSubtreeCost(node) : t.cost ?? null
@@ -190,7 +192,7 @@ export function TraceTreeRows({
           })()}
         </td>
         <td className={cn(cellPad, textSize)}>
-          <div className="flex flex-wrap text-xs items-center gap-2">
+          <div className="flex flex-wrap text-xs items-center gap-1.5">
             {failed ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive">
                 <HugeiconsIcon icon={Alert02Icon} size={10} />
@@ -201,11 +203,38 @@ export function TraceTreeRows({
                 <HugeiconsIcon icon={Alert02Icon} size={10} />
                 Blocked
               </span>
-            ) : <span>
-              {(getStr(t.event, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(t.event, "integration"))  ?? (
-                <span className="text-muted-foreground/60">{"\u2014"}</span>
-              )}
-            </span>}
+            ) : (
+              <>
+                <span>
+                  {(getStr(t.event, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(t.event, "integration")) ?? (
+                    <span className="text-muted-foreground/60">{"\u2014"}</span>
+                  )}
+                </span>
+                {/* The node itself is fine, but a step deeper in the tree
+                    failed/blocked \u2014 an outline (vs. filled) chip distinguishes
+                    "happened inside" from "this node", and forms a trail the
+                    user can follow down to the offending span. Explains why a
+                    healthy-looking root surfaces under the Failed/Blocked
+                    filter. */}
+                {subtreeFailed ? (
+                  <span
+                    title="A step inside this trace failed"
+                    className="inline-flex items-center gap-1 rounded-full border border-destructive/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-destructive/80"
+                  >
+                    <HugeiconsIcon icon={Alert02Icon} size={9} />
+                    Failed step
+                  </span>
+                ) : subtreeBlocked ? (
+                  <span
+                    title="A step inside this trace was blocked"
+                    className="inline-flex items-center gap-1 rounded-full border border-red-500/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-red-600/80"
+                  >
+                    <HugeiconsIcon icon={Alert02Icon} size={9} />
+                    Blocked step
+                  </span>
+                ) : null}
+              </>
+            )}
           </div>
         </td>
         <td className={cn(cellPad, textSize)}>
@@ -235,8 +264,13 @@ export function TraceTreeRows({
               {displayCount}
               {!isExpanded && subtreeFailed ? (
                 <span
-                  aria-label="Contains failed traces"
+                  aria-label="Contains failed steps"
                   className="ml-0.5 inline-block size-1.5 rounded-full bg-destructive"
+                />
+              ) : !isExpanded && subtreeBlocked ? (
+                <span
+                  aria-label="Contains blocked steps"
+                  className="ml-0.5 inline-block size-1.5 rounded-full bg-red-500"
                 />
               ) : null}
             </button>

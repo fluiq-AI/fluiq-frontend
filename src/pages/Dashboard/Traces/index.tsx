@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   Activity01Icon,
   Alert02Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
   Loading03Icon,
   RefreshIcon,
 } from "@hugeicons/core-free-icons"
@@ -51,9 +53,8 @@ function Traces() {
   const [traces, setTraces] = useState<TraceRecord[]>([])
   const [keyId, setKeyId] = useState<string>(ALL_KEYS)
   const [loading, setLoading] = useState(true)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
-  const [loadOffset, setLoadOffset] = useState(TRACES_PAGE_SIZE)
+  const [page, setPage] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null)
   const [selectedTool, setSelectedTool] = useState<SelectedTool | null>(null)
@@ -126,15 +127,18 @@ function Traces() {
     }
   }, [])
 
-  const fetchTraces = useCallback(async (currentKeyId: string, currentFilters: TraceFilters, silent = false) => {
+  // fetchTraces: load a single page of root traces, replacing the current set.
+  // Pagination keeps only one page in the DOM at a time so the table stays
+  // responsive no matter how many traces the org has accumulated.
+  const fetchTraces = useCallback(async (currentKeyId: string, currentFilters: TraceFilters, currentPage: number, silent = false) => {
     if (!silent) setLoading(true)
     if (!silent) setError(null)
     try {
+      const offset = currentPage * TRACES_PAGE_SIZE
       const data = await authFetch<TraceListResponse>(
-        `/api/v1/traces?${buildParams(currentKeyId, 0, currentFilters).toString()}`,
+        `/api/v1/traces?${buildParams(currentKeyId, offset, currentFilters).toString()}`,
       )
       setTraces(data.traces)
-      setLoadOffset(TRACES_PAGE_SIZE)
       setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
       setFetchedSpanRoots(new Set())
       prefetchRootSpans(data.traces)
@@ -147,31 +151,6 @@ function Traces() {
       if (!silent) setLoading(false)
     }
   }, [prefetchRootSpans])
-
-  // loadMore: appends the next page of root traces (no replace).
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return
-    setIsLoadingMore(true)
-    try {
-      const data = await authFetch<TraceListResponse>(
-        `/api/v1/traces?${buildParams(keyId, loadOffset, filters).toString()}`,
-      )
-      setTraces((prev) => {
-        const seen = new Set(prev.map((t) => getStr(t.event, "trace_id")).filter(Boolean))
-        const fresh = data.traces.filter((t) => {
-          const tid = getStr(t.event, "trace_id")
-          return tid && !seen.has(tid)
-        })
-        return fresh.length > 0 ? [...prev, ...fresh] : prev
-      })
-      setLoadOffset((o) => o + TRACES_PAGE_SIZE)
-      setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
-    } catch {
-      // silently fail — "Load more" button stays visible so user can retry
-    } finally {
-      setIsLoadingMore(false)
-    }
-  }, [isLoadingMore, hasMore, keyId, loadOffset, filters])
 
   // expandRoot: fetches child spans for a root trace on first expand.
   const expandRoot = useCallback(async (rootTraceId: string) => {
@@ -237,23 +216,38 @@ function Traces() {
 
   const handleKeyChange = useCallback((next: string) => {
     setKeyId(next)
+    setPage(0)
     setLoading(true)
     setFetchedSpanRoots(new Set())
     setLoadingSpanRoots(new Set())
   }, [])
 
-  // Auto-fetch whenever keyId or filters change.
+  // Filter changes must restart paging from the first page, otherwise the
+  // current offset could point past the end of the freshly filtered result set.
+  const handleSetFilter = useCallback<typeof setFilter>((key, value) => {
+    setPage(0)
+    setFilter(key, value)
+  }, [setFilter])
+
+  const handleClearFilters = useCallback(() => {
+    setPage(0)
+    clearFilters()
+  }, [clearFilters])
+
+  // Auto-fetch whenever the page, key, or filters change. Key/filter changes
+  // reset the page to 0 at their change sites (handleKeyChange / the wrapped
+  // filter handlers) so we never fetch a stale offset against a fresh result
+  // set, and the change collapses into a single fetch here.
   useEffect(() => {
     let cancelled = false
     ;(async () => {
       if (!cancelled) { setLoading(true); setError(null) }
       try {
         const data = await authFetch<TraceListResponse>(
-          `/api/v1/traces?${buildParams(keyId, 0, filters).toString()}`,
+          `/api/v1/traces?${buildParams(keyId, page * TRACES_PAGE_SIZE, filters).toString()}`,
         )
         if (cancelled) return
         setTraces(data.traces)
-        setLoadOffset(TRACES_PAGE_SIZE)
         setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
         setFetchedSpanRoots(new Set())
         prefetchRootSpans(data.traces)
@@ -266,22 +260,25 @@ function Traces() {
       }
     })()
     return () => { cancelled = true }
-  }, [keyId, filters, prefetchRootSpans])
+  }, [keyId, filters, page, prefetchRootSpans])
 
   const { realtimeError } = useTraceStream({
     keyId,
     setTraces,
-    onReopen: () => { void fetchTraces(keyId, filters, true) },
+    // Live inserts only make sense on the first (newest) page; on deeper pages
+    // they would corrupt the fixed offset window, so the stream pauses inserts.
+    live: page === 0,
+    onReopen: () => { void fetchTraces(keyId, filters, page, true) },
   })
 
   // Catch up after the tab has been hidden.
   useEffect(() => {
     const onVisibility = () => {
-      if (document.visibilityState === "visible") void fetchTraces(keyId, filters)
+      if (document.visibilityState === "visible") void fetchTraces(keyId, filters, page)
     }
     document.addEventListener("visibilitychange", onVisibility)
     return () => document.removeEventListener("visibilitychange", onVisibility)
-  }, [fetchTraces, keyId, filters])
+  }, [fetchTraces, keyId, filters, page])
 
   useEffect(() => {
     if (!selectedTrace) return
@@ -318,11 +315,11 @@ function Traces() {
             <CardDescription>
               {traces.length === 0
                 ? "No traces yet"
-                : `${groups.length} root trace${groups.length === 1 ? "" : "s"} loaded`}
+                : `${groups.length} root trace${groups.length === 1 ? "" : "s"} · page ${page + 1}`}
             </CardDescription>
             </div>
             <div>
-              <Button variant="outline" size="sm" onClick={() => fetchTraces(keyId, filters)} disabled={loading}>
+              <Button variant="outline" size="sm" onClick={() => fetchTraces(keyId, filters, page)} disabled={loading}>
                 <HugeiconsIcon
                   icon={loading ? Loading03Icon : RefreshIcon}
                   className={loading ? "animate-spin" : undefined}
@@ -335,8 +332,8 @@ function Traces() {
         <CardContent className="p-0">
           <FilterBar
             filters={filters}
-            setFilter={setFilter}
-            clearFilters={clearFilters}
+            setFilter={handleSetFilter}
+            clearFilters={handleClearFilters}
             activeFilterCount={activeFilterCount}
             apiKeys={apiKeys}
             keyId={keyId}
@@ -394,20 +391,34 @@ function Traces() {
               </table>
             </div>
           )}
-          {!error && hasMore ? (
-            <div className="flex justify-center border-t border-border/60 px-6 py-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadMore}
-                disabled={isLoadingMore}
-              >
-                <HugeiconsIcon
-                  icon={isLoadingMore ? Loading03Icon : RefreshIcon}
-                  className={isLoadingMore ? "animate-spin" : undefined}
-                />
-                {isLoadingMore ? "Loading…" : "Load more"}
-              </Button>
+          {!error && (page > 0 || hasMore) ? (
+            <div className="flex items-center justify-between border-t border-border/60 px-6 py-3">
+              <span className="text-xs text-muted-foreground">
+                Page {page + 1}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0 || loading}
+                >
+                  <HugeiconsIcon icon={ArrowLeft01Icon} />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={!hasMore || loading}
+                >
+                  Next
+                  <HugeiconsIcon
+                    icon={loading ? Loading03Icon : ArrowRight01Icon}
+                    className={loading ? "animate-spin" : undefined}
+                  />
+                </Button>
+              </div>
             </div>
           ) : null}
         </CardContent>

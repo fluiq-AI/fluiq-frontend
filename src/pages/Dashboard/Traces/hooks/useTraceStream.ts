@@ -10,10 +10,15 @@ import { getStr, isRunning } from "../utils"
 export function useTraceStream({
   keyId,
   setTraces,
+  live = true,
   onReopen,
 }: {
   keyId: string
   setTraces: Dispatch<SetStateAction<TraceRecord[]>>
+  // When false (the user is viewing a deeper, fixed-offset page), new-trace
+  // inserts are paused so they don't shift the page window; enrichment updates
+  // to already-visible rows still apply.
+  live?: boolean
   onReopen: () => void
 }) {
   const streamPath = useMemo(() => {
@@ -30,6 +35,8 @@ export function useTraceStream({
       if (!data || typeof data !== "object") return
 
       if (msg.event === "trace.started") {
+        // Paused on deeper pages — a new running row belongs on page 1 only.
+        if (!live) return
         const payload = data as {
           api_key_prefix?: string
           trace_id?: string
@@ -103,7 +110,10 @@ export function useTraceStream({
         return
       }
 
-      // "trace" event — completed trace record.
+      // "trace" event — completed trace record. Paused on deeper pages (no
+      // running placeholder to upgrade there, and appending would shift the
+      // fixed offset window).
+      if (!live) return
       const payload = data as {
         api_key_prefix?: string
         trace_id?: string

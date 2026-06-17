@@ -1,5 +1,5 @@
 import type { TraceGroup, TraceNode, TraceRecord } from "../utils/types"
-import { getEventTimestamp, getStr, isFailed } from "../utils"
+import { getEventTimestamp, getStr, isBlocked, isFailed } from "../utils"
 
 export function countSubtree(n: TraceNode): number {
   let total = 1
@@ -58,6 +58,14 @@ export function hasFailedDescendant(n: TraceNode): boolean {
   for (const c of n.children) {
     if (isFailed(c.trace.event)) return true
     if (hasFailedDescendant(c)) return true
+  }
+  return false
+}
+
+export function hasBlockedDescendant(n: TraceNode): boolean {
+  for (const c of n.children) {
+    if (isBlocked(c.trace.event)) return true
+    if (hasBlockedDescendant(c)) return true
   }
   return false
 }

@@ -27,7 +27,6 @@ import { cn } from "@/lib/utils"
 import {
   FLOW_NODE_HEIGHT,
   FLOW_NODE_WIDTH,
-  FLOW_TOOL_ROWS_MAX,
 } from "../utils/constants"
 import type { ToolSelectFn, TraceGroup, TraceRecord } from "../utils/types"
 import {
@@ -236,7 +235,7 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
                 select handler. */}
             {isMergedTools ? (
               <div className="flex flex-col px-1.5 py-1">
-                {toolEntries!.slice(0, FLOW_TOOL_ROWS_MAX).map((entry) => (
+                {toolEntries!.map((entry) => (
                   <button
                     key={`${entry.kind}:${entry.name}`}
                     type="button"
@@ -266,11 +265,6 @@ function TraceFlowNodeCard({ id, data }: NodeProps<TraceFlowNode>) {
                     ) : null}
                   </button>
                 ))}
-                {toolEntries!.length > FLOW_TOOL_ROWS_MAX ? (
-                  <div className="px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                    +{toolEntries!.length - FLOW_TOOL_ROWS_MAX} more
-                  </div>
-                ) : null}
               </div>
             ) : null}
           </>

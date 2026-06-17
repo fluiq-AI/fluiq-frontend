@@ -3,11 +3,19 @@ import {
   Alert02Icon,
   Cancel01Icon,
   Loading03Icon,
+  WorkflowSquare01Icon,
   Wrench01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/helpers/treeBuilder"
@@ -43,6 +51,86 @@ import { SpanTimeline } from "@/pages/Dashboard/Prompts/components/SpanTimeline"
 import type { AgentRow } from "../utils/types"
 import { KIND_CLASS, KIND_LABEL } from "./AgentTable"
 
+// How many recent runs to pull for the left list. Smaller windows keep the
+// (heavily joined) trace query snappy on agents with deep history; the user
+// can widen it on demand.
+type RunsLimit = 10 | 20 | 50 | 100
+const RUNS_LIMITS: RunsLimit[] = [10, 20, 50, 100]
+
+// "all" keeps the running placeholder at the top; "completed" hides in-flight
+// runs (whose span tree is still empty) so the diagram never opens blank;
+// "running" isolates live runs for debugging.
+type RunsStatus = "all" | "completed" | "running"
+const RUNS_STATUS: { id: RunsStatus; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "completed", label: "Done" },
+  { id: "running", label: "Live" },
+]
+
+// Compact toolbar for the Recent-runs list: a window-size dropdown plus a
+// status segmented control. Mirrors the LeftViewToggle / index.tsx dropdown
+// idiom so it reads as part of the same system.
+function RunsFilter({
+  limit,
+  status,
+  onLimitChange,
+  onStatusChange,
+}: {
+  limit: RunsLimit
+  status: RunsStatus
+  onLimitChange: (v: RunsLimit) => void
+  onStatusChange: (v: RunsStatus) => void
+}) {
+  return (
+    <div className="space-y-2 border-b border-border/40 px-3 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          Recent runs
+        </span>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="inline-flex h-6 items-center gap-1 rounded-md border border-border/60 bg-background px-2 font-mono text-[10px] tabular-nums shadow-xs transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring data-[state=open]:bg-muted/60">
+            Last {limit}
+            <span className="text-[9px] opacity-60">▾</span>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-28">
+            <DropdownMenuRadioGroup
+              value={String(limit)}
+              onValueChange={(v) => onLimitChange(Number(v) as RunsLimit)}
+            >
+              {RUNS_LIMITS.map((n) => (
+                <DropdownMenuRadioItem
+                  key={n}
+                  value={String(n)}
+                  className="font-mono text-xs tabular-nums"
+                >
+                  Last {n}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="inline-flex w-full items-center rounded-md border border-border/60 bg-muted/30 p-0.5 text-[11px]">
+        {RUNS_STATUS.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => onStatusChange(opt.id)}
+            className={cn(
+              "flex-1 rounded px-2 py-1 font-medium transition-colors",
+              status === opt.id
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function AgentDrawer({
   agent,
   onClose,
@@ -53,6 +141,8 @@ export function AgentDrawer({
   const [traces, setTraces] = useState<TraceRecord[]>([])
   const [loadingTraces, setLoadingTraces] = useState(true)
   const [traceError, setTraceError] = useState<string | null>(null)
+  const [runsLimit, setRunsLimit] = useState<RunsLimit>(20)
+  const [runsStatus, setRunsStatus] = useState<RunsStatus>("all")
   const [selectedTrace, setSelectedTrace] = useState<TraceRecord | null>(null)
   // Tracks the root run whose spans populate the architecture view. Updated
   // only when the user picks a run from the left list — NOT when they click a
@@ -60,6 +150,7 @@ export function AgentDrawer({
   const [traceSpansRoot, setTraceSpansRoot] = useState<TraceRecord | null>(null)
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("ui")
   const [traceSpans, setTraceSpans] = useState<TraceRecord[]>([])
+  const [loadingSpans, setLoadingSpans] = useState(false)
   const [leftView, setLeftView] = useState<LeftView>("architecture")
   const [selectedTool, setSelectedTool] = useState<SelectedTool | null>(null)
   const isTree = leftView === "tree"
@@ -85,21 +176,34 @@ export function AgentDrawer({
     setDrawerTab("ui")
   }, [])
 
-  // Fetch the recent runs list (root traces only) for the left panel.
+  // Fetch the recent runs list (root traces only) for the left panel. The
+  // window size and status come from the filter so the heavily-joined query
+  // stays cheap on agents with deep history. Re-runs whenever those change.
   useEffect(() => {
     let cancelled = false
     ;(async () => {
+      setLoadingTraces(true)
+      setTraceError(null)
       try {
         const params = new URLSearchParams()
         params.set("agent_key", agent.agent_key)
         params.set("agent_kind", agent.agent_kind)
-        params.set("limit", "20")
+        params.set("limit", String(runsLimit))
+        if (runsStatus !== "all") params.set("status", runsStatus)
         const data = await authFetch<TraceListResponse>(`/api/v1/traces?${params.toString()}`)
         if (cancelled) return
         setTraces(data.traces)
-        if (data.traces.length > 0) {
-          setSelectedTrace(data.traces[0])
-          setTraceSpansRoot(data.traces[0])
+        // Auto-select the newest *completed* run so the diagram opens with a
+        // real span tree instead of a still-running (empty) one. Fall back to
+        // the newest run when every loaded run is in flight.
+        const initial =
+          data.traces.find((t) => !isRunning(t.event)) ?? data.traces[0] ?? null
+        if (initial) {
+          setSelectedTrace(initial)
+          setTraceSpansRoot(initial)
+        } else {
+          setSelectedTrace(null)
+          setTraceSpansRoot(null)
         }
       } catch (err) {
         if (cancelled) return
@@ -110,7 +214,7 @@ export function AgentDrawer({
       }
     })()
     return () => { cancelled = true }
-  }, [agent.agent_key, agent.agent_kind])
+  }, [agent.agent_key, agent.agent_kind, runsLimit, runsStatus])
 
   // When the selected root run changes, fetch all its spans so the architecture
   // view can render the full trace tree. This is intentionally decoupled from
@@ -121,9 +225,13 @@ export function AgentDrawer({
     ;(async () => {
       const traceId = traceSpansRoot ? getStr(traceSpansRoot.event, "trace_id") : null
       if (!traceSpansRoot || !traceId) {
-        if (!cancelled) setTraceSpans(traceSpansRoot ? [traceSpansRoot] : [])
+        if (!cancelled) {
+          setTraceSpans(traceSpansRoot ? [traceSpansRoot] : [])
+          setLoadingSpans(false)
+        }
         return
       }
+      if (!cancelled) setLoadingSpans(true)
       const params = new URLSearchParams()
       params.set("root_trace_id", traceId)
       params.set("limit", "500")
@@ -132,6 +240,8 @@ export function AgentDrawer({
         if (!cancelled) setTraceSpans(data.traces)
       } catch {
         if (!cancelled) setTraceSpans([traceSpansRoot])
+      } finally {
+        if (!cancelled) setLoadingSpans(false)
       }
     })()
     return () => { cancelled = true }
@@ -255,10 +365,14 @@ export function AgentDrawer({
         <div className="flex min-h-0 flex-1">
 
           {/* Recent runs list */}
-          <div className="flex w-52 shrink-0 flex-col overflow-y-auto border-r border-border/60">
-            <div className="border-b border-border/40 px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              Recent runs
-            </div>
+          <div className="flex w-60 shrink-0 flex-col border-r border-border/60">
+            <RunsFilter
+              limit={runsLimit}
+              status={runsStatus}
+              onLimitChange={setRunsLimit}
+              onStatusChange={setRunsStatus}
+            />
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
             {loadingTraces ? (
               <div className="flex flex-1 items-center justify-center py-8">
                 <HugeiconsIcon
@@ -273,7 +387,9 @@ export function AgentDrawer({
               </div>
             ) : traces.length === 0 ? (
               <div className="px-3 py-6 text-center text-xs text-muted-foreground">
-                No traces found
+                {runsStatus === "all"
+                  ? "No traces found"
+                  : `No ${runsStatus === "completed" ? "completed" : "running"} runs found`}
               </div>
             ) : (
               traces.map((t) => {
@@ -327,6 +443,7 @@ export function AgentDrawer({
                 )
               })
             )}
+            </div>
           </div>
 
           {/* Architecture / Trace Tree */}
@@ -343,7 +460,28 @@ export function AgentDrawer({
               <LeftViewToggle value={leftView} onChange={setLeftView} />
             </div>
             <div className="flex min-h-0 flex-1 flex-col px-2 pb-4 pt-3">
-              {isTree ? (
+              {selectedTrace && loadingSpans ? (
+                // Spans for the picked run are still loading. Show a spinner
+                // here instead of letting the views render a null group (which
+                // would flash "unavailable" / an empty tree).
+                <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
+                  <div className="relative">
+                    <HugeiconsIcon
+                      icon={WorkflowSquare01Icon}
+                      size={26}
+                      className="opacity-20"
+                    />
+                    <HugeiconsIcon
+                      icon={Loading03Icon}
+                      size={14}
+                      className="absolute -bottom-1 -right-1 animate-spin text-primary"
+                    />
+                  </div>
+                  <span className="text-xs">
+                    Loading {isTree ? "trace tree" : "architecture"}…
+                  </span>
+                </div>
+              ) : isTree ? (
                 selectedTrace ? (
                   <SpanTimeline
                     group={selectedGroup}
