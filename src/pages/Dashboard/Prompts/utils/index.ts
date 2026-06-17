@@ -4,6 +4,7 @@ import {
   extractTokens,
 } from "@/pages/Dashboard/Traces/helpers/extractors"
 import type { TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
+import { normalizeModelName } from "@/pages/Dashboard/Traces/utils"
 import type { PromptRow, TraceMetadata } from "./types"
 import { VAR_RE } from "./types"
 
@@ -98,7 +99,7 @@ export function toPromptRow(trace: TraceRecord): PromptRow {
     : (typeof e["name"] === "string" && e["name"]) ? e["name"] as string
     : promptPreview ? truncate(promptPreview, 60)
     : "—"
-  const model = (typeof e["model"] === "string" && e["model"]) ? e["model"] as string : "—"
+  const model = (typeof e["model"] === "string" && e["model"]) ? (normalizeModelName(e["model"] as string) as string) : "—"
   const fullOutput = extractOutput(e)
   const fullInput  = buildFullInput(e)
   return {

@@ -26,6 +26,9 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import type { TraceListResponse } from "@/pages/Dashboard/Traces/utils/types"
+import { normalizeModelName } from "@/pages/Dashboard/Traces/utils"
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Provider = "all" | "openai" | "anthropic" | "google"
@@ -56,6 +59,30 @@ interface SpendingResponse {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function detectProvider(model: unknown): "openai" | "anthropic" | "google" | "other" {
+  const name = normalizeModelName(model)
+  if (typeof name !== "string" || !name) return "other"
+  const m = name.toLowerCase()
+  if (m.startsWith("gpt-") || m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4") || m.startsWith("text-embedding") || m.includes("openai")) return "openai"
+  if (m.startsWith("claude-") || m.includes("anthropic")) return "anthropic"
+  if (m.startsWith("gemini-") || m.includes("google")) return "google"
+  return "other"
+}
+
+// Client-side daily aggregation, used only as a fallback when the server
+// aggregation endpoint isn't available yet (deploy skew).
+function aggregateTraces(traces: TraceListResponse["traces"]): SpendingDay[] {
+  const byDate: Record<string, SpendingDay> = {}
+  for (const t of traces) {
+    if (typeof t.cost !== "number" || t.cost <= 0) continue
+    const date = t.ingested_at.slice(0, 10)
+    const e = (byDate[date] ??= { date, all: 0, openai: 0, anthropic: 0, google: 0, other: 0 })
+    e.all += t.cost
+    e[detectProvider(t.event["model"])] += t.cost
+  }
+  return Object.values(byDate)
+}
 
 function generateDateRange(days: number): { date: string; label: string }[] {
   const result = []
@@ -111,7 +138,18 @@ export function SpendingChartCard() {
         const data = await authFetch<SpendingResponse>("/api/v1/traces/spending?days=30")
         if (!cancelled) setSpending(data.days)
       } catch (err) {
-        if (!cancelled) setError(err instanceof ApiError ? err.detail : "Failed to load spending data")
+        // Deploy skew: an older backend without /traces/spending returns 404.
+        // Fall back to client-side aggregation so the chart still renders.
+        if (err instanceof ApiError && err.status === 404) {
+          try {
+            const fallback = await authFetch<TraceListResponse>("/api/v1/traces?limit=500")
+            if (!cancelled) setSpending(aggregateTraces(fallback.traces))
+          } catch (err2) {
+            if (!cancelled) setError(err2 instanceof ApiError ? err2.detail : "Failed to load spending data")
+          }
+        } else if (!cancelled) {
+          setError(err instanceof ApiError ? err.detail : "Failed to load spending data")
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }

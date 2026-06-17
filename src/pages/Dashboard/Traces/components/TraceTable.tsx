@@ -22,6 +22,7 @@ import {
   formatDate,
   formatLatency,
   formatScore,
+  getModel,
   getStr,
   isBlocked,
   isFailed,
@@ -108,7 +109,7 @@ export function TraceTreeRows({
           <span className="text-muted-foreground/60">{"\u2026"}</span>
         </td>
         <td className={cn("font-mono text-xs", cellPad)}>
-          {getStr(t.event, "model") ?? (
+          {getModel(t.event) ?? (
             <span className="text-muted-foreground/60">{"\u2014"}</span>
           )}
         </td>

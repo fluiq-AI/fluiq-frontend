@@ -12,7 +12,7 @@ import { useRealtimeStream } from "@/lib/useRealtimeStream"
 import type { TraceListResponse, TraceRecord } from "../Traces/utils/types"
 import { SecurityBadge, SecurityPanel } from "../Traces/components/SecurityPanel"
 import { extractRequestMessages } from "../Traces/helpers/extractors"
-import { formatDate, getStr } from "../Traces/utils"
+import { formatDate, getModel, getStr } from "../Traces/utils"
 import { TRACES_PAGE_SIZE } from "../Traces/utils/constants"
 
 const SECURITY_PAGE_SIZE = TRACES_PAGE_SIZE * 2
@@ -303,7 +303,7 @@ function SecurityOverview() {
                           {formatDate(trace.ingested_at)}
                         </td>
                         <td className="px-6 py-3 font-mono text-xs">
-                          {getStr(trace.event, "model") ?? "—"}
+                          {getModel(trace.event) ?? "—"}
                         </td>
                         <td className="px-6 py-3">
                           <div className="flex flex-col gap-1">
@@ -386,7 +386,7 @@ function SecurityDetailDrawer({
   }, [onClose])
 
   const prompt = extractFirstUserPrompt(trace.event)
-  const model = getStr(trace.event, "model")
+  const model = getModel(trace.event)
 
   return (
     <div

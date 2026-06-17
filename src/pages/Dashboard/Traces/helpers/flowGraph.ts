@@ -34,6 +34,7 @@ import {
   getStr,
   isFailed,
   isRunning,
+  normalizeModelName,
   toolSelectionKey,
 } from "../utils"
 
@@ -188,7 +189,8 @@ function describeNode(node: TraceNode): {
   const ev = node.trace.event
   const type = getStr(ev, "type")
   const fn = getStr(ev, "function")
-  const model = getStr(ev, "model")
+  const rawModel = getStr(ev, "model")
+  const model = rawModel === null ? null : (normalizeModelName(rawModel) as string)
   const integration = getStr(ev, "integration") == "OTHERFUNCTION" ? "FUNCTION" : getStr(ev, "integration")
   const lgNode = getLanggraphNode(ev)
   const hasChildren = node.children.length > 0

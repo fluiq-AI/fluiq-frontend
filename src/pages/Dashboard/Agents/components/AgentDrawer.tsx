@@ -31,6 +31,7 @@ import {
   formatCost,
   formatDate,
   formatLatency,
+  getModel,
   getStr,
   isFailed,
   isRunning,
@@ -521,7 +522,7 @@ export function AgentDrawer({
                       onClick={() => setSelectedTool(null)}
                       className="text-muted-foreground hover:text-foreground"
                     >
-                      {getStr(selectedTrace.event, "model") ?? "Trace"}
+                      {getModel(selectedTrace.event) ?? "Trace"}
                     </button>
                     <span className="text-muted-foreground/50">/</span>
                     <span className="inline-flex items-center gap-1 font-medium text-foreground">

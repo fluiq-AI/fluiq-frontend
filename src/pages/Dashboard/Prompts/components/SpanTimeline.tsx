@@ -25,7 +25,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import type { ToolIO, ToolSelectFn, TraceGroup, TraceNode, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
-import { formatLatency, isFailed, toolSelectionKey } from "@/pages/Dashboard/Traces/utils"
+import { formatLatency, isFailed, normalizeModelName, toolSelectionKey } from "@/pages/Dashboard/Traces/utils"
 import {
   extractMcpToolCalls,
   extractResponseToolCalls,
@@ -208,7 +208,7 @@ function SpanNode({
     (typeof e["function"] === "string" && e["function"]) ? e["function"] as string
     : (typeof e["name"] === "string" && e["name"]) ? e["name"] as string
     : type
-  const model = typeof e["model"] === "string" ? e["model"] as string : null
+  const model = typeof e["model"] === "string" ? (normalizeModelName(e["model"] as string) as string) : null
   const latency = typeof e["latency"] === "number" ? e["latency"] as number : null
   const failed = isFailed(e)
   const isSelected = node.trace === selectedTrace

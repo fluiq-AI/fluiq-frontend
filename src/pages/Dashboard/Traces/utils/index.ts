@@ -22,6 +22,26 @@ export function getStr(event: Record<string, unknown>, key: string): string | nu
   return null
 }
 
+// Strip Vertex AI resource-path prefixes down to the bare model id, e.g.
+// "publishers/google/models/gemini-2.5-flash" → "gemini-2.5-flash" (and the
+// fully-qualified "projects/<p>/locations/<l>/publishers/google/models/..."
+// form). New traces are normalised at ingest, but already-stored traces still
+// carry the prefixed name, so the UI normalises on read. No real model id
+// contains "/models/" or a leading "models/", so this is safe for all
+// providers; non-prefixed names pass through unchanged.
+export function normalizeModelName<T>(model: T): T | string {
+  if (typeof model !== "string") return model
+  if (model.includes("/models/")) return model.slice(model.lastIndexOf("/models/") + "/models/".length)
+  if (model.startsWith("models/")) return model.slice("models/".length)
+  return model
+}
+
+// Convenience: read a trace event's model already normalised for display.
+export function getModel(event: Record<string, unknown>): string | null {
+  const m = getStr(event, "model")
+  return m === null ? null : (normalizeModelName(m) as string)
+}
+
 // Stable identity for a selected embedded tool: the parent LLM's trace_id (or
 // its tree-node id as a fallback) plus the tool name. Built identically at the
 // click site and the highlight site so selection state lines up across views.

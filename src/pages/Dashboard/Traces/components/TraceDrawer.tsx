@@ -13,7 +13,7 @@ import { SpanTimeline } from "@/pages/Dashboard/Prompts/components/SpanTimeline"
 import { synthesizeAggregatedEvent } from "../helpers/aggregation"
 import { findGroupForTrace } from "../helpers/treeBuilder"
 import type { DrawerTab, SelectedTool, ToolSelectFn, TraceRecord } from "../utils/types"
-import { formatCost, formatDate, formatLatency, getStr, isFailed } from "../utils"
+import { formatCost, formatDate, formatLatency, getModel, getStr, isFailed } from "../utils"
 
 export function TraceDrawer({
   trace,
@@ -110,7 +110,7 @@ export function TraceDrawer({
           <div>
             <div className="text-muted-foreground">Model</div>
             <div className="mt-0.5 font-mono">
-              {getStr(trace.event, "model") ?? "—"}
+              {getModel(trace.event) ?? "—"}
             </div>
           </div>
           <div>
@@ -176,7 +176,7 @@ export function TraceDrawer({
                   onClick={onClearTool}
                   className="text-muted-foreground hover:text-foreground"
                 >
-                  {getStr(trace.event, "model") ?? "LLM call"}
+                  {getModel(trace.event) ?? "LLM call"}
                 </button>
                 <span className="text-muted-foreground/50">/</span>
                 <span className="inline-flex items-center gap-1 font-medium text-foreground">
