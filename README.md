@@ -1,73 +1,99 @@
-# React + TypeScript + Vite
+# Fluiq Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Marketing site + product app for [Fluiq](https://getfluiq.com) — the AI Ops stack
+for LLM applications. Built with **Next.js 16 (App Router)**, React 19, TypeScript,
+Tailwind CSS v4, and Redux Toolkit.
 
-Currently, two official plugins are available:
+> Migrated from Vite + react-router + a puppeteer prerender step to Next.js App
+> Router with server-rendered metadata. See [Architecture notes](#architecture-notes).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Requirements
 
-## React Compiler
+- Node.js **>= 20.9** (see `.nvmrc`)
+- npm
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting started
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Command         | Description                                  |
+| --------------- | -------------------------------------------- |
+| `npm run dev`   | Start the dev server (Turbopack)             |
+| `npm run build` | Production build (type-checked)              |
+| `npm run start` | Serve the production build                   |
+| `npm run lint`  | Lint with `eslint-config-next`               |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Environment variables
+
+`.env.development` (used by `next dev`) and `.env.production` (used by
+`next build` / `next start`):
+
 ```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080   # backend API base URL
+```
+
+> On Amplify, set `NEXT_PUBLIC_API_BASE_URL` in the console env vars.
+
+## Project structure
+
+```
+src/
+├─ app/                 # Next.js App Router: routes, layouts, metadata
+│  ├─ layout.tsx        # Root layout (head, analytics, providers)
+│  ├─ providers.tsx     # Client providers: Redux, theme, Helmet
+│  ├─ robots.ts         # Dynamic robots.txt  -> /robots.txt
+│  ├─ sitemap.ts        # Dynamic sitemap      -> /sitemap.xml
+│  └─ <route>/page.tsx  # Thin wrappers that render screens + export metadata
+├─ screens/             # Page/feature components (the former src/pages)
+├─ components/          # Shared UI components
+├─ lib/
+│  ├─ router-compat.tsx # react-router -> next/navigation shim
+│  ├─ seo.ts            # buildMetadata() helper
+│  └─ seo-pages.ts      # Per-route SEO descriptors + JSON-LD
+├─ store/               # Redux Toolkit store + slices
+└─ contexts/            # React contexts (theme, …)
+public/                 # Static assets (logo, banner, llms.txt, llms-full.txt)
+```
+
+## Routing & SEO
+
+- Routes live in `src/app` (App Router). Each public route's `page.tsx` is a
+  **server component** that exports `metadata` (and JSON-LD via `<JsonLd>`),
+  rendering the corresponding client screen.
+- `app/sitemap.ts` generates `/sitemap.xml` dynamically — including every
+  integration page and **published blog post** (fetched from the API,
+  fail-open), regenerated hourly.
+- `app/robots.ts` generates `/robots.txt` (search + LLM crawler rules, sitemap
+  reference).
+- `llms.txt` / `llms-full.txt` are static crawler context files served from
+  `public/`.
+- Dynamic routes: `integrations/[slug]` (SSG via `generateStaticParams`) and
+  `blog/[slug]` (SSR via `generateMetadata` with a server-side post fetch).
+
+## Architecture notes
+
+This app was migrated from a Vite SPA. Two deliberate choices keep the diff small:
+
+1. **`react-router` compatibility shim** (`src/lib/router-compat.tsx`) is aliased
+   in `next.config.ts` + `tsconfig.json`, so components can keep importing
+   `Link`, `useNavigate`, `useParams`, `Outlet`, etc. from `"react-router"`.
+2. **`src/pages` was renamed to `src/screens`** to avoid colliding with Next's
+   Pages Router; the `@/pages/*` path alias still resolves to it, so imports are
+   unchanged.
+
+Authenticated surfaces (`/dashboard`, `/admin`, auth pages) are client-rendered
+and use `react-helmet-async` for their (non-indexed) titles; public/marketing
+routes use server-side Next Metadata.
+
+## Deployment
+
+Hosted on **AWS Amplify** (Next.js SSR). Build config in `amplify.yml`:
+
+- `npm ci` → `npm run build`, artifacts from `.next`
+- Node pinned to 20 for Next 16
+- Set `NEXT_PUBLIC_API_BASE_URL` in the Amplify console
