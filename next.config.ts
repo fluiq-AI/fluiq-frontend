@@ -8,6 +8,12 @@ import type { NextConfig } from "next"
 const routerShim = "./src/lib/router-compat.tsx"
 
 const nextConfig: NextConfig = {
+  // Self-contained server bundle for AWS Amplify WEB_COMPUTE (we assemble the
+  // .amplify-hosting deploy manifest ourselves — see scripts/amplify-hosting.mjs
+  // — instead of relying on Amplify's managed Next.js adapter, which doesn't yet
+  // recognize Next 16).
+  output: "standalone",
+
   turbopack: {
     resolveAlias: {
       "react-router": routerShim,

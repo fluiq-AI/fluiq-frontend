@@ -5,21 +5,19 @@ frontend:
       commands:
         # Next.js 16 needs Node >= 20.9 (Amplify's default image may be older).
         - nvm use 20 || nvm install 20
-        # Next.js SSR build — no headless Chromium / puppeteer prerender needed
-        # anymore (per-route metadata is rendered server-side by the App Router).
         - npm ci
     build:
       commands:
         - npm run build
+        # Assemble the WEB_COMPUTE deploy bundle ourselves from Next's standalone
+        # output. Amplify's managed Next.js adapter doesn't recognize Next 16 yet,
+        # so this produces .amplify-hosting/deploy-manifest.json explicitly.
+        - node scripts/amplify-hosting.mjs
   artifacts:
-    # Amplify auto-detects Next.js and provisions SSR compute from the .next output.
-    baseDirectory: .next
+    baseDirectory: .amplify-hosting
     files:
       - '**/*'
   cache:
     paths:
       - node_modules/**/*
       - .next/cache/**/*
-# NOTE: set NEXT_PUBLIC_API_BASE_URL in the Amplify console env vars (replaces
-# the old VITE_API_BASE_URL). The previous PUPPETEER_* build env vars are no
-# longer used and can be removed.
