@@ -1,15 +1,12 @@
-"use client"
+import type { Metadata } from "next"
 
-import RequireAuth from "@/components/RequireAuth"
-import Dashboard from "@/pages/Dashboard/dashboard"
-import { OutletProvider } from "@/lib/router-compat"
+import { DashboardShell } from "./shell"
+
+export const metadata: Metadata = {
+  title: { absolute: "Dashboard — Fluiq" },
+  robots: { index: false, follow: false },
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <RequireAuth>
-      <OutletProvider outlet={children}>
-        <Dashboard />
-      </OutletProvider>
-    </RequireAuth>
-  )
+  return <DashboardShell>{children}</DashboardShell>
 }
