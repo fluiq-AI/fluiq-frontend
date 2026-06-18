@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useMemo, useState, type FormEvent } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -24,8 +26,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ApiError, apiRequest } from "@/lib/api"
 import type { OkResponse } from "@/lib/auth-types"
-import { Helmet } from "react-helmet-async"
-
 function ResetPassword() {
   const navigate = useNavigate()
   const [params] = useSearchParams()
@@ -64,8 +64,7 @@ function ResetPassword() {
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
-      <Helmet><title>Set a new password — Fluiq</title></Helmet>
-      <header className="border-b border-border/60 bg-background">
+<header className="border-b border-border/60 bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.svg" alt="Fluiq" className="size-7" />

@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useState, type FormEvent } from "react"
 import { Link, useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -27,8 +29,6 @@ import { Label } from "@/components/ui/label"
 import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearError, registerThunk } from "@/store/auth/slice"
 import { API_BASE_URL } from "@/lib/api"
-import { Helmet } from "react-helmet-async"
-
 const perks = [
   "50,000 free traces every month to get started",
   "Tracing, evals, and dashboards out of the box",
@@ -63,8 +63,7 @@ function Signup() {
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/30">
-      <Helmet><title>Sign up — Fluiq</title></Helmet>
-      <header className="border-b border-border/60 bg-background">
+<header className="border-b border-border/60 bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">
             <img src="/logo.svg" alt="Fluiq" className="size-7" />

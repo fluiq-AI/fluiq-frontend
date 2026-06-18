@@ -1,15 +1,12 @@
-"use client"
+import type { Metadata } from "next"
 
-import RequireAdmin from "@/components/RequireAdmin"
-import AdminLayout from "@/pages/Admin/admin"
-import { OutletProvider } from "@/lib/router-compat"
+import { AdminShell } from "./shell"
+
+export const metadata: Metadata = {
+  title: { absolute: "Admin — Fluiq" },
+  robots: { index: false, follow: false },
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <RequireAdmin>
-      <OutletProvider outlet={children}>
-        <AdminLayout />
-      </OutletProvider>
-    </RequireAdmin>
-  )
+  return <AdminShell>{children}</AdminShell>
 }

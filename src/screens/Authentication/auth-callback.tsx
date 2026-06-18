@@ -1,11 +1,10 @@
+"use client"
+
 import { useEffect, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { useAppDispatch } from "@/store/hooks"
 import { setSession } from "@/store/auth/slice"
-import type { AuthSession } from "@/lib/auth-types"
-import { Helmet } from "react-helmet-async"
-
-/**
+import type { AuthSession } from "@/lib/auth-types"/**
  * Landing page after OAuth redirect from the backend.
  * The backend encodes the full session as base64 JSON in ?session=
  * We decode it, hydrate the Redux store, then go to /dashboard.
@@ -44,8 +43,7 @@ function AuthCallback() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30">
-      <Helmet><title>Signing you in… — Fluiq</title></Helmet>
-      <div className="flex flex-col items-center gap-3 text-muted-foreground">
+<div className="flex flex-col items-center gap-3 text-muted-foreground">
         <svg
           className="size-6 animate-spin"
           xmlns="http://www.w3.org/2000/svg"
