@@ -9,12 +9,10 @@ frontend:
     build:
       commands:
         - npm run build
-        # Assemble the WEB_COMPUTE deploy bundle ourselves from Next's standalone
-        # output. Amplify's managed Next.js adapter doesn't recognize Next 16 yet,
-        # so this produces .amplify-hosting/deploy-manifest.json explicitly.
-        - node scripts/amplify-hosting.mjs
   artifacts:
-    baseDirectory: .amplify-hosting
+    # Amplify's managed Next.js SSR adapter consumes the .next output (the branch
+    # framework must be "Next.js - SSR" and the app platform WEB_COMPUTE).
+    baseDirectory: .next
     files:
       - '**/*'
   cache:
