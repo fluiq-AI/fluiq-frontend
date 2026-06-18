@@ -13,7 +13,14 @@ export const metadata: Metadata = {
   },
   description:
     "The AI Ops stack for LLM applications — observe, secure, optimize, and evaluate every LLM call with two lines of Python.",
-  icons: { icon: "/logo.svg", apple: "/logo.svg" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
