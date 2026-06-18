@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-touch-icon.png",
   },
+  manifest: "/site.webmanifest",
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
