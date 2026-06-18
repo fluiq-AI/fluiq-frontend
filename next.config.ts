@@ -8,10 +8,6 @@ import type { NextConfig } from "next"
 const routerShim = "./src/lib/router-compat.tsx"
 
 const nextConfig: NextConfig = {
-  // Build despite type errors so the migration can land incrementally.
-  // Tighten this back up once the tree is clean.
-  typescript: { ignoreBuildErrors: true },
-
   turbopack: {
     resolveAlias: {
       "react-router": routerShim,

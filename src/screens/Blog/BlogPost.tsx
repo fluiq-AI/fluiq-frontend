@@ -12,8 +12,6 @@ import { fetchPost, mediaUrl, type BlogPostFull } from "@/lib/blog"
 import { signalPrerenderReady } from "@/lib/prerender"
 import "@/styles/blog.css"
 
-const SITE = "https://getfluiq.com"
-
 function formatDate(iso: string | null): string {
   if (!iso) return ""
   return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
@@ -40,7 +38,6 @@ export default function BlogPost() {
     [post],
   )
 
-  const canonical = `${SITE}/blog/${slug}`
   const cover = post?.cover_image_url ? mediaUrl(post.cover_image_url) : null
 
   return (

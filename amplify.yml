@@ -3,20 +3,23 @@ frontend:
   phases:
     preBuild:
       commands:
-        # The build-time prerender (@prerenderer/renderer-puppeteer) launches
-        # headless Chromium, which Amplify's build image doesn't ship. Install
-        # Google Chrome (dnf resolves its system libs). PUPPETEER_EXECUTABLE_PATH
-        # + PUPPETEER_SKIP_DOWNLOAD are set as Amplify env vars so puppeteer uses
-        # this binary instead of downloading its own.
-        - sudo dnf install -y https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+        # Next.js 16 needs Node >= 20.9 (Amplify's default image may be older).
+        - nvm use 20 || nvm install 20
+        # Next.js SSR build — no headless Chromium / puppeteer prerender needed
+        # anymore (per-route metadata is rendered server-side by the App Router).
         - npm ci
     build:
       commands:
         - npm run build
   artifacts:
-    baseDirectory: dist
+    # Amplify auto-detects Next.js and provisions SSR compute from the .next output.
+    baseDirectory: .next
     files:
       - '**/*'
   cache:
     paths:
       - node_modules/**/*
+      - .next/cache/**/*
+# NOTE: set NEXT_PUBLIC_API_BASE_URL in the Amplify console env vars (replaces
+# the old VITE_API_BASE_URL). The previous PUPPETEER_* build env vars are no
+# longer used and can be removed.
