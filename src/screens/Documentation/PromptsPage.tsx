@@ -1,4 +1,5 @@
-﻿import { Helmet } from "react-helmet-async"
+"use client"
+
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   CheckmarkCircle02Icon,
@@ -18,24 +19,7 @@ export default function PromptsPage() {
   const fetchName = isTs ? "fluiq.fetchPrompt()" : "fluiq.fetch_prompt()"
   return (
     <>
-      <Helmet>
-        <title>Prompt Management — Fluiq Docs</title>
-        <meta name="description" content="Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison." />
-        <meta name="keywords" content="prompt management, prompt versioning, prompt templates, prompt deployment, prompt playground, prompt engineering" />
-        <link rel="canonical" href="https://getfluiq.com/documentation/prompts" />
-        <meta property="og:url" content="https://getfluiq.com/documentation/prompts" />
-        <meta property="og:title" content="Prompt Management — Fluiq Docs" />
-        <meta property="og:description" content="Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "headline": "Prompt Management — Fluiq Docs",
-          "description": "Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison.",
-          "url": "https://getfluiq.com/documentation/prompts",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-    <div className="space-y-4">
+<div className="space-y-4">
       <PageHeading
         icon={FileScriptIcon}
         title="Prompts"

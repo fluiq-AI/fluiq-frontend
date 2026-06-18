@@ -1,6 +1,6 @@
 import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 
-const data: CompetitorData = {
+export const data: CompetitorData = {
   slug: "lakera-alternative",
   name: "Lakera Guard",
   metaTitle: "Fluiq vs Lakera Guard, The Lakera Alternative With Tracing, Caching & Evals",

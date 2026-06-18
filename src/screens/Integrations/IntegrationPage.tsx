@@ -1,5 +1,6 @@
+"use client"
+
 import { useState } from "react"
-import { Helmet } from "react-helmet-async"
 import { Link } from "react-router"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -61,26 +62,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
       <GrainOverlay />
-      <Helmet>
-        <title>{data.metaTitle}</title>
-        <meta name="description" content={data.metaDescription} />
-        <meta name="keywords" content={`${data.name} monitoring, ${data.name} tracing, ${data.name} observability, ${data.name} cost tracking, LLM ${data.category.toLowerCase()} integration, Fluiq ${data.name}`} />
-        <link rel="canonical" href={`https://getfluiq.com/integrations/${data.slug}`} />
-        <meta property="og:title" content={data.metaTitle} />
-        <meta property="og:description" content={data.metaDescription} />
-        <meta property="og:url" content={`https://getfluiq.com/integrations/${data.slug}`} />
-        <meta property="og:type" content="website" />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": data.metaTitle,
-          "description": data.metaDescription,
-          "url": `https://getfluiq.com/integrations/${data.slug}`,
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+{/* ── Nav ─────────────────────────────────────────────────────────── */}
       <SiteNavbar active="integrations" />
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}

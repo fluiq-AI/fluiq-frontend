@@ -1,6 +1,6 @@
 import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 
-const data: CompetitorData = {
+export const data: CompetitorData = {
   slug: "langsmith-alternative",
   name: "LangSmith",
   metaTitle: "Fluiq vs LangSmith, The LangSmith Alternative for Production LLM Apps",

@@ -1,4 +1,5 @@
-﻿import { Helmet } from "react-helmet-async"
+"use client"
+
 import { SecurityCheckIcon } from "@hugeicons/core-free-icons"
 import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 
@@ -356,24 +357,7 @@ await axios.put(
 export default function SecurityExamplesPage() {
   return (
     <>
-      <Helmet>
-        <title>Security Examples — Fluiq Docs</title>
-        <meta name="description" content="Code examples for fluiq.secure(): blocking prompt injection, jailbreaks, PII leakage, and skeleton-key attacks across OpenAI, Anthropic, and LangChain." />
-        <meta name="keywords" content="fluiq.secure examples, prompt injection code, PII redaction example, LLM security code, jailbreak blocking, LLM guardrails example" />
-        <link rel="canonical" href="https://getfluiq.com/examples/security" />
-        <meta property="og:url" content="https://getfluiq.com/examples/security" />
-        <meta property="og:title" content="Security Examples — Fluiq Docs" />
-        <meta property="og:description" content="Code examples for fluiq.secure(): blocking prompt injection, jailbreaks, PII leakage, and skeleton-key attacks across OpenAI, Anthropic, and LangChain." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "headline": "Security Examples — Fluiq Docs",
-          "description": "Code examples for fluiq.secure(): blocking prompt injection, jailbreaks, PII leakage, and skeleton-key attacks across OpenAI, Anthropic, and LangChain.",
-          "url": "https://getfluiq.com/examples/security",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-    <div className="space-y-6">
+<div className="space-y-6">
       <PageHeading
         icon={SecurityCheckIcon}
         title="Security"

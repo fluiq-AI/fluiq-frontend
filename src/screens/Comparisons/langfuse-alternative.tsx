@@ -1,6 +1,6 @@
 import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 
-const data: CompetitorData = {
+export const data: CompetitorData = {
   slug: "langfuse-alternative",
   name: "Langfuse",
   metaTitle: "Fluiq vs Langfuse, The Langfuse Alternative With Security & Caching Built In",

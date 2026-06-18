@@ -1,6 +1,6 @@
 import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 
-const data: CompetitorData = {
+export const data: CompetitorData = {
   slug: "portkey-alternative",
   name: "Portkey",
   metaTitle: "Fluiq vs Portkey, The Portkey Alternative Without the Gateway Latency",

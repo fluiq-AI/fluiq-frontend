@@ -1,4 +1,5 @@
-﻿import { Helmet } from "react-helmet-async"
+"use client"
+
 import { FileScriptIcon } from "@hugeicons/core-free-icons"
 import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 
@@ -333,24 +334,7 @@ console.log(prompt.template.slice(0, 200));`,
 export default function PromptsExamplesPage() {
   return (
     <>
-      <Helmet>
-        <title>Prompt Management Examples — Fluiq Docs</title>
-        <meta name="description" content="Code examples for Fluiq prompt management: fetching versioned prompt templates by environment, variable injection, and deployment across dev, staging, and production." />
-        <meta name="keywords" content="prompt management examples, versioned prompts code, prompt deployment example, variable injection, prompt templates code" />
-        <link rel="canonical" href="https://getfluiq.com/examples/prompts" />
-        <meta property="og:url" content="https://getfluiq.com/examples/prompts" />
-        <meta property="og:title" content="Prompt Management Examples — Fluiq Docs" />
-        <meta property="og:description" content="Code examples for Fluiq prompt management: fetching versioned prompt templates by environment, variable injection, and deployment across dev, staging, and production." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "headline": "Prompt Management Examples — Fluiq Docs",
-          "description": "Code examples for Fluiq prompt management: fetching versioned prompt templates by environment, variable injection, and deployment across dev, staging, and production.",
-          "url": "https://getfluiq.com/examples/prompts",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-    <div className="space-y-6">
+<div className="space-y-6">
       <PageHeading
         icon={FileScriptIcon}
         title="Prompts"

@@ -1,5 +1,6 @@
+"use client"
+
 import "@/styles/contact.css";
-import { Helmet } from "react-helmet-async"
 import { useState, type FormEvent } from "react"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -60,24 +61,7 @@ export default function Contact() {
   return (
     <div className="contact-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
       <GrainOverlay />
-      <Helmet>
-        <title>Contact - Fluiq</title>
-        <meta name="description" content="Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day." />
-        <meta name="keywords" content="contact Fluiq, Fluiq support, Fluiq sales, LLM observability support, Fluiq integrations, Fluiq partnerships" />
-        <link rel="canonical" href="https://getfluiq.com/contact" />
-        <meta property="og:url" content="https://getfluiq.com/contact" />
-        <meta property="og:title" content="Contact - Fluiq" />
-        <meta property="og:description" content="Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "ContactPage",
-          "name": "Contact Fluiq",
-          "description": "Contact the Fluiq team for sales enquiries, integration support, feature requests, and partnership discussions. Replies within one business day.",
-          "url": "https://getfluiq.com/contact",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-      <SiteNavbar active="contact" />
+<SiteNavbar active="contact" />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden py-24">

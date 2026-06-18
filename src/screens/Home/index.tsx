@@ -1,5 +1,6 @@
+"use client"
+
 import "@/styles/home.css";
-import { Helmet } from "react-helmet-async"
 import React, { useCallback, useState } from "react"
 import { motion, useMotionValue, useSpring, useReducedMotion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -174,64 +175,7 @@ export default function Home() {
   return (
     <div className="home-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
       <GrainOverlay />
-      <Helmet>
-        <title>Fluiq: The AI Ops Stack for LLM Applications</title>
-        <meta name="description" content="Fluiq is the unified ops layer for LLM applications: security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
-        <meta name="keywords" content="AI Ops, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, AI security, hallucination detection" />
-        <link rel="canonical" href="https://getfluiq.com/" />
-        <meta property="og:url" content="https://getfluiq.com/" />
-        <meta property="og:title" content="Fluiq: The AI Ops Stack for LLM Applications" />
-        <meta property="og:description" content="Fluiq is the unified ops layer for LLM applications: security scanning, intelligent caching, deep observability, and automated evaluation on every single request." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
-          "name": "Fluiq",
-          "url": "https://getfluiq.com",
-          "logo": "https://getfluiq.com/logo.svg",
-          "applicationCategory": "DeveloperApplication",
-          "operatingSystem": "Any",
-          "programmingLanguage": "Python",
-          "description": "Fluiq is the AI Ops stack for production LLM applications. It auto-instruments OpenAI, Anthropic, Gemini, LangChain, LangGraph, Google ADK, CrewAI, MCP, and major vector databases. Two lines of Python add tracing, security scanning, response caching, and LLM-as-judge evaluation to any LLM app.",
-          "featureList": [
-            "Automatic LLM call tracing with full span tree",
-            "Per-node token attribution and USD cost tracking at provider rates",
-            "p50/p95/p99 latency histograms per agent and model",
-            "Real-time trace streaming to dashboard",
-            "Pre-call prompt injection and jailbreak blocking",
-            "PII detection: credit cards, SSNs, IBAN, emails, phone numbers, IP addresses, names",
-            "Secret and high-entropy string redaction",
-            "Semantic attack scoring with warn and block modes",
-            "Trace-driven server-side Redis response caching",
-            "Cache observe mode to measure savings without caching",
-            "Configurable TTL and per-model cache scoping",
-            "LLM-as-judge evaluation: hallucination, faithfulness, relevance, toxicity, coherence, completeness",
-            "Evaluation warn and block modes with configurable thresholds",
-            "CI/CD GitHub Actions eval gates",
-            "Prompt template management with environment-based deployment",
-            "Prompt playground with LLM-as-judge scoring",
-            "Agent-level cost and latency aggregation",
-            "Cost anomaly alerts to Slack",
-            "Dataset management for regression testing",
-            "API key management"
-          ],
-          "applicationSubCategory": "AI Ops, LLM Monitoring, AI Security, LLM Evaluation, Response Caching",
-          "softwareVersion": "latest",
-          "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD",
-            "description": "Free tier: 50,000 traces per month, 1000 LLM-as-judge evaluations per month, 1 seat, 14-day retention. No credit card required."
-          },
-          "author": {
-            "@type": "Organization",
-            "name": "Fluiq",
-            "url": "https://getfluiq.com"
-          },
-          "sameAs": ["https://github.com/fluiq-AI/fluiq-sdk"]
-        })}</script>
-      </Helmet>
-
-      <SiteNavbar landing />
+<SiteNavbar landing />
 
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden">
         <HeroAtmosphere variant="offset" />

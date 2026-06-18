@@ -1,4 +1,5 @@
-import { Helmet } from "react-helmet-async"
+"use client"
+
 import { Link } from "react-router"
 
 const LAST_UPDATED = "May 27, 2026"
@@ -53,24 +54,7 @@ function Ul({ items }: { items: string[] }) {
 export default function Privacy() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Helmet>
-        <title>Privacy Policy — Fluiq</title>
-        <meta name="description" content="Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA." />
-        <meta name="keywords" content="Fluiq privacy policy, data collection, GDPR, CCPA, LLM trace data privacy, data retention" />
-        <link rel="canonical" href="https://getfluiq.com/privacy" />
-        <meta property="og:url" content="https://getfluiq.com/privacy" />
-        <meta property="og:title" content="Privacy Policy — Fluiq" />
-        <meta property="og:description" content="Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": "Privacy Policy — Fluiq",
-          "description": "Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA.",
-          "url": "https://getfluiq.com/privacy",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-      {/* Header */}
+{/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">

@@ -1,4 +1,5 @@
-﻿import { Helmet } from "react-helmet-async"
+"use client"
+
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons"
 import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 
@@ -496,24 +497,7 @@ console.log("Eval gate passed");`,
 export default function EvaluationExamplesPage() {
   return (
     <>
-      <Helmet>
-        <title>Evaluation Examples — Fluiq Docs</title>
-        <meta name="description" content="Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers." />
-        <meta name="keywords" content="fluiq.eval examples, LLM evaluation code, hallucination scoring example, LLM-as-judge code, toxicity scoring, eval modes" />
-        <link rel="canonical" href="https://getfluiq.com/examples/evaluation" />
-        <meta property="og:url" content="https://getfluiq.com/examples/evaluation" />
-        <meta property="og:title" content="Evaluation Examples — Fluiq Docs" />
-        <meta property="og:description" content="Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "headline": "Evaluation Examples — Fluiq Docs",
-          "description": "Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers.",
-          "url": "https://getfluiq.com/examples/evaluation",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-    <div className="space-y-6">
+<div className="space-y-6">
       <PageHeading
         icon={CheckmarkCircle02Icon}
         title="Evaluation"

@@ -1,6 +1,6 @@
 import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 
-const data: CompetitorData = {
+export const data: CompetitorData = {
   slug: "braintrust-alternative",
   name: "Braintrust",
   metaTitle: "Fluiq vs Braintrust, The Braintrust Alternative With Observability + Security",

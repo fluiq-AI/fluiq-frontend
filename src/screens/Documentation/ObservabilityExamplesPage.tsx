@@ -1,4 +1,5 @@
-﻿import { Helmet } from "react-helmet-async"
+"use client"
+
 import { ChartLineData01Icon } from "@hugeicons/core-free-icons"
 import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 
@@ -537,24 +538,7 @@ await answer("What is RAG?");`,
 export default function ObservabilityExamplesPage() {
   return (
     <>
-      <Helmet>
-        <title>Observability Examples — Fluiq Docs</title>
-        <meta name="description" content="Code examples for Fluiq observability: tracing OpenAI, Anthropic, LangChain, LangGraph, CrewAI, Google ADK, and vector database calls." />
-        <meta name="keywords" content="Fluiq tracing examples, OpenAI tracing code, LangChain tracing, CrewAI tracing examples, LLM observability code, span tree example" />
-        <link rel="canonical" href="https://getfluiq.com/examples/observability" />
-        <meta property="og:url" content="https://getfluiq.com/examples/observability" />
-        <meta property="og:title" content="Observability Examples — Fluiq Docs" />
-        <meta property="og:description" content="Code examples for Fluiq observability: tracing OpenAI, Anthropic, LangChain, LangGraph, CrewAI, Google ADK, and vector database calls." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "headline": "Observability Examples — Fluiq Docs",
-          "description": "Code examples for Fluiq observability: tracing OpenAI, Anthropic, LangChain, LangGraph, CrewAI, Google ADK, and vector database calls.",
-          "url": "https://getfluiq.com/examples/observability",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-    <div className="space-y-6">
+<div className="space-y-6">
       <PageHeading
         icon={ChartLineData01Icon}
         title="Observability"

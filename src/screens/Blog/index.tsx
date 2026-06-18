@@ -1,7 +1,7 @@
+"use client"
+
 import { useEffect, useState } from "react"
 import { Link } from "react-router"
-import { Helmet } from "react-helmet-async"
-
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { SiteFooter } from "@/components/SiteFooter"
 import { fetchPosts, mediaUrl, type BlogPostSummary } from "@/lib/blog"
@@ -33,16 +33,7 @@ export default function BlogIndex() {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
-      <Helmet>
-        <title>Blog — Fluiq</title>
-        <meta name="description" content="Guides, engineering notes, and product updates from the Fluiq team on LLM observability, evals, security, and optimization." />
-        <link rel="canonical" href="https://getfluiq.com/blog" />
-        <meta property="og:title" content="Fluiq Blog" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://getfluiq.com/blog" />
-      </Helmet>
-
-      <SiteNavbar />
+<SiteNavbar />
 
       <header className="border-b border-[#D4CFC1] dark:border-[#1A1A1A]">
         <div className="mx-auto max-w-5xl px-6 py-16 md:py-20">

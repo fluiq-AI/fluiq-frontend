@@ -1,6 +1,6 @@
 import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 
-const data: CompetitorData = {
+export const data: CompetitorData = {
   slug: "helicone-alternative",
   name: "Helicone",
   metaTitle: "Fluiq vs Helicone, The Helicone Alternative With No Proxy Overhead",

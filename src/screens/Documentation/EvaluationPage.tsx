@@ -1,4 +1,5 @@
-﻿import { Helmet } from "react-helmet-async"
+"use client"
+
 import { HugeiconsIcon } from "@hugeicons/react"
 import { CheckmarkCircle02Icon, WorkflowSquare01Icon } from "@hugeicons/core-free-icons"
 import { Code, PageHeading } from "./_docComponents"
@@ -9,24 +10,7 @@ export default function EvaluationPage() {
   const isTs = lang === "typescript"
   return (
     <>
-      <Helmet>
-        <title>Evaluation — Fluiq Docs</title>
-        <meta name="description" content="Score every LLM response for hallucination, faithfulness, relevance, and toxicity using LLM-as-judge. Warn or block based on configurable per-metric thresholds." />
-        <meta name="keywords" content="LLM evaluation, LLM-as-judge, hallucination detection, faithfulness scoring, relevance scoring, toxicity detection, eval gates" />
-        <link rel="canonical" href="https://getfluiq.com/documentation/evaluation" />
-        <meta property="og:url" content="https://getfluiq.com/documentation/evaluation" />
-        <meta property="og:title" content="Evaluation — Fluiq Docs" />
-        <meta property="og:description" content="Score every LLM response for hallucination, faithfulness, relevance, and toxicity using LLM-as-judge. Warn or block based on configurable per-metric thresholds." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "headline": "Evaluation — Fluiq Docs",
-          "description": "Score every LLM response for hallucination, faithfulness, relevance, and toxicity using LLM-as-judge. Warn or block based on configurable per-metric thresholds.",
-          "url": "https://getfluiq.com/documentation/evaluation",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-    <div className="space-y-4">
+<div className="space-y-4">
       <PageHeading
         icon={CheckmarkCircle02Icon}
         title="Evaluation"

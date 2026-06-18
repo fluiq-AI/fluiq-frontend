@@ -1,4 +1,5 @@
-﻿import { Helmet } from "react-helmet-async"
+"use client"
+
 import { MagicWand01Icon } from "@hugeicons/core-free-icons"
 import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 
@@ -586,24 +587,7 @@ const result2 = await client.callTool({
 export default function OptimizationExamplesPage() {
   return (
     <>
-      <Helmet>
-        <title>Optimization Examples — Fluiq Docs</title>
-        <meta name="description" content="Code examples for fluiq.optimize(): trace-driven LLM response caching with observe mode, configurable TTL, and per-model scope." />
-        <meta name="keywords" content="fluiq.optimize examples, LLM caching code, response caching example, cache TTL, prompt caching code, observe mode" />
-        <link rel="canonical" href="https://getfluiq.com/examples/optimization" />
-        <meta property="og:url" content="https://getfluiq.com/examples/optimization" />
-        <meta property="og:title" content="Optimization Examples — Fluiq Docs" />
-        <meta property="og:description" content="Code examples for fluiq.optimize(): trace-driven LLM response caching with observe mode, configurable TTL, and per-model scope." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "headline": "Optimization Examples — Fluiq Docs",
-          "description": "Code examples for fluiq.optimize(): trace-driven LLM response caching with observe mode, configurable TTL, and per-model scope.",
-          "url": "https://getfluiq.com/examples/optimization",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-    <div className="space-y-6">
+<div className="space-y-6">
       <PageHeading
         icon={MagicWand01Icon}
         title="Optimization"

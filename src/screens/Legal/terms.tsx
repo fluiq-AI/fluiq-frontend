@@ -1,4 +1,5 @@
-import { Helmet } from "react-helmet-async"
+"use client"
+
 import { Link } from "react-router"
 
 const LAST_UPDATED = "May 27, 2026"
@@ -52,24 +53,7 @@ function Ul({ items }: { items: string[] }) {
 export default function Terms() {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Helmet>
-        <title>Terms of Service — Fluiq</title>
-        <meta name="description" content="Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements." />
-        <meta name="keywords" content="Fluiq terms of service, acceptable use, data ownership, API usage, billing, enterprise agreements" />
-        <link rel="canonical" href="https://getfluiq.com/terms" />
-        <meta property="og:url" content="https://getfluiq.com/terms" />
-        <meta property="og:title" content="Terms of Service — Fluiq" />
-        <meta property="og:description" content="Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": "Terms of Service — Fluiq",
-          "description": "Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements.",
-          "url": "https://getfluiq.com/terms",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-      {/* Header */}
+{/* Header */}
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-2">

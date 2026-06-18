@@ -1,6 +1,7 @@
+"use client"
+
 import { useEffect, useMemo, useState } from "react"
 import { Link, useParams } from "react-router"
-import { Helmet } from "react-helmet-async"
 import DOMPurify from "dompurify"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
@@ -62,33 +63,7 @@ export default function BlogPost() {
         </div>
       ) : post ? (
         <>
-          <Helmet>
-            <title>{post.seo_title || `${post.title} — Fluiq Blog`}</title>
-            <meta name="description" content={post.seo_description || post.excerpt} />
-            <link rel="canonical" href={canonical} />
-            <meta property="og:type" content="article" />
-            <meta property="og:title" content={post.seo_title || post.title} />
-            <meta property="og:description" content={post.seo_description || post.excerpt} />
-            <meta property="og:url" content={canonical} />
-            {cover && <meta property="og:image" content={cover} />}
-            <meta name="twitter:card" content={cover ? "summary_large_image" : "summary"} />
-            <script type="application/ld+json">
-              {JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "BlogPosting",
-                headline: post.title,
-                description: post.seo_description || post.excerpt,
-                image: cover || undefined,
-                author: { "@type": "Organization", name: post.author },
-                publisher: { "@type": "Organization", name: "Fluiq" },
-                datePublished: post.published_at || undefined,
-                dateModified: post.updated_at || post.published_at || undefined,
-                mainEntityOfPage: canonical,
-              })}
-            </script>
-          </Helmet>
-
-          <article className="mx-auto max-w-3xl px-6 py-14 md:py-20">
+<article className="mx-auto max-w-3xl px-6 py-14 md:py-20">
             <Link
               to="/blog"
               className="inline-flex items-center gap-1.5 text-sm text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors"

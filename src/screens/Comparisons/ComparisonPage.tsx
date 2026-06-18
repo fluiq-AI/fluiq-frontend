@@ -1,4 +1,5 @@
-import { Helmet } from "react-helmet-async"
+"use client"
+
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
@@ -72,26 +73,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
       <GrainOverlay />
-      <Helmet>
-        <title>{data.metaTitle}</title>
-        <meta name="description" content={data.metaDescription} />
-        <meta name="keywords" content={`${data.name} alternative, Fluiq vs ${data.name}, ${data.name} comparison, ${data.name} pricing, LLM observability, LLM monitoring`} />
-        <link rel="canonical" href={`https://getfluiq.com${data.canonicalPath}`} />
-        <meta property="og:title" content={data.metaTitle} />
-        <meta property="og:description" content={data.metaDescription} />
-        <meta property="og:url" content={`https://getfluiq.com${data.canonicalPath}`} />
-        <meta property="og:type" content="website" />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": data.metaTitle,
-          "description": data.metaDescription,
-          "url": `https://getfluiq.com${data.canonicalPath}`,
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+{/* ── Nav ─────────────────────────────────────────────────────────── */}
       <SiteNavbar />
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}

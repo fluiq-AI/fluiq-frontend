@@ -1,4 +1,5 @@
-﻿import { Helmet } from "react-helmet-async"
+"use client"
+
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowRight02Icon, BookOpen01Icon, RocketIcon } from "@hugeicons/core-free-icons"
@@ -13,24 +14,7 @@ export default function QuickstartPage() {
   const isTs = lang === "typescript"
   return (
     <>
-      <Helmet>
-        <title>Quickstart — Fluiq Docs</title>
-        <meta name="description" content="Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more." />
-        <meta name="keywords" content="Fluiq quickstart, LLM observability setup, Python LLM SDK, install Fluiq, LLM tracing tutorial, getting started" />
-        <link rel="canonical" href="https://getfluiq.com/documentation/quickstart" />
-        <meta property="og:url" content="https://getfluiq.com/documentation/quickstart" />
-        <meta property="og:title" content="Quickstart — Fluiq Docs" />
-        <meta property="og:description" content="Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "TechArticle",
-          "headline": "Quickstart — Fluiq Docs",
-          "description": "Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more.",
-          "url": "https://getfluiq.com/documentation/quickstart",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-    <div className="space-y-12">
+<div className="space-y-12">
       <div>
         <Badge variant="outline" className="mb-4 gap-1.5 px-3 py-1">
           <HugeiconsIcon icon={BookOpen01Icon} />

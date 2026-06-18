@@ -1,5 +1,6 @@
+"use client"
+
 import "@/styles/pricing.css";
-import { Helmet } from "react-helmet-async"
 import { useState, Fragment } from "react"
 import { motion } from "motion/react"
 import { HugeiconsIcon } from "@hugeicons/react"
@@ -267,24 +268,7 @@ export default function Pricing() {
   return (
     <div className="pricing-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
       <GrainOverlay />
-      <Helmet>
-        <title>Pricing - Fluiq</title>
-        <meta name="description" content="Fluiq pricing: start free with 50,000 traces/month and 1,000 evaluations. Upgrade to Team ($49/mo) for caching and unlimited traces, Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO & custom SLAs." />
-        <meta name="keywords" content="Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing, LLM security pricing" />
-        <link rel="canonical" href="https://getfluiq.com/pricing" />
-        <meta property="og:url" content="https://getfluiq.com/pricing" />
-        <meta property="og:title" content="Pricing - Fluiq" />
-        <meta property="og:description" content="Start free with 50,000 traces/month. Add security and scale as you grow: Team $49/mo, Growth $149/mo, Enterprise custom." />
-        <script type="application/ld+json">{JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          "name": "Fluiq Pricing",
-          "description": "Fluiq pricing plans: start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($49/mo), Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
-          "url": "https://getfluiq.com/pricing",
-          "isPartOf": { "@id": "https://getfluiq.com" },
-        })}</script>
-      </Helmet>
-      <SiteNavbar active="pricing" />
+<SiteNavbar active="pricing" />
 
       <section className="relative border-b border-[#D4CFC1] dark:border-[#1A1A1A] overflow-hidden py-24">
 

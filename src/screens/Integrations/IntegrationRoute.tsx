@@ -1,3 +1,5 @@
+"use client"
+
 import { useParams, Navigate } from "react-router"
 import { INTEGRATIONS } from "./data"
 import IntegrationPage from "./IntegrationPage"
