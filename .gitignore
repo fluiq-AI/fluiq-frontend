@@ -16,7 +16,6 @@ dist-ssr
 /.next/
 /out/
 /build
-/.amplify-hosting/
 next-env.d.ts
 *.tsbuildinfo
 .vercel
