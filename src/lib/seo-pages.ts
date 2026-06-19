@@ -62,7 +62,7 @@ export const SEO = {
   pricing: {
     title: "Pricing - Fluiq",
     description:
-      "Fluiq pricing: start free with 50,000 traces/month and 1,000 evaluations. Upgrade to Team ($49/mo) for caching and unlimited traces, Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO & custom SLAs.",
+      "Fluiq pricing: start free with 50,000 traces/month and 1,000 evaluations. Upgrade to Team ($299/mo) for caching and unlimited traces, Growth ($599/mo) for security scanning, or Enterprise for VPC, SSO & custom SLAs.",
     keywords:
       "Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing, LLM security pricing",
     path: "/pricing",
@@ -71,7 +71,7 @@ export const SEO = {
       "@type": "WebPage",
       name: "Fluiq Pricing",
       description:
-        "Fluiq pricing plans: start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($49/mo), Growth ($149/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
+        "Fluiq pricing plans: start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($299/mo), Growth ($599/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
       url: "https://getfluiq.com/pricing",
       isPartOf: ISPART,
     },
