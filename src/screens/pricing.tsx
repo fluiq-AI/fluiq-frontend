@@ -60,7 +60,7 @@ const tiers: Tier[] = [
   },
   {
     name: "Team",
-    price: { monthly: 49, annual: 490 },
+    price: { monthly: 299, annual: 2990 },
     traces: "Unlimited traces",
     evals: "10,000 evaluations / month",
     seats: "Up to 5 seats",
@@ -79,7 +79,7 @@ const tiers: Tier[] = [
   },
   {
     name: "Growth",
-    price: { monthly: 149, annual: 1490 },
+    price: { monthly: 599, annual: 5990 },
     traces: "Unlimited traces",
     evals: "100,000 evaluations / month",
     seats: "Up to 20 seats",
