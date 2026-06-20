@@ -7,7 +7,6 @@ import {
   Delete02Icon,
   FloppyDiskIcon,
   Loading03Icon,
-  TestTube01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
@@ -106,7 +105,6 @@ export default function Guardrails() {
   const [loading, setLoading]     = useState(true)
   const [saving, setSaving]       = useState(false)
   const [deleting, setDeleting]   = useState(false)
-  const [testing, setTesting]     = useState(false)
   const [error, setError]         = useState<string | null>(null)
   const [saved, setSaved]         = useState(false)
 
@@ -210,23 +208,6 @@ export default function Guardrails() {
     }
   }
 
-  async function handleTestWebhook() {
-    if (!draft.alert_webhook) return
-    setTesting(true)
-    try {
-      await fetch(draft.alert_webhook, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "security.block", org_id: policy?.org_id ?? "test",
-          trace_id: null, risk_level: "high", attack_types: ["jailbreak"], _test: true,
-        }),
-      })
-    } catch { /* CORS will usually block this */ } finally {
-      setTesting(false)
-    }
-  }
-
   function toggleCategory(id: string) {
     setDraft((d) => ({
       ...d,
@@ -243,15 +224,6 @@ export default function Guardrails() {
       pii_ignore: d.pii_ignore.includes(id)
         ? d.pii_ignore.filter((e) => e !== id)
         : [...d.pii_ignore, id],
-    }))
-  }
-
-  function toggleAlertOn(level: string) {
-    setDraft((d) => ({
-      ...d,
-      alert_on: d.alert_on.includes(level)
-        ? d.alert_on.filter((l) => l !== level)
-        : [...d.alert_on, level],
     }))
   }
 
@@ -492,46 +464,6 @@ export default function Guardrails() {
                     No allowlist configured — all tool calls are permitted.
                   </p>
                 )}
-              </CardContent>
-            </Card>
-
-            {/* ── Webhook alerts ── */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Webhook alerts</CardTitle>
-                <CardDescription>POST a JSON payload to your Slack / Teams / custom endpoint on each block. Retried up to 3 times with exponential backoff.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Webhook URL</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      placeholder="https://hooks.slack.com/services/…"
-                      value={draft.alert_webhook ?? ""}
-                      onChange={(e) => setDraft((d) => ({ ...d, alert_webhook: e.target.value || null }))}
-                      className="flex-1 rounded-md border border-border/60 bg-background px-3 py-1.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-ring"
-                    />
-                    <Button variant="outline" size="sm" onClick={handleTestWebhook} disabled={!draft.alert_webhook || testing}>
-                      <HugeiconsIcon icon={testing ? Loading03Icon : TestTube01Icon} size={13} className={testing ? "animate-spin" : undefined} />
-                      Test
-                    </Button>
-                  </div>
-                </div>
-                <div>
-                  <label className="mb-2 block text-xs font-medium text-muted-foreground uppercase tracking-wide">Alert on risk levels</label>
-                  <div className="flex gap-3">
-                    {RISK_LEVELS.map((level) => (
-                      <label key={level} className="flex cursor-pointer items-center gap-1.5 text-sm">
-                        <Checkbox checked={draft.alert_on.includes(level)} onCheckedChange={() => toggleAlertOn(level)} />
-                        {level.charAt(0).toUpperCase() + level.slice(1)}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-                <div className="rounded-md bg-muted/40 px-3 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground">
-                  {JSON.stringify({ event: "security.block", org_id: "…", trace_id: "…", risk_level: "high", attack_types: ["jailbreak"] }, null, 2)}
-                </div>
               </CardContent>
             </Card>
 
