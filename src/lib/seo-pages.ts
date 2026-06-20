@@ -199,6 +199,12 @@ export const DOC_SEO = {
     "Fluiq configuration, SDK configuration, API keys, environment variables, LLM SDK settings, feature toggles",
     "/documentation/configuration",
   ),
+  alerts: techArticle(
+    "Alerts — Fluiq Docs",
+    "Send eval regressions and security events to Slack. Configure per-metric thresholds and risk levels in the dashboard; Fluiq posts to your Incoming Webhook in real time or as a digest.",
+    "LLM alerts, Slack alerts, eval regression alerts, security alerts, LLM monitoring alerts, anomaly alerts, Slack webhook",
+    "/documentation/alerts",
+  ),
 } satisfies Record<string, PageSeo>
 
 /** Comparison / "X alternative" pages, built from each route's CompetitorData. */
