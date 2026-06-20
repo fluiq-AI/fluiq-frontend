@@ -2,6 +2,7 @@ import { Link, NavLink, Outlet } from "react-router"
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
+  Alert02Icon,
   BookOpen01Icon,
   ChartLineData01Icon,
   CheckmarkCircle02Icon,
@@ -35,6 +36,7 @@ const NAV = [
     items: [
       { to: "/documentation/prompts",       label: "Prompts",       icon: FileScriptIcon },
       { to: "/documentation/configuration", label: "Configuration", icon: ZapIcon },
+      { to: "/documentation/alerts",        label: "Alerts",        icon: Alert02Icon },
     ],
   },
 ]

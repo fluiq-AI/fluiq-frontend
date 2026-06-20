@@ -25,6 +25,7 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/documentation/evaluation", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/prompts", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/configuration", changeFrequency: "monthly", priority: 0.7 },
+  { path: "/documentation/alerts", changeFrequency: "monthly", priority: 0.7 },
 
   // Examples
   { path: "/examples/observability", changeFrequency: "weekly", priority: 0.7 },
