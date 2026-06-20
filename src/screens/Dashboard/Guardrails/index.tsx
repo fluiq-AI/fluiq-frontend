@@ -29,6 +29,7 @@ interface GuardrailPolicy {
   block_categories:  string[]
   custom_deny_list:  string[]
   custom_allow_list: string[]
+  pii_ignore:        string[]
   alert_webhook:     string | null
   alert_on:          string[]
   scan_responses:    boolean
@@ -48,12 +49,29 @@ const ALL_CATEGORIES: { id: string; label: string; description: string }[] = [
 
 const RISK_LEVELS = ["low", "medium", "high"]
 
+// PII entity types the scanner detects. Each can be toggled off (ignored) per
+// policy — a checked entity is tracked, unchecked means it is suppressed in warn
+// mode and never surfaces in the dashboard. Mirrors PII_ENTITIES in the API.
+const PII_ENTITIES: { id: string; label: string; description: string }[] = [
+  { id: "US_SSN",        label: "US SSN",         description: "Social Security numbers" },
+  { id: "CREDIT_CARD",   label: "Credit Card",    description: "Card numbers (all major networks)" },
+  { id: "IBAN_CODE",     label: "IBAN",           description: "International bank account numbers" },
+  { id: "CRYPTO",        label: "Crypto Wallet",  description: "Bitcoin / crypto wallet addresses" },
+  { id: "US_PASSPORT",   label: "US Passport",    description: "Passport numbers" },
+  { id: "EMAIL_ADDRESS", label: "Email",          description: "Email addresses" },
+  { id: "PHONE_NUMBER",  label: "Phone",          description: "Phone numbers" },
+  { id: "PERSON",        label: "Person Name",    description: "People's names (NER)" },
+  { id: "LOCATION",      label: "Location",       description: "Geographic locations / addresses" },
+  { id: "IP_ADDRESS",    label: "IP Address",     description: "IPv4 / IPv6 addresses" },
+]
+
 const EMPTY_DRAFT = {
   block_threshold:   "high" as const,
   warn_threshold:    "medium" as const,
   block_categories:  [] as string[],
   custom_deny_list:  [] as string[],
   custom_allow_list: [] as string[],
+  pii_ignore:        [] as string[],
   alert_webhook:     null as string | null,
   alert_on:          ["high"] as string[],
   scan_responses:    false,
@@ -114,6 +132,7 @@ export default function Guardrails() {
           block_categories:  data.block_categories,
           custom_deny_list:  data.custom_deny_list,
           custom_allow_list: data.custom_allow_list,
+          pii_ignore:        data.pii_ignore ?? [],
           alert_webhook:     data.alert_webhook,
           alert_on:          data.alert_on,
           scan_responses:    data.scan_responses ?? false,
@@ -207,6 +226,16 @@ export default function Guardrails() {
       block_categories: d.block_categories.includes(id)
         ? d.block_categories.filter((c) => c !== id)
         : [...d.block_categories, id],
+    }))
+  }
+
+  // A checked entity is tracked; toggling off adds it to pii_ignore (suppressed).
+  function togglePiiEntity(id: string) {
+    setDraft((d) => ({
+      ...d,
+      pii_ignore: d.pii_ignore.includes(id)
+        ? d.pii_ignore.filter((e) => e !== id)
+        : [...d.pii_ignore, id],
     }))
   }
 
@@ -370,6 +399,39 @@ export default function Guardrails() {
                     <p className="text-xs text-muted-foreground">Adds ~50–200ms per call. Responses containing PII or secrets are blocked before being returned.</p>
                   </div>
                 </label>
+              </CardContent>
+            </Card>
+
+            {/* ── PII entity policy ── */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">PII detection</CardTitle>
+                <CardDescription>
+                  Choose which personal-data types are tracked. Unchecked entities are ignored —
+                  they never raise PII flags, are excluded from risk scoring, and are left unredacted.
+                  Applies in warn mode and the response gate.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {PII_ENTITIES.map((ent) => {
+                    const tracked = !draft.pii_ignore.includes(ent.id)
+                    return (
+                      <label key={ent.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${tracked ? "border-[#1860D3]/30 bg-[#1860D3]/5 dark:border-[#6FA8FF]/30 dark:bg-[#6FA8FF]/5" : "border-border/60 hover:bg-muted/40"}`}>
+                        <Checkbox checked={tracked} onCheckedChange={() => togglePiiEntity(ent.id)} className="mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium">{ent.label}</p>
+                          <p className="text-xs text-muted-foreground">{ent.description}</p>
+                        </div>
+                      </label>
+                    )
+                  })}
+                </div>
+                {draft.pii_ignore.length > 0 && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    Ignoring {draft.pii_ignore.length} {draft.pii_ignore.length === 1 ? "type" : "types"} — these are suppressed everywhere.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
