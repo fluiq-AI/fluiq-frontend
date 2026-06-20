@@ -161,8 +161,13 @@ requests.put(
         "block_threshold": "high",
         # Warn on medium-risk findings too
         "warn_threshold": "medium",
-        # Only these categories trigger a block — PII is warn-only
+        # Only these categories trigger a block — PII is warn-only.
+        # Agentic categories are also available: rag_poisoning,
+        # tool_exfiltration, tool_policy_violation, cross_agent_injection
         "block_categories": ["prompt_injection", "jailbreak", "skeleton_key"],
+        # Tools the agent may call — anything else is flagged as a
+        # tool_policy_violation. Empty = all tools allowed.
+        "allowed_tools": ["search_web", "read_file", "get_weather"],
         # Exact phrases always blocked before any scan
         "custom_deny_list": [
             "ignore previous instructions",
@@ -339,8 +344,13 @@ await axios.put(
     block_threshold: "high",
     // Warn on medium-risk findings too
     warn_threshold: "medium",
-    // Only these categories trigger a block — PII is warn-only
+    // Only these categories trigger a block — PII is warn-only.
+    // Agentic categories also available: rag_poisoning, tool_exfiltration,
+    // tool_policy_violation, cross_agent_injection
     block_categories: ["prompt_injection", "jailbreak", "skeleton_key"],
+    // Tools the agent may call — anything else is flagged as a
+    // tool_policy_violation. Empty = all tools allowed.
+    allowed_tools: ["search_web", "read_file", "get_weather"],
     // Exact phrases always blocked before any scan
     custom_deny_list: ["ignore previous instructions", "confidential pricing"],
     // Phrases that skip all scanning (internal tooling)

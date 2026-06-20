@@ -198,6 +198,22 @@ secure()  # Team plan required`}</pre>
   const skPatterns   = (ev["skeleton_key_patterns"] as string[] | null) ?? []
   const secDetected  = Boolean(ev["secrets_detected"])
   const secretTypes  = (ev["secret_types"]          as string[] | null) ?? []
+
+  // Agentic-threat signals (RAG poisoning, tool abuse, multi-agent trust)
+  const indirectDetected = Boolean(ev["indirect_injection_detected"])
+  const indirectSources  = (ev["indirect_injection_sources"] as string[] | null) ?? []
+  const ragDetected      = Boolean(ev["rag_poisoning_detected"])
+  const ragSources       = (ev["rag_poisoning_sources"] as string[] | null) ?? []
+  const exfilDetected    = Boolean(ev["tool_exfiltration_detected"])
+  const exfilTypes       = (ev["tool_exfiltration_types"] as string[] | null) ?? []
+  const toolPolicyViol   = Boolean(ev["tool_policy_violation_detected"])
+  const toolPolicyList   = (ev["tool_policy_violations"] as string[] | null) ?? []
+  const crossAgentInj    = Boolean(ev["cross_agent_injection_detected"])
+  const trustEscalation  = Boolean(ev["trust_boundary_escalation"])
+  const escalationScore  = typeof ev["escalation_score"] === "number" ? (ev["escalation_score"] as number) : null
+  const agentChainDepth  = typeof ev["agent_chain_depth"] === "number" ? (ev["agent_chain_depth"] as number) : null
+  const anyAgentic = indirectDetected || ragDetected || exfilDetected || toolPolicyViol || crossAgentInj || trustEscalation
+
   const promptRedact = ev["prompt_redacted"]   as string | null | undefined
   const respRedact   = ev["response_redacted"] as string | null | undefined
 
@@ -209,7 +225,8 @@ secure()  # Team plan required`}</pre>
     !injDetected &&
     !jbDetected &&
     !skDetected &&
-    !secDetected
+    !secDetected &&
+    !anyAgentic
 
   return (
     <div className="space-y-6 p-4">
@@ -342,6 +359,53 @@ secure()  # Team plan required`}</pre>
         <Section title="Secrets / Credentials Detected">
           <TagList tags={secretTypes.length ? secretTypes : ["high-entropy string"]} />
         </Section>
+      )}
+
+      {/* ── Agentic threats: RAG poisoning, tool abuse, multi-agent trust ── */}
+      {anyAgentic && (
+        <div className="rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-500/20 dark:bg-purple-500/10 px-4 py-3 space-y-3">
+          <p className="text-[12px] font-semibold text-purple-700 dark:text-purple-400">
+            Agentic Threats
+          </p>
+
+          {indirectDetected && (
+            <Section title="Indirect Injection">
+              <TagList tags={indirectSources.length ? indirectSources : ["detected"]} />
+            </Section>
+          )}
+          {ragDetected && (
+            <Section title="RAG Poisoning">
+              <TagList tags={ragSources.length ? ragSources : ["detected"]} />
+            </Section>
+          )}
+          {exfilDetected && (
+            <Section title="Tool-Input Exfiltration">
+              <TagList tags={exfilTypes.length ? exfilTypes : ["sensitive data sent to tool"]} />
+            </Section>
+          )}
+          {toolPolicyViol && (
+            <Section title="Tool Allowlist Violation">
+              <TagList tags={toolPolicyList.length ? toolPolicyList : ["disallowed tool"]} />
+            </Section>
+          )}
+          {crossAgentInj && (
+            <Section title="Cross-Agent Injection">
+              <p className="text-[12px] text-muted-foreground">
+                Attack content arrived from another agent&apos;s output rather than the end user.
+              </p>
+            </Section>
+          )}
+          {trustEscalation && (
+            <Section title="Trust-Boundary Escalation">
+              <p className="text-[12px] text-muted-foreground">
+                Risk is escalating across agent boundaries
+                {escalationScore !== null && ` · slope ${escalationScore.toFixed(3)}`}
+                {agentChainDepth !== null && ` · ${agentChainDepth} agents`}
+                .
+              </p>
+            </Section>
+          )}
+        </div>
       )}
 
       {(promptRedact || respRedact) && (

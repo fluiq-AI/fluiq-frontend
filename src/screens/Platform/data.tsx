@@ -123,20 +123,22 @@ def answer(question: str) -> str:
         <span className={cobalt}>Block attacks</span> before they reach your model
       </>
     ),
-    lede: "Pre-call scanning stops jailbreaks and injections. Post-call scanning redacts PII and secrets from stored traces.",
+    lede: "Pre-call scanning stops jailbreaks and injections. Post-call scanning redacts PII and secrets, and inspects the whole trace tree for agentic threats — RAG poisoning, tool misuse, and multi-agent trust attacks.",
     Mockup: SecurityMockup,
     docHref: "/documentation/security",
     capabilities: [
       { kicker: "Pre-call", title: "Injection and jailbreak blocking", body: "Prompt injection, jailbreaks, and skeleton-key attacks are caught before the model call is made." },
       { kicker: "Redaction", title: "PII and secret stripping", body: "Credit cards, SSNs, emails, IBANs, and high-entropy secrets are redacted from stored traces." },
+      { kicker: "Agentic", title: "RAG, tool & multi-agent defense", body: "Detects poisoned retrieved docs, sensitive data exfiltrated through tool calls, tools used outside an allowlist, and attacks that cross agent-to-agent boundaries." },
       { kicker: "Resilient", title: "Fails open by design", body: "A scanner error or plan change never blocks traffic. Security degrades to observe, not to an outage." },
     ],
     mechanism: {
-      heading: "Guard the prompt, then guard the response.",
+      heading: "Guard the prompt, then guard the response — and the whole trace tree.",
       points: [
         "Block mode raises FluiqSecurityError before a high-risk prompt hits the model",
-        "Named guardrail policies are set per call site from the dashboard",
+        "Named guardrail policies — block categories, tool allowlist, PII policy — set per call site from the dashboard",
         "The response gate scans model output for PII and secrets",
+        "Post-call scanning reads sibling tool outputs, retrieved docs, and the agent DAG to catch indirect injection, RAG poisoning, tool exfiltration, and cross-agent attacks",
       ],
       file: "app.py",
       signature: 'fluiq.secure(mode="block")',
