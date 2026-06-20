@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
 import { NavDeveloperDropdown } from "@/components/NavDeveloperDropdown"
+import { NavPlatformDropdown } from "@/components/NavPlatformDropdown"
 
 type NavKey = "platform" | "integrations" | "pricing" | "developer" | "contact"
 
@@ -75,13 +76,9 @@ export function SiteNavbar({ variant = "marketing", active, badge, landing }: Si
         <nav className={`hidden items-center md:flex ${
           isDocs ? "gap-6 text-sm text-muted-foreground" : "gap-7 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]"
         }`}>
-          {landing ? (
-            <>
-              <a href="#pillars" className={linkClass("platform")}>Platform</a>
-              <a href="#how-it-works" className={linkClass("platform")}>How it works</a>
-            </>
-          ) : (
-            <Link to="/" className={linkClass("platform")}>Platform</Link>
+          <NavPlatformDropdown triggerClassName={triggerClass("platform")} />
+          {landing && (
+            <a href="#how-it-works" className={linkClass("platform")}>How it works</a>
           )}
           <NavIntegrationsDropdown triggerClassName={triggerClass("integrations")} />
           <Link to="/pricing" className={linkClass("pricing")}>Pricing</Link>

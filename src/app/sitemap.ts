@@ -17,6 +17,13 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/pricing", changeFrequency: "monthly", priority: 0.9 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
 
+  // Platform pillars
+  { path: "/observability", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/security", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/optimization", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/evaluation", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/prompts", changeFrequency: "monthly", priority: 0.8 },
+
   // Documentation
   { path: "/documentation/quickstart", changeFrequency: "weekly", priority: 0.9 },
   { path: "/documentation/observability", changeFrequency: "weekly", priority: 0.8 },

@@ -8,10 +8,12 @@ import {
   File01Icon,
   Loading03Icon,
   Logout01Icon,
+  ServerStack01Icon,
   ShieldKeyIcon,
   SparklesIcon,
   UserCircleIcon,
   UserIcon,
+  WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Button } from "@/components/ui/button"
@@ -25,6 +27,8 @@ const NAV_ITEMS = [
   { to: "/admin/organizations", label: "Organizations", icon: Building01Icon },
   { to: "/admin/plans", label: "Plans", icon: SparklesIcon },
   { to: "/admin/blog", label: "Blog", icon: File01Icon },
+  { to: "/admin/architecture", label: "Architecture", icon: WorkflowSquare01Icon },
+  { to: "/admin/infrastructure", label: "Infrastructure", icon: ServerStack01Icon },
 ] as const
 
 function AdminLayout() {
