@@ -10,6 +10,7 @@ import {
   MagicWand01Icon,
   AiSecurity02Icon,
   AiContentGenerator01Icon,
+  Alert02Icon,
   FileEditIcon,
   Settings01Icon,
   TestTube01Icon,
@@ -27,6 +28,7 @@ import { NotificationWatcher } from "@/components/NotificationWatcher"const NAV
     items:[
       { to: "/dashboard/getting-started", label: "Getting Started", icon: Rocket02Icon},
       { to: "/dashboard/overview", label: "Overview", icon: DashboardSquare01Icon },
+      { to: "/dashboard/alerts", label: "Alerts", icon: Alert02Icon },
     ]
   },
   {
