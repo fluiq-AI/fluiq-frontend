@@ -56,11 +56,17 @@ const EVAL_METRICS: { id: string; label: string }[] = [
 ]
 
 const SECURITY_CATEGORIES: { id: string; label: string }[] = [
-  { id: "prompt_injection",   label: "Prompt injection" },
-  { id: "jailbreak",          label: "Jailbreak" },
-  { id: "pii_detected",       label: "PII" },
-  { id: "secrets_detected",   label: "Secrets / keys" },
-  { id: "indirect_injection", label: "Indirect injection" },
+  { id: "prompt_injection",       label: "Prompt injection" },
+  { id: "jailbreak",              label: "Jailbreak" },
+  { id: "skeleton_key",           label: "Skeleton key" },
+  { id: "semantic_attack",        label: "Semantic attack" },
+  { id: "pii_detected",           label: "PII" },
+  { id: "secrets_detected",       label: "Secrets / keys" },
+  { id: "indirect_injection",     label: "Indirect injection" },
+  { id: "rag_poisoning",          label: "RAG poisoning" },
+  { id: "tool_exfiltration",      label: "Tool exfiltration" },
+  { id: "tool_policy_violation",  label: "Tool allowlist violation" },
+  { id: "cross_agent_injection",  label: "Cross-agent injection" },
 ]
 
 const RISK_LEVELS = ["low", "medium", "high"]
