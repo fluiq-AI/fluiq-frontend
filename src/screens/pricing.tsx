@@ -146,6 +146,9 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
       { label: "Jailbreak detection", values: [false, false, true, true] },
       { label: "Secret leak prevention", values: [false, false, true, true] },
       { label: "Indirect injection detection", values: [false, false, true, true] },
+      { label: "RAG poisoning detection", values: [false, false, true, true] },
+      { label: "Tool-input exfiltration & allowlist", values: [false, false, true, true] },
+      { label: "Cross-agent injection & trust-boundary escalation", values: [false, false, true, true] },
     ],
   },
   {
@@ -195,7 +198,9 @@ const powerFeatures = [
       { label: "Prompt Injection Blocking", desc: "Catches injection patterns, jailbreak attempts, and skeleton key attacks in real time." },
       { label: "Jailbreak & Semantic Attack Scoring", desc: "Semantic similarity scoring against known attack vectors, even when phrasing varies." },
       { label: "Secret Leak Prevention", desc: "Scans LLM outputs for leaked API keys, tokens, and high-entropy credential strings." },
-      { label: "Indirect Injection Detection", desc: "Inspects tool outputs and context documents for second-order injection hidden in retrieved content." },
+      { label: "Indirect Injection & RAG Poisoning", desc: "Inspects tool outputs and retrieved documents for second-order injection, and flags chunks that semantically resemble an attack." },
+      { label: "Tool Abuse Defense", desc: "Catches sensitive data exfiltrated through tool-call arguments and tools invoked outside your configured allowlist." },
+      { label: "Multi-Agent Trust", desc: "Detects cross-agent injection and risk escalating across agent handoffs in the trace DAG." },
       { label: "Warn or Block mode", desc: "warn (default) flags risks and attaches security metadata to the trace. block intercepts before the LLM call and raises FluiqSecurityError." },
     ],
     code: `fluiq.instrument(api_key="fl_...")\nfluiq.secure()  # warn mode flags risks on the trace\nfluiq.secure(mode="block")  # block mode`,
@@ -234,7 +239,7 @@ const faqs = [
   },
   {
     q: "When do I need fluiq.secure()?",
-    a: "fluiq.secure() runs server-side security scanning: PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, and indirect-injection detection. It is included on the Growth and Enterprise plans. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
+    a: "fluiq.secure() runs server-side security scanning: PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, indirect-injection and RAG-poisoning detection, tool-input exfiltration and allowlist enforcement, and multi-agent trust checks (cross-agent injection and trust-boundary escalation). It is included on the Growth and Enterprise plans. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
   },
   {
     q: "How does fluiq.optimize() work?",

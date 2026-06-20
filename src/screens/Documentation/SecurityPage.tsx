@@ -14,7 +14,7 @@ export default function SecurityPage() {
       <PageHeading
         icon={SecurityCheckIcon}
         title="Security"
-        description="Call fluiq.secure() after instrument() to activate server-side security scanning. Every traced prompt and response is scanned for PII, prompt injection, and leaked secrets on Fluiq infrastructure. High-risk content is automatically redacted before persistence — the raw sensitive text is never written to the database."
+        description="Call fluiq.secure() after instrument() to activate server-side security scanning. Every traced prompt and response is scanned for PII, prompt injection, leaked secrets, and agentic threats — RAG poisoning, tool-input exfiltration, tool-allowlist violations, and multi-agent trust attacks — on Fluiq infrastructure. High-risk content is automatically redacted before persistence — the raw sensitive text is never written to the database."
       />
 
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
@@ -65,6 +65,18 @@ fluiq.secure({ mode: "block" });`,
         </li>
         <li>
           <span className="text-foreground">Secret scanner</span> — matches hardcoded credential patterns for OpenAI, Anthropic, AWS, GitHub, and Stripe keys, and flags high-entropy tokens resembling bearer tokens or passwords.
+        </li>
+        <li>
+          <span className="text-foreground">Indirect-injection &amp; RAG-poisoning scanner</span> — inspects sibling tool outputs and retrieved documents in the same trace tree for injection patterns, and flags retrieved chunks that semantically resemble an attack — catching prompts poisoned through tools or your knowledge base, not just the user message.
+        </li>
+        <li>
+          <span className="text-foreground">Tool-input exfiltration scanner</span> — runs the PII and secret scanners over the arguments your agent sends <em>to</em> tools, so sensitive data leaving in a tool call is surfaced.
+        </li>
+        <li>
+          <span className="text-foreground">Tool allowlist</span> — when you configure an allowlist, any tool the agent invokes outside it is flagged as a <code className="font-mono text-foreground">tool_policy_violation</code>.
+        </li>
+        <li>
+          <span className="text-foreground">Multi-agent trust</span> — detects <span className="text-foreground">cross-agent injection</span> (attack content arriving from another agent&apos;s output rather than the end user) and <span className="text-foreground">trust-boundary escalation</span> (risk climbing as it crosses agent handoffs in the trace DAG).
         </li>
       </ul>
 
@@ -168,7 +180,15 @@ fluiq.secure({ mode: "block" });`,
           },
           {
             name: "Block categories",
-            body: "Restrict which attack types trigger a block. When empty (default), any detected category blocks. Configure a subset — e.g. only prompt_injection and jailbreak — to warn on PII or secrets without blocking them.",
+            body: "Restrict which attack types trigger a block. When empty (default), any detected category blocks. Configure a subset — e.g. only prompt_injection and jailbreak — to warn on PII or secrets without blocking them. Covers the agentic categories too: rag_poisoning, tool_exfiltration, tool_policy_violation, and cross_agent_injection.",
+          },
+          {
+            name: "Tool allowlist",
+            body: "List the tools your agent is allowed to call. When set, any tool invoked outside the list is flagged as a tool_policy_violation. Leave empty to permit all tools (no enforcement).",
+          },
+          {
+            name: "PII policy",
+            body: "Choose which PII entity types are tracked. Unchecked types are suppressed in warn mode — never redacted and never surfaced in the dashboard — so you can ignore, say, person names and locations while still catching SSNs and cards.",
           },
           {
             name: "Custom deny / allow lists",

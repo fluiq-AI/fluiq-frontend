@@ -30,6 +30,7 @@ interface GuardrailPolicy {
   custom_deny_list:  string[]
   custom_allow_list: string[]
   pii_ignore:        string[]
+  allowed_tools:     string[]
   alert_webhook:     string | null
   alert_on:          string[]
   scan_responses:    boolean
@@ -45,6 +46,10 @@ const ALL_CATEGORIES: { id: string; label: string; description: string }[] = [
   { id: "pii_detected",       label: "PII",                description: "Personal identifiable information in the prompt" },
   { id: "secrets_detected",   label: "Secrets / Keys",     description: "API keys, passwords, private key blocks" },
   { id: "indirect_injection", label: "Indirect Injection", description: "Attack patterns in tool outputs or retrieved docs" },
+  { id: "rag_poisoning",        label: "RAG Poisoning",        description: "Retrieved documents that semantically resemble attacks" },
+  { id: "tool_exfiltration",    label: "Tool Exfiltration",    description: "PII / secrets sent out in tool-call arguments" },
+  { id: "tool_policy_violation", label: "Tool Allowlist",      description: "A tool was called outside the configured allowlist" },
+  { id: "cross_agent_injection", label: "Cross-Agent Injection", description: "Attack content arriving from another agent's output" },
 ]
 
 const RISK_LEVELS = ["low", "medium", "high"]
@@ -72,6 +77,7 @@ const EMPTY_DRAFT = {
   custom_deny_list:  [] as string[],
   custom_allow_list: [] as string[],
   pii_ignore:        [] as string[],
+  allowed_tools:     [] as string[],
   alert_webhook:     null as string | null,
   alert_on:          ["high"] as string[],
   scan_responses:    false,
@@ -133,6 +139,7 @@ export default function Guardrails() {
           custom_deny_list:  data.custom_deny_list,
           custom_allow_list: data.custom_allow_list,
           pii_ignore:        data.pii_ignore ?? [],
+          allowed_tools:     data.allowed_tools ?? [],
           alert_webhook:     data.alert_webhook,
           alert_on:          data.alert_on,
           scan_responses:    data.scan_responses ?? false,
@@ -460,6 +467,31 @@ export default function Guardrails() {
                     onChange={(e) => setDraft((d) => ({ ...d, custom_allow_list: e.target.value.split("\n") }))}
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* ── Tool allowlist ── */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Tool allowlist</CardTitle>
+                <CardDescription>
+                  One tool name per line. When set, any tool the agent invokes that is not on this
+                  list is flagged as a <span className="font-mono">tool_policy_violation</span>. Leave
+                  empty to allow all tools (no enforcement).
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <textarea
+                  className="h-36 w-full rounded-md border border-border/60 bg-muted/30 px-3 py-2 font-mono text-xs leading-relaxed text-foreground outline-none placeholder:text-muted-foreground/50 focus:ring-1 focus:ring-ring"
+                  placeholder={"search_web\nread_file\nget_weather"}
+                  value={draft.allowed_tools.join("\n")}
+                  onChange={(e) => setDraft((d) => ({ ...d, allowed_tools: e.target.value.split("\n") }))}
+                />
+                {draft.allowed_tools.filter((t) => t.trim()).length === 0 && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    No allowlist configured — all tool calls are permitted.
+                  </p>
+                )}
               </CardContent>
             </Card>
 
