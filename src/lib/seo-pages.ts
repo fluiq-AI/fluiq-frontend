@@ -207,6 +207,57 @@ export const DOC_SEO = {
   ),
 } satisfies Record<string, PageSeo>
 
+/** Product / pillar landing pages (one per platform pillar). */
+function pillarPage(title: string, description: string, keywords: string, path: string): PageSeo {
+  return {
+    title,
+    description,
+    keywords,
+    path,
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: title,
+      description,
+      url: `https://getfluiq.com${path}`,
+      isPartOf: ISPART,
+    },
+  }
+}
+
+export const PLATFORM_SEO = {
+  observability: pillarPage(
+    "LLM Observability - Fluiq",
+    "Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency. Real-time streaming to your Fluiq dashboard, no code changes.",
+    "LLM observability, LLM tracing, token attribution, LLM cost tracking, latency monitoring, agent tracing, real-time traces",
+    "/observability",
+  ),
+  security: pillarPage(
+    "LLM Security and Guardrails - Fluiq",
+    "Block prompt injection, jailbreaks, and PII leakage before they reach your model. Pre-call and post-call scanning with named guardrail policies, fails open by design.",
+    "LLM security, prompt injection detection, jailbreak detection, PII redaction, LLM guardrails, secret redaction, AI security",
+    "/security",
+  ),
+  optimization: pillarPage(
+    "LLM Cost Optimization and Caching - Fluiq",
+    "Cut LLM costs by caching repeated prompts server-side. Fluiq profiles your real trace history, provisions a cache, and serves duplicate calls automatically.",
+    "LLM caching, prompt caching, LLM cost optimization, response caching, reduce LLM costs, observe mode",
+    "/optimization",
+  ),
+  evaluation: pillarPage(
+    "LLM Evaluation and Quality Gates - Fluiq",
+    "Score every LLM response for hallucination, faithfulness, relevance, and toxicity with LLM-as-judge. Warn or block on configurable per-metric thresholds.",
+    "LLM evaluation, LLM-as-judge, hallucination detection, faithfulness scoring, toxicity detection, eval gates, quality thresholds",
+    "/evaluation",
+  ),
+  prompts: pillarPage(
+    "Prompt Management and Versioning - Fluiq",
+    "Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison.",
+    "prompt management, prompt versioning, prompt templates, prompt deployment, prompt playground, prompt engineering",
+    "/prompts",
+  ),
+} satisfies Record<string, PageSeo>
+
 /** Comparison / "X alternative" pages, built from each route's CompetitorData. */
 export function comparisonSeo(d: {
   name: string

@@ -9,8 +9,15 @@ const COMPARE_LINKS = [
   { label: "vs Lakera",     to: "/lakera-alternative" },
 ]
 
+const PLATFORM_LINKS = [
+  { label: "Observability",     to: "/observability" },
+  { label: "Security",          to: "/security" },
+  { label: "Optimization",      to: "/optimization" },
+  { label: "Evaluation",        to: "/evaluation" },
+  { label: "Prompt Management", to: "/prompts" },
+]
+
 const NAV_LINKS = [
-  { label: "Platform",      to: "/" },
   { label: "Integrations",  to: "/integrations" },
   { label: "Pricing",       to: "/pricing" },
   { label: "Docs",          to: "/documentation" },
@@ -50,7 +57,14 @@ export function SiteFooter() {
           {/* Link columns */}
           <div className="flex flex-wrap gap-12 text-[13px]">
             <div className="flex flex-col gap-3">
-              <span className={headingCls}>Product</span>
+              <span className={headingCls}>Platform</span>
+              {PLATFORM_LINKS.map((l) => (
+                <Link key={l.to} to={l.to} className={linkCls}>{l.label}</Link>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <span className={headingCls}>Company</span>
               {NAV_LINKS.map((l) => (
                 <Link key={l.to} to={l.to} className={linkCls}>{l.label}</Link>
               ))}
