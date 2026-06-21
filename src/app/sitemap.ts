@@ -17,6 +17,9 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/pricing", changeFrequency: "monthly", priority: 0.9 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
 
+  // Free tools (linkable assets)
+  { path: "/llm-cost-calculator", changeFrequency: "monthly", priority: 0.8 },
+
   // Platform pillars
   { path: "/observability", changeFrequency: "monthly", priority: 0.8 },
   { path: "/security", changeFrequency: "monthly", priority: 0.8 },

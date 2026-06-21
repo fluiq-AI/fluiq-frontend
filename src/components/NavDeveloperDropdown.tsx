@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight02Icon, Book02Icon, SourceCodeIcon } from "@hugeicons/core-free-icons"
+import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon } from "@hugeicons/core-free-icons"
 
 const NAV_DEVELOPER = [
   {
@@ -16,6 +16,13 @@ const NAV_DEVELOPER = [
     to: "/examples",
     description: "Copy-paste integration snippets",
     icon: SourceCodeIcon,
+  },
+  {
+    name: "LLM Cost Calculator",
+    slug: "llm-cost-calculator",
+    to: "/llm-cost-calculator",
+    description: "Compare OpenAI, Claude & Gemini pricing",
+    icon: Calculator01Icon,
   },
 ]
 

@@ -22,6 +22,7 @@ const NAV_LINKS = [
   { label: "Integrations",  to: "/integrations" },
   { label: "Pricing",       to: "/pricing" },
   { label: "Docs",          to: "/documentation" },
+  { label: "Cost Calculator", to: "/llm-cost-calculator" },
   { label: "Blog",          to: "/blog" },
   { label: "Contact",       to: "/contact" },
 ]
