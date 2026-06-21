@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "braintrust-alternative",
   name: "Braintrust",
-  metaTitle: "Fluiq vs Braintrust, The Braintrust Alternative With Observability + Security",
-  metaDescription: "Comparing Fluiq vs Braintrust. Fluiq adds production LLM tracing, security scanning, and response caching alongside evals, everything Braintrust covers, plus the ops layer it doesn't.",
+  metaTitle: "Fluiq vs Braintrust — Observability + Security Alternative",
+  metaDescription: "Fluiq vs Braintrust: production LLM tracing, security scanning, and caching alongside evals — everything Braintrust covers, plus the ops layer it doesn't.",
   canonicalPath: "/braintrust-alternative",
   heroHeadline: "The Braintrust Alternative: Evals Plus the Full Ops Stack",
   heroSub: "Braintrust is a strong evaluation platform. Fluiq adds production tracing, security scanning, and response caching alongside evals, all from two lines of Python, with no manual scoring scaffolding.",

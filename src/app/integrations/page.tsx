@@ -1,10 +1,11 @@
 import type { Metadata } from "next"
 import { JsonLd } from "@/components/JsonLd"
+import { breadcrumbLd } from "@/lib/seo-pages"
 import Component from "@/pages/Integrations/index"
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Fluiq Integrations, LLM Monitoring for OpenAI, LangChain, Pinecone & More",
+    absolute: "Fluiq Integrations — LLM Monitoring for 14 Frameworks & DBs",
   },
   description:
     "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases, OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python.",
@@ -34,6 +35,12 @@ export default function Page() {
   return (
     <>
       <JsonLd data={jsonLd} />
+      <JsonLd
+        data={breadcrumbLd([
+          ["Home", "/"],
+          ["Integrations", "/integrations"],
+        ])}
+      />
       <Component />
     </>
   )

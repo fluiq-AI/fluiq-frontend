@@ -23,6 +23,7 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/optimization", changeFrequency: "monthly", priority: 0.8 },
   { path: "/evaluation", changeFrequency: "monthly", priority: 0.8 },
   { path: "/prompts", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/alerts", changeFrequency: "monthly", priority: 0.8 },
 
   // Documentation
   { path: "/documentation/quickstart", changeFrequency: "weekly", priority: 0.9 },
@@ -59,9 +60,9 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
   { path: "/terms", changeFrequency: "yearly", priority: 0.3 },
 
-  // Auth (low priority — no unique content)
-  { path: "/signup", changeFrequency: "monthly", priority: 0.6 },
-  { path: "/login", changeFrequency: "monthly", priority: 0.3 },
+  // NOTE: auth pages (/signup, /login, /forgot-password, /reset-password) are
+  // intentionally excluded — they set robots noindex, so listing them in the
+  // sitemap would be contradictory.
 ]
 
 // Published blog slugs come from the API. Fail open — a sitemap should never

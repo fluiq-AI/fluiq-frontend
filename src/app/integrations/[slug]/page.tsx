@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { JsonLd } from "@/components/JsonLd"
+import { breadcrumbLd } from "@/lib/seo-pages"
 import { INTEGRATIONS } from "@/pages/Integrations/data"
 import Component from "@/pages/Integrations/IntegrationRoute"
 
@@ -40,16 +41,25 @@ export default async function Page({
   return (
     <>
       {data && (
-        <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "WebPage",
-            name: data.metaTitle,
-            description: data.metaDescription,
-            url: `https://getfluiq.com/integrations/${data.slug}`,
-            isPartOf: { "@id": "https://getfluiq.com" },
-          }}
-        />
+        <>
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "WebPage",
+              name: data.metaTitle,
+              description: data.metaDescription,
+              url: `https://getfluiq.com/integrations/${data.slug}`,
+              isPartOf: { "@id": "https://getfluiq.com" },
+            }}
+          />
+          <JsonLd
+            data={breadcrumbLd([
+              ["Home", "/"],
+              ["Integrations", "/integrations"],
+              [data.name, `/integrations/${data.slug}`],
+            ])}
+          />
+        </>
       )}
       <Component />
     </>

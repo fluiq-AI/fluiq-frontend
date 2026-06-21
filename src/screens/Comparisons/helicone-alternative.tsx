@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "helicone-alternative",
   name: "Helicone",
-  metaTitle: "Fluiq vs Helicone, The Helicone Alternative With No Proxy Overhead",
-  metaDescription: "Comparing Fluiq vs Helicone. Fluiq is SDK-based with zero proxy latency, supports 13+ frameworks beyond OpenAI, and adds security scanning and LLM-as-judge evals Helicone doesn't offer.",
+  metaTitle: "Fluiq vs Helicone — Alternative With No Proxy Overhead",
+  metaDescription: "Fluiq vs Helicone: SDK-based with zero proxy latency, 13+ frameworks beyond OpenAI, plus security scanning and LLM-as-judge evals Helicone doesn't offer.",
   canonicalPath: "/helicone-alternative",
   heroHeadline: "The Helicone Alternative: No Proxy, No Latency Tax",
   heroSub: "Helicone routes your traffic through a proxy to log requests. Fluiq instruments the SDK directly, zero latency overhead, full agent trace trees, security scanning, and evals for every framework you use.",

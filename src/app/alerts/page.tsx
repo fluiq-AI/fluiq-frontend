@@ -1,17 +1,16 @@
 import { buildMetadata } from "@/lib/seo"
 import { JsonLd } from "@/components/JsonLd"
-import { SEO, faqPageLd } from "@/lib/seo-pages"
-import Component, { faqs } from "@/pages/pricing"
+import { PLATFORM_SEO } from "@/lib/seo-pages"
+import Component from "@/pages/Platform/PillarPage"
 
-const seo = SEO.pricing
+const seo = PLATFORM_SEO.alerts
 export const metadata = buildMetadata(seo)
 
 export default function Page() {
   return (
     <>
       <JsonLd data={seo.jsonLd!} />
-      <JsonLd data={faqPageLd(faqs)} />
-      <Component />
+      <Component slug="alerts" />
     </>
   )
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { JsonLd } from "@/components/JsonLd"
+import { breadcrumbLd } from "@/lib/seo-pages"
 import { fetchPost, mediaUrl, type BlogPostFull } from "@/lib/blog"
 import Component from "@/pages/Blog/BlogPost"
 
@@ -65,6 +66,15 @@ export default async function Page({
             dateModified: post.updated_at || post.published_at || undefined,
             mainEntityOfPage: canonical,
           }}
+        />
+      )}
+      {post && (
+        <JsonLd
+          data={breadcrumbLd([
+            ["Home", "/"],
+            ["Blog", "/blog"],
+            [post.title, `/blog/${slug}`],
+          ])}
         />
       )}
       <Component />

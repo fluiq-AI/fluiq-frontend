@@ -344,9 +344,17 @@ export default function Home() {
                 <HugeiconsIcon icon={ShieldIcon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4"><span className="text-[#1860D3] dark:text-[#6FA8FF]">Block attacks</span> before they reach your model</h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Pre-call scanning catches jailbreaks, prompt injections, and skeleton-key attacks before the LLM call is made. Post-call scanning redacts PII and secrets from stored traces.</p>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">A full suite of server-side scanners runs on every request — catching jailbreaks, PII and secret leaks, and attacks injected through your tools, knowledge base, and other agents, not just the user message. Patterns are maintained server-side and updated without SDK releases. Everything fails open, so a scanner error never breaks your app.</p>
               <ul className="space-y-2 mb-6">
-                {["Pre-call jailbreak + injection blocking", "PII & secret redaction on traces", "No false positives, fails open on errors"].map(pt => (
+                {[
+                  "PII scanner: credit cards, SSNs, IBANs, emails, phones, IPs, names, and API keys",
+                  "Prompt-injection scanner: known jailbreak and instruction-override phrases",
+                  "Secret scanner: OpenAI, Anthropic, AWS, GitHub, Stripe keys + high-entropy tokens",
+                  "Indirect-injection & RAG-poisoning scanner: inspects sibling tool outputs and retrieved documents in the trace tree, flagging chunks that semantically resemble an attack",
+                  "Tool-input exfiltration scanner: PII and secret scan over the arguments your agent sends to tools",
+                  "Tool allowlist: any tool invoked outside it is flagged as a tool_policy_violation",
+                  "Multi-agent trust: detects cross-agent injection and trust-boundary escalation across handoffs in the trace DAG",
+                ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
                     {pt}

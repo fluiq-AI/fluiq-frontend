@@ -7,6 +7,7 @@ import {
   ZapIcon,
   TestTube01Icon,
   AiContentGenerator01Icon,
+  Notification01Icon,
 } from "@hugeicons/core-free-icons"
 
 const NAV_PLATFORM = [
@@ -15,6 +16,7 @@ const NAV_PLATFORM = [
   { name: "Optimization",      to: "/optimization",  description: "Cache repeated prompts automatically", icon: ZapIcon },
   { name: "Evaluation",        to: "/evaluation",    description: "Score and gate response quality", icon: TestTube01Icon },
   { name: "Prompt Management", to: "/prompts",       description: "Version and deploy prompt templates", icon: AiContentGenerator01Icon },
+  { name: "Alerts",            to: "/alerts",        description: "Push eval and security events to Slack", icon: Notification01Icon },
 ]
 
 interface Props {

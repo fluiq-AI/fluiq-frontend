@@ -95,7 +95,12 @@ export default function BlogPost() {
               <img
                 src={cover}
                 alt={post.title}
-                className="mt-8 w-full rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] object-cover"
+                width={1200}
+                height={675}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                className="mt-8 aspect-[16/9] w-full rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] object-cover"
               />
             )}
 

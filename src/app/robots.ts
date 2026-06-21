@@ -19,18 +19,33 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: PRIVATE_PATHS,
       },
-      // LLM / AI crawlers
+      // LLM / AI crawlers — both training bots and real-time "search/answer"
+      // bots. The search/answer bots (OAI-SearchBot, ChatGPT-User, Claude-User,
+      // PerplexityBot) are the ones that fetch pages live to build an answer and
+      // can drive referral traffic, so they must stay allowed on public paths.
       {
         userAgent: [
+          // OpenAI
           "GPTBot",
           "ChatGPT-User",
+          "OAI-SearchBot",
+          // Anthropic
+          "ClaudeBot",
           "Claude-Web",
+          "Claude-User",
+          "Claude-SearchBot",
           "anthropic-ai",
-          "PerplexityBot",
-          "cohere-ai",
+          // Google / Perplexity / others
           "Google-Extended",
+          "Google-CloudVertexBot",
+          "PerplexityBot",
+          "Perplexity-User",
+          "cohere-ai",
           "CCBot",
           "Applebot-Extended",
+          "Amazonbot",
+          "Meta-ExternalAgent",
+          "DuckAssistBot",
           "Bytespider",
         ],
         disallow: PRIVATE_PATHS,

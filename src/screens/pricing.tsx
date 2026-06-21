@@ -224,7 +224,7 @@ const powerFeatures = [
   },
 ]
 
-const faqs = [
+export const faqs = [
   {
     q: "What counts as a trace?",
     a: "One traced span, typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5-20 traces depending on how many tools and LLM calls it makes. The Free plan includes 50,000 traces per month; Team and above are unlimited.",
