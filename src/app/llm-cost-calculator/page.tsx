@@ -1,7 +1,8 @@
 import { buildMetadata } from "@/lib/seo"
 import { JsonLd } from "@/components/JsonLd"
 import { breadcrumbLd, faqPageLd } from "@/lib/seo-pages"
-import Component, { FAQS } from "@/pages/Tools/LlmCostCalculator"
+import Component from "@/pages/Tools/LlmCostCalculator"
+import { LLMCostFAQS } from "@/lib/faqs"
 
 const SITE = "https://getfluiq.com"
 const PATH = "/llm-cost-calculator"
@@ -35,7 +36,7 @@ export default function Page() {
     <>
       <JsonLd data={webAppLd} />
       <JsonLd data={breadcrumbLd([["Home", "/"], ["LLM Cost Calculator", PATH]])} />
-      <JsonLd data={faqPageLd(FAQS)} />
+      <JsonLd data={faqPageLd(LLMCostFAQS)} />
       <Component />
     </>
   )

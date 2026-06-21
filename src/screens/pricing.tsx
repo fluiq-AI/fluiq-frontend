@@ -20,6 +20,7 @@ import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
+import {PricingFaqs} from "@/lib/faqs";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -221,37 +222,6 @@ const powerFeatures = [
       { label: "Cache hit dashboard", desc: "See hit rates, latency savings, and estimated cost savings in your Fluiq dashboard." },
     ],
     code: `fluiq.instrument(api_key="fl_...")\nfluiq.optimize()  # cache mode\nfluiq.optimize(mode="observe")  # observe mode`,
-  },
-]
-
-export const faqs = [
-  {
-    q: "What counts as a trace?",
-    a: "One traced span, typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5-20 traces depending on how many tools and LLM calls it makes. The Free plan includes 50,000 traces per month; Team and above are unlimited.",
-  },
-  {
-    q: "Which frameworks does Fluiq support?",
-    a: "Fluiq instruments at the function-call level and ships integrations for OpenAI, Anthropic, Gemini, LangChain, LangGraph, CrewAI, Google ADK, and raw HTTP calls via the @trace decorator. Streaming, tool calls, thinking tokens, and MCP servers are all captured automatically.",
-  },
-  {
-    q: "What counts as an evaluation?",
-    a: "One LLM-as-judge scoring call: e.g. a hallucination check on an answer or a relevance score over a retrieved chunk set. Metrics include hallucination, faithfulness, relevance, toxicity, coherence, and completeness. Free includes 1,000 evals/month, Team 10,000, Growth 100,000, and Enterprise is unlimited.",
-  },
-  {
-    q: "When do I need fluiq.secure()?",
-    a: "fluiq.secure() runs server-side security scanning: PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, indirect-injection and RAG-poisoning detection, tool-input exfiltration and allowlist enforcement, and multi-agent trust checks (cross-agent injection and trust-boundary escalation). It is included on the Growth and Enterprise plans. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
-  },
-  {
-    q: "How does fluiq.optimize() work?",
-    a: "Available on Team and above. After you call fluiq.optimize(), the SDK fetches your trace-derived cache profile from the Fluiq backend, connects to a dedicated Redis instance provisioned for your account, and begins serving repeated prompts from cache. In observe mode it records what would have been a cache hit so you can review projected savings before enabling full interception.",
-  },
-  {
-    q: "Do you support self-hosting?",
-    a: "Yes. VPC and on-prem deployments are available on the Enterprise plan. The SDK is a thin instrumentation layer and can be pointed at your own backend endpoint if you prefer full self-hosting.",
-  },
-  {
-    q: "Can I switch frameworks later?",
-    a: "Yes. Because Fluiq instruments at the call level, the same SDK works across all supported frameworks simultaneously. Switching from LangChain to LangGraph, or adding a new provider, requires no changes to your instrumentation.",
   },
 ]
 
@@ -573,7 +543,7 @@ export default function Pricing() {
             </h2>
           </div>
           <div className="grid gap-3">
-            {faqs.map((f, i) => (
+            {PricingFaqs.map((f, i) => (
               <div
                 key={f.q}
                 data-animate

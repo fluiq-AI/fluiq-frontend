@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { fetchModels, requestModel, reportPrice, type PricedModel } from "@/lib/models"
+import { LLMCostFAQS as FAQS } from "@/lib/faqs"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -807,27 +808,3 @@ export default function LlmCostCalculator() {
     </div>
   )
 }
-
-/** Visible FAQ, kept in sync with the FAQPage JSON-LD in the route file. */
-export const FAQS = [
-  {
-    q: "How is LLM cost calculated?",
-    a: "Cost per request = (input tokens / 1,000,000 x input price) + (output tokens / 1,000,000 x output price). Multiply by your monthly request volume for the monthly cost. Input and output tokens are priced separately, and output is usually more expensive.",
-  },
-  {
-    q: "What is a token?",
-    a: "A token is a chunk of text a model reads or writes, roughly 4 characters or 0.75 English words. Both your prompt (input) and the model's response (output) are billed in tokens.",
-  },
-  {
-    q: "Which LLM is cheapest?",
-    a: "It depends on your input-to-output ratio, but lightweight models like GPT-4o mini, Claude Haiku, and Gemini Flash are the cheapest per token, often 10 to 20 times less than frontier models. The comparison table ranks every model for your exact workload.",
-  },
-  {
-    q: "How much can response caching save?",
-    a: "A cache hit serves a repeated prompt from storage instead of calling the model, so that request costs effectively nothing. At a 60% cache hit rate you cut model spend by about 60%. Fluiq's optimize() builds a cache profile from your real traces and serves duplicates automatically.",
-  },
-  {
-    q: "Where do these prices come from?",
-    a: "Prices are list rates per 1M tokens for the standard tier, served from Fluiq's pricing database. Providers change pricing often, so treat the result as a planning estimate, confirm with the provider, and use the report link to flag anything out of date.",
-  },
-]
