@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "langfuse-alternative",
   name: "Langfuse",
-  metaTitle: "Fluiq vs Langfuse, The Langfuse Alternative With Security & Caching Built In",
-  metaDescription: "Comparing Fluiq vs Langfuse. Fluiq requires zero manual spans, adds prompt injection blocking and Redis caching, and runs fully managed, no self-hosting required.",
+  metaTitle: "Fluiq vs Langfuse — Alternative With Security & Caching",
+  metaDescription: "Fluiq vs Langfuse: Fluiq needs zero manual spans, adds prompt injection blocking and Redis caching, and runs fully managed — no self-hosting required.",
   canonicalPath: "/langfuse-alternative",
   heroHeadline: "The Langfuse Alternative: Zero Manual Spans, Security Included",
   heroSub: "Langfuse is a solid open-source observability platform. Fluiq auto-instruments the same frameworks with zero manual span calls, adds server-side security scanning, and runs fully managed, no infra to maintain.",

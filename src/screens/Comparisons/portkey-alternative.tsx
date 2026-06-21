@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "portkey-alternative",
   name: "Portkey",
-  metaTitle: "Fluiq vs Portkey, The Portkey Alternative Without the Gateway Latency",
-  metaDescription: "Comparing Fluiq vs Portkey. Fluiq is SDK-based with no gateway overhead, adds full agent trace trees, security scanning, and LLM-as-judge evals that Portkey's gateway model doesn't support.",
+  metaTitle: "Fluiq vs Portkey — Alternative Without Gateway Latency",
+  metaDescription: "Fluiq vs Portkey: Fluiq is SDK-based with no gateway overhead, adding agent trace trees, security scanning, and LLM-as-judge evals Portkey's gateway can't.",
   canonicalPath: "/portkey-alternative",
   heroHeadline: "The Portkey Alternative: Deep Traces, No Gateway Tax",
   heroSub: "Portkey is an LLM gateway for routing and fallbacks. Fluiq instruments the SDK directly, giving you full agent trace trees, security scanning, and inline evals with zero proxy latency and no routing configuration.",

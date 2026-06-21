@@ -8,7 +8,7 @@ import { Providers } from "./providers"
 export const metadata: Metadata = {
   metadataBase: new URL("https://getfluiq.com"),
   title: {
-    default: "Fluiq — The AI Ops Stack for LLM Applications",
+    default: "Fluiq — The AI Ops Stack for Production LLM Applications",
     template: "%s | Fluiq",
   },
   description:
@@ -65,8 +65,32 @@ const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Fluiq",
+  alternateName: "FluiqAI",
   url: "https://getfluiq.com",
-  logo: "https://getfluiq.com/logo.svg",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://getfluiq.com/logo.svg",
+    width: 512,
+    height: 512,
+  },
+  description:
+    "Fluiq is the AI Ops stack for LLM applications. Two lines of Python add tracing, security scanning, response caching, and LLM-as-judge evaluation to any LLM app.",
+  slogan: "The AI Ops stack for LLM applications.",
+  // Topic entities Fluiq should be associated with in AI answers (AEO).
+  knowsAbout: [
+    "LLM observability",
+    "LLM tracing",
+    "AI security",
+    "prompt injection detection",
+    "PII redaction",
+    "LLM cost optimization",
+    "response caching",
+    "LLM evaluation",
+    "LLM-as-judge",
+    "hallucination detection",
+    "prompt management",
+    "AI Ops",
+  ],
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer support",

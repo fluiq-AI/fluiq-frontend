@@ -1,14 +1,26 @@
 import type { Metadata } from "next"
+import { JsonLd } from "@/components/JsonLd"
+import { breadcrumbLd } from "@/lib/seo-pages"
 import Component from "@/pages/Blog/index"
 
 export const metadata: Metadata = {
-  title: { absolute: "Blog — Fluiq" },
+  title: { absolute: "Fluiq Blog — LLM Observability, Evals, Security & Caching" },
   description:
     "Guides, engineering notes, and product updates from the Fluiq team on LLM observability, evals, security, and optimization.",
   alternates: { canonical: "/blog" },
-  openGraph: { title: "Fluiq Blog", url: "/blog", type: "website" },
+  openGraph: { title: "Fluiq Blog — LLM Observability, Evals, Security & Caching", url: "/blog", type: "website" },
 }
 
 export default function Page() {
-  return <Component />
+  return (
+    <>
+      <JsonLd
+        data={breadcrumbLd([
+          ["Home", "/"],
+          ["Blog", "/blog"],
+        ])}
+      />
+      <Component />
+    </>
+  )
 }

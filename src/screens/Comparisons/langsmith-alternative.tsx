@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "langsmith-alternative",
   name: "LangSmith",
-  metaTitle: "Fluiq vs LangSmith, The LangSmith Alternative for Production LLM Apps",
-  metaDescription: "Comparing Fluiq vs LangSmith. Fluiq adds security scanning, caching, and multi-framework support beyond LangChain, in two lines of Python, with no tracing boilerplate.",
+  metaTitle: "Fluiq vs LangSmith — Alternative for Production LLM Apps",
+  metaDescription: "Fluiq vs LangSmith: Fluiq adds security scanning, caching, and multi-framework support beyond LangChain — two lines of Python, no tracing boilerplate.",
   canonicalPath: "/langsmith-alternative",
   heroHeadline: "The LangSmith Alternative Built Beyond LangChain",
   heroSub: "LangSmith is excellent if your stack is LangChain. Fluiq auto-instruments OpenAI, Anthropic, Gemini, LangGraph, CrewAI, Google ADK, and 7 more, plus adds security scanning and response caching LangSmith doesn't touch.",

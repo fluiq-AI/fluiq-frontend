@@ -15,6 +15,7 @@ const PLATFORM_LINKS = [
   { label: "Optimization",      to: "/optimization" },
   { label: "Evaluation",        to: "/evaluation" },
   { label: "Prompt Management", to: "/prompts" },
+  { label: "Alerts",            to: "/alerts" },
 ]
 
 const NAV_LINKS = [

@@ -1,13 +1,71 @@
 import type { PageSeo } from "@/lib/seo"
 
-const ISPART = { "@id": "https://getfluiq.com" }
+const SITE = "https://getfluiq.com"
+const ISPART = { "@id": SITE }
+
+/**
+ * schema.org BreadcrumbList node (no @context — embed inside an @graph).
+ * Pass an ordered trail of [name, path] pairs, root first.
+ */
+function breadcrumb(trail: Array<[string, string]>) {
+  return {
+    "@type": "BreadcrumbList",
+    itemListElement: trail.map(([name, path], i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name,
+      item: `${SITE}${path}`,
+    })),
+  }
+}
+
+/** Standalone BreadcrumbList JSON-LD (with @context) for rendering on its own. */
+export function breadcrumbLd(trail: Array<[string, string]>) {
+  return { "@context": "https://schema.org", ...breadcrumb(trail) }
+}
+
+/** Title-case the last path segment: "/documentation/quickstart" → "Quickstart". */
+function leafLabel(path: string): string {
+  const seg = path.split("/").filter(Boolean).pop() ?? ""
+  return seg
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ")
+}
+
+/** Reusable Organization node for author/publisher fields. */
+const ORG = { "@type": "Organization", name: "Fluiq", url: SITE }
+
+/**
+ * Last meaningful content update for docs/examples. Bump this whenever you make
+ * a substantive edit — AI answer engines weight fresh content heavily, so the
+ * dateModified signal directly affects AEO citation odds.
+ */
+const DOCS_UPDATED = "2026-06-20"
+
+/**
+ * Standalone FAQPage JSON-LD from an array of question/answer pairs. The Q&A
+ * must also be visible on the page (Google requirement). Strong AEO asset:
+ * specific, factual answers are exactly what answer engines extract and cite.
+ */
+export function faqPageLd(items: Array<{ q: string; a: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  }
+}
 
 /** Per-route SEO descriptors ported from the SPA's <Helmet> tags. */
 export const SEO = {
   home: {
-    title: "Fluiq: The AI Ops Stack for LLM Applications",
+    title: "Fluiq — The AI Ops Stack for Production LLM Applications",
     description:
-      "Fluiq is the unified ops layer for LLM applications: security scanning, intelligent caching, deep observability, and automated evaluation on every single request.",
+      "The unified ops layer for LLM applications: security scanning, intelligent caching, deep observability, and automated evaluation on every request.",
     keywords:
       "AI Ops, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, AI security, hallucination detection",
     path: "/",
@@ -60,25 +118,100 @@ export const SEO = {
   },
 
   pricing: {
-    title: "Pricing - Fluiq",
+    title: "Fluiq Pricing — Free LLM Observability, Evals & Caching",
     description:
-      "Fluiq pricing: start free with 50,000 traces/month and 1,000 evaluations. Upgrade to Team ($299/mo) for caching and unlimited traces, Growth ($599/mo) for security scanning, or Enterprise for VPC, SSO & custom SLAs.",
+      "Start free with 50,000 traces/month and 1,000 evals. Upgrade to Team ($299/mo) for caching, Growth ($599/mo) for security, or Enterprise for SSO & SLAs.",
     keywords:
       "Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing, LLM security pricing",
     path: "/pricing",
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: "Fluiq Pricing",
-      description:
-        "Fluiq pricing plans: start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($299/mo), Growth ($599/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
-      url: "https://getfluiq.com/pricing",
-      isPartOf: ISPART,
+      "@graph": [
+        {
+          "@type": "WebPage",
+          name: "Fluiq Pricing",
+          description:
+            "Fluiq pricing plans: start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($299/mo), Growth ($599/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
+          url: `${SITE}/pricing`,
+          isPartOf: ISPART,
+        },
+        {
+          "@type": "Product",
+          name: "Fluiq",
+          description:
+            "The AI Ops platform for LLM applications: observability, security scanning, response caching, and LLM-as-judge evaluation.",
+          brand: { "@type": "Brand", name: "Fluiq" },
+          offers: {
+            "@type": "AggregateOffer",
+            priceCurrency: "USD",
+            lowPrice: "0",
+            highPrice: "599",
+            offerCount: 4,
+            offers: [
+              {
+                "@type": "Offer",
+                name: "Free",
+                price: "0",
+                priceCurrency: "USD",
+                url: `${SITE}/pricing`,
+                availability: "https://schema.org/InStock",
+                description:
+                  "50,000 traces/month, 1,000 LLM-as-judge evals/month, 1 seat, 14-day retention. No credit card required.",
+              },
+              {
+                "@type": "Offer",
+                name: "Team",
+                price: "299",
+                priceCurrency: "USD",
+                url: `${SITE}/pricing`,
+                availability: "https://schema.org/InStock",
+                priceSpecification: {
+                  "@type": "UnitPriceSpecification",
+                  price: "299",
+                  priceCurrency: "USD",
+                  unitText: "MONTH",
+                },
+                description:
+                  "Unlimited traces, fluiq.optimize() response caching, and 10,000 evals/month.",
+              },
+              {
+                "@type": "Offer",
+                name: "Growth",
+                price: "599",
+                priceCurrency: "USD",
+                url: `${SITE}/pricing`,
+                availability: "https://schema.org/InStock",
+                priceSpecification: {
+                  "@type": "UnitPriceSpecification",
+                  price: "599",
+                  priceCurrency: "USD",
+                  unitText: "MONTH",
+                },
+                description:
+                  "Everything in Team plus fluiq.secure() security scanning and 100,000 evals/month.",
+              },
+              {
+                "@type": "Offer",
+                name: "Enterprise",
+                priceCurrency: "USD",
+                url: `${SITE}/contact`,
+                availability: "https://schema.org/InStock",
+                description:
+                  "Custom pricing with VPC / on-prem deployment, SSO, unlimited evals, and custom SLAs.",
+              },
+            ],
+          },
+        },
+        breadcrumb([
+          ["Home", "/"],
+          ["Pricing", "/pricing"],
+        ]),
+      ],
     },
   },
 
   contact: {
-    title: "Contact - Fluiq",
+    title: "Contact Fluiq — Sales, Support & LLM Integration Help",
     description:
       "Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day.",
     keywords:
@@ -86,17 +219,25 @@ export const SEO = {
     path: "/contact",
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "ContactPage",
-      name: "Contact Fluiq",
-      description:
-        "Contact the Fluiq team for sales enquiries, integration support, feature requests, and partnership discussions. Replies within one business day.",
-      url: "https://getfluiq.com/contact",
-      isPartOf: ISPART,
+      "@graph": [
+        {
+          "@type": "ContactPage",
+          name: "Contact Fluiq",
+          description:
+            "Contact the Fluiq team for sales enquiries, integration support, feature requests, and partnership discussions. Replies within one business day.",
+          url: `${SITE}/contact`,
+          isPartOf: ISPART,
+        },
+        breadcrumb([
+          ["Home", "/"],
+          ["Contact", "/contact"],
+        ]),
+      ],
     },
   },
 
   privacy: {
-    title: "Privacy Policy — Fluiq",
+    title: "Privacy Policy — How Fluiq Handles Your LLM Trace Data",
     description:
       "Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA.",
     keywords:
@@ -104,17 +245,25 @@ export const SEO = {
     path: "/privacy",
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: "Privacy Policy — Fluiq",
-      description:
-        "Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA.",
-      url: "https://getfluiq.com/privacy",
-      isPartOf: ISPART,
+      "@graph": [
+        {
+          "@type": "WebPage",
+          name: "Privacy Policy — Fluiq",
+          description:
+            "Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA.",
+          url: `${SITE}/privacy`,
+          isPartOf: ISPART,
+        },
+        breadcrumb([
+          ["Home", "/"],
+          ["Privacy Policy", "/privacy"],
+        ]),
+      ],
     },
   },
 
   terms: {
-    title: "Terms of Service — Fluiq",
+    title: "Terms of Service — Acceptable Use & Billing for Fluiq",
     description:
       "Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements.",
     keywords:
@@ -122,12 +271,20 @@ export const SEO = {
     path: "/terms",
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: "Terms of Service — Fluiq",
-      description:
-        "Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements.",
-      url: "https://getfluiq.com/terms",
-      isPartOf: ISPART,
+      "@graph": [
+        {
+          "@type": "WebPage",
+          name: "Terms of Service — Fluiq",
+          description:
+            "Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements.",
+          url: `${SITE}/terms`,
+          isPartOf: ISPART,
+        },
+        breadcrumb([
+          ["Home", "/"],
+          ["Terms of Service", "/terms"],
+        ]),
+      ],
     },
   },
 } satisfies Record<string, PageSeo>
@@ -139,6 +296,7 @@ function techArticle(
   keywords: string,
   path: string,
 ): PageSeo {
+  const isExample = path.startsWith("/examples")
   return {
     title,
     description,
@@ -147,60 +305,73 @@ function techArticle(
     ogType: "article",
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "TechArticle",
-      headline: title,
-      description,
-      url: `https://getfluiq.com${path}`,
-      isPartOf: ISPART,
+      "@graph": [
+        {
+          "@type": "TechArticle",
+          headline: title,
+          description,
+          url: `${SITE}${path}`,
+          isPartOf: ISPART,
+          inLanguage: "en",
+          author: ORG,
+          publisher: ORG,
+          dateModified: DOCS_UPDATED,
+        },
+        breadcrumb([
+          ["Home", "/"],
+          isExample ? ["Examples", "/examples"] : ["Documentation", "/documentation"],
+          [leafLabel(path), path],
+        ]),
+      ],
     },
   }
 }
 
 export const DOC_SEO = {
   quickstart: techArticle(
-    "Quickstart — Fluiq Docs",
+    "Quickstart — Add LLM Observability in 60 Seconds | Fluiq",
     "Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more.",
     "Fluiq quickstart, LLM observability setup, Python LLM SDK, install Fluiq, LLM tracing tutorial, getting started",
     "/documentation/quickstart",
   ),
   observability: techArticle(
-    "Observability — Fluiq Docs",
+    "LLM Observability — Tracing, Token & Cost Docs | Fluiq",
     "Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency histograms. Real-time streaming to your Fluiq dashboard.",
     "LLM observability, LLM tracing, token attribution, USD cost tracking, latency histograms, span tree, real-time traces",
     "/documentation/observability",
   ),
   optimization: techArticle(
-    "Optimization — Fluiq Docs",
+    "LLM Cost Optimization & Response Caching Docs | Fluiq",
     "Cut LLM costs by caching repeated prompts server-side. fluiq.optimize() analyses your trace history, provisions a cache instance, and serves duplicates automatically.",
     "LLM caching, prompt caching, LLM cost optimization, response caching, Redis LLM cache, reduce LLM costs",
     "/documentation/optimization",
   ),
   security: techArticle(
-    "Security — Fluiq Docs",
+    "LLM Security — Prompt Injection & PII Defense Docs | Fluiq",
     "Block prompt injection, jailbreaks, and PII leakage before they reach your model. fluiq.secure() adds pre-call and post-call scanning with zero false positives.",
     "LLM security, prompt injection detection, jailbreak detection, PII redaction, LLM guardrails, secret redaction",
     "/documentation/security",
   ),
   evaluation: techArticle(
-    "Evaluation — Fluiq Docs",
+    "LLM Evaluation — LLM-as-Judge Quality Scoring | Fluiq Docs",
     "Score every LLM response for hallucination, faithfulness, relevance, and toxicity using LLM-as-judge. Warn or block based on configurable per-metric thresholds.",
     "LLM evaluation, LLM-as-judge, hallucination detection, faithfulness scoring, relevance scoring, toxicity detection, eval gates",
     "/documentation/evaluation",
   ),
   prompts: techArticle(
-    "Prompt Management — Fluiq Docs",
+    "Prompt Management — Versioning & Deployment Docs | Fluiq",
     "Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison.",
     "prompt management, prompt versioning, prompt templates, prompt deployment, prompt playground, prompt engineering",
     "/documentation/prompts",
   ),
   configuration: techArticle(
-    "Configuration — Fluiq Docs",
+    "Configuration — Fluiq SDK Options & Environment Variables",
     "Full reference for Fluiq SDK configuration options — API keys, environment variables, log levels, timeout settings, and per-feature toggles.",
     "Fluiq configuration, SDK configuration, API keys, environment variables, LLM SDK settings, feature toggles",
     "/documentation/configuration",
   ),
   alerts: techArticle(
-    "Alerts — Fluiq Docs",
+    "Alerts — Slack Notifications for Evals & Security | Fluiq",
     "Send eval regressions and security events to Slack. Configure per-metric thresholds and risk levels in the dashboard; Fluiq posts to your Incoming Webhook in real time or as a digest.",
     "LLM alerts, Slack alerts, eval regression alerts, security alerts, LLM monitoring alerts, anomaly alerts, Slack webhook",
     "/documentation/alerts",
@@ -216,45 +387,59 @@ function pillarPage(title: string, description: string, keywords: string, path: 
     path,
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: title,
-      description,
-      url: `https://getfluiq.com${path}`,
-      isPartOf: ISPART,
+      "@graph": [
+        {
+          "@type": "WebPage",
+          name: title,
+          description,
+          url: `${SITE}${path}`,
+          isPartOf: ISPART,
+        },
+        breadcrumb([
+          ["Home", "/"],
+          [leafLabel(path), path],
+        ]),
+      ],
     },
   }
 }
 
 export const PLATFORM_SEO = {
   observability: pillarPage(
-    "LLM Observability - Fluiq",
+    "LLM Observability — Tracing, Token & Cost Tracking | Fluiq",
     "Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency. Real-time streaming to your Fluiq dashboard, no code changes.",
     "LLM observability, LLM tracing, token attribution, LLM cost tracking, latency monitoring, agent tracing, real-time traces",
     "/observability",
   ),
   security: pillarPage(
-    "LLM Security and Guardrails - Fluiq",
+    "LLM Security & Guardrails — Block Injection & PII | Fluiq",
     "Block prompt injection, jailbreaks, and PII leakage before they reach your model. Pre-call and post-call scanning with named guardrail policies, fails open by design.",
     "LLM security, prompt injection detection, jailbreak detection, PII redaction, LLM guardrails, secret redaction, AI security",
     "/security",
   ),
   optimization: pillarPage(
-    "LLM Cost Optimization and Caching - Fluiq",
+    "LLM Cost Optimization & Response Caching | Fluiq Platform",
     "Cut LLM costs by caching repeated prompts server-side. Fluiq profiles your real trace history, provisions a cache, and serves duplicate calls automatically.",
     "LLM caching, prompt caching, LLM cost optimization, response caching, reduce LLM costs, observe mode",
     "/optimization",
   ),
   evaluation: pillarPage(
-    "LLM Evaluation and Quality Gates - Fluiq",
+    "LLM Evaluation & Quality Gates — LLM-as-Judge | Fluiq",
     "Score every LLM response for hallucination, faithfulness, relevance, and toxicity with LLM-as-judge. Warn or block on configurable per-metric thresholds.",
     "LLM evaluation, LLM-as-judge, hallucination detection, faithfulness scoring, toxicity detection, eval gates, quality thresholds",
     "/evaluation",
   ),
   prompts: pillarPage(
-    "Prompt Management and Versioning - Fluiq",
+    "Prompt Management & Versioning — Templates & Deploy | Fluiq",
     "Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison.",
     "prompt management, prompt versioning, prompt templates, prompt deployment, prompt playground, prompt engineering",
     "/prompts",
+  ),
+  alerts: pillarPage(
+    "LLM Alerts to Slack — Eval & Security Notifications | Fluiq",
+    "Push eval regressions and security events straight to Slack. Configure per-metric thresholds and risk levels in the dashboard; Fluiq posts to your Incoming Webhook in real time or as a digest.",
+    "LLM alerts, Slack alerts, eval regression alerts, security alerts, LLM monitoring alerts, anomaly alerts, Slack webhook",
+    "/alerts",
   ),
 } satisfies Record<string, PageSeo>
 
@@ -272,42 +457,50 @@ export function comparisonSeo(d: {
     path: d.canonicalPath,
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "WebPage",
-      name: d.metaTitle,
-      description: d.metaDescription,
-      url: `https://getfluiq.com${d.canonicalPath}`,
-      isPartOf: ISPART,
+      "@graph": [
+        {
+          "@type": "WebPage",
+          name: d.metaTitle,
+          description: d.metaDescription,
+          url: `${SITE}${d.canonicalPath}`,
+          isPartOf: ISPART,
+        },
+        breadcrumb([
+          ["Home", "/"],
+          [`${d.name} Alternative`, d.canonicalPath],
+        ]),
+      ],
     },
   }
 }
 
 export const EXAMPLE_SEO = {
   observability: techArticle(
-    "Observability Examples — Fluiq Docs",
+    "Observability Examples — OpenAI, LangChain & More | Fluiq",
     "Code examples for Fluiq observability: tracing OpenAI, Anthropic, LangChain, LangGraph, CrewAI, Google ADK, and vector database calls.",
     "Fluiq tracing examples, OpenAI tracing code, LangChain tracing, CrewAI tracing examples, LLM observability code, span tree example",
     "/examples/observability",
   ),
   security: techArticle(
-    "Security Examples — Fluiq Docs",
+    "Security Examples — Block Injection, Jailbreaks & PII",
     "Code examples for fluiq.secure(): blocking prompt injection, jailbreaks, PII leakage, and skeleton-key attacks across OpenAI, Anthropic, and LangChain.",
     "fluiq.secure examples, prompt injection code, PII redaction example, LLM security code, jailbreak blocking, LLM guardrails example",
     "/examples/security",
   ),
   evaluation: techArticle(
-    "Evaluation Examples — Fluiq Docs",
+    "Evaluation Examples — Score LLM Responses With Judge | Fluiq",
     "Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers.",
     "fluiq.eval examples, LLM evaluation code, hallucination scoring example, LLM-as-judge code, toxicity scoring, eval modes",
     "/examples/evaluation",
   ),
   optimization: techArticle(
-    "Optimization Examples — Fluiq Docs",
+    "Optimization Examples — Trace-Driven LLM Caching | Fluiq",
     "Code examples for fluiq.optimize(): trace-driven LLM response caching with observe mode, configurable TTL, and per-model scope.",
     "fluiq.optimize examples, LLM caching code, response caching example, cache TTL, prompt caching code, observe mode",
     "/examples/optimization",
   ),
   prompts: techArticle(
-    "Prompt Management Examples — Fluiq Docs",
+    "Prompt Management Examples — Versioned Templates | Fluiq",
     "Code examples for Fluiq prompt management: fetching versioned prompt templates by environment, variable injection, and deployment across dev, staging, and production.",
     "prompt management examples, versioned prompts code, prompt deployment example, variable injection, prompt templates code",
     "/examples/prompts",

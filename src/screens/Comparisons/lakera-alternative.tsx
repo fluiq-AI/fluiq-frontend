@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "lakera-alternative",
   name: "Lakera Guard",
-  metaTitle: "Fluiq vs Lakera Guard, The Lakera Alternative With Tracing, Caching & Evals",
-  metaDescription: "Comparing Fluiq vs Lakera Guard. Fluiq covers prompt injection and PII detection like Lakera, plus adds full LLM observability, response caching, and automated evals with no extra API call per request.",
+  metaTitle: "Fluiq vs Lakera — Lakera Alternative With Tracing & Evals",
+  metaDescription: "Fluiq vs Lakera Guard: same prompt injection and PII detection, plus full LLM observability, caching, and automated evals — no extra API call per request.",
   canonicalPath: "/lakera-alternative",
   heroHeadline: "The Lakera Alternative: Security Plus the Full Ops Stack",
   heroSub: "Lakera Guard is focused entirely on security. Fluiq covers the same prompt injection and PII detection, plus adds tracing, caching, and evals, all server-side with no extra round-trip API call per request.",

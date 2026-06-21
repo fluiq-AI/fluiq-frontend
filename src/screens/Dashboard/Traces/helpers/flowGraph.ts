@@ -808,10 +808,12 @@ export function buildFlowElements(
           }
         })
       // Size the node to fit every tool row so none get clipped behind a
-      // fixed height — the header (~34px) plus one ~22px row per tool.
+      // fixed, overflow-hidden height. Budget = header with its bottom border
+      // plus the row container's vertical padding (~46px) and one ~24px row per
+      // tool (each row button is text-[11px] with py-1).
       const nodeHeight = Math.max(
         FLOW_NODE_HEIGHT,
-        34 + entries.length * 22,
+        46 + entries.length * 24,
       )
       const toolsFlowId = `looptools:${myFlowId}`
       const synthetic: TraceNode = {

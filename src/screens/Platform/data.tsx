@@ -5,6 +5,7 @@ import {
   ZapIcon,
   TestTube01Icon,
   AiContentGenerator01Icon,
+  Notification01Icon,
 } from "@hugeicons/core-free-icons"
 import {
   TracesMockup,
@@ -12,6 +13,7 @@ import {
   OptimizationMockup,
   EvalMockup,
   PromptsMockup,
+  AlertsMockup,
 } from "@/pages/Home/components/DashboardMockups"
 
 export type PillarSlug =
@@ -20,6 +22,7 @@ export type PillarSlug =
   | "optimization"
   | "evaluation"
   | "prompts"
+  | "alerts"
 
 export interface Capability {
   kicker: string
@@ -64,6 +67,7 @@ export const PILLAR_ORDER: PillarSlug[] = [
   "optimization",
   "evaluation",
   "prompts",
+  "alerts",
 ]
 
 export const PILLARS: Record<PillarSlug, Pillar> = {
@@ -277,6 +281,51 @@ p = fluiq.fetch_prompt("customer-support", env="production")
 message = p.render(name="Ada", topic="billing")
 
 # p.template, p.model, and p.version are all available`,
+    },
+  },
+
+  alerts: {
+    slug: "alerts",
+    route: "/alerts",
+    name: "Alerts",
+    summary: "Push eval and security events to Slack.",
+    icon: Notification01Icon,
+    eyebrow: "Alerts",
+    plan: "Team plan and up",
+    headline: (
+      <>
+        Get paged the moment <span className={cobalt}>quality or safety</span> slips
+      </>
+    ),
+    lede: "Send eval regressions and security events straight to Slack. Configured in the dashboard — no SDK code or redeploy.",
+    Mockup: AlertsMockup,
+    docHref: "/documentation/alerts",
+    capabilities: [
+      { kicker: "Eval", title: "Quality regression alerts", body: "Fire when a watched metric scores below threshold, or when the failure rate over recent evals climbs too high." },
+      { kicker: "Security", title: "Attack and leak alerts", body: "Fire on flagged or blocked prompts and responses, filtered by risk level and attack category." },
+      { kicker: "Slack", title: "One webhook, no bot", body: "Paste a Slack Incoming Webhook and Fluiq posts server-side. Your URL never reaches the browser." },
+      { kicker: "Quiet", title: "Debounced and digestible", body: "Realtime, hourly, or daily digests, with failure-rate alerts debounced so a sustained regression pings you once." },
+    ],
+    mechanism: {
+      heading: "No new scans, no added latency — just delivery.",
+      points: [
+        "Reads the eval and security results Fluiq already computes for your traces",
+        "Eval alerts on score_below and failure_rate_above; security alerts by risk level and category",
+        "Configured entirely in Dashboard → Alerts; changes apply within ~60 seconds",
+        "Delivery fails open — a webhook outage never interrupts trace processing",
+      ],
+      file: "dashboard",
+      signature: "Dashboard → Alerts",
+      code: `# No SDK code required — alerts are configured in the dashboard.
+# They fire off the eval and security scans already running:
+
+import fluiq
+
+fluiq.instrument(api_key="fl_...")
+fluiq.secure(mode="block")   # security events → Slack
+fluiq.eval(thresholds={"faithfulness": 0.8})  # regressions → Slack
+
+# Set the Slack webhook + thresholds in Dashboard → Alerts.`,
     },
   },
 }
