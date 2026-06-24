@@ -11,6 +11,7 @@ import {
   ServerStack01Icon,
   ShieldKeyIcon,
   SparklesIcon,
+  TestTube01Icon,
   UserCircleIcon,
   UserIcon,
   WorkflowSquare01Icon,
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils"
 const NAV_ITEMS = [
   { to: "/admin/overview", label: "Overview", icon: DashboardSquare01Icon },
   { to: "/admin/users", label: "Users", icon: UserIcon },
+  { to: "/admin/evaluations", label: "Evaluations", icon: TestTube01Icon },
   { to: "/admin/organizations", label: "Organizations", icon: Building01Icon },
   { to: "/admin/plans", label: "Plans", icon: SparklesIcon },
   { to: "/admin/blog", label: "Blog", icon: File01Icon },
