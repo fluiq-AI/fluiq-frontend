@@ -3,13 +3,17 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   AlertCircleIcon,
   ArrowTurnBackwardIcon,
+  Cancel01Icon,
   FloppyDiskIcon,
   Loading03Icon,
+  PlusSignIcon,
   RefreshIcon,
+  Search01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 
@@ -56,17 +60,24 @@ function AdminJudgePrompts() {
   const [notice, setNotice] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState("")
+  const [creating, setCreating] = useState(false)
 
   const [versions, setVersions] = useState<PromptVersion[]>([])
   const [showVersions, setShowVersions] = useState(false)
 
-  async function load() {
+  async function load(selectName?: string) {
     setLoading(true)
     setError(null)
     try {
       const res = await authFetch<{ prompts: JudgePrompt[] }>("/admin/judge-prompts")
       setPrompts(res.prompts)
-      if (res.prompts.length > 0 && selected === null) {
+      const pick = selectName ?? selected
+      if (pick && res.prompts.some((p) => p.name === pick)) {
+        const p = res.prompts.find((x) => x.name === pick)!
+        setSelected(p.name)
+        setDraft(p.template)
+      } else if (res.prompts.length > 0 && selected === null) {
         setSelected(res.prompts[0].name)
         setDraft(res.prompts[0].template)
       }
@@ -84,6 +95,16 @@ function AdminJudgePrompts() {
     [prompts, selected],
   )
 
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return prompts
+    return prompts.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.description ?? "").toLowerCase().includes(q),
+    )
+  }, [prompts, search])
+
   function selectPrompt(name: string) {
     const p = prompts.find((x) => x.name === name)
     setSelected(name)
@@ -92,6 +113,7 @@ function AdminJudgePrompts() {
     setError(null)
     setShowVersions(false)
     setVersions([])
+    setCreating(false)
   }
 
   const present = identifiers(draft)
@@ -186,39 +208,79 @@ function AdminJudgePrompts() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-        {/* List */}
-        <div className="overflow-hidden rounded-lg border border-border/60">
-          {loading ? (
-            <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading…</div>
-          ) : (
-            <ul className="divide-y divide-border/40">
-              {prompts.map((p) => (
-                <li key={p.name}>
-                  <button
-                    type="button"
-                    onClick={() => selectPrompt(p.name)}
-                    className={`flex w-full flex-col items-start gap-1 px-4 py-3 text-left transition-colors hover:bg-muted/40 ${
-                      selected === p.name ? "bg-muted/60" : "bg-background"
-                    }`}
-                  >
-                    <div className="flex w-full items-center justify-between gap-2">
-                      <span className="font-mono text-xs font-medium">{p.name}</span>
-                      {p.is_overridden ? (
-                        <Badge variant="outline" className="text-[10px]">edited</Badge>
+      <div className="grid items-start gap-6 lg:grid-cols-[18rem_1fr]">
+        {/* List column — sticky + scrollable */}
+        <div className="lg:sticky lg:top-6 flex max-h-[calc(100vh-6rem)] flex-col">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="relative flex flex-1 items-center">
+              <HugeiconsIcon
+                icon={Search01Icon}
+                size={14}
+                className="pointer-events-none absolute left-3 text-muted-foreground"
+              />
+              <Input
+                placeholder="Search prompts…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+              {search ? (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 text-muted-foreground hover:text-foreground"
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} size={13} />
+                </button>
+              ) : null}
+            </div>
+            <Button
+              size="sm"
+              variant={creating ? "default" : "outline"}
+              onClick={() => { setCreating(true); setNotice(null); setError(null) }}
+              title="Add a new judge prompt"
+            >
+              <HugeiconsIcon icon={PlusSignIcon} size={14} />
+              Add
+            </Button>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-border/60">
+            {loading ? (
+              <div className="px-4 py-6 text-center text-sm text-muted-foreground">Loading…</div>
+            ) : filtered.length === 0 ? (
+              <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                {search ? "No prompts match." : "No prompts yet."}
+              </div>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {filtered.map((p) => (
+                  <li key={p.name}>
+                    <button
+                      type="button"
+                      onClick={() => selectPrompt(p.name)}
+                      className={`flex w-full flex-col items-start gap-1 px-4 py-3 text-left transition-colors hover:bg-muted/40 ${
+                        selected === p.name && !creating ? "bg-muted/60" : "bg-background"
+                      }`}
+                    >
+                      <div className="flex w-full items-center justify-between gap-2">
+                        <span className="font-mono text-xs font-medium">{p.name}</span>
+                        {p.is_overridden ? (
+                          <Badge variant="outline" className="text-[10px]">edited</Badge>
+                        ) : null}
+                      </div>
+                      {p.description ? (
+                        <span className="text-xs text-muted-foreground">{p.description}</span>
                       ) : null}
-                    </div>
-                    {p.description ? (
-                      <span className="text-xs text-muted-foreground">{p.description}</span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
 
-        {/* Editor */}
+        {/* Right column — editor or create form */}
         <div>
           {error && (
             <p className="mb-3 flex items-center gap-1.5 text-sm text-destructive">
@@ -228,9 +290,20 @@ function AdminJudgePrompts() {
           )}
           {notice && <p className="mb-3 text-sm text-emerald-600 dark:text-emerald-400">{notice}</p>}
 
-          {!current ? (
+          {creating ? (
+            <CreatePromptForm
+              existingNames={prompts.map((p) => p.name)}
+              onCancel={() => setCreating(false)}
+              onCreated={async (created) => {
+                setCreating(false)
+                setNotice(`Created "${created.name}".`)
+                await load(created.name)
+              }}
+              onError={setError}
+            />
+          ) : !current ? (
             <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-border/60 text-sm text-muted-foreground">
-              Select a prompt to edit.
+              Select a prompt to edit, or click Add to create one.
             </div>
           ) : (
             <div className="rounded-lg border border-border/60 bg-background">
@@ -267,7 +340,6 @@ function AdminJudgePrompts() {
                 </div>
               </div>
 
-              {/* Required vars */}
               {current.required_vars.length > 0 && (
                 <div className="flex flex-wrap items-center gap-1.5 border-b border-border/60 px-4 py-2.5 text-xs">
                   <span className="text-muted-foreground">Required:</span>
@@ -302,7 +374,6 @@ function AdminJudgePrompts() {
                 </p>
               )}
 
-              {/* Version history */}
               {showVersions && (
                 <div className="border-t border-border/60">
                   <p className="px-4 py-2 text-xs font-medium text-muted-foreground">Version history</p>
@@ -339,6 +410,157 @@ function AdminJudgePrompts() {
         </div>
       </div>
     </>
+  )
+}
+
+function CreatePromptForm({
+  existingNames,
+  onCancel,
+  onCreated,
+  onError,
+}: {
+  existingNames: string[]
+  onCancel: () => void
+  onCreated: (created: JudgePrompt) => void | Promise<void>
+  onError: (msg: string) => void
+}) {
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [requiredRaw, setRequiredRaw] = useState("")
+  const [template, setTemplate] = useState("")
+  const [busy, setBusy] = useState(false)
+
+  const requiredVars = requiredRaw
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)
+
+  const present = identifiers(template)
+  const missing = requiredVars.filter((v) => !present.has(v))
+  const nameValid = /^[a-z][a-z0-9_]{1,63}$/.test(name)
+  const nameTaken = existingNames.includes(name)
+  const canCreate =
+    nameValid && !nameTaken && template.trim().length > 0 && missing.length === 0 && !busy
+
+  async function submit() {
+    if (!canCreate) return
+    setBusy(true)
+    try {
+      const created = await authFetch<JudgePrompt>("/admin/judge-prompts", {
+        method: "POST",
+        body: { name, description: description || null, required_vars: requiredVars, template },
+      })
+      await onCreated(created)
+    } catch (err) {
+      onError(err instanceof ApiError ? err.detail : "Failed to create prompt")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-background">
+      <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+        <p className="text-sm font-medium">New judge prompt</p>
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={busy}>
+          <HugeiconsIcon icon={Cancel01Icon} size={14} />
+          Cancel
+        </Button>
+      </div>
+
+      <div className="space-y-4 px-4 py-4">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            Name (lowercase, e.g. <code className="font-mono">conciseness</code>)
+          </label>
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value.toLowerCase())}
+            placeholder="my_metric"
+            className="font-mono"
+          />
+          {name && !nameValid ? (
+            <p className="mt-1 text-xs text-destructive">
+              Use lowercase letters, digits, and underscores; start with a letter.
+            </p>
+          ) : nameTaken ? (
+            <p className="mt-1 text-xs text-destructive">That name already exists.</p>
+          ) : null}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">Description</label>
+          <Input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What this judge measures"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            Required variables (comma-separated, optional)
+          </label>
+          <Input
+            value={requiredRaw}
+            onChange={(e) => setRequiredRaw(e.target.value)}
+            placeholder="answer, question"
+            className="font-mono"
+          />
+          {requiredVars.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
+              {requiredVars.map((v) => {
+                const ok = present.has(v)
+                return (
+                  <span
+                    key={v}
+                    className={`rounded px-1.5 py-0.5 font-mono ${
+                      ok
+                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        : "bg-destructive/10 text-destructive"
+                    }`}
+                  >
+                    ${v}
+                  </span>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            Template — use <code className="font-mono">$variable</code> placeholders
+          </label>
+          <textarea
+            value={template}
+            onChange={(e) => setTemplate(e.target.value)}
+            spellCheck={false}
+            placeholder={'Evaluate the ANSWER…\nReturn JSON: {"score": float, "reason": str}.\n\nQUESTION: $question\nANSWER: $answer'}
+            className="block min-h-[14rem] w-full resize-y rounded-md border border-border/60 bg-background px-3 py-2 font-mono text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          />
+          {missing.length > 0 && (
+            <p className="mt-1 text-xs text-destructive">
+              Template is missing: {missing.map((v) => `$${v}`).join(", ")}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Stored for future use — it runs once an evaluator references it by name.
+          </p>
+          <Button size="sm" onClick={submit} disabled={!canCreate}>
+            <HugeiconsIcon
+              icon={busy ? Loading03Icon : PlusSignIcon}
+              size={14}
+              className={busy ? "animate-spin" : undefined}
+            />
+            Create prompt
+          </Button>
+        </div>
+      </div>
+    </div>
   )
 }
 
