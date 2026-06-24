@@ -38,7 +38,7 @@ import {
   formatScore,
   scoreBandClass,
 } from "@/pages/Dashboard/Traces/utils"
-import type { CompareResult, MetricResult, PromptRow,  TraceMetadata, PromptVersion, PromptEnv, EnvDeployment } from "../utils/types"
+import type { CompareResult, MetricResult, PromptRow,  TraceMetadata, PromptVersion, PromptEnv, EnvDeployment, PromptKind } from "../utils/types"
 // import type { DatasetRef } from "../utils/types"
 import { ALL_METRICS, COMPARE_MODELS, JUDGE_MODELS } from "../utils/types"
 import { PromptEditor } from "./PromptEditor"
@@ -245,6 +245,8 @@ export function EvalPlayground({
   showSaveForm,
   saveName,
   saveSlug,
+  saveKind = "completion",
+  onSaveKindChange,
   savePending,
   saveError,
   saveSuccess,
@@ -299,6 +301,8 @@ export function EvalPlayground({
   showSaveForm: boolean
   saveName: string
   saveSlug: string
+  saveKind?: PromptKind
+  onSaveKindChange?: (k: PromptKind) => void
   savePending: boolean
   saveError: string | null
   saveSuccess: boolean
@@ -853,13 +857,37 @@ export function EvalPlayground({
               <p className="text-[11px] font-medium uppercase tracking-wide text-primary/70">
                 Save Prompt Template
               </p>
+              {/* Kind selector — completion prompt vs. custom LLM-as-judge */}
+              <div className="space-y-1">
+                <Label className="text-xs">Type</Label>
+                <div className="inline-flex rounded-md border border-border/60 bg-background p-0.5">
+                  {([
+                    { key: "completion", label: "Completion" },
+                    { key: "judge", label: "Judge" },
+                  ] as const).map(({ key, label }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => onSaveKindChange?.(key)}
+                      className={cn(
+                        "rounded px-3 py-1 text-xs font-medium transition-colors",
+                        saveKind === key
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label className="text-xs">Name</Label>
                   <Input
                     value={saveName}
                     onChange={(e) => onSaveNameChange(e.target.value)}
-                    placeholder="My prompt name"
+                    placeholder={saveKind === "judge" ? "Refund policy judge" : "My prompt name"}
                     className="h-8 text-sm"
                   />
                 </div>
@@ -871,11 +899,30 @@ export function EvalPlayground({
                   <Input
                     value={saveSlug}
                     onChange={(e) => onSaveSlugChange(e.target.value)}
-                    placeholder="my-prompt-name"
+                    placeholder={saveKind === "judge" ? "refund-policy" : "my-prompt-name"}
                     className="h-8 font-mono text-sm"
                   />
                 </div>
               </div>
+              {saveKind === "judge" ? (
+                <div className="space-y-1.5 rounded-md border border-amber-500/25 bg-amber-500/5 px-3 py-2.5">
+                  <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+                    Custom judge prompt
+                  </p>
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    Use{" "}
+                    <code className="rounded bg-muted px-1 font-mono text-[10px]">$question</code>,{" "}
+                    <code className="rounded bg-muted px-1 font-mono text-[10px]">$answer</code> and{" "}
+                    <code className="rounded bg-muted px-1 font-mono text-[10px]">$context</code>{" "}
+                    in your template, and ask the model to return JSON with a numeric{" "}
+                    <code className="rounded bg-muted px-1 font-mono text-[10px]">score</code> (0–1) and a{" "}
+                    <code className="rounded bg-muted px-1 font-mono text-[10px]">reason</code>. Then reference it from the SDK:
+                  </p>
+                  <code className="block whitespace-pre-wrap break-words rounded bg-background px-2 py-1.5 font-mono text-[10px] text-muted-foreground">
+                    {`fluiq.eval(custom_judges={"${saveSlug || "your-slug"}": 0.8})`}
+                  </code>
+                </div>
+              ) : null}
               {saveError ? (
                 <p className="text-xs text-destructive">{saveError}</p>
               ) : null}

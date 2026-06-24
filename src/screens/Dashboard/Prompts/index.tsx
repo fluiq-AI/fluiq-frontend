@@ -23,7 +23,7 @@ import {
 import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/helpers/treeBuilder"
 import type { AgentRow } from "@/pages/Dashboard/Agents/utils/types"
 
-import type { CompareResult, MetricResult, PlaygroundResponse, SavedPrompt, PromptRow, PromptVersion, PromptEnv, EnvDeployment } from "./utils/types"
+import type { CompareResult, MetricResult, PlaygroundResponse, SavedPrompt, PromptRow, PromptVersion, PromptEnv, EnvDeployment, PromptKind } from "./utils/types"
 import { COMPARE_MODELS, JUDGE_MODELS, PROMPTS_PAGE_SIZE } from "./utils/types"
 import { detectVars, renderTemplate, toPromptRow, toSlug } from "./utils"
 import { SpanTimeline, spanTypeIcon } from "./components/SpanTimeline"
@@ -63,6 +63,7 @@ type PromptTab = {
   showSaveForm: boolean
   saveName: string
   saveSlug: string
+  saveKind: PromptKind
   savePending: boolean
   saveError: string | null
   saveSuccess: boolean
@@ -88,6 +89,7 @@ function makeTab(overrides: Partial<PromptTab> = {}): PromptTab {
     showSaveForm: false,
     saveName: "",
     saveSlug: "",
+    saveKind: "completion",
     savePending: false,
     saveError: null,
     saveSuccess: false,
@@ -252,6 +254,7 @@ function Prompts() {
       templateName: p.name,
       saveName: p.name,
       saveSlug: p.slug,
+      saveKind: p.kind ?? "completion",
       activeRow: null,
       savedPromptId: p.prompt_id,
       savedPromptEnvs: p.environments,
@@ -441,6 +444,7 @@ function Prompts() {
             name: activeTab.saveName.trim(),
             slug: activeTab.saveSlug.trim(),
             template: activeTab.templateText,
+            kind: activeTab.saveKind,
             model:
               activeTab.activeRow?.model && activeTab.activeRow.model !== "—"
                 ? activeTab.activeRow.model
@@ -638,7 +642,14 @@ function Prompts() {
                     onClick={() => handleSelectSaved(p)}
                     className="flex w-full flex-col items-start gap-0.5 border-b border-border/40 px-3 py-2.5 text-left transition-colors hover:bg-muted/40"
                   >
-                    <span className="w-full truncate text-xs font-medium">{p.name}</span>
+                    <div className="flex w-full min-w-0 items-center gap-1.5">
+                      <span className="min-w-0 flex-1 truncate text-xs font-medium">{p.name}</span>
+                      {p.kind === "judge" ? (
+                        <span className="shrink-0 rounded-full bg-amber-500/15 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-amber-600 dark:text-amber-400">
+                          Judge
+                        </span>
+                      ) : null}
+                    </div>
                     <span className="font-mono text-[10px] text-muted-foreground/50">
                       v{p.version} · {p.slug}
                     </span>
@@ -879,6 +890,8 @@ function Prompts() {
               showSaveForm={activeTab.showSaveForm}
               saveName={activeTab.saveName}
               saveSlug={activeTab.saveSlug}
+              saveKind={activeTab.saveKind}
+              onSaveKindChange={(k) => updateActiveTab({ saveKind: k })}
               savePending={activeTab.savePending}
               saveError={activeTab.saveError}
               saveSuccess={activeTab.saveSuccess}

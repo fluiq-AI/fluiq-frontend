@@ -74,6 +74,8 @@ export interface EnvDeployment {
   deployed_at: string
 }
 
+export type PromptKind = "completion" | "judge"
+
 export interface SavedPrompt {
   prompt_id: string
   org_id: string
@@ -82,6 +84,7 @@ export interface SavedPrompt {
   template: string
   model: string | null
   variables: { name: string }[]
+  kind: PromptKind
   is_deployed: boolean
   deployed_at: string | null
   version: number

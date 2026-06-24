@@ -76,6 +76,66 @@ fluiq.eval({
         </table>
       </div>
 
+      <p className="font-medium">Custom judges</p>
+      <p className="text-sm text-muted-foreground">
+        Built-in metrics not enough? Write your own LLM-as-judge. In the dashboard go to{" "}
+        <span className="font-medium text-foreground">Prompts</span>, write your judge prompt, and{" "}
+        <span className="font-medium text-foreground">Save</span> it with type{" "}
+        <span className="font-mono text-foreground">Judge</span>. The template uses{" "}
+        <code className="font-mono text-foreground">$question</code>,{" "}
+        <code className="font-mono text-foreground">$answer</code> and{" "}
+        <code className="font-mono text-foreground">$context</code> placeholders and should ask the
+        model to return a JSON object with a numeric <code className="font-mono text-foreground">score</code>{" "}
+        (0–1) and a <code className="font-mono text-foreground">reason</code>. Then reference it by its
+        slug in {isTs ? <code className="font-mono text-foreground">customJudges</code> : <code className="font-mono text-foreground">custom_judges</code>}{" "}
+        (slug → threshold). Each judge is scored on every response just like a built-in metric and
+        appears in the dashboard under its slug.
+      </p>
+
+      <Code>{byLang(
+        lang,
+        `# Saved in Prompts (type: Judge), slug "refund-policy":
+#
+#   You are auditing a support reply for refund-policy compliance.
+#   QUESTION: $question
+#   ANSWER:   $answer
+#   POLICY:   $context
+#   Return JSON: {"score": <0-1>, "reason": "<why>"}
+
+fluiq.eval(
+    metrics=["hallucination"],          # built-ins still run
+    thresholds={"hallucination": 0.8},
+    custom_judges={
+        "refund-policy":  0.9,          # slug → pass threshold
+        "brand-tone":     0.7,
+    },
+    mode="warn",
+)`,
+        `// Saved in Prompts (type: Judge), slug "refund-policy":
+//
+//   You are auditing a support reply for refund-policy compliance.
+//   QUESTION: $question
+//   ANSWER:   $answer
+//   POLICY:   $context
+//   Return JSON: {"score": <0-1>, "reason": "<why>"}
+
+fluiq.eval({
+  metrics: ["hallucination"],          // built-ins still run
+  thresholds: { hallucination: 0.8 },
+  customJudges: {
+    "refund-policy": 0.9,              // slug → pass threshold
+    "brand-tone": 0.7,
+  },
+  mode: "warn",
+});`,
+      )}</Code>
+      <p className="text-sm text-muted-foreground">
+        In <code className="font-mono text-foreground">block</code> mode a custom judge scoring below
+        its threshold {isTs ? "throws" : "raises"} <code className="font-mono text-foreground">FluiqEvalError</code>{" "}
+        just like a built-in metric. If a slug doesn&apos;t resolve to a saved Judge prompt it is
+        silently skipped — your call is never broken by a missing judge.
+      </p>
+
       <p className="font-medium">Modes</p>
       <div className="grid gap-3 text-sm">
         <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
