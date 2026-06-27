@@ -13,6 +13,7 @@ import {
   Cancel01Icon,
   Delete02Icon,
   Loading03Icon,
+  MinusSignIcon,
   RefreshIcon,
   Search01Icon,
   ShieldKeyIcon,
@@ -140,7 +141,7 @@ function WorkerDetail({ worker, onBack }: { worker: Worker; onBack: () => void }
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button size="sm" variant="outline" onClick={onBack}>
           <HugeiconsIcon icon={ArrowLeft01Icon} size={14} /> Workers
         </Button>
@@ -150,6 +151,7 @@ function WorkerDetail({ worker, onBack }: { worker: Worker; onBack: () => void }
             <Badge variant="muted">{worker.task_definition}</Badge>
           </div>
         </div>
+        <ScaleControl worker={worker} className="ml-auto" />
       </div>
 
       <div className="flex gap-1 border-b border-border/60">
@@ -170,6 +172,78 @@ function WorkerDetail({ worker, onBack }: { worker: Worker; onBack: () => void }
       </div>
 
       {pane === "logs" ? <WorkerLogs worker={worker} /> : <WorkerSecrets worker={worker} />}
+    </div>
+  )
+}
+
+// ── Scaling: set the service's desired task count ──────────────────────────────
+
+const MAX_DESIRED = 10
+
+function ScaleControl({ worker, className }: { worker: Worker; className?: string }) {
+  const [desired, setDesired] = useState(worker.desired)
+  const [applied, setApplied] = useState(worker.desired)
+  const [running, setRunning] = useState(worker.running)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const clamp = (n: number) => Math.max(0, Math.min(MAX_DESIRED, n))
+  const dirty = desired !== applied
+  const stopping = desired === 0 && applied !== 0
+
+  const apply = useCallback(async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await authFetch<{ desired: number; running: number; pending: number }>(
+        `/admin/infra/workers/${worker.name}/scale`,
+        { method: "POST", body: { desired } },
+      )
+      setApplied(res.desired)
+      setDesired(res.desired)
+      setRunning(res.running)
+    } catch (e) {
+      setError(e instanceof ApiError ? e.message : "Failed to scale")
+    } finally {
+      setBusy(false)
+    }
+  }, [worker.name, desired])
+
+  return (
+    <div className={cn("flex flex-col items-end gap-1", className)}>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">{running}/{applied} running</span>
+        <div className="flex items-center rounded-lg border border-border bg-input/30">
+          <button
+            onClick={() => setDesired((n) => clamp(n - 1))}
+            disabled={busy || desired <= 0}
+            className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40"
+            title="Decrease"
+          >
+            <HugeiconsIcon icon={MinusSignIcon} size={14} />
+          </button>
+          <span className="w-8 text-center font-mono text-sm tabular-nums">{desired}</span>
+          <button
+            onClick={() => setDesired((n) => clamp(n + 1))}
+            disabled={busy || desired >= MAX_DESIRED}
+            className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-40"
+            title="Increase"
+          >
+            <HugeiconsIcon icon={Add01Icon} size={14} />
+          </button>
+        </div>
+        <Button
+          size="sm"
+          variant={stopping ? "destructive" : "default"}
+          onClick={apply}
+          disabled={busy || !dirty}
+        >
+          {busy && <HugeiconsIcon icon={Loading03Icon} size={14} className="animate-spin" />}
+          {stopping ? "Stop" : "Apply"}
+        </Button>
+      </div>
+      {error && <span className="text-xs text-red-600 dark:text-red-400">{error}</span>}
+      {stopping && !error && <span className="text-xs text-amber-600 dark:text-amber-400">Scaling to 0 stops the service.</span>}
     </div>
   )
 }
