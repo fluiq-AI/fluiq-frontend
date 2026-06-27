@@ -115,7 +115,7 @@ export default function InfrastructurePage() {
       {tab !== "database" && (
         <div className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
           <HugeiconsIcon icon={InformationCircleIcon} size={14} className="mt-0.5 shrink-0" />
-          <span>Live data from AWS. Requires the API’s scoped read permissions (ECS · CloudWatch Logs · SSM names) — if you see an error, the IAM policy isn’t enabled yet.</span>
+          <span>Live data from AWS. Reads need scoped permissions (ECS · CloudWatch Logs · SSM names); adding/deleting secrets additionally needs write permissions (ssm:Put/DeleteParameter, ecs:RegisterTaskDefinition/UpdateService, iam:PassRole) — if you see an error, the IAM policy isn’t enabled yet.</span>
         </div>
       )}
     </div>
