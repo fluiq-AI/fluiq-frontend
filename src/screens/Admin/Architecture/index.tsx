@@ -27,9 +27,7 @@ import {
   Layers01Icon,
   Notebook01Icon,
   ServerStack01Icon,
-  ShieldKeyIcon,
   UserGroupIcon,
-  WorkflowSquare01Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/ui/badge"
@@ -106,22 +104,25 @@ const NODES: InfraNode[] = [
     label: "fluiq-api", sublabel: "FastAPI · ECS service", group: "compute", icon: CloudServerIcon,
     details: [
       { label: "Cluster", value: "fluiq (Fargate)" },
+      { label: "Scaling", value: "1→4 tasks · CPU 65% (always ≥1)" },
       { label: "Task role", value: "fluiqECSTaskRole" },
       { label: "Image", value: "ECR fluiq-api:latest" },
     ],
   }),
-  N("msk", 980, 210, {
-    label: "Amazon MSK", sublabel: "Kafka", group: "messaging", icon: WorkflowSquare01Icon,
+  N("kafka", 980, 210, {
+    label: "Kafka", sublabel: "self-hosted · EC2 i-0ce87c91…", group: "messaging", icon: DistributionIcon,
     details: [
-      { label: "Auth", value: "SASL/SCRAM over TLS (9096)" },
+      { label: "Engine", value: "Kafka 3.9 KRaft (Docker) · t4g.medium" },
+      { label: "Endpoint", value: "172.31.13.149:9092 · PLAINTEXT, in-VPC" },
       { label: "Topics", value: "tracer · security · evaluations · *.reply" },
-      { label: "Creds", value: "Secrets Manager AmazonMSK_fluiq" },
+      { label: "Network", value: "private · SG → ECS only · SSM-managed" },
     ],
   }),
   N("tracer", 1240, 70, {
     label: "fluiq-tracer", sublabel: "Worker · ECS", group: "compute", icon: CloudServerIcon,
     details: [
       { label: "Consumes", value: "tracer topic" },
+      { label: "Scaling", value: "1→3 tasks · CPU 65%" },
       { label: "Writes", value: "ClickHouse traces/costs · reads RDS" },
     ],
   }),
@@ -129,6 +130,7 @@ const NODES: InfraNode[] = [
     label: "fluiq-evaluator", sublabel: "Worker · ECS", group: "compute", icon: CloudServerIcon,
     details: [
       { label: "Consumes", value: "evaluations topic" },
+      { label: "Scaling", value: "1→3 tasks · CPU 65%" },
       { label: "Writes", value: "ClickHouse evaluations" },
     ],
   }),
@@ -136,6 +138,7 @@ const NODES: InfraNode[] = [
     label: "fluiq-security", sublabel: "Worker · ECS", group: "compute", icon: CloudServerIcon,
     details: [
       { label: "Consumes", value: "security topic" },
+      { label: "Scaling", value: "1→2 tasks · CPU 65%" },
       { label: "Writes", value: "ClickHouse security_scans" },
     ],
   }),
@@ -176,10 +179,6 @@ const NODES: InfraNode[] = [
       { label: "Consumed by", value: "all ECS task defs (secrets)" },
     ],
   }),
-  N("secrets", 980, 380, {
-    label: "Secrets Manager", sublabel: "MSK credentials", group: "config", icon: ShieldKeyIcon,
-    details: [{ label: "Secret", value: "AmazonMSK_fluiq (user/pass)" }],
-  }),
   N("cloudwatch", 460, 400, {
     label: "CloudWatch Logs", sublabel: "/ecs/fluiq-*", group: "ops", icon: Notebook01Icon,
     details: [{ label: "Streams", value: "api, tracer, evaluator, security" }],
@@ -214,13 +213,13 @@ const EDGES: Edge[] = [
   E("route53", "amplify"),
   E("route53", "alb"),
   E("alb", "api"),
-  E("api", "msk", { animated: true }),
+  E("api", "kafka", { animated: true }),
   E("api", "rds"),
   E("api", "clickhouse"),
   E("api", "s3-media"),
-  E("msk", "tracer", { animated: true }),
-  E("msk", "evaluator", { animated: true }),
-  E("msk", "security", { animated: true }),
+  E("kafka", "tracer", { animated: true }),
+  E("kafka", "evaluator", { animated: true }),
+  E("kafka", "security", { animated: true }),
   E("tracer", "clickhouse"),
   E("evaluator", "clickhouse"),
   E("security", "clickhouse"),
@@ -228,7 +227,6 @@ const EDGES: Edge[] = [
   E("clickhouse", "s3-backups"),
   E("clickhouse", "dlm", dashed),
   E("api", "ssm", dashed),
-  E("api", "secrets", dashed),
   E("api", "cloudwatch", dashed),
   E("github", "ecr", dashed),
   E("ecr", "api", dashed),

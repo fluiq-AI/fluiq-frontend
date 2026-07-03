@@ -5,6 +5,7 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Building01Icon,
   DashboardSquare01Icon,
+  Database01Icon,
   File01Icon,
   Loading03Icon,
   JusticeScale01Icon,
@@ -33,6 +34,7 @@ const NAV_ITEMS = [
   { to: "/admin/blog", label: "Blog", icon: File01Icon },
   { to: "/admin/architecture", label: "Architecture", icon: WorkflowSquare01Icon },
   { to: "/admin/infrastructure", label: "Infrastructure", icon: ServerStack01Icon },
+  { to: "/admin/sql-editor", label: "SQL Editor", icon: Database01Icon },
 ] as const
 
 function AdminLayout() {
