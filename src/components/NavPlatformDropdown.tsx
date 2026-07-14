@@ -8,13 +8,15 @@ import {
   TestTube01Icon,
   AiContentGenerator01Icon,
   Notification01Icon,
+  Database01Icon,
 } from "@hugeicons/core-free-icons"
 
 const NAV_PLATFORM = [
   { name: "Observability",     to: "/observability", description: "Trace every call, cost, and latency", icon: EyeIcon },
   { name: "Security",          to: "/security",      description: "Block attacks, redact PII and secrets", icon: ShieldIcon },
   { name: "Optimization",      to: "/optimization",  description: "Cache repeated prompts automatically", icon: ZapIcon },
-  { name: "Evaluation",        to: "/evaluation",    description: "Score and gate response quality", icon: TestTube01Icon },
+  { name: "Evaluation",        to: "/evaluation",    description: "Score responses and whole agent runs", icon: TestTube01Icon },
+  { name: "Datasets",          to: "/datasets",      description: "Golden sets that capture whole agent runs", icon: Database01Icon },
   { name: "Prompt Management", to: "/prompts",       description: "Version and deploy prompt templates", icon: AiContentGenerator01Icon },
   { name: "Alerts",            to: "/alerts",        description: "Push eval and security events to Slack", icon: Notification01Icon },
 ]

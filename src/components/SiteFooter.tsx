@@ -14,6 +14,7 @@ const PLATFORM_LINKS = [
   { label: "Security",          to: "/security" },
   { label: "Optimization",      to: "/optimization" },
   { label: "Evaluation",        to: "/evaluation" },
+  { label: "Datasets",          to: "/datasets" },
   { label: "Prompt Management", to: "/prompts" },
   { label: "Alerts",            to: "/alerts" },
 ]

@@ -127,6 +127,7 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
       { label: "Trace retention", values: ["14 days", "Unlimited", "Unlimited", "Unlimited"] },
       { label: "Live dashboard", values: [true, true, true, true] },
       { label: "Trace explorer", values: [true, true, true, true] },
+      { label: "Multi-agent DAG rendering (LangGraph, CrewAI, ADK)", values: [true, true, true, true] },
       { label: "Streaming traces", values: [true, true, true, true] },
     ],
   },
@@ -135,8 +136,19 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
     rows: [
       { label: "Evals / month", values: ["1,000", "10,000", "100,000", "Unlimited"] },
       { label: "LLM-as-judge metrics", values: [true, true, true, true] },
+      { label: "Agentic evaluation (tool selection, trajectory, coordination)", values: [true, true, true, true] },
+      { label: "Multi-model judge jury with audit trail", values: [true, true, true, true] },
       { label: "CI/CD eval gates", values: [false, true, true, true] },
       { label: "Custom eval thresholds", values: [false, false, true, true] },
+    ],
+  },
+  {
+    category: "Datasets",
+    rows: [
+      { label: "Golden datasets from traces", values: [true, true, true, true] },
+      { label: "Whole-trajectory capture (steps, tools, MCP, media)", values: [true, true, true, true] },
+      { label: "Connect Agents auto-sync", values: [true, true, true, true] },
+      { label: "Batch agentic-eval & security runs", values: [true, true, true, true] },
     ],
   },
   {

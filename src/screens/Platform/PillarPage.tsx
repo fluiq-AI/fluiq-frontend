@@ -169,7 +169,7 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
               Compare plans
             </Link>
           </div>
-          <div data-animate data-delay="1" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <div data-animate data-delay="1" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             {others.map((p) => (
               <Link
                 key={p.slug}

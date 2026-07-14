@@ -23,6 +23,8 @@ export const data: CompetitorData = {
     { feature: "PII detection & redaction", fluiq: "yes", competitor: "no" },
     { feature: "Trace-driven response caching", fluiq: "yes", competitor: "partial", competitorNote: "semantic cache via gateway" },
     { feature: "LLM-as-judge evals", fluiq: "yes", competitor: "no" },
+    { feature: "Agentic evaluation (whole-run: tools, trajectory, coordination)", fluiq: "yes", competitor: "no" },
+    { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
     { feature: "CI/CD eval gates", fluiq: "yes", competitor: "no" },
     { feature: "Dataset management", fluiq: "yes", competitor: "no" },
     { feature: "Prompt management", fluiq: "yes", competitor: "yes" },

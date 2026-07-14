@@ -87,6 +87,14 @@ fluiq.secure(mode="warn")      # logs to dashboard, never raises
 - API key patterns (OpenAI, Anthropic, AWS, GitHub, Stripe, etc.)
 - High-entropy strings (Bearer tokens, private keys)
 
+**Agentic threats (scanned across the whole trace tree, not just the user message):**
+- RAG poisoning: retrieved documents that semantically resemble attack instructions
+- Tool-input exfiltration: PII or secrets sent out through tool-call arguments
+- Tool allowlist violations: any tool invoked outside the policy's allowlist
+- Cross-agent injection: attack content crossing agent-to-agent handoffs
+- Trust-boundary escalation: privilege creep across the multi-agent DAG
+- Image-embedded injection: OCR of image inputs scanned with the same injection rules
+
 ### Risk levels
 
 Each trace is annotated with a risk level:
@@ -157,7 +165,7 @@ Gemini context caching requires creating a `CachedContent` object via the Gemini
 
 ## Pillar 4: Evaluate (fluiq.eval)
 
-`fluiq.eval()` runs LLM-as-judge scoring on every response, server-side and asynchronously.
+`fluiq.eval()` runs LLM-as-judge scoring on every response, server-side and asynchronously. Evaluation is opt-in: `fluiq.instrument()` alone only traces — scoring starts when `fluiq.eval()` is called.
 
 ### Metrics
 
@@ -183,6 +191,18 @@ fluiq.eval(
 )
 ```
 
+### Agentic evaluation (whole-run judging)
+
+Single-response metrics can't tell whether an *agent* did its job. Agentic evaluation judges a whole run — triggered from the trace drawer's "Run Agentic Eval" button (root traces only) or as a batch over a Dataset. Layers:
+
+- **Deterministic checks** (no LLM cost): failed calls, schema violations, tool-allowlist breaches, branch-aware loop detection over the run's DAG
+- **Tool-selection quality**: given the goal, the available tools, and the calls made, a judge rates whether the right tools were used with the right arguments
+- **Trajectory**: the goal is decomposed into sub-goals; the judge scores goal completion and efficiency over the ordered steps, aware of fan-outs and joins
+- **Multi-agent coordination**: hand-offs and joins between agents are judged for information loss and trust violations
+- **Judge jury**: borderline verdicts convene a panel of different judge models (e.g. Claude Haiku + Sonnet + Opus) and aggregate their votes; every member's score and reasoning is stored for audit; a failed judge never dilutes the verdict
+
+Depth tiers control cost: `fast` (deterministic + tool selection), `standard` (adds trajectory), `deep` (adds the jury).
+
 ### CI/CD integration
 
 Fluiq eval gates can run as GitHub Actions. The action pulls the latest eval scores for a dataset, checks them against configured thresholds, and fails the workflow (blocking the merge) if quality has degraded.
@@ -190,6 +210,17 @@ Fluiq eval gates can run as GitHub Actions. The action pulls the latest eval sco
 ### Eval data
 
 All scores are stored per trace and visible in the dashboard. Traces can be added to named datasets for regression testing. When running evals in CI, Fluiq runs the eval pipeline against the dataset and compares against a baseline.
+
+---
+
+## Datasets (golden sets with trajectory capture)
+
+Datasets turn real traffic into a regression suite:
+
+- **Whole-trajectory examples** — adding a run from the trace drawer (or `POST /datasets/{id}/examples` with `metadata.source_trace_id`) pins the run's entire trajectory: every agent step, LLM call, tool call, MCP call, and media object. The snapshot is retention-independent — it stays evaluable after the source trace ages out.
+- **Connect Agents** — link a traced agent to a dataset: every run it has ever made is imported (deduplicated), and future runs auto-append.
+- **Batch runs** — run agentic evaluation or the full security scan over every example and get a scored report. Use it as the regression gate before shipping a prompt or model change.
+- **Enrichment** — each example carries its source run's eval scores, security verdicts, and cost, backfilled live as workers finish.
 
 ---
 
@@ -351,7 +382,7 @@ A: No. `fluiq.secure()` fails open — if the security service is unreachable, t
 A: Fluiq raises `FluiqEvalError` before the response is returned to the application. The error includes the metric name and the score that triggered the block.
 
 **Q: Is there a free tier?**
-A: Yes. The free tier includes unlimited traces, 1,000 LLM-as-judge evaluations per month, 1 seat, and a rolling 14-day trace retention window. No credit card is required to sign up. Paid plans: Team ($49/mo) adds unlimited (never-expiring) trace retention and response caching; Growth ($149/mo) unlocks fluiq.secure() security scanning and SSO; Enterprise (custom) adds VPC/on-prem deployment, SAML/SCIM, and audit logs.
+A: Yes. The free tier includes unlimited traces, 1,000 LLM-as-judge evaluations per month, 1 seat, and a rolling 14-day trace retention window. No credit card is required to sign up. Paid plans: Team ($299/mo) adds unlimited (never-expiring) trace retention and response caching; Growth ($599/mo) unlocks fluiq.secure() security scanning and SSO; Enterprise (custom) adds VPC/on-prem deployment, SAML/SCIM, and audit logs. Team and Growth offer a 5-day free trial with no card.
 
 **Q: What is the GitHub repository?**
 A: https://github.com/fluiq-AI/fluiq-sdk

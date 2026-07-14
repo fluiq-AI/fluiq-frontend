@@ -15,6 +15,7 @@ import {
   TestTube01Icon,
   SparklesIcon,
   AiContentGenerator01Icon,
+  Database01Icon,
 } from "@hugeicons/core-free-icons"
 import { CodeBlock } from "@/components/code-block"
 import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
@@ -31,6 +32,7 @@ import {
   OptimizationMockup,
   EvalMockup,
   PromptsMockup,
+  DatasetsMockup,
 } from "./components/DashboardMockups"
 import { INTEGRATIONS, STATS, EASE_OUT } from "./utils/constants"
 
@@ -205,7 +207,8 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
                 FluiqAI is the unified ops layer for LLM applications: security scanning,
-                intelligent caching, deep observability, and automated evaluation on every request.
+                intelligent caching, deep observability, and automated evaluation on every
+                request — plus golden datasets to regression-test whole agent runs.
               </motion.p>
 
               <motion.div className="flex flex-wrap items-center gap-3"
@@ -315,7 +318,7 @@ export default function Home() {
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Full trace visibility across every <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM call</span></h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns, without changing how you write code.</p>
               <ul className="space-y-2 mb-6">
-                {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Real-time trace streaming"].map(pt => (
+                {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Multi-agent runs render as real DAGs — fan-outs, joins, and loops across LangGraph, CrewAI, and Google ADK", "Real-time trace streaming"].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
                     {pt}
@@ -415,9 +418,14 @@ export default function Home() {
                 <HugeiconsIcon icon={TestTube01Icon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Gate responses that fail <span className="text-[#1860D3] dark:text-[#6FA8FF]">quality thresholds</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge runs server-side after each call. Set per-metric thresholds. Warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app.</p>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge runs server-side after each call. Set per-metric thresholds. Warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app. And for agents, agentic evaluation judges the <em>whole run</em> — not just single answers.</p>
               <ul className="space-y-2 mb-6">
-                {["hallucination, faithfulness, relevance, toxicity", "Scores stored and visible in the dashboard", "Block mode prevents bad responses reaching users"].map(pt => (
+                {[
+                  "hallucination, faithfulness, relevance, toxicity",
+                  "Agentic eval scores tool selection, trajectory-vs-goal, and multi-agent coordination across the run's DAG",
+                  "Borderline verdicts convene a multi-model judge jury — every member's score and reasoning kept for audit",
+                  "Block mode prevents bad responses reaching users",
+                ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
                     {pt}
@@ -432,7 +440,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5 · Prompt Management */}
+      {/* 5 · Datasets */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+            <div data-animate>
+              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+                <HugeiconsIcon icon={Database01Icon} size={16} />
+              </span>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Regression-test agents on <span className="text-[#1860D3] dark:text-[#6FA8FF]">real trajectories</span></h2>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Curate golden datasets straight from production traffic. Adding a run pins its <em>entire</em> trajectory — every agent step, tool call, and MCP call — so it stays evaluable forever, independent of trace retention. Then re-run agentic evaluation or the security suite over the whole set before you ship a prompt or model change.</p>
+              <ul className="space-y-2 mb-6">
+                {[
+                  "One click pins a whole run: steps, tools, MCP calls, and media",
+                  "Connect Agents imports every run an agent has made — and keeps auto-appending future ones",
+                  "Batch agentic-eval and security runs produce a scored regression report",
+                  "Examples carry live eval, security, and cost signals from their source runs",
+                ].map(pt => (
+                  <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
+                    {pt}
+                  </li>
+                ))}
+              </ul>
+              <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
+                Traces → Add to Dataset → Run Agentic Eval
+              </div>
+            </div>
+            <div data-animate data-delay="2">
+              <DatasetsMockup />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6 · Prompt Management */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">

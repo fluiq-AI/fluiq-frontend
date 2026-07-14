@@ -6,6 +6,7 @@ import {
   TestTube01Icon,
   AiContentGenerator01Icon,
   Notification01Icon,
+  Database01Icon,
 } from "@hugeicons/core-free-icons"
 import {
   TracesMockup,
@@ -14,6 +15,7 @@ import {
   EvalMockup,
   PromptsMockup,
   AlertsMockup,
+  DatasetsMockup,
 } from "@/pages/Home/components/DashboardMockups"
 
 export type PillarSlug =
@@ -21,6 +23,7 @@ export type PillarSlug =
   | "security"
   | "optimization"
   | "evaluation"
+  | "datasets"
   | "prompts"
   | "alerts"
 
@@ -66,6 +69,7 @@ export const PILLAR_ORDER: PillarSlug[] = [
   "security",
   "optimization",
   "evaluation",
+  "datasets",
   "prompts",
   "alerts",
 ]
@@ -78,18 +82,19 @@ export const PILLARS: Record<PillarSlug, Pillar> = {
     summary: "Trace every call, cost, and latency.",
     icon: EyeIcon,
     eyebrow: "Observability",
-    plan: "Free and up",
+    plan: "Free · unlimited on every plan",
     headline: (
       <>
         Full trace visibility across every <span className={cobalt}>LLM call</span>
       </>
     ),
-    lede: "Every token, latency, and dollar attributed to the exact agent node that spent it. No code changes.",
+    lede: "Every token, latency, and dollar attributed to the exact agent node that spent it. Unlimited traces on every plan — retention is the only paid axis.",
     Mockup: TracesMockup,
     docHref: "/documentation/observability",
     capabilities: [
       { kicker: "Attribution", title: "Per-node token and cost", body: "Token counts and USD cost at live provider rates, attributed down to the span that spent them." },
       { kicker: "Latency", title: "p50 / p95 / p99", body: "Latency histograms per agent and per model, so you watch the tail, not just the average." },
+      { kicker: "Multi-agent", title: "Real DAGs, not flat lists", body: "Fan-outs, joins, and loop-backs across LangGraph, CrewAI, and Google ADK render as the graph your agents actually executed." },
       { kicker: "Live", title: "Real-time streaming", body: "Traces land on the dashboard as calls complete. Watch a run unfold instead of refreshing." },
     ],
     mechanism: {
@@ -205,7 +210,7 @@ answer(question)`,
     slug: "evaluation",
     route: "/evaluation",
     name: "Evaluation",
-    summary: "Score and gate response quality.",
+    summary: "Score responses and whole agent runs.",
     icon: TestTube01Icon,
     eyebrow: "Evaluation",
     plan: "All plans",
@@ -214,19 +219,21 @@ answer(question)`,
         Gate responses that fail <span className={cobalt}>quality thresholds</span>
       </>
     ),
-    lede: "LLM-as-judge scores every response server-side. Warn to log, or block before bad output reaches users.",
+    lede: "LLM-as-judge scores every response server-side — and agentic evaluation judges whole runs: tool choice, trajectory, and multi-agent coordination.",
     Mockup: EvalMockup,
     docHref: "/documentation/evaluation",
     capabilities: [
       { kicker: "Metrics", title: "Six judge metrics", body: "Hallucination, faithfulness, relevance, toxicity, coherence, and completeness, scored per response." },
       { kicker: "Thresholds", title: "Per-metric gates", body: "Set a threshold for each metric. Warn mode logs the score; block mode stops the response." },
-      { kicker: "Visible", title: "Scored in the dashboard", body: "Every score is stored and shown in the Quality column across your full trace history." },
+      { kicker: "Agentic", title: "Whole-run evaluation", body: "Layered judging of a full agent run: deterministic checks, tool-selection quality, trajectory against the goal, and multi-agent coordination across fan-outs and joins." },
+      { kicker: "Jury", title: "Multi-model judge panel", body: "Borderline verdicts convene a jury of different judge models and aggregate their votes — with every member's score and reasoning kept for audit." },
     ],
     mechanism: {
-      heading: "The judge runs server-side, after every call.",
+      heading: "The judge runs server-side. Opt in with one call.",
       points: [
-        "Warn mode logs scores without changing behavior",
-        "Block mode raises FluiqEvalError below threshold",
+        "instrument() only traces — scoring starts when you call fluiq.eval()",
+        "Warn mode logs scores; block mode raises FluiqEvalError below threshold",
+        "Run Agentic Eval on any root trace to judge the whole run — tools, trajectory, coordination",
         "CI gates run the same checks in GitHub Actions",
       ],
       file: "app.py",
@@ -240,6 +247,47 @@ fluiq.eval(
     thresholds={"hallucination": 0.8, "relevance": 0.75},
     mode="warn",   # "block" raises FluiqEvalError
 )`,
+    },
+  },
+
+  datasets: {
+    slug: "datasets",
+    route: "/datasets",
+    name: "Datasets",
+    summary: "Golden sets that capture whole agent runs.",
+    icon: Database01Icon,
+    eyebrow: "Datasets",
+    plan: "All plans",
+    headline: (
+      <>
+        Regression-test agents on <span className={cobalt}>real trajectories</span>
+      </>
+    ),
+    lede: "Curate golden datasets from production traffic. Each example pins the whole agent run — every step, tool, and MCP call — forever.",
+    Mockup: DatasetsMockup,
+    docHref: "/documentation/datasets",
+    capabilities: [
+      { kicker: "Capture", title: "Whole-trajectory examples", body: "Add any run from the trace drawer and Fluiq pins its full trajectory — LLM calls, agent steps, tool and MCP calls, media — independent of trace retention." },
+      { kicker: "Sync", title: "Connect Agents", body: "Link a traced agent to a dataset and every run it has ever made is imported, deduplicated — and future runs keep appending automatically." },
+      { kicker: "Batch", title: "Agentic eval & security runs", body: "Re-run agentic evaluation or the full security scan over every example and get a scored report — the regression gate for prompt and model changes." },
+      { kicker: "Enriched", title: "Live quality signals", body: "Each example carries its run's eval scores, security verdicts, and cost, backfilled automatically as workers finish." },
+    ],
+    mechanism: {
+      heading: "Pin a run once. Evaluate it forever.",
+      points: [
+        "Add to Dataset on a root trace snapshots the entire run, media included",
+        "Batch runs feed pinned trajectories to the same agentic evaluator used on live traffic",
+        "Examples stay evaluable after the source trace ages out of retention",
+      ],
+      file: "app.py",
+      signature: 'POST /datasets/{id}/examples',
+      code: `# Link a run to a dataset via the API (or one click in the UI)
+requests.post(f"{BASE}/datasets/{ds_id}/examples", headers=H, json={
+    "input": "Refund my last order",
+    "expected_output": "Opened refund #4821",
+    # the whole trajectory is pinned from the run's root trace
+    "metadata": {"source_trace_id": "0f9c...e21"},
+})`,
     },
   },
 

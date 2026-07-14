@@ -25,6 +25,7 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/security", changeFrequency: "monthly", priority: 0.8 },
   { path: "/optimization", changeFrequency: "monthly", priority: 0.8 },
   { path: "/evaluation", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/datasets", changeFrequency: "monthly", priority: 0.8 },
   { path: "/prompts", changeFrequency: "monthly", priority: 0.8 },
   { path: "/alerts", changeFrequency: "monthly", priority: 0.8 },
 
@@ -34,6 +35,7 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/documentation/security", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/optimization", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/evaluation", changeFrequency: "weekly", priority: 0.8 },
+  { path: "/documentation/datasets", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/prompts", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/configuration", changeFrequency: "monthly", priority: 0.7 },
   { path: "/documentation/alerts", changeFrequency: "monthly", priority: 0.7 },

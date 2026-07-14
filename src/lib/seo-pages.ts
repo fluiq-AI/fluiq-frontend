@@ -431,9 +431,15 @@ export const PLATFORM_SEO = {
   ),
   evaluation: pillarPage(
     "LLM Evaluation & Quality Gates — LLM-as-Judge | Fluiq",
-    "Score every LLM response for hallucination, faithfulness, relevance, and toxicity with LLM-as-judge. Warn or block on configurable per-metric thresholds.",
-    "LLM evaluation, LLM-as-judge, hallucination detection, faithfulness scoring, toxicity detection, eval gates, quality thresholds",
+    "Score every LLM response for hallucination, faithfulness, relevance, and toxicity with LLM-as-judge — plus agentic evaluation of whole runs: tool selection, trajectory, and multi-agent coordination, judged by a multi-model jury.",
+    "LLM evaluation, LLM-as-judge, agentic evaluation, agent trajectory evaluation, tool selection quality, judge panel, hallucination detection, eval gates",
     "/evaluation",
+  ),
+  datasets: pillarPage(
+    "Agent Datasets — Golden Sets & Trajectory Capture | Fluiq",
+    "Curate golden datasets from real traces. Every example pins the whole agent run — steps, tools, MCP calls, media — so agentic evaluation and security re-run offline as your regression gate.",
+    "LLM datasets, golden dataset, agent trajectory capture, agent regression testing, batch evaluation, dataset from traces, agentic eval",
+    "/datasets",
   ),
   prompts: pillarPage(
     "Prompt Management & Versioning — Templates & Deploy | Fluiq",

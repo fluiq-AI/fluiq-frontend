@@ -375,3 +375,55 @@ export function AlertsMockup() {
   )
 }
 
+
+export function DatasetsMockup() {
+  const steps = [
+    { type: "crew",  name: "Crew(Researcher, Writer, Editor)", extra: "root" },
+    { type: "task",  name: "Research the customer's issue",    extra: "Researcher" },
+    { type: "tool",  name: "search_orders",                    extra: "×2" },
+    { type: "llm",   name: "gpt-4o-mini",                      extra: "0.8s" },
+    { type: "task",  name: "Draft the refund reply",           extra: "Writer" },
+    { type: "mcp",   name: "crm.update_ticket",                extra: "MCP" },
+  ]
+  const tc = (t: string) =>
+    t === "crew" ? "bg-purple-500/10 text-purple-600"
+    : t === "task" ? "bg-[#E8F0FD] text-[#1860D3]"
+    : t === "tool" ? "bg-amber-500/10 text-amber-600"
+    : t === "mcp"  ? "bg-teal-500/10 text-teal-600"
+    : "bg-[#F2F0E9] dark:bg-[#2A2A2A] text-[#9A9A92]"
+  return (
+    <div className={_shell}>
+      <MockHead path="/ datasets" />
+      <div className="grid grid-cols-3 gap-3 p-4">
+        {[
+          { label: "Examples",     value: "48",  sub: "checkout-regressions" },
+          { label: "Trajectories", value: "41",  sub: "full runs pinned" },
+          { label: "Batch Runs",   value: "6",   sub: "agentic eval · security" },
+        ].map(s => (
+          <div key={s.label} className="rounded-xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] p-3">
+            <p className="text-[9px] uppercase tracking-wide text-[#9A9A92]">{s.label}</p>
+            <p className="font-heading text-lg font-bold mt-0.5 text-[#0a0a0a] dark:text-[#FAF9F6]">{s.value}</p>
+            <p className="text-[9px] text-[#9A9A92] mt-0.5">{s.sub}</p>
+          </div>
+        ))}
+      </div>
+      <div className="px-4 pb-4">
+        <div className="rounded-xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">Pinned trajectory · example #12</p>
+            <span className="rounded-full bg-[#2D7A4F]/10 px-1.5 py-px text-[9px] font-medium text-[#2D7A4F]">run score 0.88</span>
+          </div>
+          <div className="space-y-1.5">
+            {steps.map((s, i) => (
+              <div key={i} className="flex items-center gap-2 text-[10px]" style={{ paddingLeft: i === 0 ? 0 : 10 }}>
+                <span className={`rounded px-1.5 py-px text-[8px] font-semibold uppercase tracking-wide ${tc(s.type)}`}>{s.type}</span>
+                <span className="font-mono text-[#0a0a0a] dark:text-[#FAF9F6] truncate">{s.name}</span>
+                <span className="ml-auto shrink-0 text-[9px] text-[#9A9A92]">{s.extra}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
