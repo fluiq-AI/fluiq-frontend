@@ -30,7 +30,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks"
 import { clearError, registerThunk } from "@/store/auth/slice"
 import { API_BASE_URL } from "@/lib/api"
 const perks = [
-  "50,000 free traces every month to get started",
+  "Unlimited free traces, with 14-day history",
   "Tracing, evals, and dashboards out of the box",
   "Works with LangChain, LangGraph, CrewAI, OpenAI, Anthropic & Gemini",
 ]
@@ -105,7 +105,7 @@ function Signup() {
             <Card>
               <CardHeader className="text-center">
                 <CardTitle className="font-heading text-2xl">Create your account</CardTitle>
-                <CardDescription>Free up to 50,000 traces a month. No credit card required.</CardDescription>
+                <CardDescription>Unlimited free traces, 14-day history. No credit card required.</CardDescription>
               </CardHeader>
 
               <CardContent className="gap-4">

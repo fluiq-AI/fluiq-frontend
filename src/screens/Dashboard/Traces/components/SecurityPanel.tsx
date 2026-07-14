@@ -209,10 +209,12 @@ secure()  # Team plan required`}</pre>
   const toolPolicyViol   = Boolean(ev["tool_policy_violation_detected"])
   const toolPolicyList   = (ev["tool_policy_violations"] as string[] | null) ?? []
   const crossAgentInj    = Boolean(ev["cross_agent_injection_detected"])
+  const imageInjDetected = Boolean(ev["image_injection_detected"])
+  const imageInjSources  = (ev["image_injection_sources"] as string[] | null) ?? []
   const trustEscalation  = Boolean(ev["trust_boundary_escalation"])
   const escalationScore  = typeof ev["escalation_score"] === "number" ? (ev["escalation_score"] as number) : null
   const agentChainDepth  = typeof ev["agent_chain_depth"] === "number" ? (ev["agent_chain_depth"] as number) : null
-  const anyAgentic = indirectDetected || ragDetected || exfilDetected || toolPolicyViol || crossAgentInj || trustEscalation
+  const anyAgentic = indirectDetected || ragDetected || exfilDetected || toolPolicyViol || crossAgentInj || imageInjDetected || trustEscalation
 
   const promptRedact = ev["prompt_redacted"]   as string | null | undefined
   const respRedact   = ev["response_redacted"] as string | null | undefined
@@ -393,6 +395,14 @@ secure()  # Team plan required`}</pre>
               <p className="text-[12px] text-muted-foreground">
                 Attack content arrived from another agent&apos;s output rather than the end user.
               </p>
+            </Section>
+          )}
+          {imageInjDetected && (
+            <Section title="Image-Embedded Injection">
+              <p className="mb-1.5 text-[12px] text-muted-foreground">
+                Attack text hidden inside an image (found by OCR) matched injection patterns.
+              </p>
+              <TagList tags={imageInjSources.length ? imageInjSources : ["detected"]} />
             </Section>
           )}
           {trustEscalation && (

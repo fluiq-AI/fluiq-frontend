@@ -3,7 +3,8 @@
 import "@/styles/home.css"
 import React, { useCallback } from "react"
 import { Link } from "react-router"
-import { motion, useMotionValue, useSpring, useReducedMotion } from "motion/react"
+import { motion, useMotionValue, useSpring } from "motion/react"
+import { useReducedMotionSafe } from "@/lib/useReducedMotionSafe"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PythonIcon,
@@ -27,7 +28,7 @@ const panelBorder = "border-[#E5E1D6] dark:border-[#2A2A2A]"
 
 export default function PillarPage({ slug }: { slug: PillarSlug }) {
   useScrollReveal()
-  const reduce = useReducedMotion()
+  const reduce = useReducedMotionSafe()
   const pillar = PILLARS[slug]
   const others = PILLAR_ORDER.filter((s) => s !== slug).map((s) => PILLARS[s])
 
@@ -198,7 +199,7 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
               <HugeiconsIcon icon={SparklesIcon} size={22} />
             </div>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] md:text-5xl dark:text-[#FAF9F6]">
-              Free up to <span className="text-[#1860D3] dark:text-[#6FA8FF]">50K</span> traces a month.
+              <span className="text-[#1860D3] dark:text-[#6FA8FF]">Unlimited</span> traces, always free.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[16px] leading-relaxed text-[#6B6B66] dark:text-[#9A9A92]">
               Start on the free tier and turn on each pillar as your pipeline grows. No code changes required.

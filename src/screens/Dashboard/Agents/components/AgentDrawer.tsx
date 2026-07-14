@@ -36,7 +36,9 @@ import {
   isFailed,
   isRunning,
   toolSelectionKey,
+  traceToDatasetExample,
 } from "@/pages/Dashboard/Traces/utils"
+import { AddToDataset } from "@/components/AddToDataset"
 import { ArchitectureView } from "@/pages/Dashboard/Traces/components/ArchitectureView"
 import {
   DrawerTabButton,
@@ -576,6 +578,12 @@ export function AgentDrawer({
                   >
                     SECURITY
                   </DrawerTabButton>
+                  <div className="ml-auto pb-1.5">
+                    <AddToDataset
+                      example={traceToDatasetExample(detailTrace)}
+                      size="xs"
+                    />
+                  </div>
                 </div>
                 <div className="flex-1 overflow-auto px-4 py-4">
                   {drawerTab === "json" ? (

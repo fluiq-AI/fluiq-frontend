@@ -24,7 +24,7 @@ import { authFetch } from "@/lib/authFetch"
 import { useAppSelector } from "@/store/hooks"
 
 import { ALL_KEYS, TRACES_PAGE_SIZE } from "@/pages/Dashboard/Traces/utils/constants"
-import type { DrawerTab, SelectedTool, TraceFilters, TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
+import type { DrawerTab, RootRollup, SelectedTool, TraceFilters, TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
 import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/helpers/treeBuilder"
 import { getStr, toolSelectionKey } from "@/pages/Dashboard/Traces/utils"
 import { TraceTreeRows } from "@/pages/Dashboard/Traces/components/TraceTable"
@@ -62,6 +62,10 @@ function Traces() {
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [fetchedSpanRoots, setFetchedSpanRoots] = useState<Set<string>>(new Set())
   const [loadingSpanRoots, setLoadingSpanRoots] = useState<Set<string>>(new Set())
+  // Precomputed per-run rollups keyed by root_trace_id (cost / quality /
+  // security / span count), fetched once per page from /traces/rollups. Drives
+  // the list's headline columns so we no longer prefetch every child to sum it.
+  const [rollups, setRollups] = useState<Map<string, RootRollup>>(new Map())
 
   const { filters, setFilter, clearFilters, activeFilterCount } = useTraceFilters()
 
@@ -98,32 +102,28 @@ function Traces() {
   // root-only traces and resets span-fetch tracking.
   // silent=true: no loading spinner, keep existing traces on API failure
   // (used by the SSE reconnect path so a transient error doesn't wipe the table).
-  // prefetchRootSpans: silently fetches child spans for a set of root traces
-  // immediately after load so sumSubtreeCost has data before the user expands.
-  // Uses functional setTraces updaters and guards against stale results by
-  // checking that the root trace is still in the list before merging children.
-  const prefetchRootSpans = useCallback((rootTraces: TraceRecord[]) => {
-    for (const t of rootTraces) {
-      const rootId = getStr(t.event, "trace_id")
-      if (!rootId) continue
-      ;(async () => {
-        try {
-          const params = new URLSearchParams({ root_trace_id: rootId, limit: "500" })
-          const data = await authFetch<TraceListResponse>(`/api/v1/traces?${params.toString()}`)
-          setTraces((prev) => {
-            if (!prev.some((r) => getStr(r.event, "trace_id") === rootId)) return prev
-            const seen = new Set(prev.map((r) => getStr(r.event, "trace_id")).filter(Boolean))
-            const fresh = data.traces.filter((r) => {
-              const tid = getStr(r.event, "trace_id")
-              return tid && !seen.has(tid)
-            })
-            return fresh.length > 0 ? [...prev, ...fresh] : prev
-          })
-          setFetchedSpanRoots((prev) => new Set(prev).add(rootId))
-        } catch {
-          // silently ignore — cost column falls back to root's own cost
-        }
-      })()
+  // fetchRollups: pull the precomputed per-run cost/quality/security/count for a
+  // page of roots in ONE request, replacing the old per-root child prefetch that
+  // fired a full join query per root and stampeded the single-node ClickHouse.
+  // Child spans now load lazily on expand (see expandRoot); the list's headline
+  // columns come from these rollups, so they're correct before any expand.
+  const fetchRollups = useCallback(async (rootTraces: TraceRecord[]) => {
+    const rootIds = rootTraces
+      .map((t) => getStr(t.event, "trace_id"))
+      .filter((id): id is string => Boolean(id))
+    if (rootIds.length === 0) return
+    try {
+      const data = await authFetch<{ rollups: Record<string, RootRollup> }>(
+        "/api/v1/traces/rollups",
+        { method: "POST", body: { root_ids: rootIds } },
+      )
+      setRollups((prev) => {
+        const next = new Map(prev)
+        for (const [rootId, item] of Object.entries(data.rollups)) next.set(rootId, item)
+        return next
+      })
+    } catch {
+      // silently ignore — columns fall back to the root's own row / lazy subtree
     }
   }, [])
 
@@ -141,7 +141,7 @@ function Traces() {
       setTraces(data.traces)
       setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
       setFetchedSpanRoots(new Set())
-      prefetchRootSpans(data.traces)
+      void fetchRollups(data.traces)
     } catch (err) {
       if (!silent) {
         setError(err instanceof ApiError ? err.detail : "Failed to load traces")
@@ -150,7 +150,7 @@ function Traces() {
     } finally {
       if (!silent) setLoading(false)
     }
-  }, [prefetchRootSpans])
+  }, [fetchRollups])
 
   // expandRoot: fetches child spans for a root trace on first expand.
   const expandRoot = useCallback(async (rootTraceId: string) => {
@@ -250,7 +250,7 @@ function Traces() {
         setTraces(data.traces)
         setHasMore(data.traces.length >= TRACES_PAGE_SIZE)
         setFetchedSpanRoots(new Set())
-        prefetchRootSpans(data.traces)
+        void fetchRollups(data.traces)
       } catch (err) {
         if (cancelled) return
         setError(err instanceof ApiError ? err.detail : "Failed to load traces")
@@ -260,7 +260,7 @@ function Traces() {
       }
     })()
     return () => { cancelled = true }
-  }, [keyId, filters, page, prefetchRootSpans])
+  }, [keyId, filters, page, fetchRollups])
 
   const { realtimeError } = useTraceStream({
     keyId,
@@ -379,6 +379,7 @@ function Traces() {
                       node={g.root}
                       depth={0}
                       subtreeCount={g.count}
+                      rollups={rollups}
                       expandedNodes={expandedNodes}
                       toggleNode={toggleNode}
                       openTrace={openTrace}

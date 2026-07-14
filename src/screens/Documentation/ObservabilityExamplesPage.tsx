@@ -144,7 +144,7 @@ async def run():
   },
   {
     label: "LangGraph",
-    description: "Every node execution and edge transition in a LangGraph StateGraph is captured as a traced span automatically.",
+    description: "Every node in a LangGraph StateGraph is a traced span. Fan-out and fan-in (join) edges are resolved from the compiled graph, so parallel branches render as a true DAG; the run appears in the Agents view as LangGraph(node_a, node_b, …).",
     code: `from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from fluiq import instrument
@@ -182,7 +182,7 @@ print(result["answer"])`,
   },
   {
     label: "CrewAI",
-    description: "Agent and task executions inside a CrewAI Crew are traced automatically — each agent run becomes a named span.",
+    description: "Agent and task executions inside a CrewAI Crew are traced automatically. Task dependencies (task.context) become DAG edges, and the run shows as Crew(agent_1, agent_2, …) in the Agents view.",
     code: `from crewai import Agent, Task, Crew, Process
 from crewai_tools import SerperDevTool
 from fluiq import instrument
@@ -454,7 +454,7 @@ console.log(result);`,
   },
   {
     label: "LangGraph",
-    description: "Every node execution in a LangGraph StateGraph is captured as a traced span automatically.",
+    description: "Every node in a LangGraph StateGraph is a traced span. Fan-out and fan-in (join) edges are resolved from the compiled graph, so parallel branches render as a true DAG in the trace drawer.",
     code: `import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import fluiq from "@fluiq/sdk";
@@ -542,7 +542,7 @@ export default function ObservabilityExamplesPage() {
       <PageHeading
         icon={ChartLineData01Icon}
         title="Observability"
-        description="Fluiq auto-instruments every supported library after a single instrument() call. Select an integration below to see how traces flow into your dashboard."
+        description="Fluiq auto-instruments every supported library after a single instrument() call — free and unlimited on every tier. Multi-agent runs are captured as a real DAG (fan-out, joins, loop-backs). Select an integration below to see how traces flow into your dashboard."
       />
       <IntegrationTabs tabs={{ python: pythonTabs, typescript: typescriptTabs }} />
     </div>

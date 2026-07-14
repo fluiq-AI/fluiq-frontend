@@ -64,18 +64,20 @@ export default function QuickstartPage() {
 
 fluiq.instrument(api_key="fl_...") # or set FLUIQ_API_KEY to environment
 
-# Every OpenAI / Anthropic / Gemini / LangChain / MCP
-# call from this point on is traced automatically.
-# Optionally add paid features:
+# Every OpenAI / Anthropic / Gemini / LangChain / MCP call from this
+# point on is traced automatically — free and unlimited on every tier.
+# Opt in to more when you want it:
+fluiq.eval(thresholds={"hallucination": 0.8})  # LLM-as-judge scoring
 fluiq.optimize()   # Redis caching — Team+
 fluiq.secure()     # Security scanning — Growth+`,
                 `import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." }); // or set FLUIQ_API_KEY in your environment
 
-// Every OpenAI / Anthropic / Gemini / LangChain / MCP
-// call from this point on is traced automatically.
-// Optionally add paid features:
+// Every OpenAI / Anthropic / Gemini / LangChain / MCP call from this
+// point on is traced automatically — free and unlimited on every tier.
+// Opt in to more when you want it:
+fluiq.eval({ thresholds: { hallucination: 0.8 } }); // LLM-as-judge scoring
 fluiq.optimize(); // Redis caching — Team+
 fluiq.secure();   // Security scanning — Growth+`,
               )}</Code>

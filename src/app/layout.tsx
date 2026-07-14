@@ -101,7 +101,7 @@ const organizationJsonLd = {
 }
 
 // Set the theme class before first paint to avoid a flash / hydration mismatch.
-const themeInitScript = `(function(){try{var t=localStorage.getItem('fluiq-theme');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`
+const themeInitScript = `(function(){try{var t=localStorage.getItem('fluiq-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

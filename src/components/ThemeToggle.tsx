@@ -1,42 +1,30 @@
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Moon01Icon, Sun01Icon } from "@hugeicons/core-free-icons"
-import { AnimatePresence, motion } from "motion/react"
 import { useTheme } from "@/contexts/ThemeContext"
 
 export function ThemeToggle({ className = "" }: { className?: string }) {
-  const { theme, toggle } = useTheme()
+  const { toggle } = useTheme()
 
+  // Both icons are ALWAYS rendered; which one is visible is decided purely by
+  // CSS via the `html.dark` class that the pre-hydration script in layout.tsx
+  // sets before React runs. Because the markup is identical on the server and
+  // on the client's first render, there's no hydration mismatch — and no
+  // motion/AnimatePresence injecting divergent inline styles. The rotate/fade
+  // is a plain CSS transition that fires when `dark` is toggled.
   return (
     <button
       onClick={toggle}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label="Toggle theme"
       className={`grid size-8 place-items-center rounded-lg text-[#6b7280] transition-colors hover:text-[#0a0a0a] dark:text-[#9A9A92] dark:hover:text-[#FAF9F6] ${className}`}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {theme === "dark" ? (
-          <motion.span
-            key="sun"
-            initial={{ rotate: -90, opacity: 0, scale: 0.8 }}
-            animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: 90, opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="flex items-center justify-center"
-          >
-            <HugeiconsIcon icon={Sun01Icon} size={16} />
-          </motion.span>
-        ) : (
-          <motion.span
-            key="moon"
-            initial={{ rotate: 90, opacity: 0, scale: 0.8 }}
-            animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: -90, opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            className="flex items-center justify-center"
-          >
-            <HugeiconsIcon icon={Moon01Icon} size={16} />
-          </motion.span>
-        )}
-      </AnimatePresence>
+      {/* Moon — shown in light mode (click → switch to dark) */}
+      <span className="col-start-1 row-start-1 flex items-center justify-center transition-all duration-200 dark:rotate-90 dark:scale-0 dark:opacity-0">
+        <HugeiconsIcon icon={Moon01Icon} size={16} />
+      </span>
+      {/* Sun — shown in dark mode (click → switch to light) */}
+      <span className="col-start-1 row-start-1 flex items-center justify-center rotate-90 scale-0 opacity-0 transition-all duration-200 dark:rotate-0 dark:scale-100 dark:opacity-100">
+        <HugeiconsIcon icon={Sun01Icon} size={16} />
+      </span>
     </button>
   )
 }

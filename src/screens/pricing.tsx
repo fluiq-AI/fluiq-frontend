@@ -41,7 +41,7 @@ const tiers: Tier[] = [
   {
     name: "Free",
     price: { monthly: 0, annual: 0 },
-    traces: "50,000 traces / month",
+    traces: "Unlimited traces",
     evals: "1,000 evaluations / month",
     seats: "1 seat",
     retention: "14-day trace retention",
@@ -65,8 +65,8 @@ const tiers: Tier[] = [
     traces: "Unlimited traces",
     evals: "10,000 evaluations / month",
     seats: "Up to 5 seats",
-    retention: "90-day trace retention",
-    cta: "Start free",
+    retention: "Unlimited trace retention",
+    cta: "Start 5-day free trial",
     ctaHref: "/signup",
     highlighted: false,
     features: [
@@ -84,8 +84,8 @@ const tiers: Tier[] = [
     traces: "Unlimited traces",
     evals: "100,000 evaluations / month",
     seats: "Up to 20 seats",
-    retention: "1-year trace retention",
-    cta: "Start free",
+    retention: "Unlimited trace retention",
+    cta: "Start 5-day free trial",
     ctaHref: "/signup",
     highlighted: true,
     features: [
@@ -103,7 +103,7 @@ const tiers: Tier[] = [
     traces: "Unlimited traces",
     evals: "Unlimited evaluations",
     seats: "Unlimited seats",
-    retention: "Custom trace retention",
+    retention: "Unlimited trace retention",
     cta: "Talk to us",
     ctaHref: "/contact",
     highlighted: false,
@@ -123,8 +123,8 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
   {
     category: "Observability",
     rows: [
-      { label: "Traces / month", values: ["50K", "Unlimited", "Unlimited", "Unlimited"] },
-      { label: "Trace retention", values: ["14 days", "90 days", "1 year", "Custom"] },
+      { label: "Traces / month", values: ["Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
+      { label: "Trace retention", values: ["14 days", "Unlimited", "Unlimited", "Unlimited"] },
       { label: "Live dashboard", values: [true, true, true, true] },
       { label: "Trace explorer", values: [true, true, true, true] },
       { label: "Streaming traces", values: [true, true, true, true] },

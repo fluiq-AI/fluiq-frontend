@@ -29,6 +29,14 @@ const mkTrace = (): Trace => ({
   cache: pick(C_CACHE), ms: Math.floor(130 + Math.random() * 560), eval: pick(C_EVALS),
 })
 
+// Deterministic first trace so the server HTML and the first client render match.
+// mkTrace() uses Math.random(), which differs between server and client and would
+// otherwise cause a hydration mismatch; the effect swaps in random traces after mount.
+const INITIAL_TRACE: Trace = {
+  id: "req_INIT", model: C_MODELS[0], sec: C_SEC[0],
+  cache: C_CACHE[0], ms: 300, eval: C_EVALS[0],
+}
+
 /* ─── Pipeline stage definitions ─────────────────────────────────────────── */
 interface PipelineStage {
   key: string; label: string; icon: typeof ShieldIcon
@@ -113,7 +121,7 @@ const DELAYS = [550, 520, 420, 520, 420, 520, 420, 520, 2300]
 
 export function PipelineViz({ rpm, metrics }: { rpm: number; metrics: { cache: number; sec: number; eval: number } }) {
   const [step, setStep] = useState(0)
-  const [trace, setTrace] = useState<Trace>(() => mkTrace())
+  const [trace, setTrace] = useState<Trace>(INITIAL_TRACE)
 
   useEffect(() => {
     const id = setTimeout(() => {

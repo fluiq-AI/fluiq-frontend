@@ -110,7 +110,7 @@ export const SEO = {
         price: "0",
         priceCurrency: "USD",
         description:
-          "Free tier: 50,000 traces per month, 1000 LLM-as-judge evaluations per month, 1 seat, 14-day retention. No credit card required.",
+          "Free tier: unlimited traces, 1000 LLM-as-judge evaluations per month, 1 seat, 14-day retention. No credit card required.",
       },
       author: { "@type": "Organization", name: "Fluiq", url: "https://getfluiq.com" },
       sameAs: ["https://github.com/fluiq-AI/fluiq-sdk"],
@@ -120,7 +120,7 @@ export const SEO = {
   pricing: {
     title: "Fluiq Pricing — Free LLM Observability, Evals & Caching",
     description:
-      "Start free with 50,000 traces/month and 1,000 evals. Upgrade to Team ($299/mo) for caching, Growth ($599/mo) for security, or Enterprise for SSO & SLAs.",
+      "Start free with unlimited traces and 1,000 evals. Upgrade to Team ($299/mo) for unlimited retention & caching, Growth ($599/mo) for security, or Enterprise for SSO & SLAs.",
     keywords:
       "Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing, LLM security pricing",
     path: "/pricing",
@@ -131,7 +131,7 @@ export const SEO = {
           "@type": "WebPage",
           name: "Fluiq Pricing",
           description:
-            "Fluiq pricing plans: start free with 50,000 traces/month and 1,000 evaluations/month, upgrade to Team ($299/mo), Growth ($599/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
+            "Fluiq pricing plans: start free with unlimited traces and 1,000 evaluations/month, upgrade to Team ($299/mo), Growth ($599/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
           url: `${SITE}/pricing`,
           isPartOf: ISPART,
         },
@@ -156,7 +156,7 @@ export const SEO = {
                 url: `${SITE}/pricing`,
                 availability: "https://schema.org/InStock",
                 description:
-                  "50,000 traces/month, 1,000 LLM-as-judge evals/month, 1 seat, 14-day retention. No credit card required.",
+                  "Unlimited traces, 1,000 LLM-as-judge evals/month, 1 seat, 14-day retention. No credit card required.",
               },
               {
                 "@type": "Offer",
@@ -357,6 +357,12 @@ export const DOC_SEO = {
     "Score every LLM response for hallucination, faithfulness, relevance, and toxicity using LLM-as-judge. Warn or block based on configurable per-metric thresholds.",
     "LLM evaluation, LLM-as-judge, hallucination detection, faithfulness scoring, relevance scoring, toxicity detection, eval gates",
     "/documentation/evaluation",
+  ),
+  datasets: techArticle(
+    "Datasets — Golden Sets & Agent Trajectory Capture | Fluiq Docs",
+    "Curate golden datasets from real traces. Trace-backed examples pin the whole agent trajectory — every span, tool call, and MCP call — so you can re-run agentic evaluation and security offline, retention-independent.",
+    "LLM datasets, golden dataset, agent trajectory, agentic evaluation, dataset from traces, batch evaluation, regression testing",
+    "/documentation/datasets",
   ),
   prompts: techArticle(
     "Prompt Management — Versioning & Deployment Docs | Fluiq",

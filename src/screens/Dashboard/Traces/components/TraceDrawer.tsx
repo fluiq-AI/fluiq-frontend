@@ -13,7 +13,8 @@ import { SpanTimeline } from "@/pages/Dashboard/Prompts/components/SpanTimeline"
 import { synthesizeAggregatedEvent } from "../helpers/aggregation"
 import { findGroupForTrace } from "../helpers/treeBuilder"
 import type { DrawerTab, SelectedTool, ToolSelectFn, TraceRecord } from "../utils/types"
-import { formatCost, formatDate, formatLatency, getModel, getStr, isFailed } from "../utils"
+import { formatCost, formatDate, formatLatency, getModel, getStr, isFailed, traceToDatasetExample } from "../utils"
+import { AddToDataset } from "@/components/AddToDataset"
 
 export function TraceDrawer({
   trace,
@@ -62,6 +63,19 @@ export function TraceDrawer({
   }, [selectedTool, trace])
   const evalCount =
     detailTrace.evaluations?.filter((e) => e.evaluator !== "fluiq.security").length ?? 0
+
+  // Agentic evaluation scores a whole run (the root span and its tool/MCP
+  // subtree, keyed by root_trace_id), so the "Run Agentic Eval" button only
+  // makes sense on a root trace. A trace is a root when it is its own root, has
+  // no root_trace_id, or is the visible root of its group (the orphan-root case
+  // where the real parent was never captured).
+  const isRootTrace = useMemo(() => {
+    const tid = getStr(trace.event, "trace_id")
+    if (!tid) return false
+    const rtid = getStr(trace.event, "root_trace_id")
+    if (!rtid || rtid === tid) return true
+    return getStr(group?.root?.trace?.event ?? {}, "trace_id") === tid
+  }, [trace, group])
   return (
     <div
       role="dialog"
@@ -97,14 +111,22 @@ export function TraceDrawer({
               <span className="font-mono">{trace.api_key_prefix}{"…"}</span>
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <HugeiconsIcon icon={Cancel01Icon} size={16} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Adding to a dataset captures the whole run (keyed by the root's
+                trace_id), so it only makes sense on the root span — not on a
+                child span or a selected tool overlay. */}
+            {isRootTrace && !selectedTool ? (
+              <AddToDataset example={traceToDatasetExample(detailTrace)} />
+            ) : null}
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} size={16} />
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-4 gap-4 border-b border-border/60 px-6 py-3 text-xs">
           <div>
@@ -233,6 +255,14 @@ export function TraceDrawer({
               ) : tab === "evaluation" ? (
                 <EvaluationsSection
                   evaluations={detailTrace.evaluations?.filter((e) => e.evaluator !== "fluiq.security")}
+                  traceId={isRootTrace ? getStr(trace.event, "trace_id") || undefined : undefined}
+                  rootTraceId={
+                    isRootTrace
+                      ? getStr(trace.event, "root_trace_id") ||
+                        getStr(trace.event, "trace_id") ||
+                        undefined
+                      : undefined
+                  }
                 />
               ) : (
                 <SecurityPanel trace={detailTrace} />

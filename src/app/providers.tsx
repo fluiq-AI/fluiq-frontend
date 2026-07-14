@@ -4,6 +4,7 @@ import { Provider } from "react-redux"
 
 import { store } from "@/store"
 import { ThemeProvider } from "@/contexts/ThemeContext"
+import { Toaster } from "@/components/ui/sonner"
 
 /**
  * Client-side provider boundary for the whole app: Redux store and the theme
@@ -12,7 +13,10 @@ import { ThemeProvider } from "@/contexts/ThemeContext"
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <Provider store={store}>
-      <ThemeProvider>{children}</ThemeProvider>
+      <ThemeProvider>
+        {children}
+        <Toaster />
+      </ThemeProvider>
     </Provider>
   )
 }

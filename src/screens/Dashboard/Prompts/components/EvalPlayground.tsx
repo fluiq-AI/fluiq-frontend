@@ -25,6 +25,7 @@ import { Tip } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { AddToDataset } from "@/components/AddToDataset"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -521,19 +522,20 @@ export function EvalPlayground({
               Saved!
             </span>
           ) : null}
-          {/* DATASETS — Add to Dataset button commented out until batch eval flow is built
           {row ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={openDatasetPanel}
-              className={cn(showDatasetPanel && "border-primary/40 bg-primary/5 text-primary")}
-            >
-              <HugeiconsIcon icon={Database01Icon} size={14} />
-              Add to Dataset
-            </Button>
+            <AddToDataset
+              example={{
+                input: renderedPrompt || templateText,
+                expected_output: row.fullOutput || null,
+                metadata: {
+                  ...(row.model && row.model !== "—" ? { model: row.model } : {}),
+                  ...(row.metadata.cost != null ? { cost: row.metadata.cost } : {}),
+                  ...(row.metadata.traceId ? { source_trace_id: row.metadata.traceId } : {}),
+                  ...(row.trace.ingested_at ? { ingested_at: row.trace.ingested_at } : {}),
+                },
+              }}
+            />
           ) : null}
-          */}
           {!row ? (
             <Button
               variant="outline"

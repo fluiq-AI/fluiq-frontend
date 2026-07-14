@@ -151,6 +151,12 @@ function SmartBlock({
   const rec = item as Record<string, unknown>
   const type = rec["type"]
 
+  // Multimodal media reference — the SDK stores a payload-free `_media_ref`
+  // (kind/mime/bytes/sha256/url) in place of raw image/audio/video bytes.
+  if (rec["_media_ref"] && typeof rec["_media_ref"] === "object") {
+    return <MediaRefCard mediaRef={rec["_media_ref"] as Record<string, unknown>} />
+  }
+
   if (type === "text" && typeof rec["text"] === "string") {
     return (
       <div className="whitespace-pre-wrap wrap-break-word text-xs">
@@ -575,6 +581,76 @@ function McpListToolsBlock({ rec }: { rec: Record<string, unknown> }) {
               {n}
             </span>
           ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+// ── Multimodal media reference ───────────────────────────────────────────────
+// The SDK never stores raw image/audio/video bytes — it keeps a payload-free
+// `_media_ref`. Render it as a compact card (kind, mime, size, sha256, and a
+// url link / thumbnail when the source is a fetchable URL).
+
+const MEDIA_GLYPH: Record<string, string> = {
+  image: "🖼️", audio: "🔊", video: "🎬", document: "📄", media: "📎",
+}
+
+function formatBytes(n: number): string {
+  if (n < 1024) return `${n} B`
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function MediaRefCard({ mediaRef }: { mediaRef: Record<string, unknown> }) {
+  const kind = typeof mediaRef["kind"] === "string" ? (mediaRef["kind"] as string) : "media"
+  const mime = typeof mediaRef["mime"] === "string" ? (mediaRef["mime"] as string) : undefined
+  const source = typeof mediaRef["source"] === "string" ? (mediaRef["source"] as string) : undefined
+  const bytes = typeof mediaRef["bytes"] === "number" ? (mediaRef["bytes"] as number) : undefined
+  const sha = typeof mediaRef["sha256"] === "string" ? (mediaRef["sha256"] as string) : undefined
+  const url = typeof mediaRef["url"] === "string" ? (mediaRef["url"] as string) : undefined
+  const data = typeof mediaRef["data"] === "string" ? (mediaRef["data"] as string) : undefined
+  const dataUri = data ? `data:${mime ?? "image/png"};base64,${data}` : undefined
+  const thumbSrc = kind === "image" ? (dataUri ?? (source === "url" ? url : undefined)) : undefined
+
+  return (
+    <div className="rounded-md border border-border/60 bg-background p-2.5">
+      <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-wide">
+        <span className="rounded bg-foreground/10 px-1.5 py-0.5 font-medium">
+          {MEDIA_GLYPH[kind] ?? "📎"} {kind}
+        </span>
+        {mime ? <span className="font-mono normal-case text-foreground">{mime}</span> : null}
+        {source ? <span className="normal-case text-muted-foreground">{source}</span> : null}
+        {typeof bytes === "number" ? (
+          <span className="normal-case text-muted-foreground">{formatBytes(bytes)}</span>
+        ) : null}
+      </div>
+      {thumbSrc ? (
+        <img
+          src={thumbSrc}
+          alt="media"
+          className="mt-2 max-h-40 max-w-full rounded border border-border/60 object-contain"
+          onError={(e) => {
+            ;(e.currentTarget as HTMLImageElement).style.display = "none"
+          }}
+        />
+      ) : null}
+      {url ? (
+        <a
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-1.5 block truncate font-mono text-[10px] text-foreground underline-offset-2 hover:underline"
+        >
+          {url}
+        </a>
+      ) : null}
+      {sha ? (
+        <div className="mt-1 font-mono text-[10px] text-muted-foreground">sha256:{sha}</div>
+      ) : null}
+      {source === "base64" && !data && !url ? (
+        <div className="mt-1 text-[10px] text-muted-foreground italic">
+          payload not stored (reference only)
         </div>
       ) : null}
     </div>

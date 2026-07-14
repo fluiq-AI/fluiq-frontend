@@ -693,7 +693,7 @@ jobs:
                 </thead>
                 <tbody className="divide-y divide-border/60">
                   {[
-                    ["Free", "50K / mo", "1,000"],
+                    ["Free", "Unlimited", "1,000"],
                     ["Team", "Unlimited", "10,000"],
                     ["Growth", "Unlimited", "100,000"],
                     ["Enterprise", "Unlimited", "Unlimited"],

@@ -186,7 +186,7 @@ export default function Terms() {
 
             <Section id="payment" title="Payment and Plans">
               <Ul items={[
-                "Free plan: limited to 50,000 traces per month with no credit card required.",
+                "Free plan: unlimited traces with a 14-day retention window, no credit card required.",
                 "Paid plans (Team, Growth, Enterprise): billed monthly or annually via Stripe. Prices are listed on the pricing page and may change with 30 days notice.",
                 "All fees are non-refundable except where required by law or as expressly stated in your plan.",
                 "Overdue invoices may result in suspension of service after a 7-day grace period.",

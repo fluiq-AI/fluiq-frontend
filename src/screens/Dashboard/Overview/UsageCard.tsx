@@ -27,6 +27,16 @@ interface QuotaResponse {
   tier: string
   traces: QuotaCounter
   evaluations: QuotaCounter
+  // Trace retention window in days; null = unlimited (paid).
+  retention_days: number | null
+  // ISO instant an active trial reverts to Free; null when not on a trial.
+  trial_ends_at: string | null
+}
+
+// Whole days remaining until an ISO instant, floored at 0.
+function daysUntil(iso: string): number {
+  const ms = new Date(iso).getTime() - Date.now()
+  return Math.max(0, Math.ceil(ms / 86_400_000))
 }
 
 function formatNumber(n: number): string {
@@ -64,10 +74,21 @@ export function UsageCard() {
             <HugeiconsIcon icon={ChartLineData01Icon} size={16} />
             <CardTitle className="text-base">Usage</CardTitle>
           </div>
-          {data ? <Badge variant="outline">{data.tier}</Badge> : null}
+          {data ? (
+            <div className="flex items-center gap-1.5">
+              {data.trial_ends_at ? (
+                <Badge variant="secondary">
+                  Trial · {daysUntil(data.trial_ends_at)}d left
+                </Badge>
+              ) : null}
+              <Badge variant="outline">{data.tier}</Badge>
+            </div>
+          ) : null}
         </div>
         <CardDescription>
-          Monthly traces and evaluations against your tier's limits.
+          {data?.trial_ends_at
+            ? `Your ${data.tier} trial reverts to Free in ${daysUntil(data.trial_ends_at)} days.`
+            : "Monthly traces and evaluations against your tier's limits."}
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">

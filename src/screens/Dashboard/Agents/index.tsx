@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
+import { Pagination } from "@/components/Pagination"
 
 import type { AgentRow, AgentSummaryResponse, SortKey } from "./utils/types"
 import { AgentTable } from "./components/AgentTable"
@@ -36,9 +37,9 @@ const AGENTS_PAGE_SIZE = 50
 function Agents() {
   const [agents, setAgents] = useState<AgentRow[]>([])
   const [loading, setLoading] = useState(false)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
-  const [loadOffset, setLoadOffset] = useState(AGENTS_PAGE_SIZE)
+  const [page, setPage] = useState(0)
+  const [reloadKey, setReloadKey] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [sortKey, setSortKey] = useState<SortKey>("last_run")
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
@@ -46,69 +47,33 @@ function Agents() {
   const [search, setSearch] = useState("")
   const [integrationFilter, setIntegrationFilter] = useState("all")
 
-  const fetchAgents = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await authFetch<AgentSummaryResponse>(
-        `/api/v1/agents/summary?limit=${AGENTS_PAGE_SIZE}&offset=0`,
-      )
-      setAgents(data.agents)
-      setLoadOffset(AGENTS_PAGE_SIZE)
-      setHasMore(data.agents.length >= AGENTS_PAGE_SIZE)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.detail : "Failed to load agents")
-      setAgents([])
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return
-    setIsLoadingMore(true)
-    try {
-      const data = await authFetch<AgentSummaryResponse>(
-        `/api/v1/agents/summary?limit=${AGENTS_PAGE_SIZE}&offset=${loadOffset}`,
-      )
-      setAgents((prev) => {
-        const seen = new Set(prev.map((a) => `${a.agent_key}__${a.agent_kind}__${a.integration}`))
-        const fresh = data.agents.filter(
-          (a) => !seen.has(`${a.agent_key}__${a.agent_kind}__${a.integration}`),
-        )
-        return fresh.length > 0 ? [...prev, ...fresh] : prev
-      })
-      setLoadOffset((o) => o + AGENTS_PAGE_SIZE)
-      setHasMore(data.agents.length >= AGENTS_PAGE_SIZE)
-    } catch {
-      // silently fail — button stays visible so user can retry
-    } finally {
-      setIsLoadingMore(false)
-    }
-  }, [isLoadingMore, hasMore, loadOffset])
-
+  // Windowed pagination: fetch one page (replacing the list) whenever `page` or
+  // `reloadKey` (refresh) changes. `hasMore` = the page came back full.
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await authFetch<AgentSummaryResponse>(
-          `/api/v1/agents/summary?limit=${AGENTS_PAGE_SIZE}&offset=0`,
-        )
+    setLoading(true)
+    setError(null)
+    authFetch<AgentSummaryResponse>(
+      `/api/v1/agents/summary?limit=${AGENTS_PAGE_SIZE}&offset=${page * AGENTS_PAGE_SIZE}`,
+    )
+      .then((data) => {
         if (cancelled) return
         setAgents(data.agents)
-        setLoadOffset(AGENTS_PAGE_SIZE)
         setHasMore(data.agents.length >= AGENTS_PAGE_SIZE)
-      } catch (err) {
+      })
+      .catch((err) => {
         if (cancelled) return
         setError(err instanceof ApiError ? err.detail : "Failed to load agents")
         setAgents([])
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
+  }, [page, reloadKey])
+
+  // Refresh reloads from the first page (batched → a single fetch).
+  const refresh = useCallback(() => {
+    setPage(0)
+    setReloadKey((k) => k + 1)
   }, [])
 
   useEffect(() => {
@@ -187,7 +152,7 @@ function Agents() {
           </CardDescription>
           </div>
           <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={fetchAgents} disabled={loading}>
+            <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
               <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} className={loading ? "animate-spin" : undefined} />
               Refresh
             </Button>
@@ -286,21 +251,14 @@ function Agents() {
               onSelectAgent={setSelectedAgent}
             />
           )}
-          {!error && hasMore ? (
-            <div className="flex justify-center border-t border-border/60 px-6 py-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadMore}
-                disabled={isLoadingMore}
-              >
-                <HugeiconsIcon
-                  icon={isLoadingMore ? Loading03Icon : RefreshIcon}
-                  className={isLoadingMore ? "animate-spin" : undefined}
-                />
-                {isLoadingMore ? "Loading…" : "Load more"}
-              </Button>
-            </div>
+          {!error ? (
+            <Pagination
+              page={page}
+              hasMore={hasMore}
+              loading={loading}
+              onPrev={() => setPage((p) => Math.max(0, p - 1))}
+              onNext={() => setPage((p) => p + 1)}
+            />
           ) : null}
         </CardContent>
       </Card>

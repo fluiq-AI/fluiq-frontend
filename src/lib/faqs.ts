@@ -26,7 +26,7 @@ export const LLMCostFAQS = [
 export const PricingFaqs = [
   {
     q: "What counts as a trace?",
-    a: "One traced span, typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5-20 traces depending on how many tools and LLM calls it makes. The Free plan includes 50,000 traces per month; Team and above are unlimited.",
+    a: "One traced span, typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5-20 traces depending on how many tools and LLM calls it makes. Trace ingestion is unlimited and free on every plan — the Free plan keeps a rolling 14-day history, while Team and above retain your traces indefinitely.",
   },
   {
     q: "Which frameworks does Fluiq support?",
@@ -58,7 +58,7 @@ export const PricingFaqs = [
   },
   {
     q: "What's the cheapest way to monitor my LLM application?",
-    a: "Start on Fluiq's Free plan: 50,000 traces and 1,000 evaluations per month at no cost, with full tracing, cost attribution, and latency analytics included. Instrumentation is one line — fluiq.instrument() — so there's no agent to run and no infrastructure to host. When you outgrow Free, Team and above make traces unlimited, and fluiq.optimize() caches repeated prompts to cut model spend, so monitoring can actually lower your bill instead of adding to it.",
+    a: "Start on Fluiq's Free plan: unlimited traces and 1,000 evaluations per month at no cost, with full tracing, cost attribution, and latency analytics included. Instrumentation is one line — fluiq.instrument() — so there's no agent to run and no infrastructure to host. Free keeps a rolling 14-day history; when you outgrow it, Team and above retain traces indefinitely, and fluiq.optimize() caches repeated prompts to cut model spend, so monitoring can actually lower your bill instead of adding to it.",
   },
   {
     q: "Will adding observability slow down my LLM?",

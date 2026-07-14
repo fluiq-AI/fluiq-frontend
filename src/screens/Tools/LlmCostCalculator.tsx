@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { motion, AnimatePresence, useReducedMotion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
+import { useReducedMotionSafe } from "@/lib/useReducedMotionSafe"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   FlashIcon,
@@ -297,7 +298,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 /* ── main ──────────────────────────────────────────────────────────────────── */
 
 export default function LlmCostCalculator() {
-  const reduce = useReducedMotion()
+  const reduce = useReducedMotionSafe()
 
   const [models, setModels] = useState<Model[]>([])
   const [source, setSource] = useState<"loading" | "api" | "fallback">("loading")

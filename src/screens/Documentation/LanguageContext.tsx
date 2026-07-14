@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { PythonIcon, Typescript01Icon } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
@@ -25,7 +25,14 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<DocLang>(loadLang)
+  // Deterministic "python" for SSR + the first client render (reading
+  // localStorage in the initializer would diverge from the server HTML and
+  // break hydration). The stored choice is applied right after mount.
+  const [lang, setLangState] = useState<DocLang>("python")
+
+  useEffect(() => {
+    setLangState(loadLang())
+  }, [])
 
   const setLang = (next: DocLang) => {
     setLangState(next)

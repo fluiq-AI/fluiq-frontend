@@ -501,7 +501,7 @@ export default function EvaluationExamplesPage() {
       <PageHeading
         icon={CheckmarkCircle02Icon}
         title="Evaluation"
-        description="Call fluiq.eval() once after instrument() — Fluiq runs an LLM-as-judge on every traced LLM response, scores each metric (0–1), and stores results in your dashboard. Use block mode to gate on quality in CI."
+        description="Evaluation is opt-in: instrument() only traces, and scoring runs once you call fluiq.eval(). From that point Fluiq runs an LLM-as-judge on every traced LLM response, scores each metric (0–1), and stores results in your dashboard. Use block mode to gate on quality in CI. For whole-run scoring — tool selection, trajectory, and multi-agent coordination — run an agentic evaluation on a root trace or over a Dataset from the dashboard."
       />
       <IntegrationTabs tabs={{ python: pythonTabs, typescript: typescriptTabs }} />
     </div>

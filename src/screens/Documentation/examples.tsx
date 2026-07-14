@@ -1424,7 +1424,7 @@ export default function Examples() {
               Ready to instrument your pipeline?
             </h2>
             <p className="text-muted-foreground mb-6 text-[15px]">
-              Free tier covers 50,000 traces / month — no credit card required.
+              Free tier covers unlimited traces with 14-day retention — no credit card required.
             </p>
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Button size="lg" className="px-6" asChild>

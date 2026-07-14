@@ -157,12 +157,18 @@ export function buildTraceTree(traces: TraceRecord[]): TraceGroup[] {
   const standaloneRoots: TraceRecord[] = []
 
   for (const t of traces) {
+    const tid = tidOf(t)
     const pid = pidOf(t)
-    if (pid && byTid.has(pid)) {
+    // A self-referential parent_id (parent_id == trace_id, e.g. CrewAI's crew
+    // span) is not a real parent. Treat it as no parent so the span becomes a
+    // group root — otherwise it's filed as a child of itself, never forms a
+    // group, and the drawer shows "Architecture is unavailable".
+    const hasParent = pid !== null && pid !== tid
+    if (hasParent && byTid.has(pid)) {
       const list = childrenOf.get(pid) ?? []
       list.push(t)
       childrenOf.set(pid, list)
-    } else if (pid) {
+    } else if (hasParent) {
       const list = orphanByPid.get(pid) ?? []
       list.push(t)
       orphanByPid.set(pid, list)
@@ -172,14 +178,21 @@ export function buildTraceTree(traces: TraceRecord[]): TraceGroup[] {
   }
 
   let solo = 0
-  function buildNode(t: TraceRecord): TraceNode {
+  function buildNode(t: TraceRecord, seen: Set<string> = new Set()): TraceNode {
     const tid = tidOf(t)
-    const childTraces = tid ? (childrenOf.get(tid) ?? []) : []
+    if (tid) seen.add(tid)
+    // Guard against parent-chain cycles (self-parent or A→B→A): never recurse
+    // into a trace already on the current path, so a bad parent_id can't cause
+    // an infinite loop / stack overflow.
+    const childTraces = (tid ? (childrenOf.get(tid) ?? []) : []).filter((c) => {
+      const ctid = tidOf(c)
+      return ctid === null || !seen.has(ctid)
+    })
     childTraces.sort((a, b) => getEventTimestamp(a) - getEventTimestamp(b))
     return {
       id: tid ?? `__node_${solo++}__`,
       trace: t,
-      children: childTraces.map(buildNode),
+      children: childTraces.map((c) => buildNode(c, seen)),
     }
   }
 
@@ -222,7 +235,7 @@ export function buildTraceTree(traces: TraceRecord[]): TraceGroup[] {
     }
     // Multiple siblings sharing an unloaded parent_id: nest the rest under the
     // primary so the user sees a single grouped row, then expandable siblings.
-    const siblingNodes = list.slice(1).map(buildNode)
+    const siblingNodes = list.slice(1).map((t) => buildNode(t))
     const merged: TraceNode = {
       id: pid,
       trace: primary,

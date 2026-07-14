@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Alert02Icon, Cancel01Icon, Loading03Icon, RefreshIcon } from "@hugeicons/core-free-icons"
 
@@ -8,6 +8,7 @@ import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { useRealtimeStream } from "@/lib/useRealtimeStream"
+import { Pagination } from "@/components/Pagination"
 
 import type { TraceListResponse, TraceRecord } from "../Traces/utils/types"
 import { SecurityBadge, SecurityPanel } from "../Traces/components/SecurityPanel"
@@ -79,28 +80,29 @@ function getRiskFlags(event: Record<string, unknown>): RiskFlag[] {
 function SecurityOverview() {
   const [traces, setTraces]           = useState<TraceRecord[]>([])
   const [loading, setLoading]         = useState(true)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore]         = useState(false)
-  const [rawOffset, setRawOffset]     = useState(SECURITY_PAGE_SIZE)
+  const [page, setPage]               = useState(0)
+  const [reloadKey, setReloadKey]     = useState(0)
   const [error, setError]             = useState<string | null>(null)
   const [selected, setSelected]       = useState<TraceRecord | null>(null)
 
-  const fetchRiskyTraces = useCallback(async (silent = false) => {
-    if (!silent) {
-      setLoading(true)
-      setError(null)
-    }
+  // Live SSE updates only make sense on the first (newest) page — pageRef lets
+  // the stream callbacks see the current page without re-subscribing.
+  const pageRef = useRef(0)
+  useEffect(() => { pageRef.current = page }, [page])
+
+  // Silent page-0 refresh for live security events (no spinner). No-op off page 0
+  // so paging back in history isn't disrupted by new traces streaming in.
+  const silentReload = useCallback(async () => {
+    if (pageRef.current !== 0) return
     try {
       const data = await authFetch<TraceListResponse>(
         `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=0&roots_only=true`,
       )
       setTraces(data.traces.filter((t) => hasSecurityData(t.event) && isSecurityRisk(t.event)))
-      setRawOffset(SECURITY_PAGE_SIZE)
       setHasMore(data.traces.length >= SECURITY_PAGE_SIZE)
-    } catch (err) {
-      if (!silent) setError(err instanceof ApiError ? err.detail : "Failed to load traces")
-    } finally {
-      if (!silent) setLoading(false)
+    } catch {
+      // silent — a transient stream refresh failure must not disrupt the view
     }
   }, [])
 
@@ -118,7 +120,7 @@ function SecurityOverview() {
         if (payload.enrichment !== "security" || !payload.security) return
         const level = payload.security["security_risk_level"]
         if (level === "low" || level === "medium" || level === "high") {
-          void fetchRiskyTraces(true)
+          void silentReload()
         }
         return
       }
@@ -132,6 +134,7 @@ function SecurityOverview() {
       }
       if (!payload.event || typeof payload.event !== "object") return
       if (payload.event["status"] !== "blocked") return
+      if (pageRef.current !== 0) return  // don't disturb a historical page
       const newRecord: TraceRecord = {
         api_key_prefix: payload.api_key_prefix ?? "",
         event: payload.event,
@@ -148,56 +151,33 @@ function SecurityOverview() {
         return [newRecord, ...prev]
       })
     },
-    onReopen: () => { void fetchRiskyTraces(true) },
+    onReopen: () => { void silentReload() },
   })
 
-  const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore) return
-    setIsLoadingMore(true)
-    try {
-      const data = await authFetch<TraceListResponse>(
-        `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=${rawOffset}&roots_only=true`,
-      )
-      const fresh = data.traces.filter((t) => hasSecurityData(t.event) && isSecurityRisk(t.event))
-      if (fresh.length > 0) {
-        setTraces((prev) => {
-          const seen = new Set(prev.map((t) => getStr(t.event, "trace_id")).filter(Boolean))
-          return [...prev, ...fresh.filter((t) => {
-            const tid = getStr(t.event, "trace_id")
-            return tid && !seen.has(tid)
-          })]
-        })
-      }
-      setRawOffset((o) => o + SECURITY_PAGE_SIZE)
-      setHasMore(data.traces.length >= SECURITY_PAGE_SIZE)
-    } catch {
-      // silently fail — button stays visible so user can retry
-    } finally {
-      setIsLoadingMore(false)
-    }
-  }, [isLoadingMore, hasMore, rawOffset])
-
+  // Windowed pagination: fetch one page (replacing the list) on page / refresh.
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await authFetch<TraceListResponse>(
-          `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=0&roots_only=true`,
-        )
+    setLoading(true)
+    setError(null)
+    authFetch<TraceListResponse>(
+      `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=${page * SECURITY_PAGE_SIZE}&roots_only=true`,
+    )
+      .then((data) => {
         if (cancelled) return
         setTraces(data.traces.filter((t) => hasSecurityData(t.event) && isSecurityRisk(t.event)))
-        setRawOffset(SECURITY_PAGE_SIZE)
         setHasMore(data.traces.length >= SECURITY_PAGE_SIZE)
-      } catch (err) {
+      })
+      .catch((err) => {
         if (cancelled) return
         setError(err instanceof ApiError ? err.detail : "Failed to load traces")
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
+  }, [page, reloadKey])
+
+  const refresh = useCallback(() => {
+    setPage(0)
+    setReloadKey((k) => k + 1)
   }, [])
 
   return (
@@ -246,7 +226,7 @@ function SecurityOverview() {
               </CardDescription>
             </div>
             <div className="flex items-center justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => { fetchRiskyTraces() }} disabled={loading}>
+              <Button variant="outline" size="sm" onClick={refresh} disabled={loading}>
                 <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} className={loading ? "animate-spin" : undefined} />
                 Refresh
               </Button>
@@ -342,21 +322,13 @@ function SecurityOverview() {
                 </tbody>
               </table>
             </div>
-            {hasMore ? (
-              <div className="flex justify-center border-t border-border/60 px-6 py-3">
-                <Button
-                  variant="outline"
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                >
-                  <HugeiconsIcon
-                    icon={isLoadingMore ? Loading03Icon : RefreshIcon}
-                    className={isLoadingMore ? "animate-spin" : undefined}
-                  />
-                  {isLoadingMore ? "Loading…" : "Load more"}
-                </Button>
-              </div>
-            ) : null}
+            <Pagination
+              page={page}
+              hasMore={hasMore}
+              loading={loading}
+              onPrev={() => setPage((p) => Math.max(0, p - 1))}
+              onNext={() => setPage((p) => p + 1)}
+            />
             </>
           )}
         </CardContent>

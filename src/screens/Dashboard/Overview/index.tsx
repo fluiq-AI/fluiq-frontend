@@ -13,6 +13,7 @@ import { UpgradePlanButton } from "@/components/UpgradePlanButton"
 import { CacheStatsCard } from "./CacheStatsCard"
 import { UsageCard } from "./UsageCard"
 import { SpendingChartCard } from "./SpendingChartCard"
+import { AgenticEvalCard } from "./AgenticEvalCard"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 
 function Overview() {
@@ -65,6 +66,8 @@ function Overview() {
         <UsageCard />
 
         <CacheStatsCard />
+
+        <AgenticEvalCard />
       </div>
 
       

@@ -2,7 +2,8 @@
 
 import "@/styles/home.css";
 import React, { useCallback, useState } from "react"
-import { motion, useMotionValue, useSpring, useReducedMotion } from "motion/react"
+import { motion, useMotionValue, useSpring } from "motion/react"
+import { useReducedMotionSafe } from "@/lib/useReducedMotionSafe"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PythonIcon,
@@ -154,7 +155,7 @@ const HERO_CODE: Array<Array<[string, string]>> = [
 
 export default function Home() {
   useScrollReveal()
-  const reduce = useReducedMotion()
+  const reduce = useReducedMotionSafe()
 
   // Shared Python/TypeScript toggle for the code blocks below.
   const [codeLang, setCodeLang] = useState<CodeLang>("python")
@@ -559,7 +560,7 @@ export default function Home() {
             <div className="inline-flex items-center justify-center size-12 rounded-2xl bg-[#0a0a0a] dark:bg-[#FAF9F6] text-white dark:text-[#0A0A0A] mb-6">
               <HugeiconsIcon icon={SparklesIcon} size={22} />
             </div>
-            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl">Free up to <span className="text-[#1860D3] dark:text-[#6FA8FF]">50K</span> traces a month.</h2>
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl"><span className="text-[#1860D3] dark:text-[#6FA8FF]">Unlimited</span> traces, always free.</h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
               Start with observability on the free tier. Add security, optimization, and evaluation as your pipeline grows. No code changes required.
             </p>

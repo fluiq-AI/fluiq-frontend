@@ -267,7 +267,7 @@ export default function IntegrationPage({ data }: { data: IntegrationData }) {
             <IslandCta to="/signup">Start free</IslandCta>
           </div>
           <p className="mt-4 text-[12px] text-[#9A9A92]">
-            50,000 free traces / month · 1,000 evals / month · 14-day retention
+            Unlimited free traces · 1,000 evals / month · 14-day retention
           </p>
         </div>
       </section>

@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react"
 
+import { toast } from "sonner"
+
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import type {
@@ -21,6 +24,8 @@ function ApiManagement() {
 
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<ApiKey | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [revealedKey, setRevealedKey] = useState<ApiKeyCreated | null>(null)
 
@@ -60,10 +65,16 @@ function ApiManagement() {
     setIsModalOpen(false)
   }
 
-  async function handleDelete(key: ApiKey) {
-    if (!window.confirm(`Delete API key "${key.name}"? This cannot be undone.`))
-      return
+  function handleDelete(key: ApiKey) {
+    setDeleteError(null)
+    setPendingDelete(key)
+  }
+
+  async function confirmDelete() {
+    const key = pendingDelete
+    if (!key) return
     setDeletingId(key.key_id)
+    setDeleteError(null)
     try {
       await authFetch<void>(`/api-keys/${key.key_id}`, { method: "DELETE" })
       const next: OrganizationModel = {
@@ -73,10 +84,12 @@ function ApiManagement() {
       }
       dispatch(setOrganization(next))
       if (revealedKey?.key_id === key.key_id) setRevealedKey(null)
+      setPendingDelete(null)
+      toast.success(`API key "${key.name}" deleted`)
     } catch (err) {
-      window.alert(
-        err instanceof ApiError ? err.detail : "Failed to delete API key",
-      )
+      const msg = err instanceof ApiError ? err.detail : "Failed to delete API key"
+      setDeleteError(msg)
+      toast.error(msg)
     } finally {
       setDeletingId(null)
     }
@@ -113,6 +126,21 @@ function ApiManagement() {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onCreated={handleCreated}
+      />
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(v) => { if (!v) setPendingDelete(null) }}
+        title="Delete API key"
+        description={
+          <>Revoke <span className="font-mono text-foreground">{pendingDelete?.name}</span> permanently. Any service still using it will start failing with a 401. This cannot be undone.</>
+        }
+        confirmWord={pendingDelete?.name ?? ""}
+        confirmLabel="Delete key"
+        destructive
+        busy={deletingId === pendingDelete?.key_id}
+        error={deleteError}
+        onConfirm={confirmDelete}
       />
       </div>
     </>

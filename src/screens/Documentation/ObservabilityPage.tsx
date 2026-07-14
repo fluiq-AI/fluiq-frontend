@@ -162,6 +162,20 @@ export default function ObservabilityPage() {
         description={`Fluiq captures every LLM call, tool invocation, and retrieval step automatically — including model, messages, response, latency, token usage, and cost. Use the ${isTs ? "trace() wrapper" : "@trace decorator"} to group any ${isTs ? "" : "Python "}function into the same trace tree.`}
       />
 
+      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm">
+        <p className="font-medium">Observability is free and unlimited — on every tier</p>
+        <p className="mt-1 text-muted-foreground">
+          There is no cap on traces, spans, or agents. Instrument as much as you
+          want on the Free plan without ever hitting a wall. The only paid axis is{" "}
+          <span className="font-medium text-foreground">retention</span>: Free keeps
+          the last <span className="font-medium text-foreground">14 days</span> of
+          traces on a rolling window, and paid plans keep them{" "}
+          <span className="font-medium text-foreground">forever</span>. Every plan
+          also includes a no-card <span className="font-medium text-foreground">5-day trial</span>{" "}
+          of a paid tier so you can try unlimited retention before deciding.
+        </p>
+      </div>
+
       <div className="flex items-center gap-2 pt-2">
         <HugeiconsIcon icon={TestTube01Icon} size={16} />
         <p className="font-medium">{isTs ? "trace() wrapper" : "@trace decorator"}</p>
@@ -274,7 +288,34 @@ const runResearchAgent = trace((question: string): string => {
 });`,
       )}</Code>
       <p className="text-sm text-muted-foreground">
-        LangChain and LangGraph agents are traced automatically without a decorator — the integration emits a root span for the runnable and child spans for every internal step.
+        LangChain, LangGraph, CrewAI, and Google ADK agents are traced automatically without a decorator — the integration emits a root span for the run and child spans for every internal step.
+      </p>
+
+      <div className="flex items-center gap-2 pt-4">
+        <HugeiconsIcon icon={WorkflowSquare01Icon} size={16} />
+        <p className="font-medium">Multi-agent DAGs</p>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Fan-out / fan-in orchestrations are captured as a true graph, not a flat list. When several agents run in parallel and their outputs join into a single downstream step, Fluiq detects the real dependency edges and renders the run as a DAG in the trace drawer — fan-out, joins, and loop-backs included.
+      </p>
+      <ul className="ml-4 list-disc space-y-1.5 text-sm text-muted-foreground">
+        <li>
+          <span className="font-medium text-foreground">LangGraph</span> — join (fan-in) nodes are resolved from the graph's declared edges captured at <code className="font-mono text-foreground">compile()</code>, so multi-parent steps are exact regardless of the trigger encoding. Each run shows in the Agents view as{" "}
+          <code className="font-mono text-foreground">LangGraph(node_a, node_b, …)</code>, named after its nodes.
+        </li>
+        <li>
+          <span className="font-medium text-foreground">CrewAI</span> — task dependencies (<code className="font-mono text-foreground">task.context</code>) become graph edges; a crew shows as <code className="font-mono text-foreground">Crew(agent_1, agent_2, …)</code>.
+        </li>
+        <li>
+          <span className="font-medium text-foreground">Google ADK</span> — <code className="font-mono text-foreground">{`{state_key}`}</code> placeholders in an agent's instruction are resolved to the upstream agents that produced them.
+        </li>
+      </ul>
+      <p className="text-sm text-muted-foreground">
+        For custom orchestrations, declare joins yourself with{" "}
+        <code className="font-mono text-foreground">fluiq.join_parents(...)</code> so a step that consumes multiple upstream results is rendered with all of its parents.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Multimodal steps are preserved too: image, audio, and file parts are kept as lightweight media references (kind, mime, size, and a content hash) on the trace without bloating storage.
       </p>
 
       <div className="flex items-center gap-2 pt-4">

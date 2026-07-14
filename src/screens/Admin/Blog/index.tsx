@@ -3,9 +3,12 @@ import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Loading03Icon, PlusSignIcon, Edit02Icon, Delete02Icon, EyeIcon } from "@hugeicons/core-free-icons"
 
+import { toast } from "sonner"
+
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { ApiError } from "@/lib/api"
 import {
   adminListPosts, adminDeletePost, adminPublishPost,
@@ -22,6 +25,7 @@ export default function AdminBlog() {
   const [search, setSearch] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<BlogPostSummary | null>(null)
 
   async function load(s = search) {
     setError(null)
@@ -46,14 +50,24 @@ export default function AdminBlog() {
     }
   }
 
-  async function remove(post: BlogPostSummary) {
-    if (!window.confirm(`Delete “${post.title}”? This cannot be undone.`)) return
+  function remove(post: BlogPostSummary) {
+    setError(null)
+    setPendingDelete(post)
+  }
+
+  async function confirmRemove() {
+    const post = pendingDelete
+    if (!post) return
     setBusyId(post.post_id)
     try {
       await adminDeletePost(post.post_id)
+      setPendingDelete(null)
       await load()
+      toast.success(`“${post.title}” deleted`)
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail : "Failed to delete post")
+      const msg = err instanceof ApiError ? err.detail : "Failed to delete post"
+      setError(msg)
+      toast.error(msg)
     } finally {
       setBusyId(null)
     }
@@ -156,6 +170,21 @@ export default function AdminBlog() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(v) => { if (!v) setPendingDelete(null) }}
+        title="Delete post"
+        description={
+          <>Delete <span className="font-medium text-foreground">“{pendingDelete?.title}”</span> permanently. If it was published, it will also be removed from the live blog. This cannot be undone.</>
+        }
+        confirmWord={pendingDelete?.title ?? ""}
+        confirmLabel="Delete post"
+        destructive
+        busy={!!pendingDelete && busyId === pendingDelete.post_id}
+        error={error}
+        onConfirm={confirmRemove}
+      />
     </>
   )
 }

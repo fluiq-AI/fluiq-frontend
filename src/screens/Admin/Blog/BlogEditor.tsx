@@ -4,10 +4,13 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { ArrowLeft02Icon, Loading03Icon, ImageUploadIcon, Delete02Icon, File01Icon } from "@hugeicons/core-free-icons"
 import { marked } from "marked"
 
+import { toast } from "sonner"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { ApiError } from "@/lib/api"
 import {
   adminCreatePost, adminGetPost, adminUpdatePost, adminUploadMedia, mediaUrl,
@@ -42,6 +45,7 @@ export default function BlogEditor() {
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState<null | "draft" | "publish">(null)
   const [error, setError] = useState<string | null>(null)
+  const [pendingMarkdown, setPendingMarkdown] = useState<string | null>(null)
   const [coverUploading, setCoverUploading] = useState(false)
   const coverInputRef = useRef<HTMLInputElement>(null)
   const mdInputRef = useRef<HTMLInputElement>(null)
@@ -85,16 +89,29 @@ export default function BlogEditor() {
 
   async function onMarkdownFile(file: File) {
     setError(null)
-    if (form.body_html.trim() && !window.confirm("Replace the current body with the imported Markdown file?")) {
-      return
-    }
+    let html: string
     try {
       const text = await file.text()
-      const html = (await marked.parse(text)).trim()
-      patch({ body_html: html })
+      html = (await marked.parse(text)).trim()
     } catch {
       setError("Couldn't read that Markdown file.")
+      return
     }
+    // Ask before clobbering existing content; otherwise apply straight away.
+    if (form.body_html.trim()) {
+      setPendingMarkdown(html)
+    } else {
+      patch({ body_html: html })
+      toast.success("Markdown imported")
+    }
+  }
+
+  function confirmReplaceBody() {
+    if (pendingMarkdown != null) {
+      patch({ body_html: pendingMarkdown })
+      toast.success("Body replaced with imported Markdown")
+    }
+    setPendingMarkdown(null)
   }
 
   async function save(intent: "draft" | "publish") {
@@ -310,6 +327,15 @@ export default function BlogEditor() {
           </div>
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={pendingMarkdown != null}
+        onOpenChange={(v) => { if (!v) setPendingMarkdown(null) }}
+        title="Replace body?"
+        description="This will overwrite the current post body with the imported Markdown. Your existing content will be lost."
+        confirmLabel="Replace body"
+        onConfirm={confirmReplaceBody}
+      />
     </>
   )
 }

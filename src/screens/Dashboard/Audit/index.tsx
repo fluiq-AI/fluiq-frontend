@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Alert02Icon,
@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
+import { Pagination } from "@/components/Pagination"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -203,37 +204,37 @@ function AuditDetailDrawer({ event, onClose }: { event: AuditEvent; onClose: () 
 export default function AuditLog() {
   const [events, setEvents]           = useState<AuditEvent[]>([])
   const [loading, setLoading]         = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore]         = useState(false)
+  const [page, setPage]               = useState(0)
   const [error, setError]             = useState<string | null>(null)
   const [selected, setSelected]       = useState<AuditEvent | null>(null)
   const [filterType, setFilterType]   = useState<string>("")
   const [refreshTick, setRefreshTick] = useState(0)
-  const offsetRef = useRef(PAGE_SIZE)
 
-  // Event handlers set loading=true before changing the dep that triggers the effect.
-  // The effect only calls setState inside Promise callbacks (never synchronously).
+  // Changing the filter resets to the first page; refresh reloads it.
   const handleFilterChange = (type: string) => {
-    setLoading(true)
     setError(null)
+    setPage(0)
     setFilterType(type)
   }
 
   const handleRefresh = () => {
-    setLoading(true)
     setError(null)
+    setPage(0)
     setRefreshTick((t) => t + 1)
   }
 
+  // Windowed pagination: fetch one page (replacing the list) on page / filter /
+  // refresh change. `hasMore` = the page came back full.
   useEffect(() => {
     let cancelled = false
-    const qs = new URLSearchParams({ limit: String(PAGE_SIZE), offset: "0" })
+    setLoading(true)
+    const qs = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) })
     if (filterType) qs.set("event_type", filterType)
     authFetch<AuditLogResponse>(`/api/v1/audit?${qs}`)
       .then((data) => {
         if (cancelled) return
         setEvents(data.events)
-        offsetRef.current = PAGE_SIZE
         setHasMore(data.events.length >= PAGE_SIZE)
         setLoading(false)
       })
@@ -243,29 +244,7 @@ export default function AuditLog() {
         setLoading(false)
       })
     return () => { cancelled = true }
-  }, [filterType, refreshTick])
-
-  const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore) return
-    setLoadingMore(true)
-    try {
-      const qs = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offsetRef.current) })
-      if (filterType) qs.set("event_type", filterType)
-      const data = await authFetch<AuditLogResponse>(`/api/v1/audit?${qs}`)
-      if (data.events.length > 0) {
-        setEvents((prev) => {
-          const seen = new Set(prev.map((e) => e.event_id))
-          return [...prev, ...data.events.filter((e) => !seen.has(e.event_id))]
-        })
-      }
-      offsetRef.current += PAGE_SIZE
-      setHasMore(data.events.length >= PAGE_SIZE)
-    } catch {
-      // silently fail — button stays visible so user can retry
-    } finally {
-      setLoadingMore(false)
-    }
-  }, [loadingMore, hasMore, filterType])
+  }, [filterType, refreshTick, page])
 
   return (
     <>
@@ -383,16 +362,14 @@ export default function AuditLog() {
                   </table>
                 </div>
 
-                {!error && hasMore && (
-                  <div className="flex justify-center border-t border-border/60 px-6 py-3">
-                    <Button variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
-                      <HugeiconsIcon
-                        icon={loadingMore ? Loading03Icon : RefreshIcon}
-                        className={loadingMore ? "animate-spin" : undefined}
-                      />
-                      {loadingMore ? "Loading…" : "Load more"}
-                    </Button>
-                  </div>
+                {!error && (
+                  <Pagination
+                    page={page}
+                    hasMore={hasMore}
+                    loading={loading}
+                    onPrev={() => setPage((p) => Math.max(0, p - 1))}
+                    onNext={() => setPage((p) => p + 1)}
+                  />
                 )}
               </>
             )}

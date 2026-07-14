@@ -8,13 +8,17 @@ import {
   GridTableIcon,
   Loading03Icon,
   RefreshIcon,
+  RoboticIcon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
+
+import { toast } from "sonner"
 
 import { cn } from "@/lib/utils"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { Button } from "@/components/ui/button"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { Tip } from "@/components/ui/tooltip"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 import { Input } from "@/components/ui/input"
@@ -26,6 +30,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Pagination } from "@/components/Pagination"
+import { DatasetRuns } from "./DatasetRuns"
+import { ConnectAgentsModal } from "./ConnectAgentsModal"
+import { TrajectoryView } from "./TrajectoryView"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -39,6 +47,12 @@ interface Dataset {
   updated_at:    string | null
 }
 
+interface ExampleEnrichment {
+  eval?:     Record<string, number>
+  security?: { risk_level: string; blocked: boolean; threats: string[] }
+  cost?:     number
+}
+
 interface DatasetExample {
   example_id:      string
   dataset_id:      string
@@ -47,6 +61,20 @@ interface DatasetExample {
   expected_output: string | null
   metadata:        Record<string, unknown>
   created_at:      string | null
+  enrichment?:     ExampleEnrichment
+}
+
+const RISK_PILL: Record<string, string> = {
+  clean:  "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  low:    "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  medium: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
+  high:   "bg-destructive/15 text-destructive",
+}
+
+function scorePillClass(v: number): string {
+  if (v >= 0.8) return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+  if (v >= 0.5) return "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+  return "bg-destructive/15 text-destructive"
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -60,6 +88,8 @@ function formatDate(iso: string | null): string {
 function truncate(s: string, max = 120): string {
   return s.length <= max ? s : s.slice(0, max) + "…"
 }
+
+const EXAMPLES_PAGE_SIZE = 50
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -105,6 +135,7 @@ function Datasets() {
       setCreateName("")
       setCreateDesc("")
       setSelectedId(row.dataset_id)
+      toast.success(`Dataset "${row.name}" created`)
     } catch (err) {
       setCreateError(err instanceof ApiError ? err.detail : "Failed to create dataset")
     } finally {
@@ -113,12 +144,15 @@ function Datasets() {
   }
 
   async function handleDeleteDataset(datasetId: string) {
+    const name = datasets.find((d) => d.dataset_id === datasetId)?.name ?? "Dataset"
     try {
       await authFetch(`/api/v1/datasets/${datasetId}`, { method: "DELETE" })
       setDatasets((prev) => prev.filter((d) => d.dataset_id !== datasetId))
       if (selectedId === datasetId) setSelectedId(null)
-    } catch {
-      // silent
+      toast.success(`Dataset "${name}" deleted`)
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.detail : "Failed to delete dataset")
+      throw err
     }
   }
 
@@ -277,6 +311,7 @@ function Datasets() {
             dataset={selectedDataset}
             onDelete={() => handleDeleteDataset(selectedDataset.dataset_id)}
             onExampleRemoved={() => handleUpdateCount(selectedDataset.dataset_id, -1)}
+            onExamplesAdded={(n) => handleUpdateCount(selectedDataset.dataset_id, n)}
           />
         ) : (
           <div className="flex flex-col items-center justify-center rounded-md border border-dashed border-border/60 py-20 text-center">
@@ -296,37 +331,63 @@ function ExamplesPanel({
   dataset,
   onDelete,
   onExampleRemoved,
+  onExamplesAdded,
 }: {
   dataset: Dataset
   onDelete: () => void
   onExampleRemoved: () => void
+  onExamplesAdded: (count: number) => void
 }) {
   const [examples,     setExamples]     = useState<DatasetExample[]>([])
   const [loading,      setLoading]      = useState(true)
+  const [hasMore,      setHasMore]      = useState(false)
+  const [page,         setPage]         = useState(0)
+  const [reloadKey,    setReloadKey]    = useState(0)
   const [expandedId,   setExpandedId]   = useState<string | null>(null)
-  const [deletingId,   setDeletingId]   = useState<string | null>(null)
-  const [confirmDel,   setConfirmDel]   = useState(false)
+  const [deletingId,      setDeletingId]      = useState<string | null>(null)
+  const [showDeleteDataset, setShowDeleteDataset] = useState(false)
+  const [deletingDataset, setDeletingDataset] = useState(false)
+  const [showConnect,     setShowConnect]     = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  async function confirmDeleteDataset() {
+    setDeletingDataset(true)
     try {
-      const data = await authFetch<{ examples: DatasetExample[] }>(
-        `/api/v1/datasets/${dataset.dataset_id}/examples`,
-      )
-      setExamples(data.examples)
+      await Promise.resolve(onDelete())
+      // Success unmounts this panel (selection cleared); nothing more to do.
     } catch {
-      setExamples([])
+      // Parent surfaced the error via toast; keep the dialog open.
     } finally {
-      setLoading(false)
+      setDeletingDataset(false)
     }
-  }, [dataset.dataset_id])
+  }
 
+  // Switching dataset always starts at the first page.
+  useEffect(() => { setPage(0) }, [dataset.dataset_id])
+
+  // Windowed pagination: fetch one page (replacing the list) on dataset / page /
+  // reload change. `hasMore` = the page came back full.
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
-    setExamples([])
     setExpandedId(null)
-    load()
-  }, [dataset.dataset_id, load])
+    authFetch<{ examples: DatasetExample[] }>(
+      `/api/v1/datasets/${dataset.dataset_id}/examples?limit=${EXAMPLES_PAGE_SIZE}&offset=${page * EXAMPLES_PAGE_SIZE}`,
+    )
+      .then((data) => {
+        if (cancelled) return
+        setExamples(data.examples)
+        setHasMore(data.examples.length >= EXAMPLES_PAGE_SIZE)
+      })
+      .catch(() => { if (!cancelled) setExamples([]) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [dataset.dataset_id, page, reloadKey])
+
+  // Reload from the first page (after an import, or the manual refresh button).
+  const reload = useCallback(() => {
+    setPage(0)
+    setReloadKey((k) => k + 1)
+  }, [])
 
   async function handleDeleteExample(exampleId: string) {
     setDeletingId(exampleId)
@@ -337,8 +398,9 @@ function ExamplesPanel({
       )
       setExamples((prev) => prev.filter((e) => e.example_id !== exampleId))
       onExampleRemoved()
-    } catch {
-      // silent
+      toast.success("Example removed")
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.detail : "Failed to remove example")
     } finally {
       setDeletingId(null)
     }
@@ -355,10 +417,14 @@ function ExamplesPanel({
             ) : null}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
+            <Button variant="outline" size="sm" onClick={() => setShowConnect(true)}>
+              <HugeiconsIcon icon={RoboticIcon} size={13} />
+              Connect Agents
+            </Button>
             <Button
               variant="outline"
               size="sm"
-              onClick={load}
+              onClick={reload}
               disabled={loading}
             >
               <HugeiconsIcon
@@ -367,34 +433,15 @@ function ExamplesPanel({
                 className={loading ? "animate-spin" : undefined}
               />
             </Button>
-            {confirmDel ? (
-              <>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => { setConfirmDel(false); onDelete() }}
-                >
-                  Delete dataset
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setConfirmDel(false)}
-                >
-                  Cancel
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setConfirmDel(true)}
-                className="text-destructive hover:text-destructive"
-              >
-                <HugeiconsIcon icon={Delete02Icon} size={13} />
-                Delete
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDeleteDataset(true)}
+              className="text-destructive hover:text-destructive"
+            >
+              <HugeiconsIcon icon={Delete02Icon} size={13} />
+              Delete
+            </Button>
           </div>
         </div>
         <p className="text-[11px] text-muted-foreground/60">
@@ -402,6 +449,14 @@ function ExamplesPanel({
           {" · "}Created {formatDate(dataset.created_at)}
         </p>
       </CardHeader>
+
+      {/* Batch evaluation / security runs over the whole dataset */}
+      <div className="border-t border-border/60 px-6 py-4">
+        <p className="mb-2.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/60">
+          Batch evaluation
+        </p>
+        <DatasetRuns dataset={dataset} />
+      </div>
 
       <CardContent className="p-0">
         {loading ? (
@@ -425,8 +480,13 @@ function ExamplesPanel({
               const expanded = expandedId === ex.example_id
               const meta = ex.metadata ?? {}
               const model = typeof meta["model"] === "string" ? meta["model"] : null
-              const cost  = typeof meta["cost"]  === "number" ? (meta["cost"] as number) : null
+              const enr = ex.enrichment
+              const cost = enr?.cost ?? (typeof meta["cost"] === "number" ? (meta["cost"] as number) : null)
               const traceId = typeof meta["source_trace_id"] === "string" ? meta["source_trace_id"] as string : null
+              // Worst (lowest) eval score across metrics/layers — the quality headline.
+              const evalScores = enr?.eval ? Object.values(enr.eval) : []
+              const evalMin = evalScores.length ? Math.min(...evalScores) : null
+              const sec = enr?.security
 
               return (
                 <div key={ex.example_id} className="px-4 py-3">
@@ -455,6 +515,16 @@ function ExamplesPanel({
                           {traceId ? (
                             <span className="font-mono text-[10px] text-muted-foreground/50">
                               trace:{traceId.slice(0, 8)}…
+                            </span>
+                          ) : null}
+                          {evalMin != null ? (
+                            <span className={cn("rounded px-1.5 py-0.5 font-mono text-[9px] font-medium", scorePillClass(evalMin))}>
+                              eval {evalMin.toFixed(2)}
+                            </span>
+                          ) : null}
+                          {sec ? (
+                            <span className={cn("rounded px-1.5 py-0.5 text-[9px] font-medium capitalize", RISK_PILL[sec.risk_level] ?? RISK_PILL.clean)}>
+                              {sec.blocked ? "blocked" : sec.risk_level}
                             </span>
                           ) : null}
                           <span className="text-[10px] text-muted-foreground/40">
@@ -488,7 +558,18 @@ function ExamplesPanel({
                   </div>
 
                   {expanded ? (
-                    <div className="mt-3 space-y-2 pl-7">
+                    <div className="mt-3 space-y-3 pl-7">
+                      {traceId ? (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
+                            Trajectory
+                            <span className="ml-1 font-normal normal-case text-muted-foreground/40">
+                              (the full agent run: steps · agents · tools · MCP)
+                            </span>
+                          </p>
+                          <TrajectoryView datasetId={dataset.dataset_id} exampleId={ex.example_id} />
+                        </div>
+                      ) : null}
                       <div className="space-y-1">
                         <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
                           Input
@@ -507,6 +588,42 @@ function ExamplesPanel({
                           </pre>
                         </div>
                       ) : null}
+                      {enr && (enr.eval || enr.security) ? (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
+                            Run signals
+                            <span className="ml-1 font-normal normal-case text-muted-foreground/40">
+                              (from the source trace · backfills as workers finish)
+                            </span>
+                          </p>
+                          {enr.eval ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {Object.entries(enr.eval).map(([k, v]) => (
+                                <span key={k} className={cn("rounded px-1.5 py-0.5 font-mono text-[10px]", scorePillClass(v))}>
+                                  {k.replace(/_/g, " ")} {v.toFixed(2)}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
+                          {sec ? (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium capitalize", RISK_PILL[sec.risk_level] ?? RISK_PILL.clean)}>
+                                {sec.risk_level} risk
+                              </span>
+                              {sec.blocked ? (
+                                <span className="rounded bg-destructive/15 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+                                  would block
+                                </span>
+                              ) : null}
+                              {sec.threats.map((t) => (
+                                <span key={t} className="rounded bg-destructive/10 px-1.5 py-0.5 text-[10px] text-destructive">
+                                  {t.replace(/_/g, " ")}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
                 </div>
@@ -514,7 +631,45 @@ function ExamplesPanel({
             })}
           </div>
         )}
+        <Pagination
+          page={page}
+          hasMore={hasMore}
+          loading={loading}
+          onPrev={() => setPage((p) => Math.max(0, p - 1))}
+          onNext={() => setPage((p) => p + 1)}
+        />
       </CardContent>
+
+      {showConnect ? (
+        <ConnectAgentsModal
+          datasetId={dataset.dataset_id}
+          onClose={() => setShowConnect(false)}
+          onDone={(n) => {
+            setShowConnect(false)
+            if (n > 0) {
+              onExamplesAdded(n)
+              reload()
+              toast.success(`Imported ${n} example${n !== 1 ? "s" : ""} from the agent`)
+            } else {
+              toast.success("Agent linked — its future runs will auto-append")
+            }
+          }}
+        />
+      ) : null}
+
+      <ConfirmDialog
+        open={showDeleteDataset}
+        onOpenChange={(v) => { if (!v) setShowDeleteDataset(false) }}
+        title="Delete dataset"
+        description={
+          <>Delete <span className="font-medium text-foreground">{dataset.name}</span> and all {dataset.example_count} of its examples, runs, and agent links. This cannot be undone.</>
+        }
+        confirmWord={dataset.name}
+        confirmLabel="Delete dataset"
+        destructive
+        busy={deletingDataset}
+        onConfirm={confirmDeleteDataset}
+      />
     </Card>
   )
 }

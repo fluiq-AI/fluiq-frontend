@@ -6,7 +6,7 @@ import {
   Activity01Icon,
   ApiIcon,
   DashboardSquare01Icon,
-  // Database01Icon,
+  Database01Icon,
   MagicWand01Icon,
   AiSecurity02Icon,
   AiContentGenerator01Icon,
@@ -17,18 +17,22 @@ import {
   Rocket02Icon,
   UserCircleIcon,
   RoboticIcon,
+  SparklesIcon,
 } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/ui/badge"
 import { useAppSelector } from "@/store/hooks"
 import { cn } from "@/lib/utils"
-import { NotificationWatcher } from "@/components/NotificationWatcher"const NAV_SECTIONS = [
+import { NotificationWatcher } from "@/components/NotificationWatcher"
+const NAV_SECTIONS = [
   {
     section: "",
     items:[
       { to: "/dashboard/getting-started", label: "Getting Started", icon: Rocket02Icon},
       { to: "/dashboard/overview", label: "Overview", icon: DashboardSquare01Icon },
       { to: "/dashboard/alerts", label: "Alerts", icon: Alert02Icon },
+      { to: "/dashboard/audit",       label: "Audit Log",   icon: FileEditIcon     },
+      { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon },
     ]
   },
   {
@@ -43,7 +47,6 @@ import { NotificationWatcher } from "@/components/NotificationWatcher"const NAV
     items: [
       { to: "/dashboard/tests", label: "Tests", icon: TestTube01Icon },
       { to: "/dashboard/prompts", label: "Prompts", icon: AiContentGenerator01Icon },
-      // { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon }
     ],
   },
   {
@@ -51,13 +54,13 @@ import { NotificationWatcher } from "@/components/NotificationWatcher"const NAV
     items: [
       { to: "/dashboard/security",    label: "Security",    icon: AiSecurity02Icon },
       { to: "/dashboard/guardrails",  label: "Guardrails",  icon: Settings01Icon   },
-      { to: "/dashboard/audit",       label: "Audit Log",   icon: FileEditIcon     },
     ],
   },
   {
     section: "Optimization",
     items: [
       { to: "/dashboard/optimize", label: "Optimize", icon: MagicWand01Icon },
+      { to: "/dashboard/insights", label: "Insights", icon: SparklesIcon },
     ],
   },
   {

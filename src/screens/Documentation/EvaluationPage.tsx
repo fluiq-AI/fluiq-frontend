@@ -47,6 +47,19 @@ fluiq.eval({
 });`,
       )}</Code>
 
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
+        <p className="font-medium">Evaluation is opt-in</p>
+        <p className="mt-1 text-muted-foreground">
+          <code className="font-mono text-foreground">instrument()</code> only traces —
+          it never evaluates on its own. Scoring runs only once you call{" "}
+          <code className="font-mono text-foreground">{isTs ? "fluiq.eval({ … })" : "fluiq.eval(…)"}</code>{" "}
+          (or trigger an evaluation from the dashboard). From that point every LLM response
+          in the process is scored against your thresholds; remove the call and Fluiq goes
+          back to tracing only. Evaluation runs asynchronously server-side and never adds
+          latency to your app.
+        </p>
+      </div>
+
       <p className="font-medium">Supported metrics</p>
       <div className="overflow-x-auto rounded-xl border border-border/60">
         <table className="w-full text-sm">
@@ -188,7 +201,7 @@ try {
         <p className="font-medium">GitHub Actions eval gate</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Gate every PR on quality scores stored during your test suite. The workflow below runs your tests (which generate traces evaluated by Fluiq), waits briefly for async evals to land, then queries the Fluiq API and fails the build if any score is below the threshold.
+        Gate every PR on quality scores stored during your test suite. Make sure your test setup calls <code className="font-mono text-foreground">{isTs ? "fluiq.eval({ … })" : "fluiq.eval(…)"}</code> so responses are scored. The workflow below runs your tests, waits briefly for the async evals to land, then queries the Fluiq API and fails the build if any score is below the threshold.
       </p>
       <Code>{byLang(
         lang,
@@ -307,7 +320,7 @@ jobs:
 
       <p className="font-medium">Quotas</p>
       <p className="text-sm text-muted-foreground">
-        Each LLM response evaluation consumes one count from your tier's eval budget. Traces continue to ingest normally once the cap is hit — only the auto-eval is skipped.
+        Tracing is always free and unlimited — the paid axis is trace <span className="font-medium text-foreground">retention</span> (Free keeps 14 days, paid keeps forever). Evaluation is metered separately: each scored LLM response consumes one count from your tier's eval budget. When the eval budget is exhausted, traces keep ingesting normally — only new scoring is paused until the next cycle.
       </p>
       <div className="overflow-x-auto rounded-xl border border-border/60">
         <table className="w-full text-sm">
@@ -315,25 +328,30 @@ jobs:
             <tr>
               <th className="px-4 py-2 font-medium">Tier</th>
               <th className="px-4 py-2 font-medium">Traces</th>
+              <th className="px-4 py-2 font-medium">Retention</th>
               <th className="px-4 py-2 font-medium">Evaluations / month</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
             {[
-              ["Free",       "50K / mo",   "1,000"],
-              ["Team",       "Unlimited",  "10,000"],
-              ["Growth",     "Unlimited",  "100,000"],
-              ["Enterprise", "Unlimited",  "Unlimited"],
-            ].map(([tier, traces, evals]) => (
+              ["Free",       "Unlimited",  "14 days",  "1,000"],
+              ["Team",       "Unlimited",  "Forever",  "10,000"],
+              ["Growth",     "Unlimited",  "Forever",  "100,000"],
+              ["Enterprise", "Unlimited",  "Forever",  "Unlimited"],
+            ].map(([tier, traces, retention, evals]) => (
               <tr key={tier}>
                 <td className="px-4 py-2 font-medium">{tier}</td>
                 <td className="px-4 py-2 text-muted-foreground">{traces}</td>
+                <td className="px-4 py-2 text-muted-foreground">{retention}</td>
                 <td className="px-4 py-2 text-muted-foreground">{evals}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <p className="text-xs text-muted-foreground/70">
+        Team and Growth include a no-card 5-day trial so you can try unlimited retention and higher eval budgets before upgrading.
+      </p>
     </div>
     </>
   )

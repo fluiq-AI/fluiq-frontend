@@ -31,6 +31,8 @@ import { isGoogleAdkAgent, isGoogleAdkLeafAgent } from "./treeBuilder"
 import {
   extractTooltipIO,
   getLanggraphNode,
+  getLanggraphPredecessors,
+  getPredecessors,
   getStr,
   isFailed,
   isRunning,
@@ -437,14 +439,24 @@ export function buildFlowElements(
     b.running = isRunning(b.latest.trace.event)
   }
 
-  const recordEdge = (sourceId: string, targetId: string) => {
+  const recordEdge = (
+    sourceId: string,
+    targetId: string,
+    opts?: { forceForward?: boolean },
+  ) => {
     if (sourceId === targetId) return
     const key = `${sourceId}->${targetId}`
     if (edgeKeys.has(key)) return
     edgeKeys.add(key)
     const sIdx = orderIndex.get(sourceId) ?? -1
     const tIdx = orderIndex.get(targetId) ?? -1
-    const isLoopback = tIdx >= 0 && sIdx >= 0 && tIdx < sIdx
+    // The loop-back heuristic (target recorded before source) is only valid for
+    // linearly-recorded flows. Structural DAG edges (declared predecessors) are
+    // always forward even when parallel branches were ingested out of order, so
+    // callers pass forceForward to keep them on the clean top→bottom handles
+    // instead of the right-side loop handles.
+    const isLoopback =
+      !opts?.forceForward && tIdx >= 0 && sIdx >= 0 && tIdx < sIdx
     edges.push({
       id: key,
       source: sourceId,
@@ -453,7 +465,11 @@ export function buildFlowElements(
       // overlap the forward edge between the same two nodes.
       sourceHandle: isLoopback ? "loop-source" : undefined,
       targetHandle: isLoopback ? "loop-target" : undefined,
-      type: "smoothstep",
+      // Forward edges use bezier curves that sweep straight down from each
+      // node's bottom handle — a wide fan-out/fan-in reads as a clean top-down
+      // DAG instead of smoothstep's orthogonal right-angle jogs down the side.
+      // Loop-backs keep smoothstep so the dashed right-routed loop stays legible.
+      type: isLoopback ? "smoothstep" : "default",
       animated: isLoopback,
       style: isLoopback
         ? { strokeDasharray: "5 4", stroke: "var(--color-primary)" }
@@ -922,22 +938,67 @@ export function buildFlowElements(
 
     // LangGraph wrapper: a chain/agent whose descendants carry langgraph_node
     // tags. Pregel inserts one RunnableSequence wrapper per iteration between
-    // the compiled graph and the actual nodes; we skip those wrappers and
-    // pull every topmost langgraph_node descendant directly under this box,
-    // sequencing them in execution order so repeated iterations collapse
-    // into loop-back edges instead of stacking sibling boxes.
+    // the compiled graph and the actual nodes; we skip those wrappers and pull
+    // every topmost langgraph_node descendant directly under this box.
+    //
+    // Edges follow the graph's DECLARED topology, not execution order: each
+    // node connects from its static predecessors (stamped by the SDK as
+    // langgraph.predecessors), so fan-out (one → many) and fan-in / join
+    // (many → one) render as the real DAG. A node with no known predecessor
+    // (its only upstream is START) connects from this container box. Falls back
+    // to linear sequencing when no predecessor metadata is present (older SDKs).
     if (
       (type === "chain" || type === "agent") &&
       anyDescendantIsLanggraphNode(node)
     ) {
       const lgChildren: TraceNode[] = []
       collectTopmostLanggraphNodes(node, lgChildren)
-      let prevFlowId = myFlowId
+      const scope = myFlowId
+
+      // Record every node's boxes first; remember each node name's inbound and
+      // outbound flow id (they differ only when a `tools` node expands into a
+      // chain of tool boxes — predecessors feed the first, successors leave the
+      // last).
+      const nodeIO = new Map<string, { inId: string; outId: string }>()
+      let sawPredecessors = false
       for (const c of lgChildren) {
-        for (const exp of expandLgForFlow(c, myFlowId)) {
+        const lgName = getLanggraphNode(c.trace.event)
+        const exps = expandLgForFlow(c, scope)
+        exps.forEach((exp, i) => {
           recordNode(exp.flowId, exp.node)
-          recordEdge(prevFlowId, exp.flowId)
-          prevFlowId = exp.flowId
+          if (i > 0) recordEdge(exps[i - 1].flowId, exp.flowId)
+        })
+        if (getLanggraphPredecessors(c.trace.event).length > 0) sawPredecessors = true
+        if (lgName) {
+          nodeIO.set(lgName, {
+            inId: exps[0].flowId,
+            outId: exps[exps.length - 1].flowId,
+          })
+        }
+      }
+
+      if (sawPredecessors) {
+        for (const c of lgChildren) {
+          const lgName = getLanggraphNode(c.trace.event)
+          const io = lgName ? nodeIO.get(lgName) : undefined
+          if (!io) continue
+          const preds = getLanggraphPredecessors(c.trace.event)
+            .map((p) => nodeIO.get(p))
+            .filter((x): x is { inId: string; outId: string } => x !== undefined)
+          if (preds.length > 0) {
+            for (const p of preds) recordEdge(p.outId, io.inId, { forceForward: true })
+          } else {
+            recordEdge(myFlowId, io.inId, { forceForward: true }) // upstream is START
+          }
+        }
+      } else {
+        // No predecessor metadata (older SDK) — keep the execution-order chain.
+        let prevFlowId = myFlowId
+        for (const c of lgChildren) {
+          for (const exp of expandLgForFlow(c, myFlowId)) {
+            recordEdge(prevFlowId, exp.flowId)
+            prevFlowId = exp.flowId
+          }
         }
       }
       return
@@ -985,6 +1046,41 @@ export function buildFlowElements(
     for (const c of children) visit(c, myFlowId, childScope)
   }
   visit(group.root, null, group.root.id)
+
+  // ── Generic DAG rewiring for run_id `predecessors` ─────────────────────────
+  // CrewAI tasks (task.context) and GoogleADK agents (instruction state keys)
+  // stamp `predecessors` as upstream run_ids. Reconnect each such node FROM its
+  // declared predecessors — drawing fan-in joins AND single-dependency fan-out
+  // edges — and drop its default tree-parent edge so the DAG reads cleanly.
+  // (LangGraph uses its own name-based path inside `visit`.)
+  {
+    const traceToFlow = new Map<string, string>()
+    for (const [flowId, b] of buckets) {
+      for (const tid of b.traceIds) traceToFlow.set(tid, flowId)
+    }
+    for (const [flowId, b] of buckets) {
+      const preds = getPredecessors(b.latest.trace.event)
+      if (preds.length === 0) continue
+      const predFlows = [
+        ...new Set(
+          preds
+            .map((p) => traceToFlow.get(p))
+            .filter((f): f is string => Boolean(f)),
+        ),
+      ].filter((pf) => pf !== flowId)
+      if (predFlows.length === 0) continue
+      // Drop the default incoming (tree-parent) edges; this node now enters from
+      // its declared predecessors. Loop-back edges are preserved.
+      for (let i = edges.length - 1; i >= 0; i--) {
+        const e = edges[i]
+        if (e.target === flowId && e.sourceHandle !== "loop-source") {
+          edgeKeys.delete(e.id)
+          edges.splice(i, 1)
+        }
+      }
+      for (const pf of predFlows) recordEdge(pf, flowId, { forceForward: true })
+    }
+  }
 
   // Single "Fluiq Caching" node aggregating all LLM (prompt) and embedding
   // buckets that carry cache_hit data from fluiq.optimize(). A single node is

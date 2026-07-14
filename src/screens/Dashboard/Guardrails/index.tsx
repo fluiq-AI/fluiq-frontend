@@ -15,6 +15,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
+import { toast } from "sonner"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 
@@ -106,6 +108,7 @@ export default function Guardrails() {
   const [saving, setSaving]       = useState(false)
   const [deleting, setDeleting]   = useState(false)
   const [error, setError]         = useState<string | null>(null)
+  const [showDeletePolicy, setShowDeletePolicy] = useState(false)
   const [saved, setSaved]         = useState(false)
 
   // New policy creation
@@ -167,17 +170,26 @@ export default function Guardrails() {
     }
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (activeSlug === "default") return
-    if (!confirm(`Delete the "${activeSlug}" policy? This cannot be undone.`)) return
+    setError(null)
+    setShowDeletePolicy(true)
+  }
+
+  async function confirmDeletePolicy() {
+    const slug = activeSlug
     setDeleting(true)
     try {
-      await authFetch(`/api/v1/guardrails?slug=${activeSlug}`, { method: "DELETE" })
-      const updated = slugs.filter((s) => s !== activeSlug)
+      await authFetch(`/api/v1/guardrails?slug=${slug}`, { method: "DELETE" })
+      const updated = slugs.filter((s) => s !== slug)
       setSlugs(updated.length ? updated : ["default"])
       setActiveSlug("default")
+      setShowDeletePolicy(false)
+      toast.success(`Policy "${slug}" deleted`)
     } catch (err) {
-      setError(err instanceof ApiError ? err.detail : "Failed to delete policy")
+      const msg = err instanceof ApiError ? err.detail : "Failed to delete policy"
+      setError(msg)
+      toast.error(msg)
     } finally {
       setDeleting(false)
     }
@@ -491,6 +503,21 @@ export default function Guardrails() {
           </>
         )}
       </div>
+
+      <ConfirmDialog
+        open={showDeletePolicy}
+        onOpenChange={(v) => { if (!v) setShowDeletePolicy(false) }}
+        title="Delete guardrail policy"
+        description={
+          <>Delete the <span className="font-mono text-foreground">{activeSlug}</span> policy. Any SDK calls referencing this guardrail slug will fall back to the default policy. This cannot be undone.</>
+        }
+        confirmWord={activeSlug}
+        confirmLabel="Delete policy"
+        destructive
+        busy={deleting}
+        error={error}
+        onConfirm={confirmDeletePolicy}
+      />
     </>
   )
 }

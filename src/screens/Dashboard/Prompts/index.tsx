@@ -9,10 +9,14 @@ import {
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
+import { toast } from "sonner"
+
 import { cn } from "@/lib/utils"
 import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
+import { Pagination } from "@/components/Pagination"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { Tip } from "@/components/ui/tooltip"
 import type { TraceListResponse, TraceRecord } from "@/pages/Dashboard/Traces/utils/types"
 import {
@@ -119,10 +123,12 @@ function Prompts() {
   // ── Data ──
   const [traces, setTraces] = useState<TraceRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(false)
-  const [loadOffset, setLoadOffset] = useState(PROMPTS_PAGE_SIZE)
+  const [page, setPage] = useState(0)
+  const [reloadKey, setReloadKey] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [showDeletePrompt, setShowDeletePrompt] = useState(false)
+  const [deletePromptBusy, setDeletePromptBusy] = useState(false)
 
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([])
   const [savedLoading, setSavedLoading] = useState(true)
@@ -168,23 +174,30 @@ function Prompts() {
     [activeTab?.templateText, activeTab?.templateVars],
   )
 
-  // ── Data loading ──
+  // ── Traces list (windowed pagination) ──
   useEffect(() => {
-    ;(async () => {
-      try {
-        const data = await authFetch<TraceListResponse>(
-          `/api/v1/traces?limit=${PROMPTS_PAGE_SIZE}&offset=0`,
-        )
+    let cancelled = false
+    setLoading(true)
+    setSelectedTraceIdx(null)  // selection is page-local
+    authFetch<TraceListResponse>(
+      `/api/v1/traces?limit=${PROMPTS_PAGE_SIZE}&offset=${page * PROMPTS_PAGE_SIZE}`,
+    )
+      .then((data) => {
+        if (cancelled) return
         setError(null)
         setTraces(data.traces)
-        setLoadOffset(PROMPTS_PAGE_SIZE)
         setHasMore(data.traces.length >= PROMPTS_PAGE_SIZE)
-      } catch (err) {
+      })
+      .catch((err) => {
+        if (cancelled) return
         setError(err instanceof ApiError ? err.detail : "Failed to load traces")
-      } finally {
-        setLoading(false)
-      }
-    })()
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [page, reloadKey])
+
+  // ── Saved prompts + agent summary (once) ──
+  useEffect(() => {
     ;(async () => {
       try {
         const data = await authFetch<{ prompts: SavedPrompt[] }>("/api/v1/prompts")
@@ -328,45 +341,9 @@ function Prompts() {
     }
   }
 
-  async function loadMore() {
-    if (isLoadingMore || !hasMore) return
-    setIsLoadingMore(true)
-    try {
-      const data = await authFetch<TraceListResponse>(
-        `/api/v1/traces?limit=${PROMPTS_PAGE_SIZE}&offset=${loadOffset}`,
-      )
-      setTraces((prev) => {
-        const seen = new Set(prev.map((t) => getStr(t.event, "trace_id")).filter(Boolean))
-        const fresh = data.traces.filter((t) => {
-          const tid = getStr(t.event, "trace_id")
-          return tid && !seen.has(tid)
-        })
-        return fresh.length > 0 ? [...prev, ...fresh] : prev
-      })
-      setLoadOffset((o) => o + PROMPTS_PAGE_SIZE)
-      setHasMore(data.traces.length >= PROMPTS_PAGE_SIZE)
-    } catch {
-      // silent
-    } finally {
-      setIsLoadingMore(false)
-    }
-  }
-
-  async function reload() {
-    setLoading(true)
-    try {
-      const data = await authFetch<TraceListResponse>(
-        `/api/v1/traces?limit=${PROMPTS_PAGE_SIZE}&offset=0`,
-      )
-      setError(null)
-      setTraces(data.traces)
-      setLoadOffset(PROMPTS_PAGE_SIZE)
-      setHasMore(data.traces.length >= PROMPTS_PAGE_SIZE)
-    } catch (err) {
-      setError(err instanceof ApiError ? err.detail : "Failed to load traces")
-    } finally {
-      setLoading(false)
-    }
+  function reload() {
+    setPage(0)
+    setReloadKey((k) => k + 1)
   }
 
   // ── Eval handlers ──
@@ -540,11 +517,17 @@ function Prompts() {
     }
   }
 
-  async function handleDeleteSaved() {
+  function handleDeleteSaved() {
     if (!activeTab || !activeTabId || !activeTab.savedPromptId) return
-    if (!window.confirm(`Delete "${activeTab.templateName}"? This cannot be undone.`)) return
+    setShowDeletePrompt(true)
+  }
+
+  async function confirmDeleteSaved() {
+    if (!activeTab || !activeTabId || !activeTab.savedPromptId) return
     const tabId = activeTabId
     const promptId = activeTab.savedPromptId
+    const name = activeTab.templateName
+    setDeletePromptBusy(true)
     try {
       await authFetch(`/api/v1/prompts/${promptId}`, { method: "DELETE" })
       setSavedPrompts((prev) => prev.filter((p) => p.prompt_id !== promptId))
@@ -555,8 +538,12 @@ function Prompts() {
         latestVersion: null,
         promptVersions: null,
       })
-    } catch {
-      // silent
+      setShowDeletePrompt(false)
+      toast.success(`Prompt "${name}" deleted`)
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.detail : "Failed to delete prompt")
+    } finally {
+      setDeletePromptBusy(false)
     }
   }
 
@@ -697,19 +684,14 @@ function Prompts() {
                       </span>
                     </button>
                   ))}
-                  {hasMore ? (
-                    <button
-                      type="button"
-                      onClick={loadMore}
-                      disabled={isLoadingMore}
-                      className="flex w-full items-center justify-center gap-1.5 py-2.5 text-[11px] text-muted-foreground hover:text-foreground disabled:opacity-50"
-                    >
-                      {isLoadingMore ? (
-                        <HugeiconsIcon icon={Loading03Icon} size={11} className="animate-spin" />
-                      ) : null}
-                      {isLoadingMore ? "Loading…" : "Load more"}
-                    </button>
-                  ) : null}
+                  <Pagination
+                    page={page}
+                    hasMore={hasMore}
+                    loading={loading}
+                    compact
+                    onPrev={() => setPage((p) => Math.max(0, p - 1))}
+                    onNext={() => setPage((p) => p + 1)}
+                  />
                 </>
               )
             ) : null}
@@ -973,6 +955,19 @@ function Prompts() {
         </div>
       </div>
 
+      <ConfirmDialog
+        open={showDeletePrompt}
+        onOpenChange={(v) => { if (!v) setShowDeletePrompt(false) }}
+        title="Delete prompt"
+        description={
+          <>Delete <span className="font-mono text-foreground">{activeTab?.templateName}</span> and all its versions and environment deployments. This cannot be undone.</>
+        }
+        confirmWord={activeTab?.templateName ?? ""}
+        confirmLabel="Delete prompt"
+        destructive
+        busy={deletePromptBusy}
+        onConfirm={confirmDeleteSaved}
+      />
     </>
   )
 }

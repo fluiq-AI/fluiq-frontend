@@ -8,7 +8,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
-import type { TraceNode, TraceRecord } from "../utils/types"
+import type { RootRollup, TraceNode, TraceRecord } from "../utils/types"
 import {
   countSubtree,
   hasBlockedDescendant,
@@ -36,6 +36,7 @@ export function TraceTreeRows({
   node,
   depth,
   subtreeCount,
+  rollups,
   expandedNodes,
   toggleNode,
   openTrace,
@@ -46,6 +47,7 @@ export function TraceTreeRows({
   node: TraceNode
   depth: number
   subtreeCount?: number
+  rollups?: Map<string, RootRollup>
   expandedNodes: Set<string>
   toggleNode: (id: string) => void
   openTrace: (t: TraceRecord) => void
@@ -67,10 +69,28 @@ export function TraceTreeRows({
   const running = isRunning(t.event)
   const subtreeFailed = hasFailedDescendant(node)
   const subtreeBlocked = hasBlockedDescendant(node)
+  // Precomputed per-run rollup (root rows only). When present it's the source of
+  // truth for the headline cost / quality / count / security, so these are right
+  // before the user expands the run and without prefetching its children.
+  const rollup = isRoot ? rollups?.get(node.id) : undefined
+  const rolled = Boolean(rollup) || hasChildren
   const displayCount =
-    typeof subtreeCount === "number" ? subtreeCount : countSubtree(node)
-  const subtreeCost = hasChildren ? sumSubtreeCost(node) : t.cost ?? null
-  const subtreeScore = hasChildren ? minSubtreeScore(node) : minTraceScore(t)
+    rollup && rollup.span_count > 0
+      ? rollup.span_count
+      : typeof subtreeCount === "number"
+      ? subtreeCount
+      : countSubtree(node)
+  const subtreeCost = rollup
+    ? rollup.run_cost
+    : hasChildren
+    ? sumSubtreeCost(node)
+    : t.cost ?? null
+  const subtreeScore =
+    rollup && rollup.quality_count > 0
+      ? rollup.quality_min
+      : hasChildren
+      ? minSubtreeScore(node)
+      : minTraceScore(t)
   const ownScore = minTraceScore(t)
   const indentStyle =
     depth > 0 ? { paddingLeft: `${1.5 + depth * 1.5}rem` } : undefined
@@ -139,13 +159,13 @@ export function TraceTreeRows({
           className={cn(
             "whitespace-nowrap font-mono text-xs",
             cellPad,
-            (hasChildren ? subtreeCost : t.cost) === null ||
-              (hasChildren ? subtreeCost : t.cost) === undefined
+            (rolled ? subtreeCost : t.cost) === null ||
+              (rolled ? subtreeCost : t.cost) === undefined
               ? "text-muted-foreground/60"
               : "text-foreground",
           )}
         >
-          {hasChildren ? (
+          {rolled ? (
             <span
               className="inline-flex items-center gap-1"
               title={`Rolled-up cost across ${displayCount} traces`}
@@ -161,7 +181,7 @@ export function TraceTreeRows({
         </td>
         <td className={cn("whitespace-nowrap", cellPad, textSize)}>
           {(() => {
-            const score = hasChildren ? subtreeScore : ownScore
+            const score = rolled ? subtreeScore : ownScore
             if (score === null) {
               return (
                 <span className="text-muted-foreground/60">{"\u2014"}</span>
@@ -174,7 +194,7 @@ export function TraceTreeRows({
                   scoreBandClass(score),
                 )}
                 title={
-                  hasChildren
+                  rolled
                     ? `Worst eval score across ${displayCount} traces`
                     : (t.evaluations ?? [])
                         .filter((e) => e.evaluator !== "fluiq.security")
@@ -183,7 +203,7 @@ export function TraceTreeRows({
                 }
               >
                 {formatScore(score)}
-                {hasChildren ? (
+                {rolled ? (
                   <span className="rounded bg-muted px-1 py-px text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
                     {"\u2193"}
                   </span>
@@ -239,7 +259,24 @@ export function TraceTreeRows({
           </div>
         </td>
         <td className={cn(cellPad, textSize)}>
-          <SecurityBadge event={t.event} />
+          <div className="flex flex-wrap items-center gap-1.5">
+            <SecurityBadge event={t.event} />
+            {/* Rolled-up security across the run: a finding on some descendant
+                span, surfaced on the root without loading its children. An
+                outline chip (vs. SecurityBadge's per-span verdict) marks it as
+                "happened inside this run". */}
+            {rollup && (rollup.security_detections > 0 || rollup.security_should_block) ? (
+              <span
+                title={`${rollup.security_detections} security finding${
+                  rollup.security_detections === 1 ? "" : "s"
+                } across this run`}
+                className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-600"
+              >
+                <HugeiconsIcon icon={Alert02Icon} size={9} />
+                {rollup.security_should_block ? "Blocked" : rollup.security_detections}
+              </span>
+            ) : null}
+          </div>
         </td>
         <td className={cellPad}>
           {showExpandToggle ? (
@@ -288,6 +325,7 @@ export function TraceTreeRows({
               key={child.id}
               node={child}
               depth={depth + 1}
+              rollups={rollups}
               expandedNodes={expandedNodes}
               toggleNode={toggleNode}
               openTrace={openTrace}

@@ -62,6 +62,29 @@ export function getLanggraphNode(event: Record<string, unknown>): string | null 
   return null
 }
 
+// Static predecessor node names (the graph's declared edges into this node),
+// stamped by the SDK at compile time. Drives the real DAG in the flow graph —
+// both fan-in (join) and fan-out edges. Empty when the only predecessor is the
+// graph START.
+export function getLanggraphPredecessors(event: Record<string, unknown>): string[] {
+  const lg = event["langgraph"]
+  if (!lg || typeof lg !== "object") return []
+  const preds = (lg as Record<string, unknown>)["predecessors"]
+  if (!Array.isArray(preds)) return []
+  return preds.filter((p): p is string => typeof p === "string" && p.length > 0)
+}
+
+// Declared predecessor run_ids (trace_ids of upstream nodes), stamped by the
+// SDK on CrewAI tasks (task.context) and GoogleADK agents (instruction state
+// keys). Unlike LangGraph's name-based predecessors, these are run_ids resolved
+// against a trace_id -> flow-node map, so they draw the DAG (fan-in joins AND
+// single-dependency fan-out edges) for those frameworks.
+export function getPredecessors(event: Record<string, unknown>): string[] {
+  const preds = event["predecessors"]
+  if (!Array.isArray(preds)) return []
+  return preds.filter((p): p is string => typeof p === "string" && p.length > 0)
+}
+
 export function isFailed(event: Record<string, unknown>): boolean {
   // ClickHouse's JSON type normalises boolean false → 0, so accept both.
   const notSuccessful = event["success"] === false || event["success"] === 0
@@ -161,6 +184,45 @@ export function extractTooltipIO(
     request: summarizeForTooltip(requestSource),
     response: summarizeForTooltip(event["output"]),
   }
+}
+
+// Build a dataset example from a trace/span. The request messages become the
+// example input (full JSON so system/tool turns are preserved), the response
+// becomes the expected output, and a few provenance fields ride along in
+// metadata. Consumed by the "Add to Dataset" control in the trace/agent drawers.
+export function traceToDatasetExample(t: TraceRecord): {
+  input: string
+  expected_output: string | null
+  metadata: Record<string, unknown>
+} {
+  const event = t.event
+  const requestSource =
+    event["messages"] ?? event["input"] ?? event["contents"] ?? event["prompts"] ?? null
+  const input =
+    typeof requestSource === "string"
+      ? requestSource
+      : requestSource != null
+        ? safeStringify(requestSource)
+        : ""
+
+  const responseSource = event["output"] ?? event["response"] ?? null
+  const expected_output =
+    responseSource == null
+      ? null
+      : typeof responseSource === "string"
+        ? responseSource
+        : safeStringify(responseSource)
+
+  const metadata: Record<string, unknown> = {}
+  const model = getModel(event)
+  if (model) metadata["model"] = model
+  if (typeof t.cost === "number") metadata["cost"] = t.cost
+  const tid = getStr(event, "trace_id")
+  if (tid) metadata["source_trace_id"] = tid
+  const integration = getStr(event, "integration")
+  if (integration) metadata["integration"] = integration
+
+  return { input, expected_output, metadata }
 }
 
 export function getEventTimestamp(t: TraceRecord): number {

@@ -6,6 +6,7 @@ import {
   BookOpen01Icon,
   ChartLineData01Icon,
   CheckmarkCircle02Icon,
+  Database01Icon,
   FileScriptIcon,
   MagicWand01Icon,
   RocketIcon,
@@ -35,6 +36,7 @@ const NAV = [
     section: "Reference",
     items: [
       { to: "/documentation/prompts",       label: "Prompts",       icon: FileScriptIcon },
+      { to: "/documentation/datasets",      label: "Datasets",      icon: Database01Icon },
       { to: "/documentation/configuration", label: "Configuration", icon: ZapIcon },
       { to: "/documentation/alerts",        label: "Alerts",        icon: Alert02Icon },
     ],

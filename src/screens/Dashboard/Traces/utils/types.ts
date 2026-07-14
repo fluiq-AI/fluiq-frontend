@@ -1,4 +1,20 @@
 export type DrawerTab = "ui" | "json" | "evaluation" | "security"
+
+// Precomputed per-run rollup returned by POST /traces/rollups, keyed by a
+// root_trace_id. Lets the Traces list show a run's cost / quality / security /
+// span-count headline numbers straight from the server-side AggregatingMergeTree
+// rollups, instead of pulling every child span to sum them in the browser.
+export interface RootRollup {
+  run_cost: number
+  run_tokens: number
+  span_count: number
+  quality_min: number | null
+  quality_avg: number | null
+  quality_count: number
+  security_risk_max: number
+  security_should_block: boolean
+  security_detections: number
+}
 // A tool/function call carried directly on a chat message (OpenAI shape:
 // message.tool_calls[*].function.{name, arguments}). `arguments` is usually a
 // JSON-encoded string from the provider; the renderer parses it best-effort.
@@ -69,6 +85,65 @@ export interface EvaluationPerChunk {
   useful?: boolean | null
 }
 
+// ── Agentic evaluation detail shapes (evaluator = "fluiq.agent_eval") ──────────
+export interface EvaluationPerCall {
+  index?: number
+  tool?: string
+  appropriate?: boolean
+  reason?: string
+}
+
+export interface DeterministicFinding {
+  call_index?: number
+  tool?: string
+  code?: string
+  severity?: string // "error" | "warning"
+  message?: string
+}
+
+export interface DeterministicReport {
+  score?: number
+  passed?: boolean
+  total_calls?: number
+  error_calls?: number
+  findings?: DeterministicFinding[]
+}
+
+export interface TrajectorySubgoal {
+  subgoal?: string
+  achieved?: boolean
+}
+
+export interface PanelMember {
+  role?: string // "primary" | "juror"
+  provider?: string
+  model?: string
+  score?: number
+  reason?: string | null
+}
+
+export interface EvaluationPanel {
+  mode?: string
+  convened?: boolean
+  agreement?: number
+  votes_pass?: number
+  votes_total?: number
+  members?: PanelMember[]
+}
+
+export interface AgentSummary {
+  agent: string
+  steps: number
+  tool_calls: number
+  errors: number
+}
+
+export interface CoordinationJoin {
+  join: string
+  reason?: string
+  branches: { agent: string; incorporated: boolean; reason?: string }[]
+}
+
 export interface EvaluationScore {
   metric: string
   score: number | null
@@ -80,6 +155,20 @@ export interface EvaluationScore {
     reason?: string | null
     per_chunk?: EvaluationPerChunk[]
     question?: string | null
+    // Agentic fields
+    per_call?: EvaluationPerCall[]
+    deterministic?: DeterministicReport
+    subgoals?: TrajectorySubgoal[]
+    goal_completion?: number | null
+    efficiency?: number | null
+    panel?: EvaluationPanel
+    // L5 coordination (agentic.coordination)
+    agents?: AgentSummary[]
+    joins?: CoordinationJoin[]
+    num_agents?: number
+    num_joins?: number
+    run_score?: number
+    run_passed?: boolean
     [key: string]: unknown
   } | null
 }

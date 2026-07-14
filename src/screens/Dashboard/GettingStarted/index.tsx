@@ -63,8 +63,16 @@ function GettingStarted() {
   }, [])
 
   const { organization } = useAppSelector((s) => s.auth)
-  const [stored, setStored] = useState<StoredState>(loadStored)
+  const [stored, setStored] = useState<StoredState>({
+    sdk_lang: null, sdk_copied: false, trace_copied: false, dismissed: false,
+  })
   const [copied, setCopied] = useState<"sdk" | "trace" | null>(null)
+
+  // Load persisted progress after mount; reading localStorage in the initializer
+  // would diverge from the server HTML and break hydration.
+  useEffect(() => {
+    setStored(loadStored())
+  }, [])
 
   const hasApiKey = (organization?.api_keys.length ?? 0) > 0
 
