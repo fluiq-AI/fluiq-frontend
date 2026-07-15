@@ -351,13 +351,11 @@ export default function Home() {
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">A full suite of server-side scanners runs on every request — catching jailbreaks, PII and secret leaks, and attacks injected through your tools, knowledge base, and other agents, not just the user message. Patterns are maintained server-side and updated without SDK releases. Everything fails open, so a scanner error never breaks your app.</p>
               <ul className="space-y-2 mb-6">
                 {[
-                  "PII scanner: credit cards, SSNs, IBANs, emails, phones, IPs, names, and API keys",
-                  "Prompt-injection scanner: known jailbreak and instruction-override phrases",
-                  "Secret scanner: OpenAI, Anthropic, AWS, GitHub, Stripe keys + high-entropy tokens",
-                  "Indirect-injection & RAG-poisoning scanner: inspects sibling tool outputs and retrieved documents in the trace tree, flagging chunks that semantically resemble an attack",
-                  "Tool-input exfiltration scanner: PII and secret scan over the arguments your agent sends to tools",
-                  "Tool allowlist: any tool invoked outside it is flagged as a tool_policy_violation",
-                  "Multi-agent trust: detects cross-agent injection and trust-boundary escalation across handoffs in the trace DAG",
+                  "PII & secrets: cards, SSNs, IBANs, emails, names, provider API keys, high-entropy tokens",
+                  "Prompt attacks: injection, jailbreak, and instruction-override patterns",
+                  "RAG poisoning & indirect injection: retrieved docs and tool outputs scanned across the trace tree",
+                  "Tool misuse: exfiltration through tool arguments, plus allowlist enforcement",
+                  "Multi-agent trust: cross-agent injection and trust-boundary escalation across the DAG",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
@@ -474,11 +472,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6 · Prompt Management */}
+      {/* 6 · Prompt Management (reversed layout so adjacent sections zigzag;
+          plain bg so the tinted "How it works" band below keeps its edge) */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate>
+            <div data-animate data-delay="2" className="lg:order-1">
+              <PromptsMockup />
+            </div>
+            <div data-animate className="lg:order-2">
               <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={AiContentGenerator01Icon} size={16} />
               </span>
@@ -499,11 +501,8 @@ export default function Home() {
                 ))}
               </ul>
               <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
-                fluiq.get_prompt("customer-support", env="production")
+                fluiq.fetch_prompt("customer-support", env="production")
               </div>
-            </div>
-            <div data-animate data-delay="2">
-              <PromptsMockup />
             </div>
           </div>
         </div>
