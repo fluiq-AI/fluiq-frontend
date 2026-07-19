@@ -18,7 +18,7 @@ import { useDocLang, byLang } from "./LanguageContext"
 const pythonIntegrations = [
   {
     name: "OpenAI",
-    blurb: "Patches chat completions, responses, parse, streaming, embeddings, images, and audio — sync and async.",
+    blurb: "Patches chat completions, responses, parse, streaming, embeddings, images, and audio, sync and async.",
     code: `import openai
 from fluiq import instrument
 
@@ -47,7 +47,7 @@ client.messages.create(
   },
   {
     name: "Gemini & Vertex AI",
-    blurb: "Patches google-genai and Vertex AI — generation, streaming, and count_tokens, sync and async.",
+    blurb: "Patches google-genai and Vertex AI: generation, streaming, and count_tokens, sync and async.",
     code: `from google import genai
 from fluiq import instrument
 
@@ -114,7 +114,7 @@ await client.messages.create({
   },
   {
     name: "Gemini & Vertex AI",
-    blurb: "Patches @google/genai and Vertex AI — generation, streaming, and countTokens.",
+    blurb: "Patches @google/genai and Vertex AI: generation, streaming, and countTokens.",
     code: `import { GoogleGenAI } from "@google/genai";
 import { instrument } from "@fluiq/sdk";
 
@@ -159,11 +159,11 @@ export default function ObservabilityPage() {
       <PageHeading
         icon={ChartLineData01Icon}
         title="Observability"
-        description={`Fluiq captures every LLM call, tool invocation, and retrieval step automatically — including model, messages, response, latency, token usage, and cost. Use the ${isTs ? "trace() wrapper" : "@trace decorator"} to group any ${isTs ? "" : "Python "}function into the same trace tree.`}
+        description={`Fluiq captures every LLM call, tool invocation, and retrieval step automatically, including model, messages, response, latency, token usage, and cost. Use the ${isTs ? "trace() wrapper" : "@trace decorator"} to group any ${isTs ? "" : "Python "}function into the same trace tree.`}
       />
 
       <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-sm">
-        <p className="font-medium">Observability is free and unlimited — on every tier</p>
+        <p className="font-medium">Observability is free and unlimited on every tier</p>
         <p className="mt-1 text-muted-foreground">
           There is no cap on traces, spans, or agents. Instrument as much as you
           want on the Free plan without ever hitting a wall. The only paid axis is{" "}
@@ -240,7 +240,7 @@ def run(question: str) -> str:
         <p className="font-medium">Auto-instrumentation</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        <code className="font-mono text-foreground">instrument()</code> patches every supported provider it can find on import. If a provider isn't installed the patch is skipped silently — you never need feature flags.
+        <code className="font-mono text-foreground">instrument()</code> patches every supported provider it can find on import. If a provider isn't installed the patch is skipped silently; you never need feature flags.
       </p>
       <div className="grid gap-4">
         {integrations.map((i) => (
@@ -264,7 +264,7 @@ def run(question: str) -> str:
         <p className="font-medium">Agents</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        An <em>agent</em> in Fluiq is any function or chain you want to monitor as a single unit of work. Wrap your entrypoint with <code className="font-mono text-foreground">{isTs ? "trace()" : "@trace"}</code> so every nested LLM call and tool invocation is grouped under one root — and aggregated as one row on the Agents dashboard.
+        An <em>agent</em> in Fluiq is any function or chain you want to monitor as a single unit of work. Wrap your entrypoint with <code className="font-mono text-foreground">{isTs ? "trace()" : "@trace"}</code> so every nested LLM call and tool invocation is grouped under one root, and aggregated as one row on the Agents dashboard.
       </p>
       <Code>{byLang(
         lang,
@@ -288,7 +288,7 @@ const runResearchAgent = trace((question: string): string => {
 });`,
       )}</Code>
       <p className="text-sm text-muted-foreground">
-        LangChain, LangGraph, CrewAI, and Google ADK agents are traced automatically without a decorator — the integration emits a root span for the run and child spans for every internal step.
+        LangChain, LangGraph, CrewAI, and Google ADK agents are traced automatically without a decorator; the integration emits a root span for the run and child spans for every internal step.
       </p>
 
       <div className="flex items-center gap-2 pt-4">
@@ -296,18 +296,18 @@ const runResearchAgent = trace((question: string): string => {
         <p className="font-medium">Multi-agent DAGs</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Fan-out / fan-in orchestrations are captured as a true graph, not a flat list. When several agents run in parallel and their outputs join into a single downstream step, Fluiq detects the real dependency edges and renders the run as a DAG in the trace drawer — fan-out, joins, and loop-backs included.
+        Fan-out / fan-in orchestrations are captured as a true graph, not a flat list. When several agents run in parallel and their outputs join into a single downstream step, Fluiq detects the real dependency edges and renders the run as a DAG in the trace drawer, with fan-out, joins, and loop-backs included.
       </p>
       <ul className="ml-4 list-disc space-y-1.5 text-sm text-muted-foreground">
         <li>
-          <span className="font-medium text-foreground">LangGraph</span> — join (fan-in) nodes are resolved from the graph's declared edges captured at <code className="font-mono text-foreground">compile()</code>, so multi-parent steps are exact regardless of the trigger encoding. Each run shows in the Agents view as{" "}
+          <span className="font-medium text-foreground">LangGraph</span>: join (fan-in) nodes are resolved from the graph's declared edges captured at <code className="font-mono text-foreground">compile()</code>, so multi-parent steps are exact regardless of the trigger encoding. Each run shows in the Agents view as{" "}
           <code className="font-mono text-foreground">LangGraph(node_a, node_b, …)</code>, named after its nodes.
         </li>
         <li>
-          <span className="font-medium text-foreground">CrewAI</span> — task dependencies (<code className="font-mono text-foreground">task.context</code>) become graph edges; a crew shows as <code className="font-mono text-foreground">Crew(agent_1, agent_2, …)</code>.
+          <span className="font-medium text-foreground">CrewAI</span>: task dependencies (<code className="font-mono text-foreground">task.context</code>) become graph edges; a crew shows as <code className="font-mono text-foreground">Crew(agent_1, agent_2, …)</code>.
         </li>
         <li>
-          <span className="font-medium text-foreground">Google ADK</span> — <code className="font-mono text-foreground">{`{state_key}`}</code> placeholders in an agent's instruction are resolved to the upstream agents that produced them.
+          <span className="font-medium text-foreground">Google ADK</span>: <code className="font-mono text-foreground">{`{state_key}`}</code> placeholders in an agent's instruction are resolved to the upstream agents that produced them.
         </li>
       </ul>
       <p className="text-sm text-muted-foreground">

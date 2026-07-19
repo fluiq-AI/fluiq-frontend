@@ -24,7 +24,7 @@ export default function EvaluationPage() {
 fluiq.instrument(api_key="fl_...")
 fluiq.eval(
     thresholds={
-        "hallucination": 0.8,   # score 0–1; 1 = no hallucination
+        "hallucination": 0.8,   # score 0-1; 1 = no hallucination
         "faithfulness":  0.7,   # grounded in provided context
         "relevance":     0.75,  # response addresses the question
         "toxicity":      0.9,   # 1 = completely safe
@@ -37,7 +37,7 @@ fluiq.eval(
 fluiq.instrument({ apiKey: "fl_..." });
 fluiq.eval({
   thresholds: {
-    hallucination: 0.8,  // score 0–1; 1 = no hallucination
+    hallucination: 0.8,  // score 0-1; 1 = no hallucination
     faithfulness: 0.7,   // grounded in provided context
     relevance: 0.75,     // response addresses the question
     toxicity: 0.9,       // 1 = completely safe
@@ -50,7 +50,7 @@ fluiq.eval({
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
         <p className="font-medium">Evaluation is opt-in</p>
         <p className="mt-1 text-muted-foreground">
-          <code className="font-mono text-foreground">instrument()</code> only traces —
+          <code className="font-mono text-foreground">instrument()</code> only traces;
           it never evaluates on its own. Scoring runs only once you call{" "}
           <code className="font-mono text-foreground">{isTs ? "fluiq.eval({ … })" : "fluiq.eval(…)"}</code>{" "}
           (or trigger an evaluation from the dashboard). From that point every LLM response
@@ -72,12 +72,12 @@ fluiq.eval({
           </thead>
           <tbody className="divide-y divide-border/60">
             {[
-              ["hallucination", "Factual claims not supported by the prompt/context", "No hallucination — every claim is grounded"],
-              ["faithfulness",  "Whether the response stays within the provided context", "Fully grounded — no outside claims added"],
+              ["hallucination", "Factual claims not supported by the prompt/context", "No hallucination; every claim is grounded"],
+              ["faithfulness",  "Whether the response stays within the provided context", "Fully grounded; no outside claims added"],
               ["relevance",     "How directly the response addresses the question", "Completely on-topic and direct"],
               ["toxicity",      "Harmful, offensive, or hateful content in the response", "Completely safe and respectful"],
               ["coherence",     "Logical structure and internal consistency", "Perfectly coherent and well-structured"],
-              ["completeness",  "Whether the response fully answers the question", "Comprehensive — no key information omitted"],
+              ["completeness",  "Whether the response fully answers the question", "Comprehensive; no key information omitted"],
             ].map(([metric, desc, best]) => (
               <tr key={metric}>
                 <td className="px-4 py-2 font-mono text-foreground">{metric}</td>
@@ -99,7 +99,7 @@ fluiq.eval({
         <code className="font-mono text-foreground">$answer</code> and{" "}
         <code className="font-mono text-foreground">$context</code> placeholders and should ask the
         model to return a JSON object with a numeric <code className="font-mono text-foreground">score</code>{" "}
-        (0–1) and a <code className="font-mono text-foreground">reason</code>. Then reference it by its
+        (0 to 1) and a <code className="font-mono text-foreground">reason</code>. Then reference it by its
         slug in {isTs ? <code className="font-mono text-foreground">customJudges</code> : <code className="font-mono text-foreground">custom_judges</code>}{" "}
         (slug → threshold). Each judge is scored on every response just like a built-in metric and
         appears in the dashboard under its slug.
@@ -146,8 +146,60 @@ fluiq.eval({
         In <code className="font-mono text-foreground">block</code> mode a custom judge scoring below
         its threshold {isTs ? "throws" : "raises"} <code className="font-mono text-foreground">FluiqEvalError</code>{" "}
         just like a built-in metric. If a slug doesn&apos;t resolve to a saved Judge prompt it is
-        silently skipped — your call is never broken by a missing judge.
+        silently skipped; your call is never broken by a missing judge.
       </p>
+
+      <p className="font-medium">Transparent, editable judge prompts</p>
+      <p className="text-sm text-muted-foreground">
+        No black-box scoring: every score records the <span className="font-medium text-foreground">exact judge
+        prompt</span> (and its version) that produced it — expand{" "}
+        <span className="font-medium text-foreground">Judge prompts</span> under any evaluation in the trace
+        drawer to read it. If a grading rubric doesn&apos;t match how you want a metric judged, edit it at{" "}
+        <span className="font-medium text-foreground">Dashboard → Judge Prompts</span>: your edit applies only
+        to your organization within about a minute, required placeholders are validated so a save can&apos;t
+        break scoring, and you can reset to the platform prompt or restore any earlier version. Because scores
+        carry the prompt version, you can tell exactly when a rubric change happened in your score history.
+      </p>
+
+      <p className="font-medium">User feedback &amp; team annotations</p>
+      <p className="text-sm text-muted-foreground">
+        Judges aren&apos;t the only signal. Record your <span className="font-medium text-foreground">end
+        users&apos;</span> reactions with {isTs
+          ? <>a call to <code className="font-mono text-foreground">POST /api/v1/feedback</code></>
+          : <code className="font-mono text-foreground">fluiq.feedback()</code>}{" "}
+        right after the LLM call the user is reacting to — the verdict lands next to the automated scores on
+        that trace. Your team can also add a thumbs-up/down with a note on any trace from the drawer&apos;s
+        Evaluation tab. Human signals are shown alongside judge scores but never move the automated quality
+        rollups.
+      </p>
+      <Code>{byLang(
+        lang,
+        `import fluiq
+
+fluiq.instrument(api_key="fl_...")
+
+answer = client.chat.completions.create(...)   # traced call
+show_to_user(answer)
+
+# later, when the user reacts:
+fluiq.feedback(True, name="thumbs")                     # 👍 on the last LLM call
+fluiq.feedback(0.25, name="csat", comment="Too slow",   # or a 0-1 rating
+               trace_id=saved_trace_id)                 # target a specific trace`,
+        `// TS SDK helper is coming; use the REST endpoint directly for now:
+await fetch("https://api.getfluiq.com/api/v1/feedback", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: \`Bearer \${process.env.FLUIQ_API_KEY}\`,
+  },
+  body: JSON.stringify({
+    trace_id: savedTraceId,     // the traced call the user is reacting to
+    name: "thumbs",             // channel shown in the dashboard
+    value: true,                // true/false or a 0-1 rating
+    comment: "Great answer",
+  }),
+});`,
+      )}</Code>
 
       <p className="font-medium">Modes</p>
       <div className="grid gap-3 text-sm">
@@ -156,7 +208,7 @@ fluiq.eval({
           <div>
             <p className="font-mono text-sm text-foreground">mode="warn" <span className="font-sans text-muted-foreground font-normal">(default)</span></p>
             <p className="mt-1 text-muted-foreground">
-              Evaluation runs {isTs ? "in the background" : "in a background thread"} after the LLM responds. Your application receives the response immediately. A warning is logged for every metric that falls below its threshold — visible in your logs and in the Fluiq dashboard's Quality column.
+              Evaluation runs {isTs ? "in the background" : "in a background thread"} after the LLM responds. Your application receives the response immediately. A warning is logged for every metric that falls below its threshold, visible in your logs and in the Fluiq dashboard's Quality column.
             </p>
           </div>
         </div>
@@ -165,7 +217,7 @@ fluiq.eval({
           <div>
             <p className="font-mono text-sm text-foreground">mode="block"</p>
             <p className="mt-1 text-muted-foreground">
-              Evaluation runs synchronously before returning the response. If any metric is below its threshold, a <code className="font-mono text-foreground">FluiqEvalError</code> is {isTs ? "thrown" : "raised"} instead — the low-quality response never reaches your application. Use in staging or for safety-critical flows.
+              Evaluation runs synchronously before returning the response. If any metric is below its threshold, a <code className="font-mono text-foreground">FluiqEvalError</code> is {isTs ? "thrown" : "raised"} instead; the low-quality response never reaches your application. Use in staging or for safety-critical flows.
             </p>
           </div>
         </div>
@@ -201,11 +253,14 @@ try {
         <p className="font-medium">GitHub Actions eval gate</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Gate every PR on quality scores stored during your test suite. Make sure your test setup calls <code className="font-mono text-foreground">{isTs ? "fluiq.eval({ … })" : "fluiq.eval(…)"}</code> so responses are scored. The workflow below runs your tests, waits briefly for the async evals to land, then queries the Fluiq API and fails the build if any score is below the threshold.
+        Gate every PR on a real eval run. <code className="font-mono text-foreground">python -m fluiq.ci</code>{" "}
+        launches a batch evaluation over one of your{" "}
+        <span className="font-medium text-foreground">datasets</span> (grading each example against its
+        expected output — or a full agentic run), waits for the report, prints per-metric averages, and exits
+        non-zero when the average score is below your gate, failing the build with an annotated error. It works
+        in any repo — the gate runs against your Fluiq dataset, not your test suite&apos;s language.
       </p>
-      <Code>{byLang(
-        lang,
-        `# .github/workflows/fluiq-eval-gate.yml
+      <Code>{`# .github/workflows/fluiq-eval-gate.yml
 name: Fluiq Eval Gate
 
 on:
@@ -216,111 +271,36 @@ jobs:
   eval-gate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt fluiq
+      - name: Install Fluiq
+        run: pip install fluiq
 
-      - name: Run test suite
+      - name: Run eval gate
         env:
           FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
-        run: pytest tests/ -x
-
-      - name: Wait for evaluations
-        run: sleep 30
-
-      - name: Check evaluation scores
-        env:
-          FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
-          THRESHOLD: \${{ vars.FLUIQ_EVAL_THRESHOLD || '0.7' }}
         run: |
-          python - <<'PYEOF'
-          import httpx, os, sys
-          api_key   = os.environ["FLUIQ_API_KEY"]
-          threshold = float(os.environ.get("THRESHOLD", "0.7"))
-          resp = httpx.get(
-              "https://api.getfluiq.com/api/v1/optimize/evals",
-              headers={"x-api-key": api_key},
-              params={"window_minutes": 10, "threshold": threshold},
-              timeout=15,
-          )
-          resp.raise_for_status()
-          data = resp.json()
-          if data["total"] == 0:
-              print("No evaluations found — skipping gate.")
-              sys.exit(0)
-          avg = data.get("avg_score")
-          print(f"Evals: {data['total']} total, {data['passed']} passed, {data['failed']} failed  (avg {f'{avg:.2f}' if avg else 'n/a'})")
-          if data["failed"] > 0:
-              for e in data["entries"]:
-                  if e["score"] is not None and e["score"] < threshold:
-                      print(f"  FAIL  {e['metric']}: {e['score']:.2f}  trace={e['trace_id']}")
-              sys.exit(1)
-          print(f"All scores above threshold ({threshold}).")
-          PYEOF`,
-        `# .github/workflows/fluiq-eval-gate.yml
-name: Fluiq Eval Gate
-
-on:
-  pull_request:
-    branches: [main]
-
-jobs:
-  eval-gate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run test suite
-        env:
-          FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
-        run: npm test
-
-      - name: Wait for evaluations
-        run: sleep 30
-
-      - name: Check evaluation scores
-        env:
-          FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
-          THRESHOLD: \${{ vars.FLUIQ_EVAL_THRESHOLD || '0.7' }}
-        run: |
-          node --input-type=module - <<'EOF'
-          const threshold = parseFloat(process.env.THRESHOLD || "0.7");
-          const url = "https://api.getfluiq.com/api/v1/optimize/evals"
-            + \`?window_minutes=10&threshold=\${threshold}\`;
-          const resp = await fetch(url, {
-            headers: { "x-api-key": process.env.FLUIQ_API_KEY },
-          });
-          const data = await resp.json();
-          if (data.total === 0) {
-            console.log("No evaluations found — skipping gate.");
-            process.exit(0);
-          }
-          console.log(\`Evals: \${data.total} total, \${data.passed} passed, \${data.failed} failed\`);
-          if (data.failed > 0) {
-            for (const e of data.entries) {
-              if (e.score !== null && e.score < threshold) {
-                console.log(\`  FAIL  \${e.metric}: \${e.score.toFixed(2)}  trace=\${e.trace_id}\`);
-              }
-            }
-            process.exit(1);
-          }
-          console.log(\`All scores above threshold (\${threshold}).\`);
-          EOF`,
-      )}</Code>
+          python -m fluiq.ci \\
+            --dataset "checkout-regressions" \\
+            --kind metrics \\
+            --metrics hallucination,relevance,completeness \\
+            --fail-below 0.7 \\
+            --min-example 0.5`}</Code>
+      <p className="text-sm text-muted-foreground">
+        <code className="font-mono text-foreground">--kind agentic</code> runs the full layered agent
+        evaluation (tool selection, trajectory, coordination) over each example&apos;s pinned trajectory
+        instead. <code className="font-mono text-foreground">--min-example</code> additionally fails the build
+        when any single example falls below that floor, so one bad regression can&apos;t hide behind a good
+        average. Exit codes: <code className="font-mono text-foreground">0</code> pass,{" "}
+        <code className="font-mono text-foreground">1</code> gate failed,{" "}
+        <code className="font-mono text-foreground">2</code> error/timeout.
+      </p>
 
       <p className="font-medium">Quotas</p>
       <p className="text-sm text-muted-foreground">
-        Tracing is always free and unlimited — the paid axis is trace <span className="font-medium text-foreground">retention</span> (Free keeps 14 days, paid keeps forever). Evaluation is metered separately: each scored LLM response consumes one count from your tier's eval budget. When the eval budget is exhausted, traces keep ingesting normally — only new scoring is paused until the next cycle.
+        Tracing is always free and unlimited; the paid axis is trace <span className="font-medium text-foreground">retention</span> (Free keeps 14 days, paid keeps forever). Evaluation is metered separately: each scored LLM response consumes one count from your tier's eval budget. When the eval budget is exhausted, traces keep ingesting normally; only new scoring is paused until the next cycle.
       </p>
       <div className="overflow-x-auto rounded-xl border border-border/60">
         <table className="w-full text-sm">

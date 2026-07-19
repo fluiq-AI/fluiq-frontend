@@ -186,29 +186,30 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-6xl px-6 py-24 md:py-32">
           <div className="relative grid grid-cols-1 items-center gap-14 lg:grid-cols-12 lg:gap-8">
             {/* Giant editorial statement, left */}
-            <div className="flex flex-col lg:col-span-6">
+            <div className="flex flex-col lg:col-span-7">
               <motion.div className="flex items-center gap-2.5 mb-7"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.05 }}>
                 <span className="block w-5 h-px shrink-0 bg-[#1860D3] dark:bg-[#6FA8FF]" />
                 <span className="text-[#1860D3] dark:text-[#6FA8FF]"
                   style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" as const }}>
-                  AI Ops Stack · LLM Applications
+                  The Control Plane for AI Agents
                 </span>
               </motion.div>
 
               <motion.h1
-                className="font-heading text-[2.75rem] sm:text-6xl lg:text-7xl xl:text-[5rem] font-bold tracking-[-0.04em] leading-[0.98] text-[#0A0A0A] dark:text-[#FAF9F6] mb-7"
+                className="font-heading text-[1.85rem] sm:text-[2.75rem] lg:text-[3.1rem] xl:text-[3.55rem] font-bold tracking-[-0.04em] leading-[1.04] text-[#0A0A0A] dark:text-[#FAF9F6] mb-7"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.15, ease: EASE_OUT }}>
-                Production AI,<br />without the<br /><span className="text-[#1860D3] dark:text-[#6FA8FF]">blind spots.</span>
+                Agents you can eval.<br />Agents you can govern.<br /><span className="text-[#1860D3] dark:text-[#6FA8FF]">Agents you can trust.</span>
               </motion.h1>
 
               <motion.p className="mb-9 max-w-[30rem] text-[15px] leading-[1.7] text-[#6B6B66] dark:text-[#9A9A92]"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
-                FluiqAI is the unified ops layer for LLM applications: security scanning,
-                intelligent caching, deep observability, and automated evaluation on every
-                request — plus golden datasets to regression-test whole agent runs.
+                Fluiq sits on every agent run. It blocks prompt attacks before the
+                model executes, scores trajectories against your golden runs, serves
+                repeated work from cache, and traces every step across LangGraph,
+                CrewAI, ADK, and MCP. Two lines of Python.
               </motion.p>
 
               <motion.div className="flex flex-wrap items-center gap-3"
@@ -221,7 +222,7 @@ export default function Home() {
 
             {/* Code artifact, same row, right column */}
             <motion.div
-              className="lg:col-span-6 lg:col-start-7"
+              className="lg:col-span-5 lg:col-start-8"
               initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, delay: 0.35, ease: EASE_OUT }}
               onMouseMove={handleTilt} onMouseLeave={resetTilt}>
@@ -318,7 +319,7 @@ export default function Home() {
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Full trace visibility across every <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM call</span></h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns, without changing how you write code.</p>
               <ul className="space-y-2 mb-6">
-                {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Multi-agent runs render as real DAGs — fan-outs, joins, and loops across LangGraph, CrewAI, and Google ADK", "Real-time trace streaming"].map(pt => (
+                {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Multi-agent runs render as real DAGs: fan-outs, joins, and loops across LangGraph, CrewAI, and Google ADK", "Real-time trace streaming"].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
                     {pt}
@@ -348,7 +349,7 @@ export default function Home() {
                 <HugeiconsIcon icon={ShieldIcon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4"><span className="text-[#1860D3] dark:text-[#6FA8FF]">Block attacks</span> before they reach your model</h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">A full suite of server-side scanners runs on every request — catching jailbreaks, PII and secret leaks, and attacks injected through your tools, knowledge base, and other agents, not just the user message. Patterns are maintained server-side and updated without SDK releases. Everything fails open, so a scanner error never breaks your app.</p>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">A full suite of server-side scanners runs on every request. It catches jailbreaks, PII and secret leaks, and attacks injected through your tools, knowledge base, and other agents, not just the user message. Patterns are maintained server-side and updated without SDK releases. Everything fails open, so a scanner error never breaks your app.</p>
               <ul className="space-y-2 mb-6">
                 {[
                   "PII & secrets: cards, SSNs, IBANs, emails, names, provider API keys, high-entropy tokens",
@@ -371,34 +372,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3 · Optimization - full-width feature (breaks the zigzag rhythm) */}
+      {/* 3 · Optimization */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <div data-animate className="max-w-2xl">
-            <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-              <HugeiconsIcon icon={ZapIcon} size={16} />
-            </span>
-            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Stop paying for duplicate <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM calls</span></h2>
-            <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">Fluiq analyses your actual trace history to find which prompts repeat, then provisions a dedicated cache instance for your account. Repeated calls are served from cache automatically.</p>
-          </div>
-          <div data-animate data-delay="1" className="mt-10 grid gap-8 sm:grid-cols-3 max-w-3xl">
-            {[
-              "Server-side caching, zero infra to manage",
-              "Profile built from your real traffic patterns",
-              "Configurable TTL and model scope",
-            ].map(pt => (
-              <div key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
-                <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
-                {pt}
+          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+            <div data-animate>
+              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+                <HugeiconsIcon icon={ZapIcon} size={16} />
+              </span>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Stop paying for duplicate <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM calls</span></h2>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Fluiq analyses your actual trace history to find which prompts repeat, then provisions a dedicated cache instance for your account. Repeated calls are served from cache automatically.</p>
+              <ul className="space-y-2 mb-6">
+                {[
+                  "Server-side caching, zero infra to manage",
+                  "Profile built from your real traffic patterns",
+                  "Configurable TTL and model scope",
+                ].map(pt => (
+                  <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
+                    {pt}
+                  </li>
+                ))}
+              </ul>
+              <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
+                fluiq.optimize()&nbsp;&nbsp;&nbsp;# "cache" | "observe"
               </div>
-            ))}
-          </div>
-          <div data-animate data-delay="2" className="mt-10 mx-auto max-w-4xl">
-            <OptimizationMockup />
-          </div>
-          <div data-animate className="mt-8 flex justify-center">
-            <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
-              fluiq.optimize()&nbsp;&nbsp;&nbsp;# "cache" | "observe"
+            </div>
+            <div data-animate data-delay="2">
+              <OptimizationMockup />
             </div>
           </div>
         </div>
@@ -416,12 +417,12 @@ export default function Home() {
                 <HugeiconsIcon icon={TestTube01Icon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Gate responses that fail <span className="text-[#1860D3] dark:text-[#6FA8FF]">quality thresholds</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge runs server-side after each call. Set per-metric thresholds. Warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app. And for agents, agentic evaluation judges the <em>whole run</em> — not just single answers.</p>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge runs server-side after each call. Set per-metric thresholds. Warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app. And for agents, agentic evaluation judges the <em>whole run</em>, not just single answers.</p>
               <ul className="space-y-2 mb-6">
                 {[
                   "hallucination, faithfulness, relevance, toxicity",
                   "Agentic eval scores tool selection, trajectory-vs-goal, and multi-agent coordination across the run's DAG",
-                  "Borderline verdicts convene a multi-model judge jury — every member's score and reasoning kept for audit",
+                  "Borderline verdicts convene a multi-model judge jury; every member's score and reasoning is kept for audit",
                   "Block mode prevents bad responses reaching users",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
@@ -447,11 +448,11 @@ export default function Home() {
                 <HugeiconsIcon icon={Database01Icon} size={16} />
               </span>
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Regression-test agents on <span className="text-[#1860D3] dark:text-[#6FA8FF]">real trajectories</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Curate golden datasets straight from production traffic. Adding a run pins its <em>entire</em> trajectory — every agent step, tool call, and MCP call — so it stays evaluable forever, independent of trace retention. Then re-run agentic evaluation or the security suite over the whole set before you ship a prompt or model change.</p>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Curate golden datasets straight from production traffic. Adding a run pins its <em>entire</em> trajectory (every agent step, tool call, and MCP call), so it stays evaluable forever, independent of trace retention. Then re-run agentic evaluation or the security suite over the whole set before you ship a prompt or model change.</p>
               <ul className="space-y-2 mb-6">
                 {[
                   "One click pins a whole run: steps, tools, MCP calls, and media",
-                  "Connect Agents imports every run an agent has made — and keeps auto-appending future ones",
+                  "Connect Agents imports every run an agent has made, and keeps auto-appending future ones",
                   "Batch agentic-eval and security runs produce a scored regression report",
                   "Examples carry live eval, security, and cost signals from their source runs",
                 ].map(pt => (

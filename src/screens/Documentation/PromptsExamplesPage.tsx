@@ -32,7 +32,7 @@ print(response.choices[0].message.content)`,
   },
   {
     label: "Environments",
-    description: "Fetch a prompt from a specific environment — development, staging, or production. Each environment stores an independent snapshot.",
+    description: "Fetch a prompt from a specific environment: development, staging, or production. Each environment stores an independent snapshot.",
     code: `import fluiq
 
 fluiq.instrument(api_key="fl_...")
@@ -40,10 +40,10 @@ fluiq.instrument(api_key="fl_...")
 # Production snapshot (default)
 prod_prompt    = fluiq.fetch_prompt("summariser")
 
-# Staging — test changes before promoting to prod
+# Staging: test changes before promoting to prod
 staging_prompt = fluiq.fetch_prompt("summariser", env="staging")
 
-# Development — iterate locally without touching staging
+# Development: iterate locally without touching staging
 dev_prompt     = fluiq.fetch_prompt("summariser", env="development")
 
 print(f"prod v{prod_prompt.version}  →  {prod_prompt.template[:60]}...")
@@ -52,7 +52,7 @@ print(f"dev  v{dev_prompt.version}  →  {dev_prompt.template[:60]}...")`,
   },
   {
     label: "Anthropic",
-    description: "Use fetch_prompt() with Anthropic — the prompt object exposes the suggested model so your code stays model-agnostic.",
+    description: "Use fetch_prompt() with Anthropic; the prompt object exposes the suggested model so your code stays model-agnostic.",
     code: `import fluiq
 import anthropic
 
@@ -73,7 +73,7 @@ print(response.content[0].text)`,
   },
   {
     label: "Template variables",
-    description: "Inspect detected variables before rendering — useful for validation or building dynamic UIs.",
+    description: "Inspect detected variables before rendering; useful for validation or building dynamic UIs.",
     code: `import fluiq
 
 fluiq.instrument(api_key="fl_...")
@@ -96,7 +96,7 @@ print(filled)`,
   },
   {
     label: "Hot-swap",
-    description: "Call fetch_prompt() per request to pick up promoted changes instantly — no code change or redeploy needed.",
+    description: "Call fetch_prompt() per request to pick up promoted changes instantly; no code change or redeploy needed.",
     code: `import fluiq
 import openai
 
@@ -105,7 +105,7 @@ fluiq.instrument(api_key="fl_...")
 client = openai.OpenAI()
 
 def handle_request(user_message: str) -> str:
-    # Fetched fresh every call — promotions appear immediately
+    # Fetched fresh every call; promotions appear immediately
     prompt = fluiq.fetch_prompt("chat-system-prompt")
 
     response = client.chat.completions.create(
@@ -123,7 +123,7 @@ def handle_request(user_message: str) -> str:
   },
   {
     label: "Async",
-    description: "fetch_prompt() works identically inside async functions — await it in FastAPI, async LangChain, or any async framework.",
+    description: "fetch_prompt() works identically inside async functions; await it in FastAPI, async LangChain, or any async framework.",
     code: `import fluiq
 import openai
 import asyncio
@@ -147,7 +147,7 @@ asyncio.run(handle("How do I upgrade my plan?"))`,
   },
   {
     label: "Version info",
-    description: "Inspect version and deployment metadata of a fetched prompt — useful for logging and debugging.",
+    description: "Inspect version and deployment metadata of a fetched prompt; useful for logging and debugging.",
     code: `import fluiq
 
 fluiq.instrument(api_key="fl_...")
@@ -196,7 +196,7 @@ console.log(response.choices[0].message.content);`,
   },
   {
     label: "Environments",
-    description: "Fetch a prompt from a specific environment — development, staging, or production. Each environment stores an independent snapshot.",
+    description: "Fetch a prompt from a specific environment: development, staging, or production. Each environment stores an independent snapshot.",
     code: `import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." });
@@ -204,10 +204,10 @@ fluiq.instrument({ apiKey: "fl_..." });
 // Production snapshot (default)
 const prodPrompt = await fluiq.fetchPrompt("summariser");
 
-// Staging — test changes before promoting to prod
+// Staging: test changes before promoting to prod
 const stagingPrompt = await fluiq.fetchPrompt("summariser", { env: "staging" });
 
-// Development — iterate locally without touching staging
+// Development: iterate locally without touching staging
 const devPrompt = await fluiq.fetchPrompt("summariser", { env: "development" });
 
 console.log(\`prod v\${prodPrompt.version}  →  \${prodPrompt.template.slice(0, 60)}...\`);
@@ -216,7 +216,7 @@ console.log(\`dev  v\${devPrompt.version}  →  \${devPrompt.template.slice(0, 6
   },
   {
     label: "Anthropic",
-    description: "Use fetchPrompt() with Anthropic — the prompt object exposes the suggested model so your code stays model-agnostic.",
+    description: "Use fetchPrompt() with Anthropic; the prompt object exposes the suggested model so your code stays model-agnostic.",
     code: `import fluiq from "@fluiq/sdk";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -237,7 +237,7 @@ console.log(response.content[0].type === "text" && response.content[0].text);`,
   },
   {
     label: "Template variables",
-    description: "Inspect declared variables before rendering — useful for validation or building dynamic UIs.",
+    description: "Inspect declared variables before rendering; useful for validation or building dynamic UIs.",
     code: `import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." });
@@ -260,7 +260,7 @@ console.log(filled);`,
   },
   {
     label: "Hot-swap",
-    description: "Call fetchPrompt() per request to pick up promoted changes instantly — no code change or redeploy needed.",
+    description: "Call fetchPrompt() per request to pick up promoted changes instantly; no code change or redeploy needed.",
     code: `import fluiq from "@fluiq/sdk";
 import OpenAI from "openai";
 
@@ -269,7 +269,7 @@ fluiq.instrument({ apiKey: "fl_..." });
 const client = new OpenAI();
 
 async function handleRequest(userMessage: string): Promise<string> {
-  // Fetched fresh every call — promotions appear immediately
+  // Fetched fresh every call; promotions appear immediately
   const prompt = await fluiq.fetchPrompt("chat-system-prompt");
 
   const response = await client.chat.completions.create({
@@ -288,7 +288,7 @@ async function handleRequest(userMessage: string): Promise<string> {
   },
   {
     label: "Express handler",
-    description: "fetchPrompt() is async — await it inside any Express, Fastify, or Next.js route handler.",
+    description: "fetchPrompt() is async; await it inside any Express, Fastify, or Next.js route handler.",
     code: `import express from "express";
 import fluiq from "@fluiq/sdk";
 import OpenAI from "openai";
@@ -312,7 +312,7 @@ app.post("/support", async (req, res) => {
   },
   {
     label: "Version info",
-    description: "Inspect version and deployment metadata of a fetched prompt — useful for logging and debugging.",
+    description: "Inspect version and deployment metadata of a fetched prompt; useful for logging and debugging.",
     code: `import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." });

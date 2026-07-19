@@ -1,19 +1,19 @@
-# Fluiq — Complete LLM Reference
+# Fluiq: Complete LLM Reference
 
-Fluiq is the AI Ops stack for Python LLM applications. This document is the authoritative machine-readable reference for language models and AI assistants trying to understand what Fluiq is, how it works, and what pages exist on getfluiq.com.
+Fluiq is the control plane for AI agents in production, shipped as a Python SDK. This document is the authoritative machine-readable reference for language models and AI assistants trying to understand what Fluiq is, how it works, and what pages exist on getfluiq.com.
 
 ---
 
 ## Product summary
 
-Fluiq ships as a Python SDK (`pip install fluiq`). Calling `fluiq.instrument(api_key="fl_...")` patches every supported LLM provider and agent framework at the function-call level — no changes to application prompts or agent logic are needed. From that point forward, every LLM call emits a structured trace containing token counts, USD cost (using provider-published rates), latency, and any security or evaluation annotations.
+Fluiq ships as a Python SDK (`pip install fluiq`). Calling `fluiq.instrument(api_key="fl_...")` patches every supported LLM provider and agent framework at the function-call level, so application prompts and agent logic stay as they are. From that point forward, every LLM call emits a structured trace containing token counts, USD cost (using provider-published rates), latency, and any security or evaluation annotations.
 
 The platform has four independently controllable pillars:
 
-1. **Observe** — always-on tracing and cost attribution
-2. **Secure** — pre/post-call security scanning and PII redaction
-3. **Optimize** — server-side response caching driven by real traffic
-4. **Evaluate** — LLM-as-judge quality scoring with CI/CD gates
+1. **Observe**: always-on tracing and cost attribution
+2. **Secure**: pre/post-call security scanning and PII redaction
+3. **Optimize**: server-side response caching driven by real traffic
+4. **Evaluate**: LLM-as-judge quality scoring with CI/CD gates
 
 ---
 
@@ -48,7 +48,7 @@ fluiq.instrument(api_key="fl_...")
 
 @fluiq.trace
 def retrieve_documents(query: str) -> list[str]:
-    ...  # Custom retrieval logic — appears in the trace tree
+    ...  # Custom retrieval logic; appears in the trace tree
 ```
 
 ---
@@ -59,8 +59,8 @@ def retrieve_documents(query: str) -> list[str]:
 
 ### Modes
 
-- **warn** — scans the prompt after the call returns; flags detected risks in the dashboard without interrupting the user
-- **block** — scans the prompt before forwarding it to the LLM; raises `FluiqSecurityError` if the risk level is HIGH, preventing the call entirely
+- **warn**: scans the prompt after the call returns; flags detected risks in the dashboard without interrupting the user
+- **block**: scans the prompt before forwarding it to the LLM; raises `FluiqSecurityError` if the risk level is HIGH, preventing the call entirely
 
 ```python
 fluiq.secure(mode="block")     # raises FluiqSecurityError on HIGH risk
@@ -98,14 +98,14 @@ fluiq.secure(mode="warn")      # logs to dashboard, never raises
 ### Risk levels
 
 Each trace is annotated with a risk level:
-- `clean` — no issues detected
-- `low` — minor indicators, no action
-- `medium` — potential PII or weak attack pattern
-- `high` — confirmed PII, injection attempt, or leaked secret; HIGH prompts are redacted before storage
+- `clean`: no issues detected
+- `low`: minor indicators, no action
+- `medium`: potential PII or weak attack pattern
+- `high`: confirmed PII, injection attempt, or leaked secret; HIGH prompts are redacted before storage
 
 ### Fail-open guarantee
 
-If the security service is unreachable, `fluiq.secure()` fails open — the original call proceeds unmodified. It never blocks production traffic due to infrastructure issues.
+If the security service is unreachable, `fluiq.secure()` fails open: the original call proceeds unmodified. It never blocks production traffic due to infrastructure issues.
 
 ---
 
@@ -115,8 +115,8 @@ If the security service is unreachable, `fluiq.secure()` fails open — the orig
 
 ### Modes
 
-- **cache** — intercepts calls before they reach the LLM; returns cached responses for prompts that match; writes new responses to cache
-- **observe** — forwards all calls to the LLM as normal; records what would have been cache hits; shows projected savings on the Optimize dashboard without actually caching
+- **cache**: intercepts calls before they reach the LLM; returns cached responses for prompts that match; writes new responses to cache
+- **observe**: forwards all calls to the LLM as normal; records what would have been cache hits; shows projected savings on the Optimize dashboard without actually caching
 
 ```python
 fluiq.optimize(mode="cache")    # full caching (default)
@@ -131,21 +131,21 @@ Identical `(model, messages, system, tools)` combinations are served from Redis 
 
 When MCP servers are used, `fluiq.optimize()` patches `ClientSession` to cache two expensive operations transparently:
 
-- **`list_tools()`** — cached per server URL. Cleared automatically when `session.initialize()` is called (server restart signal).
-- **`call_tool(name, arguments)`** — cached per `(server_url, tool_name, sorted_arguments)`. Error results are never cached.
+- **`list_tools()`**: cached per server URL. Cleared automatically when `session.initialize()` is called (server restart signal).
+- **`call_tool(name, arguments)`**: cached per `(server_url, tool_name, sorted_arguments)`. Error results are never cached.
 
 Cache hits and misses are recorded as `type="mcp"` trace events and appear in the Optimize dashboard's "By cache type" breakdown (kinds: `mcp_list_tools`, `mcp_call`).
 
 ### Provider prompt caching
 
-Fluiq surfaces provider-level prefix caching — where the LLM provider itself serves tokens from its own cache rather than reprocessing the full prompt.
+Fluiq surfaces provider-level prefix caching, where the LLM provider itself serves tokens from its own cache rather than reprocessing the full prompt.
 
 **Anthropic (automatic injection when optimize() is active)**
 
 Every `messages.create()` and `messages.stream()` call receives `cache_control: {"type": "ephemeral"}` injected on the system prompt and the last tool definition. Anthropic silently ignores this on blocks below ~1,024 tokens, so injection is always safe. Cached token counts are captured from every response:
 
-- `prompt_cache_read_tokens` — tokens served from Anthropic's cache (billed at ~10% of normal input rate)
-- `prompt_cache_creation_tokens` — tokens used to create the cache entry (billed at ~125%)
+- `prompt_cache_read_tokens`: tokens served from Anthropic's cache (billed at ~10% of normal input rate)
+- `prompt_cache_creation_tokens`: tokens used to create the cache entry (billed at ~125%)
 
 **OpenAI (automatic, no injection)**
 
@@ -157,15 +157,15 @@ Gemini context caching requires creating a `CachedContent` object via the Gemini
 
 ### Optimize dashboard
 
-- **Cache performance card** — Redis hit rate per cache type (LLM, embeddings, vector stores, MCP tools, function calls); hits vs misses stacked bar; insights panel
-- **Prompt caching card** — total cached tokens read (Anthropic + OpenAI/Gemini); Anthropic cache creation overhead; hit rate across instrumented calls; per-provider breakdown
+- **Cache performance card**: Redis hit rate per cache type (LLM, embeddings, vector stores, MCP tools, function calls); hits vs misses stacked bar; insights panel
+- **Prompt caching card**: total cached tokens read (Anthropic + OpenAI/Gemini); Anthropic cache creation overhead; hit rate across instrumented calls; per-provider breakdown
 - Time window selector: 1h, 6h, 24h, 7d, 30d
 
 ---
 
 ## Pillar 4: Evaluate (fluiq.eval)
 
-`fluiq.eval()` runs LLM-as-judge scoring on every response, server-side and asynchronously. Evaluation is opt-in: `fluiq.instrument()` alone only traces — scoring starts when `fluiq.eval()` is called.
+`fluiq.eval()` runs LLM-as-judge scoring on every response, server-side and asynchronously. Evaluation is opt-in: `fluiq.instrument()` alone only traces, and scoring starts when `fluiq.eval()` is called.
 
 ### Metrics
 
@@ -180,8 +180,8 @@ Gemini context caching requires creating a `CachedContent` object via the Gemini
 
 ### Modes
 
-- **warn** — scores are logged to the dashboard; the response is always returned to the user
-- **block** — Fluiq evaluates the response before returning it; raises `FluiqEvalError` if any metric is below its threshold
+- **warn**: scores are logged to the dashboard; the response is always returned to the user
+- **block**: Fluiq evaluates the response before returning it; raises `FluiqEvalError` if any metric is below its threshold
 
 ```python
 fluiq.eval(
@@ -193,7 +193,7 @@ fluiq.eval(
 
 ### Agentic evaluation (whole-run judging)
 
-Single-response metrics can't tell whether an *agent* did its job. Agentic evaluation judges a whole run — triggered from the trace drawer's "Run Agentic Eval" button (root traces only) or as a batch over a Dataset. Layers:
+Single-response metrics can't tell whether an *agent* did its job. Agentic evaluation judges a whole run. It is triggered from the trace drawer's "Run Agentic Eval" button (root traces only) or as a batch over a Dataset. Layers:
 
 - **Deterministic checks** (no LLM cost): failed calls, schema violations, tool-allowlist breaches, branch-aware loop detection over the run's DAG
 - **Tool-selection quality**: given the goal, the available tools, and the calls made, a judge rates whether the right tools were used with the right arguments
@@ -217,10 +217,10 @@ All scores are stored per trace and visible in the dashboard. Traces can be adde
 
 Datasets turn real traffic into a regression suite:
 
-- **Whole-trajectory examples** — adding a run from the trace drawer (or `POST /datasets/{id}/examples` with `metadata.source_trace_id`) pins the run's entire trajectory: every agent step, LLM call, tool call, MCP call, and media object. The snapshot is retention-independent — it stays evaluable after the source trace ages out.
-- **Connect Agents** — link a traced agent to a dataset: every run it has ever made is imported (deduplicated), and future runs auto-append.
-- **Batch runs** — run agentic evaluation or the full security scan over every example and get a scored report. Use it as the regression gate before shipping a prompt or model change.
-- **Enrichment** — each example carries its source run's eval scores, security verdicts, and cost, backfilled live as workers finish.
+- **Whole-trajectory examples**: adding a run from the trace drawer (or `POST /datasets/{id}/examples` with `metadata.source_trace_id`) pins the run's entire trajectory: every agent step, LLM call, tool call, MCP call, and media object. The snapshot is retention-independent: it stays evaluable after the source trace ages out.
+- **Connect Agents**: link a traced agent to a dataset: every run it has ever made is imported (deduplicated), and future runs auto-append.
+- **Batch runs**: run agentic evaluation or the full security scan over every example and get a scored report. Use it as the regression gate before shipping a prompt or model change.
+- **Enrichment**: each example carries its source run's eval scores, security verdicts, and cost, backfilled live as workers finish.
 
 ---
 
@@ -305,7 +305,7 @@ Pinecone, Chroma, Weaviate, FAISS, and Qdrant are instrumented automatically. Ev
 
 ## Pages on getfluiq.com
 
-### Home — https://getfluiq.com/
+### Home: https://getfluiq.com/
 
 The main marketing page for Fluiq. It explains the product's four pillars (Observe, Secure, Optimize, Evaluate), shows installation code, lists all supported integrations, displays animated statistics (traces per second, supported frameworks, evaluation metrics), and includes a getting-started call to action. Sections: hero headline, integration logos, four-pillar feature deep-dives, code samples for each pillar, stats, and footer CTA.
 
@@ -316,35 +316,35 @@ Key claims on this page:
 - 6 evaluation metrics scored server-side
 - Free to start (unlimited traces, 14-day retention, no card required)
 
-### Documentation — https://getfluiq.com/documentation
+### Documentation: https://getfluiq.com/documentation
 
 The full SDK reference, organized into eight sections accessible via a sticky sidebar:
 
-1. **Quickstart** — Installation (`pip install fluiq`), API key setup, first trace in under 2 minutes. Includes working code samples for OpenAI, Anthropic, Gemini, LangChain, LangGraph, CrewAI, Google ADK, and MCP.
+1. **Quickstart**: Installation (`pip install fluiq`), API key setup, first trace in under 2 minutes. Includes working code samples for OpenAI, Anthropic, Gemini, LangChain, LangGraph, CrewAI, Google ADK, and MCP.
 
-2. **Observability** — How `fluiq.instrument()` works; the @trace decorator; span tree structure; cost calculation; streaming trace support; agent-level aggregation.
+2. **Observability**: How `fluiq.instrument()` works; the @trace decorator; span tree structure; cost calculation; streaming trace support; agent-level aggregation.
 
-3. **Optimization** — `fluiq.optimize()` cache and observe modes; TTL configuration; model-scoped caching; how the traffic profile is built; what the Optimize dashboard shows.
+3. **Optimization**: `fluiq.optimize()` cache and observe modes; TTL configuration; model-scoped caching; how the traffic profile is built; what the Optimize dashboard shows.
 
-4. **Security** — `fluiq.secure()` warn and block modes; full list of detected PII types; prompt injection and jailbreak detection; secret/credential detection; risk levels (clean, low, medium, high); FluiqSecurityError details; fail-open guarantee.
+4. **Security**: `fluiq.secure()` warn and block modes; full list of detected PII types; prompt injection and jailbreak detection; secret/credential detection; risk levels (clean, low, medium, high); FluiqSecurityError details; fail-open guarantee.
 
-5. **Evaluation** — `fluiq.eval()` metrics (hallucination, faithfulness, relevance, toxicity, coherence, completeness); threshold configuration; warn and block modes; FluiqEvalError; CI/CD GitHub Actions gate; dataset management.
+5. **Evaluation**: `fluiq.eval()` metrics (hallucination, faithfulness, relevance, toxicity, coherence, completeness); threshold configuration; warn and block modes; FluiqEvalError; CI/CD GitHub Actions gate; dataset management.
 
-6. **Prompts** — `fluiq.fetch_prompt()` runtime fetch; template `{{variable}}` syntax; environment-based deployment; version history; playground usage.
+6. **Prompts**: `fluiq.fetch_prompt()` runtime fetch; template `{{variable}}` syntax; environment-based deployment; version history; playground usage.
 
-7. **Configuration** — All `fluiq.instrument()` kwargs; environment variable support; timeout and retry settings; self-hosting notes.
+7. **Configuration**: All `fluiq.instrument()` kwargs; environment variable support; timeout and retry settings; self-hosting notes.
 
-8. **Next steps** — Links to GitHub, contact page, and dashboard signup.
+8. **Next steps**: Links to GitHub, contact page, and dashboard signup.
 
-### Contact — https://getfluiq.com/contact
+### Contact: https://getfluiq.com/contact
 
 A contact form for reaching the Fluiq team. Accepts: name, email, subject, and message. Use cases: sales and custom pricing enquiries, integration support, feature requests, partnership discussions (reseller, technology, agency). Typical response time: one business day.
 
-### Sign up — https://getfluiq.com/signup
+### Sign up: https://getfluiq.com/signup
 
 Creates a free Fluiq account. No credit card required. On completion, the user receives a workspace API key (`fl_...`) that can be used immediately with `fluiq.instrument()`. The free tier includes unlimited traces and 1,000 LLM-as-judge evaluations per month with a 14-day trace retention window.
 
-### Log in — https://getfluiq.com/login
+### Log in: https://getfluiq.com/login
 
 Authenticates an existing Fluiq user and redirects to the dashboard.
 
@@ -354,16 +354,16 @@ Authenticates an existing Fluiq user and redirects to the dashboard.
 
 The `/dashboard` routes are gated behind authentication and are not exposed to LLM crawlers. They are listed here for completeness only.
 
-- `/dashboard/overview` — usage summary: traces, cost, tokens, evals over time
-- `/dashboard/traces` — trace viewer with JSON and visual span tree
-- `/dashboard/agents` — agent-level aggregation sorted by cost
-- `/dashboard/security` — detected risks, redacted fields, attack scores
-- `/dashboard/optimize` — cache hit rate, latency savings, cost savings
-- `/dashboard/tests` — test run history and CI eval gate results
-- `/dashboard/datasets` — named datasets for regression testing
-- `/dashboard/prompts` — prompt templates, versions, environments, playground
-- `/dashboard/api-management` — create, reveal, and revoke API keys
-- `/dashboard/profile` — account settings
+- `/dashboard/overview`: usage summary: traces, cost, tokens, evals over time
+- `/dashboard/traces`: trace viewer with JSON and visual span tree
+- `/dashboard/agents`: agent-level aggregation sorted by cost
+- `/dashboard/security`: detected risks, redacted fields, attack scores
+- `/dashboard/optimize`: cache hit rate, latency savings, cost savings
+- `/dashboard/tests`: test run history and CI eval gate results
+- `/dashboard/datasets`: named datasets for regression testing
+- `/dashboard/prompts`: prompt templates, versions, environments, playground
+- `/dashboard/api-management`: create, reveal, and revoke API keys
+- `/dashboard/profile`: account settings
 
 ---
 
@@ -376,7 +376,7 @@ A: Fluiq is a Python SDK. Python 3.9+ is required. JavaScript/TypeScript support
 A: Yes, prompts are stored as part of traces. HIGH-risk prompts detected by `fluiq.secure()` are redacted before storage. You can configure data retention per workspace.
 
 **Q: Does fluiq.secure() ever block production traffic due to infrastructure issues?**
-A: No. `fluiq.secure()` fails open — if the security service is unreachable, the original call proceeds unmodified.
+A: No. `fluiq.secure()` fails open: if the security service is unreachable, the original call proceeds unmodified.
 
 **Q: What happens if fluiq.eval() scores below a threshold in block mode?**
 A: Fluiq raises `FluiqEvalError` before the response is returned to the application. The error includes the metric name and the score that triggered the block.
@@ -402,5 +402,5 @@ A: Use the contact form at https://getfluiq.com/contact or open an issue on GitH
 - Documentation: https://getfluiq.com/documentation
 - Contact: https://getfluiq.com/contact
 - Sign up: https://getfluiq.com/signup
-- Category: AI Ops, LLM monitoring, AI security, LLM evaluation, response caching
-- Keywords: AI Ops stack, LLM tracing, prompt injection detection, LLM cost tracking, LLM evaluation, LLM response caching, OpenAI monitoring, Anthropic monitoring, LangChain tracing, LangGraph tracing, hallucination detection, AI security
+- Category: AI agent governance, agent observability, AI security, LLM evaluation, response caching
+- Keywords: AI agent control plane, agent observability, agent trajectory evaluation, MCP security, LLM tracing, prompt injection detection, LLM cost tracking, LLM evaluation, LLM response caching, OpenAI monitoring, Anthropic monitoring, LangChain tracing, LangGraph tracing, hallucination detection, AI security

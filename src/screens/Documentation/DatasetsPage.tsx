@@ -21,7 +21,7 @@ export default function DatasetsPage() {
         <PageHeading
           icon={Database01Icon}
           title="Datasets"
-          description="Curate golden datasets straight from your real traffic, then re-run evaluation and security over them as a regression suite. Trace-backed examples capture the whole agent run — not just an input/output pair — so full agentic evaluation works offline, forever."
+          description="Curate golden datasets straight from your real traffic, then re-run evaluation and security over them as a regression suite. Trace-backed examples capture the whole agent run, not just an input/output pair, so full agentic evaluation works offline, forever."
         />
 
         <div className="flex items-center gap-2 pt-2">
@@ -43,12 +43,12 @@ export default function DatasetsPage() {
           <p className="font-medium">Trajectory capture</p>
         </div>
         <p className="text-sm text-muted-foreground">
-          When you add a trace-backed example, Fluiq pins the run's <span className="font-medium text-foreground">whole trajectory</span> — every span: LLM calls, agent/task steps, tool calls, MCP calls, the multi-agent DAG, and media references — into a retention-independent store. Media is offloaded to object storage and re-linked on read. The pinned snapshot means a dataset run evaluates the exact trajectory even after the original trace has passed its retention window.
+          When you add a trace-backed example, Fluiq pins the run's <span className="font-medium text-foreground">whole trajectory</span> into a retention-independent store: every span, including LLM calls, agent/task steps, tool calls, MCP calls, the multi-agent DAG, and media references. Media is offloaded to object storage and re-linked on read. The pinned snapshot means a dataset run evaluates the exact trajectory even after the original trace has passed its retention window.
         </p>
         <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
           <p className="font-medium">Why the whole trajectory?</p>
           <p className="mt-1 text-muted-foreground">
-            A single input/output pair can only be scored as one turn. Pinning the full run lets Fluiq re-run <span className="font-medium text-foreground">agentic</span> evaluation — tool-selection correctness, trajectory quality, and multi-agent coordination — and security, exactly as it would on a live trace. Expand any example in the{" "}
+            A single input/output pair can only be scored as one turn. Pinning the full run lets Fluiq re-run <span className="font-medium text-foreground">agentic</span> evaluation (tool-selection correctness, trajectory quality, and multi-agent coordination) and security, exactly as it would on a live trace. Expand any example in the{" "}
             <Link to="/dashboard/datasets" className="font-medium text-foreground hover:underline">Datasets</Link>{" "}
             dashboard to inspect the captured steps, agents, tools, and MCP calls.
           </p>
@@ -59,7 +59,7 @@ export default function DatasetsPage() {
           <p className="font-medium">Connect Agents</p>
         </div>
         <p className="text-sm text-muted-foreground">
-          Rather than adding runs one at a time, click <span className="font-medium text-foreground">Connect Agents</span> on a dataset and pick a traced agent. Fluiq imports every run of that agent to date (deduplicated, full trajectory pinned) and keeps the dataset in sync — future runs of a linked agent are appended automatically.
+          Rather than adding runs one at a time, click <span className="font-medium text-foreground">Connect Agents</span> on a dataset and pick a traced agent. Fluiq imports every run of that agent to date (deduplicated, full trajectory pinned) and keeps the dataset in sync; future runs of a linked agent are appended automatically.
         </p>
 
         <div className="flex items-center gap-2 pt-4">
@@ -67,7 +67,18 @@ export default function DatasetsPage() {
           <p className="font-medium">Batch evaluation &amp; security</p>
         </div>
         <p className="text-sm text-muted-foreground">
-          From a dataset you can launch a batch <span className="font-medium text-foreground">agentic evaluation</span> or <span className="font-medium text-foreground">security</span> run over every example. Each item is scored against its pinned trajectory and the results roll up into a report — the same signals you see on a live trace (quality, tool selection, trajectory, coordination; risk level and detections), now over a fixed, versioned set. Use it as a regression gate before shipping a prompt or model change.
+          From a dataset you can launch three kinds of batch run over every example:{" "}
+          <span className="font-medium text-foreground">agentic evaluation</span> (tool selection, trajectory, coordination against the pinned trajectory),{" "}
+          <span className="font-medium text-foreground">security</span> (risk level and detections), and a{" "}
+          <span className="font-medium text-foreground">metrics</span> run that grades each example's recorded answer against its{" "}
+          <code className="font-mono text-foreground">expected_output</code> with the metrics you pick (hallucination, faithfulness, relevance, toxicity, coherence, completeness). Results roll up into a per-run report with per-metric averages and per-example scores.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Compare runs.</span> Every report has a{" "}
+          <span className="font-medium text-foreground">Compare vs…</span> selector: pick any earlier run of the same kind and Fluiq diffs them — per-metric score deltas (computed only over examples present in both runs) and every example classified as{" "}
+          <span className="font-medium text-foreground">regressed</span>, improved, or unchanged. That's your regression gate before shipping a prompt or model change; the same check runs headless in CI via{" "}
+          <code className="font-mono text-foreground">python -m fluiq.ci</code> (see{" "}
+          <Link to="/documentation#evaluation" className="font-medium text-foreground hover:underline">Evaluation</Link>).
         </p>
 
         <div className="flex items-center gap-2 pt-4">
@@ -75,7 +86,7 @@ export default function DatasetsPage() {
           <p className="font-medium">Programmatic access</p>
         </div>
         <p className="text-sm text-muted-foreground">
-          Datasets are also reachable over the API — list datasets, add examples, and fetch an example's pinned trajectory.
+          Datasets are also reachable over the API: list datasets, add examples, and fetch an example's pinned trajectory.
         </p>
         <Code>{byLang(
           lang,

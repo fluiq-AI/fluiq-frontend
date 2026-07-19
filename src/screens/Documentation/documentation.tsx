@@ -43,7 +43,7 @@ const sections = [
 const integrations = [
   {
     name: "OpenAI",
-    blurb: "Patches chat completions, responses, parse, streaming, embeddings, images, and audio — sync and async.",
+    blurb: "Patches chat completions, responses, parse, streaming, embeddings, images, and audio, sync and async.",
     code: `import openai
 from fluiq import instrument
 
@@ -72,7 +72,7 @@ client.messages.create(
   },
   {
     name: "Gemini & Vertex AI",
-    blurb: "Patches google-genai and Vertex AI — generation, streaming, and count_tokens, sync and async.",
+    blurb: "Patches google-genai and Vertex AI: generation, streaming, and count_tokens, sync and async.",
     code: `from google import genai
 from fluiq import instrument
 
@@ -144,7 +144,7 @@ function Documentation() {
               Fluiq Python SDK
             </h1>
             <p className="mt-3 text-muted-foreground">
-              Two lines of Python instrument any AI agent or LLM pipeline. Auto-traced integrations for OpenAI, Anthropic, Gemini, LangChain, and MCP, plus a <code className="font-mono text-foreground">@trace</code> decorator for everything else. Server-side security scanning, Redis caching, and LLM-as-judge evaluations are one method call each — all on Fluiq infrastructure, nothing to deploy.
+              Two lines of Python instrument any AI agent or LLM pipeline. Auto-traced integrations for OpenAI, Anthropic, Gemini, LangChain, and MCP, plus a <code className="font-mono text-foreground">@trace</code> decorator for everything else. Server-side security scanning, Redis caching, and LLM-as-judge evaluations are one method call each, all on Fluiq infrastructure, nothing to deploy.
             </p>
           </div>
 
@@ -187,8 +187,8 @@ function Documentation() {
                       # Every OpenAI / Anthropic / Gemini / LangChain / MCP
                       # call from this point on is traced automatically.
                       # Optionally add paid features:
-                      fluiq.optimize()   # Redis caching — Team+
-                      fluiq.secure()     # Security scanning — Growth+`
+                      fluiq.optimize()   # Redis caching (Team+)
+                      fluiq.secure()     # Security scanning (Growth+)`
                       }
                   </Code>
                 </div>
@@ -203,7 +203,7 @@ function Documentation() {
               <h2 className="font-heading text-2xl font-semibold tracking-tight">Observability</h2>
             </div>
             <p className="text-muted-foreground">
-              Fluiq captures every LLM call, tool invocation, and retrieval step automatically — including model, messages, response, latency, token usage, and cost. Use the <code className="font-mono text-foreground">@trace</code> decorator to group any Python function into the same trace tree.
+              Fluiq captures every LLM call, tool invocation, and retrieval step automatically, including model, messages, response, latency, token usage, and cost. Use the <code className="font-mono text-foreground">@trace</code> decorator to group any Python function into the same trace tree.
             </p>
 
             <div className="flex items-center gap-2 pt-2">
@@ -244,7 +244,7 @@ def run(question: str) -> str:
               <p className="font-medium">Auto-instrumentation</p>
             </div>
             <p className="text-sm text-muted-foreground">
-              <code className="font-mono text-foreground">instrument()</code> patches every supported provider it can find on import. If a provider isn't installed the patch is skipped silently — you never need feature flags.
+              <code className="font-mono text-foreground">instrument()</code> patches every supported provider it can find on import. If a provider isn't installed the patch is skipped silently; you never need feature flags.
             </p>
             <div className="grid gap-4">
               {integrations.map((i) => (
@@ -268,7 +268,7 @@ def run(question: str) -> str:
               <p className="font-medium">Agents</p>
             </div>
             <p className="text-sm text-muted-foreground">
-              An <em>agent</em> in Fluiq is any function or chain you want to monitor as a single unit of work. Wrap your entrypoint with <code className="font-mono text-foreground">@trace</code> so every nested LLM call and tool invocation is grouped under one root — and aggregated as one row on the Agents dashboard.
+              An <em>agent</em> in Fluiq is any function or chain you want to monitor as a single unit of work. Wrap your entrypoint with <code className="font-mono text-foreground">@trace</code> so every nested LLM call and tool invocation is grouped under one root, and aggregated as one row on the Agents dashboard.
             </p>
             <Code>{`from fluiq import instrument, trace
 
@@ -280,7 +280,7 @@ def run_research_agent(question: str) -> str:
     docs = retrieve(plan)                 # nested @trace
     return synthesize(question, docs)     # nested @trace`}</Code>
             <p className="text-sm text-muted-foreground">
-              LangChain and LangGraph agents are traced automatically without a decorator — the integration emits a root span for the runnable and child spans for every internal step.
+              LangChain and LangGraph agents are traced automatically without a decorator; the integration emits a root span for the runnable and child spans for every internal step.
             </p>
 
             <div className="flex items-center gap-2 pt-4">
@@ -303,13 +303,13 @@ def run_research_agent(question: str) -> str:
               <h2 className="font-heading text-2xl font-semibold tracking-tight">Optimization</h2>
             </div>
             <p className="text-muted-foreground">
-              Call <code className="font-mono text-foreground">fluiq.optimize()</code> after <code className="font-mono text-foreground">instrument()</code> to enable trace-driven Redis caching. Fluiq's backend analyses your historical traces, identifies which LLM calls repeat most, and provisions a dedicated Redis instance for your account. On the first call the SDK fetches that profile and begins serving repeated prompts from cache — saving both latency and LLM spend with no extra code.
+              Call <code className="font-mono text-foreground">fluiq.optimize()</code> after <code className="font-mono text-foreground">instrument()</code> to enable trace-driven Redis caching. Fluiq's backend analyses your historical traces, identifies which LLM calls repeat most, and provisions a dedicated Redis instance for your account. On the first call the SDK fetches that profile and begins serving repeated prompts from cache, which saves latency and LLM spend with no extra code.
             </p>
 
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
               <p className="font-semibold text-amber-700 dark:text-amber-400">Team plan and above</p>
               <p className="mt-1 text-muted-foreground">
-                <code className="font-mono text-foreground">fluiq.optimize()</code> requires a Team, Growth, or Enterprise plan. Calling it on a Free account logs a warning and skips caching — tracing continues normally, your application is never interrupted.
+                <code className="font-mono text-foreground">fluiq.optimize()</code> requires a Team, Growth, or Enterprise plan. Calling it on a Free account logs a warning and skips caching; tracing continues normally, and your application is never interrupted.
               </p>
             </div>
 
@@ -320,15 +320,15 @@ fluiq.instrument(api_key="fl_...")
 fluiq.optimize()
 
 # All LLM calls from this point are transparently intercepted.
-# Repeated (model, messages) pairs are served from Redis instantly —
+# Repeated (model, messages) pairs are served from Redis instantly;
 # no LLM API call is made and your spend drops accordingly.`}</Code>
 
             <p className="font-medium">How it works</p>
             <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
               <li>On the first LLM call after startup the SDK fetches your <strong className="text-foreground">optimization profile</strong> from the Fluiq backend.</li>
               <li>The profile contains which models to cache, the suggested TTL, and the connection URL for your dedicated Redis instance.</li>
-              <li>Subsequent calls with an identical <code className="font-mono text-foreground">(model, messages)</code> combination are served from Redis instantly — your LLM provider is never contacted.</li>
-              <li>Real responses are cached automatically — there is nothing extra to instrument.</li>
+              <li>Subsequent calls with an identical <code className="font-mono text-foreground">(model, messages)</code> combination are served from Redis instantly; your LLM provider is never contacted.</li>
+              <li>Real responses are cached automatically; there is nothing extra to instrument.</li>
               <li>The dashboard <span className="text-foreground">Optimization</span> tab shows cache hit rate and estimated spend saved alongside your traces.</li>
             </ol>
 
@@ -343,7 +343,7 @@ fluiq.optimize()
                 {
                   name: `"observe"`,
                   badge: "optional",
-                  body: "No interception. The SDK records what would have been a cache hit so you can review potential savings — latency and spend — before opting into full caching.",
+                  body: "No interception. The SDK records what would have been a cache hit so you can review potential savings (latency and spend) before opting into full caching.",
                 },
               ].map((m) => (
                 <div key={m.name} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
@@ -376,13 +376,13 @@ fluiq.optimize(mode="cache")     # then enable full caching`}</Code>
               <h2 className="font-heading text-2xl font-semibold tracking-tight">Security</h2>
             </div>
             <p className="text-muted-foreground">
-              Call <code className="font-mono text-foreground">fluiq.secure()</code> after <code className="font-mono text-foreground">instrument()</code> to activate server-side security scanning. Every traced prompt and response is scanned for PII, prompt injection, and leaked secrets on Fluiq infrastructure. High-risk content is automatically redacted before persistence — the raw sensitive text is never written to the database.
+              Call <code className="font-mono text-foreground">fluiq.secure()</code> after <code className="font-mono text-foreground">instrument()</code> to activate server-side security scanning. Every traced prompt and response is scanned for PII, prompt injection, and leaked secrets on Fluiq infrastructure. High-risk content is automatically redacted before persistence; the raw sensitive text is never written to the database.
             </p>
 
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
               <p className="font-semibold text-amber-700 dark:text-amber-400">Growth plan and above</p>
               <p className="mt-1 text-muted-foreground">
-                <code className="font-mono text-foreground">fluiq.secure()</code> requires a Growth or Enterprise plan. Calling it on a Free or Team account logs a warning and skips scanning — tracing continues normally, your application is never interrupted.
+                <code className="font-mono text-foreground">fluiq.secure()</code> requires a Growth or Enterprise plan. Calling it on a Free or Team account logs a warning and skips scanning; tracing continues normally, and your application is never interrupted.
               </p>
             </div>
 
@@ -396,19 +396,19 @@ fluiq.secure()
 # Use mode="block" to reject malicious prompts before the LLM call:
 fluiq.secure(mode="block")`}</Code>
             <p className="text-sm text-muted-foreground">
-              No extra packages — scanning runs on Fluiq infrastructure, not in your process. Detection patterns are never shipped in the SDK and are improved continuously without requiring an update.
+              No extra packages are needed; scanning runs on Fluiq infrastructure, not in your process. Detection patterns are never shipped in the SDK and are improved continuously without requiring an update.
             </p>
 
             <p className="font-medium">What's scanned</p>
             <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
               <li>
-                <span className="text-foreground">PII scanner</span> — running server-side. Detects credit cards, SSNs, IBAN codes, email addresses, phone numbers, IP addresses, names, and popular API key formats. No client dependencies required.
+                <span className="text-foreground">PII scanner</span>: running server-side. Detects credit cards, SSNs, IBAN codes, email addresses, phone numbers, IP addresses, names, and popular API key formats. No client dependencies required.
               </li>
               <li>
-                <span className="text-foreground">Prompt-injection scanner</span> — detects known jailbreak and instruction-override phrases. Patterns are maintained server-side and updated without SDK releases.
+                <span className="text-foreground">Prompt-injection scanner</span>: detects known jailbreak and instruction-override phrases. Patterns are maintained server-side and updated without SDK releases.
               </li>
               <li>
-                <span className="text-foreground">Secret scanner</span> — matches hardcoded credential patterns for OpenAI, Anthropic, AWS, GitHub, and Stripe keys, and flags high-entropy tokens resembling bearer tokens or passwords.
+                <span className="text-foreground">Secret scanner</span>: matches hardcoded credential patterns for OpenAI, Anthropic, AWS, GitHub, and Stripe keys, and flags high-entropy tokens resembling bearer tokens or passwords.
               </li>
             </ul>
 
@@ -457,12 +457,12 @@ fluiq.secure(mode="block")`}</Code>
                   </tr>
                   <tr>
                     <td className="px-4 py-2 font-medium text-blue-600 dark:text-blue-400">low</td>
-                    <td className="px-4 py-2 font-mono text-muted-foreground">0.3 – 0.49</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">0.3-0.49</td>
                     <td className="px-4 py-2 text-muted-foreground">Weak signal; review recommended</td>
                   </tr>
                   <tr>
                     <td className="px-4 py-2 font-medium text-amber-600 dark:text-amber-400">medium</td>
-                    <td className="px-4 py-2 font-mono text-muted-foreground">0.5 – 0.89</td>
+                    <td className="px-4 py-2 font-mono text-muted-foreground">0.5-0.89</td>
                     <td className="px-4 py-2 text-muted-foreground">Likely PII, injection attempt, or suspicious string detected</td>
                   </tr>
                   <tr>
@@ -476,36 +476,36 @@ fluiq.secure(mode="block")`}</Code>
 
             <p className="font-medium">Audit Logs</p>
             <p className="text-sm text-muted-foreground">
-              Every action taken by a user or API key through Fluiq — SDK configuration calls, key creation, policy changes — is written to an append-only audit log backed by ClickHouse. Each row is signed with HMAC-SHA256 so tampering can be detected downstream.
+              Every action taken by a user or API key through Fluiq (SDK configuration calls, key creation, policy changes) is written to an append-only audit log backed by ClickHouse. Each row is signed with HMAC-SHA256 so tampering can be detected downstream.
             </p>
             <ul className="list-disc space-y-2 pl-5 text-sm text-muted-foreground">
               <li>
-                <span className="text-foreground">10-year retention</span> — rows are never updated or deleted. Meets requirements under the EU AI Act, China AIGC regulations, and the Colorado AI Act.
+                <span className="text-foreground">10-year retention</span>: rows are never updated or deleted. Meets requirements under the EU AI Act, China AIGC regulations, and the Colorado AI Act.
               </li>
               <li>
-                <span className="text-foreground">Event types logged</span> — <code className="font-mono text-foreground">api_key.created</code>, <code className="font-mono text-foreground">api_key.deleted</code>, <code className="font-mono text-foreground">guardrail.updated</code>, <code className="font-mono text-foreground">eval.configured</code>, <code className="font-mono text-foreground">secure.configured</code>, <code className="font-mono text-foreground">optimize.configured</code>, <code className="font-mono text-foreground">user.invited</code>, <code className="font-mono text-foreground">user.removed</code>, and more.
+                <span className="text-foreground">Event types logged</span>: <code className="font-mono text-foreground">api_key.created</code>, <code className="font-mono text-foreground">api_key.deleted</code>, <code className="font-mono text-foreground">guardrail.updated</code>, <code className="font-mono text-foreground">eval.configured</code>, <code className="font-mono text-foreground">secure.configured</code>, <code className="font-mono text-foreground">optimize.configured</code>, <code className="font-mono text-foreground">user.invited</code>, <code className="font-mono text-foreground">user.removed</code>, and more.
               </li>
               <li>
-                <span className="text-foreground">Dashboard access</span> — browse, filter, and export as CSV at <code className="font-mono text-foreground">/dashboard/audit</code>. The <code className="font-mono text-foreground">row_hash</code> field is shown per event for compliance hand-off.
+                <span className="text-foreground">Dashboard access</span>: browse, filter, and export as CSV at <code className="font-mono text-foreground">/dashboard/audit</code>. The <code className="font-mono text-foreground">row_hash</code> field is shown per event for compliance hand-off.
               </li>
               <li>
-                <span className="text-foreground">API access</span> — <code className="font-mono text-foreground">GET /api/v1/audit</code> accepts <code className="font-mono text-foreground">event_type</code>, <code className="font-mono text-foreground">actor</code>, <code className="font-mono text-foreground">limit</code> (max 500), and <code className="font-mono text-foreground">offset</code> query parameters. No SDK change needed — the log is maintained automatically.
+                <span className="text-foreground">API access</span>: <code className="font-mono text-foreground">GET /api/v1/audit</code> accepts <code className="font-mono text-foreground">event_type</code>, <code className="font-mono text-foreground">actor</code>, <code className="font-mono text-foreground">limit</code> (max 500), and <code className="font-mono text-foreground">offset</code> query parameters. No SDK change is needed; the log is maintained automatically.
               </li>
             </ul>
 
             <p className="font-medium">Guardrail Policies</p>
             <p className="text-sm text-muted-foreground">
-              Fine-tune exactly what <code className="font-mono text-foreground">fluiq.secure()</code> blocks for your organisation without changing SDK code. Policies are stored per-org in Postgres and cached in-process for 60 seconds — configuration changes propagate to all new calls within one minute.
+              Fine-tune exactly what <code className="font-mono text-foreground">fluiq.secure()</code> blocks for your organisation without changing SDK code. Policies are stored per-org in Postgres and cached in-process for 60 seconds; configuration changes propagate to all new calls within one minute.
             </p>
             <div className="grid gap-3 text-sm">
               {[
                 {
                   name: "Block threshold",
-                  body: 'Set to "high" (default) to block only confirmed high-risk requests, or "medium" to also block medium-risk findings. Warn threshold is configured independently — requests above it are flagged in traces even when not blocked.',
+                  body: 'Set to "high" (default) to block only confirmed high-risk requests, or "medium" to also block medium-risk findings. Warn threshold is configured independently; requests above it are flagged in traces even when not blocked.',
                 },
                 {
                   name: "Block categories",
-                  body: "Restrict which attack types trigger a block. When empty (default), any detected category blocks. Configure a subset — e.g. only prompt_injection and jailbreak — to warn on PII or secrets without blocking them.",
+                  body: "Restrict which attack types trigger a block. When empty (default), any detected category blocks. Configure a subset (e.g. only prompt_injection and jailbreak) to warn on PII or secrets without blocking them.",
                 },
                 {
                   name: "Custom deny / allow lists",
@@ -545,7 +545,7 @@ fluiq.secure(mode="block")`}</Code>
 fluiq.instrument(api_key="fl_...")
 fluiq.eval(
     thresholds={
-        "hallucination": 0.8,   # score 0–1; 1 = no hallucination
+        "hallucination": 0.8,   # score 0-1; 1 = no hallucination
         "faithfulness":  0.7,   # grounded in provided context
         "relevance":     0.75,  # response addresses the question
         "toxicity":      0.9,   # 1 = completely safe
@@ -566,12 +566,12 @@ fluiq.eval(
                 </thead>
                 <tbody className="divide-y divide-border/60">
                   {[
-                    ["hallucination", "Factual claims not supported by the prompt/context", "No hallucination — every claim is grounded"],
-                    ["faithfulness", "Whether the response stays within the provided context", "Fully grounded — no outside claims added"],
+                    ["hallucination", "Factual claims not supported by the prompt/context", "No hallucination; every claim is grounded"],
+                    ["faithfulness", "Whether the response stays within the provided context", "Fully grounded; no outside claims added"],
                     ["relevance", "How directly the response addresses the question", "Completely on-topic and direct"],
                     ["toxicity", "Harmful, offensive, or hateful content in the response", "Completely safe and respectful"],
                     ["coherence", "Logical structure and internal consistency", "Perfectly coherent and well-structured"],
-                    ["completeness", "Whether the response fully answers the question", "Comprehensive — no key information omitted"],
+                    ["completeness", "Whether the response fully answers the question", "Comprehensive; no key information omitted"],
                   ].map(([metric, desc, best]) => (
                     <tr key={metric}>
                       <td className="px-4 py-2 font-mono text-foreground">{metric}</td>
@@ -590,7 +590,7 @@ fluiq.eval(
                 <div>
                   <p className="font-mono text-sm text-foreground">mode="warn" <span className="font-sans text-muted-foreground font-normal">(default)</span></p>
                   <p className="mt-1 text-muted-foreground">
-                    Evaluation runs in a background thread after the LLM responds. Your application receives the response immediately. A Python warning is logged for every metric that falls below its threshold — visible in your logs and in the Fluiq dashboard's Quality column.
+                    Evaluation runs in a background thread after the LLM responds. Your application receives the response immediately. A Python warning is logged for every metric that falls below its threshold, visible in your logs and in the Fluiq dashboard's Quality column.
                   </p>
                 </div>
               </div>
@@ -599,7 +599,7 @@ fluiq.eval(
                 <div>
                   <p className="font-mono text-sm text-foreground">mode="block"</p>
                   <p className="mt-1 text-muted-foreground">
-                    Evaluation runs synchronously before returning the response. If any metric is below its threshold, a <code className="font-mono text-foreground">FluiqEvalError</code> is raised instead — the low-quality response never reaches your application. Use in staging or for safety-critical flows.
+                    Evaluation runs synchronously before returning the response. If any metric is below its threshold, a <code className="font-mono text-foreground">FluiqEvalError</code> is raised instead; the low-quality response never reaches your application. Use in staging or for safety-critical flows.
                   </p>
                 </div>
               </div>
@@ -666,7 +666,7 @@ jobs:
           resp.raise_for_status()
           data = resp.json()
           if data["total"] == 0:
-              print("No evaluations found — skipping gate.")
+              print("No evaluations found; skipping gate.")
               sys.exit(0)
           avg = data.get("avg_score")
           print(f"Evals: {data['total']} total, {data['passed']} passed, {data['failed']} failed  (avg {f'{avg:.2f}' if avg else 'n/a'})")
@@ -680,7 +680,7 @@ jobs:
 
             <p className="font-medium">Quotas</p>
             <p className="text-sm text-muted-foreground">
-              Each LLM response evaluation consumes one count from your tier's eval budget. Traces continue to ingest normally once the cap is hit — only the auto-eval is skipped.
+              Each LLM response evaluation consumes one count from your tier's eval budget. Traces continue to ingest normally once the cap is hit; only the auto-eval is skipped.
             </p>
             <div className="overflow-x-auto rounded-xl border border-border/60">
               <table className="w-full text-sm">
@@ -716,7 +716,7 @@ jobs:
               <h2 className="font-heading text-2xl font-semibold tracking-tight">Prompts</h2>
             </div>
             <p className="text-muted-foreground">
-              The Prompts dashboard turns every LLM trace into a managed prompt template. Discover prompts from production traffic, edit them with <code className="font-mono text-foreground">{"{{variable}}"}</code> substitution, run LLM-as-judge evaluations in the playground, then promote them to named environments so your SDK can fetch the right version at runtime — with no redeploy required.
+              The Prompts dashboard turns every LLM trace into a managed prompt template. Discover prompts from production traffic, edit them with <code className="font-mono text-foreground">{"{{variable}}"}</code> substitution, run LLM-as-judge evaluations in the playground, then promote them to named environments so your SDK can fetch the right version at runtime, with no redeploy required.
             </p>
 
             <div className="flex items-center gap-2 pt-2">
@@ -724,11 +724,11 @@ jobs:
               <p className="font-medium">Dashboard workflow</p>
             </div>
             <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
-              <li><span className="text-foreground">Discover</span> — the Prompts page surfaces every LLM call from your traces as a row. Click any row to open it in the evaluation playground alongside its full trace tree.</li>
-              <li><span className="text-foreground">Edit</span> — refine the template in the editor. Add <code className="font-mono text-foreground">{"{{variable}}"}</code> placeholders; the UI detects them and renders input fields for test values.</li>
-              <li><span className="text-foreground">Evaluate</span> — run LLM-as-judge metrics (hallucination, faithfulness, relevance …) on the template + response pair. Results appear inline as scored cards.</li>
-              <li><span className="text-foreground">Save</span> — give the prompt a name and a unique slug. Every subsequent edit creates a version snapshot so you can restore any previous state.</li>
-              <li><span className="text-foreground">Promote</span> — deploy to <span className="font-medium text-blue-500">development</span>, <span className="font-medium text-amber-500">staging</span>, and <span className="font-medium text-emerald-500">production</span> independently. Each environment stores a full snapshot of the template at promote time, so rolling back is one click.</li>
+              <li><span className="text-foreground">Discover</span>: the Prompts page surfaces every LLM call from your traces as a row. Click any row to open it in the evaluation playground alongside its full trace tree.</li>
+              <li><span className="text-foreground">Edit</span>: refine the template in the editor. Add <code className="font-mono text-foreground">{"{{variable}}"}</code> placeholders; the UI detects them and renders input fields for test values.</li>
+              <li><span className="text-foreground">Evaluate</span>: run LLM-as-judge metrics (hallucination, faithfulness, relevance …) on the template + response pair. Results appear inline as scored cards.</li>
+              <li><span className="text-foreground">Save</span>: give the prompt a name and a unique slug. Every subsequent edit creates a version snapshot so you can restore any previous state.</li>
+              <li><span className="text-foreground">Promote</span>: deploy to <span className="font-medium text-blue-500">development</span>, <span className="font-medium text-amber-500">staging</span>, and <span className="font-medium text-emerald-500">production</span> independently. Each environment stores a full snapshot of the template at promote time, so rolling back is one click.</li>
             </ol>
 
             <div className="flex items-center gap-2 pt-2">
@@ -750,7 +750,7 @@ Answer the following question in {{language}}: {{question}}`}</Code>
               <p className="font-medium">Environment-based deployment</p>
             </div>
             <p className="text-sm text-muted-foreground">
-              Each named environment stores an independent snapshot — promoting to <code className="font-mono text-foreground">staging</code> never touches <code className="font-mono text-foreground">production</code>. The typical promotion flow:
+              Each named environment stores an independent snapshot; promoting to <code className="font-mono text-foreground">staging</code> never touches <code className="font-mono text-foreground">production</code>. The typical promotion flow:
             </p>
             <div className="overflow-x-auto rounded-xl border border-border/60">
               <table className="w-full text-sm">
@@ -778,7 +778,7 @@ Answer the following question in {{language}}: {{question}}`}</Code>
                   <tr>
                     <td className="px-4 py-2 font-medium text-emerald-600 dark:text-emerald-400">production</td>
                     <td className="px-4 py-2"><span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-600 dark:text-emerald-400">prod</span></td>
-                    <td className="px-4 py-2 text-muted-foreground">Live traffic — the default</td>
+                    <td className="px-4 py-2 text-muted-foreground">Live traffic (the default)</td>
                     <td className="px-4 py-2 font-mono text-muted-foreground text-xs">fetch_prompt(slug)</td>
                   </tr>
                 </tbody>
@@ -790,7 +790,7 @@ Answer the following question in {{language}}: {{question}}`}</Code>
               <p className="font-medium">SDK fetch</p>
             </div>
             <p className="text-sm text-muted-foreground">
-              Call <code className="font-mono text-foreground">fluiq.fetch_prompt()</code> anywhere in your application to retrieve the deployed template for an environment. The call is authenticated with your API key and returns the snapshot that was promoted — not the current editor draft.
+              Call <code className="font-mono text-foreground">fluiq.fetch_prompt()</code> anywhere in your application to retrieve the deployed template for an environment. The call is authenticated with your API key and returns the snapshot that was promoted, not the current editor draft.
             </p>
             <Code>{`import fluiq
 
@@ -851,16 +851,16 @@ response = client.chat.completions.create(
               <p className="font-medium">Version history</p>
             </div>
             <p className="text-sm text-muted-foreground">
-              Every time you save an edited template, the previous version is automatically snapshotted. Open the <span className="font-medium text-foreground">History</span> panel on any saved prompt to browse past versions — each shows its version number, the template preview, the model, and when it was saved. Click <span className="font-medium text-foreground">Restore</span> to roll back; the current state is snapshotted first so no work is ever lost.
+              Every time you save an edited template, the previous version is automatically snapshotted. Open the <span className="font-medium text-foreground">History</span> panel on any saved prompt to browse past versions; each shows its version number, the template preview, the model, and when it was saved. Click <span className="font-medium text-foreground">Restore</span> to roll back; the current state is snapshotted first so no work is ever lost.
             </p>
             <p className="text-sm text-muted-foreground">
-              Environments pin to their snapshot independently — restoring v3 to the head does not change what <code className="font-mono text-foreground">production</code> is serving until you explicitly re-promote.
+              Environments pin to their snapshot independently; restoring v3 to the head does not change what <code className="font-mono text-foreground">production</code> is serving until you explicitly re-promote.
             </p>
 
             <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
               <p className="font-medium">Decoupled from your deploy pipeline</p>
               <p className="mt-1 text-muted-foreground">
-                Because <code className="font-mono text-foreground">fluiq.fetch_prompt()</code> fetches at runtime, you can update a production prompt — fix a hallucination-prone instruction, add a guardrail, tweak tone — in the dashboard without touching your codebase or triggering a new deployment. The change is live the next time your SDK calls <code className="font-mono text-foreground">fetch_prompt()</code>.
+                Because <code className="font-mono text-foreground">fluiq.fetch_prompt()</code> fetches at runtime, you can update a production prompt (fix a hallucination-prone instruction, add a guardrail, tweak tone) in the dashboard without touching your codebase or triggering a new deployment. The change is live the next time your SDK calls <code className="font-mono text-foreground">fetch_prompt()</code>.
               </p>
             </div>
           </section>
@@ -877,9 +877,9 @@ response = client.chat.completions.create(
 
             <p className="font-medium">fluiq.instrument()</p>
             <Code>{`fluiq.instrument(
-    api_key  = "fl_...",          # required — or set FLUIQ_API_KEY env var
-    endpoint = "https://...",     # optional — override for self-hosted
-    version  = "v1",              # optional — pin for stable schema
+    api_key  = "fl_...",          # required; or set FLUIQ_API_KEY env var
+    endpoint = "https://...",     # optional; override for self-hosted
+    version  = "v1",              # optional; pin for stable schema
 )`}</Code>
             <p className="text-sm text-muted-foreground">
               The SDK reads <code className="font-mono text-foreground">FLUIQ_API_KEY</code> and <code className="font-mono text-foreground">FLUIQ_API_ENDPOINT</code> from the environment automatically, so <code className="font-mono text-foreground">instrument()</code> can be called with no arguments in CI and production environments that set those variables.
@@ -898,9 +898,9 @@ response = client.chat.completions.create(
                     <Badge variant="outline" className="ml-2">Team+ required</Badge>
                   </p>
                   <p className="mt-1 text-muted-foreground">
-                    <code className="font-mono text-foreground">"cache"</code> — full Redis caching enabled (default).{" "}
-                    <code className="font-mono text-foreground">"observe"</code> — records what would be hits without intercepting calls.
-                    Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open — if the backend is unreachable or the plan check fails, all LLM calls proceed normally.
+                    <code className="font-mono text-foreground">"cache"</code>: full Redis caching enabled (default).{" "}
+                    <code className="font-mono text-foreground">"observe"</code>: records what would be hits without intercepting calls.
+                    Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open: if the backend is unreachable or the plan check fails, all LLM calls proceed normally.
                   </p>
                 </div>
               </div>
@@ -919,9 +919,9 @@ response = client.chat.completions.create(
                     <Badge variant="outline" className="ml-2">Growth+ required</Badge>
                   </p>
                   <p className="mt-1 text-muted-foreground">
-                    <code className="font-mono text-foreground">"warn"</code> — post-call scan only; security metadata enriched on the trace (default).{" "}
-                    <code className="font-mono text-foreground">"block"</code> — pre-call guard; raises <code className="font-mono text-foreground">FluiqSecurityError</code> before the LLM call when a HIGH-risk prompt is detected.
-                    Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open — a plan downgrade or endpoint outage never blocks your LLM calls.
+                    <code className="font-mono text-foreground">"warn"</code>: post-call scan only; security metadata enriched on the trace (default).{" "}
+                    <code className="font-mono text-foreground">"block"</code>: pre-call guard; raises <code className="font-mono text-foreground">FluiqSecurityError</code> before the LLM call when a HIGH-risk prompt is detected.
+                    Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open: a plan downgrade or endpoint outage never blocks your LLM calls.
                   </p>
                 </div>
               </div>
@@ -929,8 +929,8 @@ response = client.chat.completions.create(
 
             <p className="font-medium mt-2">fluiq.fetch_prompt()</p>
             <Code>{`fluiq.fetch_prompt(
-    slug  = "my-prompt",       # required — the unique identifier
-    env   = "production",      # optional — "development" | "staging" | "production" (default)
+    slug  = "my-prompt",       # required; the unique identifier
+    env   = "production",      # optional; "development" | "staging" | "production" (default)
 )`}</Code>
             <div className="grid gap-3 text-sm">
               <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">

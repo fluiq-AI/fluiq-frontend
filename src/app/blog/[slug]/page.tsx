@@ -24,7 +24,7 @@ export async function generateMetadata({
   const canonical = `/blog/${slug}`
   if (!post) return { alternates: { canonical } }
   const cover = post.cover_image_url ? mediaUrl(post.cover_image_url) : undefined
-  const title = post.seo_title || `${post.title} — Fluiq Blog`
+  const title = post.seo_title || `${post.title} | Fluiq Blog`
   const description = post.seo_description || post.excerpt
   return {
     title: { absolute: title },

@@ -8,11 +8,11 @@ import { Providers } from "./providers"
 export const metadata: Metadata = {
   metadataBase: new URL("https://getfluiq.com"),
   title: {
-    default: "Fluiq — The AI Ops Stack for Production LLM Applications",
+    default: "Fluiq | The Control Plane for AI Agents in Production",
     template: "%s | Fluiq",
   },
   description:
-    "The AI Ops stack for LLM applications — observe, secure, optimize, and evaluate every LLM call with two lines of Python.",
+    "The control plane for AI agents in production: block prompt attacks, score trajectories, cache repeated work, and trace every step with two lines of Python.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
         url: "https://getfluiq.com/banner.png",
         width: 1200,
         height: 630,
-        alt: "Fluiq — The AI Ops Stack for LLM Applications",
+        alt: "Fluiq, the control plane for AI agents in production",
       },
     ],
   },
@@ -53,7 +53,7 @@ const websiteJsonLd = {
   name: "Fluiq",
   url: "https://getfluiq.com",
   description:
-    "The AI Ops stack for LLM applications — observe, secure, optimize, and evaluate every LLM call with two lines of Python.",
+    "The control plane for AI agents in production: block prompt attacks, score trajectories, cache repeated work, and trace every step with two lines of Python.",
   potentialAction: {
     "@type": "SearchAction",
     target: "https://getfluiq.com/documentation",
@@ -74,8 +74,8 @@ const organizationJsonLd = {
     height: 512,
   },
   description:
-    "Fluiq is the AI Ops stack for LLM applications. Two lines of Python add tracing, security scanning, response caching, and LLM-as-judge evaluation to any LLM app.",
-  slogan: "The AI Ops stack for LLM applications.",
+    "Fluiq is the control plane for AI agents in production. Two lines of Python add tracing, pre-call security blocking, response caching, and trajectory-level evaluation to any agent or LLM app.",
+  slogan: "The control plane for AI agents in production.",
   // Topic entities Fluiq should be associated with in AI answers (AEO).
   knowsAbout: [
     "LLM observability",
@@ -89,7 +89,10 @@ const organizationJsonLd = {
     "LLM-as-judge",
     "hallucination detection",
     "prompt management",
-    "AI Ops",
+    "AI agent observability",
+    "AI agent governance",
+    "agent trajectory evaluation",
+    "MCP security",
   ],
   contactPoint: {
     "@type": "ContactPoint",

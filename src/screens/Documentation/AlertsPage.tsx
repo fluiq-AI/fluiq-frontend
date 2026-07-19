@@ -45,7 +45,7 @@ export default function AlertsPage() {
       <PageHeading
         icon={Alert02Icon}
         title="Alerts"
-        description="Push eval regressions and security events straight to Slack. Alerts are configured in the dashboard — no SDK code or redeploy required — and fire off the same evaluation and security scans already running on your traces."
+        description="Push eval regressions and security events straight to Slack. Alerts are configured in the dashboard (no SDK code or redeploy required) and fire off the same evaluation and security scans already running on your traces."
       />
 
       <p className="text-muted-foreground leading-relaxed">
@@ -84,7 +84,7 @@ export default function AlertsPage() {
       </p>
       <div className="grid gap-3 text-sm">
         <Field name="score_below">
-          Alert the moment any watched metric scores below this value (0–1). Watched metrics:{" "}
+          Alert the moment any watched metric scores below this value (0 to 1). Watched metrics:{" "}
           <code className="font-mono text-foreground">faithfulness</code>,{" "}
           <code className="font-mono text-foreground">answer_relevancy</code>,{" "}
           <code className="font-mono text-foreground">context_precision</code>,{" "}
@@ -93,7 +93,7 @@ export default function AlertsPage() {
         </Field>
         <Field name="failure_rate_above">
           Alert when the share of failing evals for a metric exceeds this percentage over a rolling window of recent
-          evaluations. Debounced — at most one failure-rate alert per metric every 10 minutes — so a sustained regression
+          evaluations. Debounced (at most one failure-rate alert per metric every 10 minutes) so a sustained regression
           pings you once, not on every trace.
         </Field>
       </div>
@@ -110,11 +110,11 @@ export default function AlertsPage() {
       </p>
       <div className="grid gap-3 text-sm">
         <Field name="alert_on">
-          Which risk levels page you — any combination of <code className="font-mono text-foreground">low</code>,{" "}
+          Which risk levels page you: any combination of <code className="font-mono text-foreground">low</code>,{" "}
           <code className="font-mono text-foreground">medium</code>, <code className="font-mono text-foreground">high</code>.
         </Field>
         <Field name="categories">
-          Restrict alerts to specific attack types — <code className="font-mono text-foreground">prompt_injection</code>,{" "}
+          Restrict alerts to specific attack types: <code className="font-mono text-foreground">prompt_injection</code>,{" "}
           <code className="font-mono text-foreground">jailbreak</code>, <code className="font-mono text-foreground">pii_detected</code>,{" "}
           <code className="font-mono text-foreground">secrets_detected</code>,{" "}
           <code className="font-mono text-foreground">indirect_injection</code>. Leave empty to alert on every detected category.
@@ -137,7 +137,7 @@ export default function AlertsPage() {
       {/* ── How it works / cost ── */}
       <h2 className="mt-6 font-heading text-xl font-semibold tracking-tight">How it works &amp; cost</h2>
       <p className="text-muted-foreground leading-relaxed">
-        Alerts read the eval and security results Fluiq already computes for your traces — there is no extra scan and no
+        Alerts read the eval and security results Fluiq already computes for your traces; there is no extra scan and no
         added latency on your LLM calls. Delivery uses Slack Incoming Webhooks, which are free. Eval alerts are included on
         Team and above; security alerts on Growth and above. There is no per-alert or metered charge.
       </p>
@@ -145,7 +145,7 @@ export default function AlertsPage() {
         <HugeiconsIcon icon={Alert02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
         <p className="text-muted-foreground">
           Alert delivery fails open: a webhook outage, a malformed payload, or a plan change never interrupts trace
-          processing — a missed alert is logged and dropped, never retried into a backlog.
+          processing; a missed alert is logged and dropped, never retried into a backlog.
         </p>
       </div>
     </div>

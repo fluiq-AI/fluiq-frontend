@@ -6,7 +6,7 @@ import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 const pythonTabs: CodeTab[] = [
   {
     label: "OpenAI",
-    description: "One call to optimize() enables semantic caching for all traced OpenAI calls — chat, streaming, and embeddings.",
+    description: "One call to optimize() enables semantic caching for all traced OpenAI calls: chat, streaming, and embeddings.",
     code: `import openai
 from fluiq import instrument, optimize
 
@@ -15,13 +15,13 @@ optimize()  # semantic caching (Team+ plan)
 
 client = openai.OpenAI()
 
-# First call — hits OpenAI, response cached in Redis
+# First call: hits OpenAI, response cached in Redis
 r1 = client.chat.completions.create(
     model="gpt-4o",
     messages=[{"role": "user", "content": "What is machine learning?"}],
 )
 
-# Semantically similar call — served instantly from cache
+# Semantically similar call: served instantly from cache
 r2 = client.chat.completions.create(
     model="gpt-4o",
     messages=[{"role": "user", "content": "Explain machine learning to me"}],
@@ -39,14 +39,14 @@ optimize()
 
 client = anthropic.Anthropic()
 
-# First call — hits Anthropic API
+# First call: hits Anthropic API
 response = client.messages.create(
     model="claude-sonnet-4-6",
     max_tokens=512,
     messages=[{"role": "user", "content": "What is machine learning?"}],
 )
 
-# Semantically equivalent follow-up — cache hit
+# Semantically equivalent follow-up: cache hit
 response2 = client.messages.create(
     model="claude-sonnet-4-6",
     max_tokens=512,
@@ -56,7 +56,7 @@ response2 = client.messages.create(
   },
   {
     label: "Gemini",
-    description: "Works with google-genai and Vertex AI — generation and streaming calls are all eligible for caching.",
+    description: "Works with google-genai and Vertex AI: generation and streaming calls are all eligible for caching.",
     code: `from google import genai
 from fluiq import instrument, optimize
 
@@ -65,13 +65,13 @@ optimize()
 
 client = genai.Client()
 
-# First call — hits Gemini API
+# First call: hits Gemini API
 response = client.models.generate_content(
     model="gemini-2.5-pro",
     contents="What is machine learning?",
 )
 
-# Semantically similar — cache hit
+# Semantically similar: cache hit
 response2 = client.models.generate_content(
     model="gemini-2.5-pro",
     contents="Explain what machine learning is",
@@ -80,7 +80,7 @@ response2 = client.models.generate_content(
   },
   {
     label: "LangChain",
-    description: "Caching applies to all LangChain LLM calls — chains, agents, and direct invocations.",
+    description: "Caching applies to all LangChain LLM calls: chains, agents, and direct invocations.",
     code: `from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from fluiq import instrument, optimize
@@ -98,12 +98,12 @@ chain = prompt | llm
 # First call hits the LLM
 chain.invoke({"question": "What is machine learning?"})
 
-# Semantically similar — cache hit
+# Semantically similar: cache hit
 chain.invoke({"question": "Explain machine learning briefly"})`,
   },
   {
     label: "LangGraph",
-    description: "Semantic caching applies to every LLM call inside a LangGraph node — repeated or similar subgraph paths are served from cache.",
+    description: "Semantic caching applies to every LLM call inside a LangGraph node; repeated or similar subgraph paths are served from cache.",
     code: `from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 from fluiq import instrument, optimize
@@ -137,15 +137,15 @@ graph = (
     .compile()
 )
 
-# First run — both nodes hit the LLM, responses cached
+# First run: both nodes hit the LLM, responses cached
 result1 = graph.invoke({"question": "What is semantic caching?"})
 
-# Semantically similar second run — node LLM calls served from cache
+# Semantically similar second run: node LLM calls served from cache
 result2 = graph.invoke({"question": "Explain semantic caching to me"})`,
   },
   {
     label: "CrewAI",
-    description: "Every LLM call made by a CrewAI agent is cached — repeated questions across tasks or reruns are served instantly.",
+    description: "Every LLM call made by a CrewAI agent is cached; repeated questions across tasks or reruns are served instantly.",
     code: `from crewai import Agent, Task, Crew, Process
 from fluiq import instrument, optimize
 
@@ -182,15 +182,15 @@ crew = Crew(
     process=Process.sequential,
 )
 
-# First run — LLM calls are cached per agent
+# First run: LLM calls are cached per agent
 crew.kickoff(inputs={"topic": "LLM observability"})
 
-# Rerun with similar topic — cache hits reduce latency and cost
+# Rerun with similar topic: cache hits reduce latency and cost
 crew.kickoff(inputs={"topic": "Observability for LLM pipelines"})`,
   },
   {
     label: "Google ADK",
-    description: "ADK agents are cached through the google-genai patch — repeated or semantically similar user queries skip the Gemini API entirely.",
+    description: "ADK agents are cached through the google-genai patch; repeated or semantically similar user queries skip the Gemini API entirely.",
     code: `from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
@@ -231,10 +231,10 @@ async def ask(user_id: str, question: str) -> str:
             return event.response.text
     return ""
 
-# First call — hits Gemini, response cached
+# First call: hits Gemini, response cached
 await ask("u1", "How do I reset my password?")
 
-# Semantically similar — cache hit, instant response, no Gemini cost
+# Semantically similar: cache hit, instant response, no Gemini cost
 await ask("u2", "What's the process to reset my password?")`,
   },
   {
@@ -256,7 +256,7 @@ optimize(
   },
   {
     label: "Anthropic prompt cache",
-    description: "fluiq.optimize() injects cache_control on the system prompt and last tool definition automatically — no code changes needed. Cached token counts appear in every trace.",
+    description: "fluiq.optimize() injects cache_control on the system prompt and last tool definition automatically; no code changes needed. Cached token counts appear in every trace.",
     code: `import anthropic
 from fluiq import instrument, optimize
 
@@ -296,7 +296,7 @@ response2 = client.messages.create(
   },
   {
     label: "MCP caching",
-    description: "optimize() transparently caches list_tools() and call_tool() on every MCP ClientSession — no changes to your MCP code required.",
+    description: "optimize() transparently caches list_tools() and call_tool() on every MCP ClientSession; no changes to your MCP code required.",
     code: `import asyncio
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
@@ -311,21 +311,21 @@ async def run():
             await session.initialize()
             # initialize() also invalidates any stale list_tools cache for this URL
 
-            # First call — hits the MCP server, result cached in Redis
+            # First call: hits the MCP server, result cached in Redis
             tools = await session.list_tools()
 
-            # Second call — served from Redis instantly (same server URL)
+            # Second call: served from Redis instantly (same server URL)
             tools_again = await session.list_tools()
 
-            # Tool call — result cached keyed by (server_url, "search", {query})
+            # Tool call: result cached keyed by (server_url, "search", {query})
             result = await session.call_tool("search", {"query": "fluiq optimize"})
 
-            # Identical call — served from Redis, MCP server never contacted
+            # Identical call: served from Redis, MCP server never contacted
             result2 = await session.call_tool("search", {"query": "fluiq optimize"})
 
 # Cache hits appear on the Optimize dashboard under:
-#   mcp_list_tools — hit rate for tool schema lookups
-#   mcp_call       — hit rate for tool execution results
+#   mcp_list_tools: hit rate for tool schema lookups
+#   mcp_call      : hit rate for tool execution results
 
 asyncio.run(run())`,
   },
@@ -334,7 +334,7 @@ asyncio.run(run())`,
 const typescriptTabs: CodeTab[] = [
   {
     label: "OpenAI",
-    description: "One call to optimize() enables semantic caching for all traced OpenAI calls — chat, streaming, and embeddings.",
+    description: "One call to optimize() enables semantic caching for all traced OpenAI calls: chat, streaming, and embeddings.",
     code: `import OpenAI from "openai";
 import fluiq from "@fluiq/sdk";
 
@@ -343,13 +343,13 @@ fluiq.optimize(); // semantic caching (Team+ plan)
 
 const client = new OpenAI();
 
-// First call — hits OpenAI, response cached in Redis
+// First call: hits OpenAI, response cached in Redis
 const r1 = await client.chat.completions.create({
   model: "gpt-4o",
   messages: [{ role: "user", content: "What is machine learning?" }],
 });
 
-// Semantically similar call — served instantly from cache
+// Semantically similar call: served instantly from cache
 const r2 = await client.chat.completions.create({
   model: "gpt-4o",
   messages: [{ role: "user", content: "Explain machine learning to me" }],
@@ -367,14 +367,14 @@ fluiq.optimize();
 
 const client = new Anthropic();
 
-// First call — hits Anthropic API
+// First call: hits Anthropic API
 const response = await client.messages.create({
   model: "claude-sonnet-4-6",
   max_tokens: 512,
   messages: [{ role: "user", content: "What is machine learning?" }],
 });
 
-// Semantically equivalent follow-up — cache hit
+// Semantically equivalent follow-up: cache hit
 const response2 = await client.messages.create({
   model: "claude-sonnet-4-6",
   max_tokens: 512,
@@ -384,7 +384,7 @@ const response2 = await client.messages.create({
   },
   {
     label: "Gemini",
-    description: "Works with @google/genai and Vertex AI — generation and streaming calls are all eligible for caching.",
+    description: "Works with @google/genai and Vertex AI: generation and streaming calls are all eligible for caching.",
     code: `import { GoogleGenAI } from "@google/genai";
 import fluiq from "@fluiq/sdk";
 
@@ -393,13 +393,13 @@ fluiq.optimize();
 
 const client = new GoogleGenAI({});
 
-// First call — hits Gemini API
+// First call: hits Gemini API
 const response = await client.models.generateContent({
   model: "gemini-2.5-pro",
   contents: "What is machine learning?",
 });
 
-// Semantically similar — cache hit
+// Semantically similar: cache hit
 const response2 = await client.models.generateContent({
   model: "gemini-2.5-pro",
   contents: "Explain what machine learning is",
@@ -408,7 +408,7 @@ const response2 = await client.models.generateContent({
   },
   {
     label: "LangChain",
-    description: "Caching applies to all LangChain LLM calls — chains, agents, and direct invocations.",
+    description: "Caching applies to all LangChain LLM calls: chains, agents, and direct invocations.",
     code: `import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import fluiq from "@fluiq/sdk";
@@ -426,12 +426,12 @@ const chain = prompt.pipe(llm);
 // First call hits the LLM
 await chain.invoke({ question: "What is machine learning?" });
 
-// Semantically similar — cache hit
+// Semantically similar: cache hit
 await chain.invoke({ question: "Explain machine learning briefly" });`,
   },
   {
     label: "LangGraph",
-    description: "Semantic caching applies to every LLM call inside a LangGraph node — repeated or similar subgraph paths are served from cache.",
+    description: "Semantic caching applies to every LLM call inside a LangGraph node; repeated or similar subgraph paths are served from cache.",
     code: `import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import fluiq from "@fluiq/sdk";
@@ -465,15 +465,15 @@ const graph = new StateGraph(State)
   .addEdge("refine", END)
   .compile();
 
-// First run — both nodes hit the LLM, responses cached
+// First run: both nodes hit the LLM, responses cached
 const result1 = await graph.invoke({ question: "What is semantic caching?" });
 
-// Semantically similar second run — node LLM calls served from cache
+// Semantically similar second run: node LLM calls served from cache
 const result2 = await graph.invoke({ question: "Explain semantic caching to me" });`,
   },
   {
     label: "Google ADK",
-    description: "ADK agents are cached through the @google/genai patch — repeated or semantically similar user queries skip the Gemini API entirely.",
+    description: "ADK agents are cached through the @google/genai patch; repeated or semantically similar user queries skip the Gemini API entirely.",
     code: `import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." });
@@ -481,7 +481,7 @@ fluiq.optimize(); // semantic caching (Team+ plan)
 
 // @google/adk agents call Gemini under the hood. With optimize() enabled,
 // repeated or semantically similar user queries are served from Redis instead
-// of hitting the Gemini API — instant responses at zero token cost. No changes
+// of hitting the Gemini API: instant responses at zero token cost. No changes
 // to your agent code are required.`,
   },
   {
@@ -503,7 +503,7 @@ fluiq.optimize({
   },
   {
     label: "Anthropic prompt cache",
-    description: "fluiq.optimize() injects cache_control on the system prompt and last tool definition automatically — no code changes needed. Cached token counts appear in every trace.",
+    description: "fluiq.optimize() injects cache_control on the system prompt and last tool definition automatically; no code changes needed. Cached token counts appear in every trace.",
     code: `import Anthropic from "@anthropic-ai/sdk";
 import fluiq from "@fluiq/sdk";
 
@@ -545,7 +545,7 @@ const response2 = await client.messages.create({
   },
   {
     label: "MCP caching",
-    description: "optimize() transparently caches listTools() and callTool() on every MCP client — no changes to your MCP code required.",
+    description: "optimize() transparently caches listTools() and callTool() on every MCP client; no changes to your MCP code required.",
     code: `import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import fluiq from "@fluiq/sdk";
@@ -560,27 +560,27 @@ const client = new Client({ name: "my-app", version: "1.0.0" });
 await client.connect(transport);
 // connect() also invalidates any stale listTools cache for this URL
 
-// First call — hits the MCP server, result cached in Redis
+// First call: hits the MCP server, result cached in Redis
 const tools = await client.listTools();
 
-// Second call — served from Redis instantly (same server URL)
+// Second call: served from Redis instantly (same server URL)
 const toolsAgain = await client.listTools();
 
-// Tool call — result cached keyed by (server URL, "search", { query })
+// Tool call: result cached keyed by (server URL, "search", { query })
 const result = await client.callTool({
   name: "search",
   arguments: { query: "fluiq optimize" },
 });
 
-// Identical call — served from Redis, MCP server never contacted
+// Identical call: served from Redis, MCP server never contacted
 const result2 = await client.callTool({
   name: "search",
   arguments: { query: "fluiq optimize" },
 });
 
 // Cache hits appear on the Optimize dashboard under:
-//   mcp_list_tools — hit rate for tool schema lookups
-//   mcp_call       — hit rate for tool execution results`,
+//   mcp_list_tools: hit rate for tool schema lookups
+//   mcp_call      : hit rate for tool execution results`,
   },
 ]
 
@@ -591,7 +591,7 @@ export default function OptimizationExamplesPage() {
       <PageHeading
         icon={MagicWand01Icon}
         title="Optimization"
-        description="fluiq.optimize() enables semantic caching on Fluiq-managed Redis. Calls with semantically similar prompts are served from cache — instant response, zero API cost."
+        description="fluiq.optimize() enables semantic caching on Fluiq-managed Redis. Calls with semantically similar prompts are served from cache: instant response, zero API cost."
       />
       <IntegrationTabs tabs={{ python: pythonTabs, typescript: typescriptTabs }} />
     </div>

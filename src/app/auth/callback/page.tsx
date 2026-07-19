@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Component from "@/pages/Authentication/auth-callback"
 
 export const metadata: Metadata = {
-  title: { absolute: "Signing You In to Fluiq — Completing Authentication Now" },
+  title: { absolute: "Signing you in | Fluiq" },
   robots: { index: false, follow: false },
 }
 

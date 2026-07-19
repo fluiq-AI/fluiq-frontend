@@ -169,8 +169,22 @@ export interface EvaluationScore {
     num_joins?: number
     run_score?: number
     run_passed?: boolean
+    // Prompt provenance: the exact judge prompt(s) that produced this score
+    judge_prompts?: JudgePromptUsage[]
     [key: string]: unknown
   } | null
+}
+
+// One judge prompt as rendered for an evaluation. `source` says which template
+// won: the org's override, an admin-edited platform template, the built-in
+// default, or a client-authored custom judge.
+export interface JudgePromptUsage {
+  name: string
+  source: "org" | "platform" | "default" | "custom"
+  version: number | null
+  calls?: number
+  truncated?: boolean
+  rendered?: string
 }
 
 export interface TraceRecord {

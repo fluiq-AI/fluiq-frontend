@@ -1,12 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Link } from "react-router"
-import { CheckmarkCircle02Icon, Cancel01Icon } from "@hugeicons/core-free-icons"
+import {
+  CheckmarkCircle02Icon,
+  Cancel01Icon,
+  ThumbsDownIcon,
+  ThumbsUpIcon,
+} from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { toast } from "sonner"
 
 import { authFetch } from "@/lib/authFetch"
 import { cn } from "@/lib/utils"
-import type { EvaluationScore } from "../utils/types"
+import type { EvaluationScore, JudgePromptUsage } from "../utils/types"
 import { formatScore, scoreBandClass } from "../utils"
 
 interface AgenticEvalResponse {
@@ -124,6 +129,88 @@ function RunAgenticEvalButton({
   )
 }
 
+interface LocalAnnotation {
+  value: boolean
+  comment: string
+}
+
+function AnnotateBar({ traceId, rootTraceId }: { traceId: string; rootTraceId?: string }) {
+  const [comment, setComment] = useState("")
+  const [busy, setBusy] = useState(false)
+  const [saved, setSaved] = useState<LocalAnnotation[]>([])
+
+  async function annotate(value: boolean) {
+    if (busy) return
+    setBusy(true)
+    try {
+      await authFetch(`/api/v1/traces/${traceId}/annotations`, {
+        method: "POST",
+        body: {
+          value,
+          root_trace_id: rootTraceId,
+          comment: comment.trim() || undefined,
+        },
+      })
+      setSaved((prev) => [...prev, { value, comment: comment.trim() }])
+      setComment("")
+      toast.success("Annotation recorded.")
+    } catch {
+      toast.error("Could not save the annotation.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+      <p className="text-xs font-medium text-foreground">Your verdict</p>
+      <div className="mt-1.5 flex items-center gap-1.5">
+        <input
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          placeholder="Optional note…"
+          className="h-7 min-w-0 flex-1 rounded-md border border-border/60 bg-background px-2 text-[11px] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => annotate(true)}
+          title="Looks good"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-emerald-500/10 hover:text-emerald-600 disabled:opacity-50 dark:hover:text-emerald-400"
+        >
+          <HugeiconsIcon icon={ThumbsUpIcon} size={14} />
+        </button>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => annotate(false)}
+          title="Something's wrong"
+          className="inline-flex size-7 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+        >
+          <HugeiconsIcon icon={ThumbsDownIcon} size={14} />
+        </button>
+      </div>
+      {saved.length > 0 ? (
+        <ul className="mt-2 space-y-1">
+          {saved.map((a, i) => (
+            <li key={i} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+              <HugeiconsIcon
+                icon={a.value ? ThumbsUpIcon : ThumbsDownIcon}
+                size={12}
+                className={cn(
+                  "mt-0.5 shrink-0",
+                  a.value ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
+                )}
+              />
+              <span>{a.comment || (a.value ? "Looks good" : "Flagged")}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  )
+}
+
 export function EvaluationsSection({
   evaluations,
   traceId,
@@ -136,11 +223,13 @@ export function EvaluationsSection({
   const button = traceId ? (
     <RunAgenticEvalButton traceId={traceId} rootTraceId={rootTraceId} evaluations={evaluations} />
   ) : null
+  const annotate = traceId ? <AnnotateBar traceId={traceId} rootTraceId={rootTraceId} /> : null
 
   if (!evaluations || evaluations.length === 0) {
     return (
       <div className="space-y-3">
         {button}
+        {annotate}
         <div className="flex flex-col items-center gap-4 p-6 text-center">
         <div className="flex size-10 items-center justify-center rounded-full bg-muted">
           <svg
@@ -193,6 +282,7 @@ fluiq.eval(
   return (
     <div className="space-y-3">
       {button}
+      {annotate}
       <div className="space-y-2">
         {evaluations.map((e, idx) => (
           <EvaluationItem key={`${e.metric}-${idx}`} evaluation={e} />
@@ -204,6 +294,49 @@ fluiq.eval(
 
 function EvaluationItem({ evaluation }: { evaluation: EvaluationScore }) {
   const { metric, score, judge_model, evaluator, details } = evaluation
+  const isHuman = evaluator.startsWith("human.")
+  const humanComment =
+    isHuman && details && typeof details.comment === "string" ? details.comment : null
+
+  if (isHuman) {
+    const up = typeof score === "number" && score >= 0.5
+    return (
+      <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <HugeiconsIcon
+                icon={up ? ThumbsUpIcon : ThumbsDownIcon}
+                size={13}
+                className={cn(
+                  "shrink-0",
+                  up ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
+                )}
+              />
+              <span className="truncate font-mono text-[11px] text-foreground">{metric}</span>
+              <span className="rounded bg-blue-500/10 px-1 py-0.5 text-[9px] font-medium text-blue-600 dark:text-blue-400">
+                {evaluator === "human.feedback" ? "end user" : "team"}
+              </span>
+            </div>
+            {humanComment ? (
+              <div className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
+                {humanComment}
+              </div>
+            ) : null}
+          </div>
+          <span
+            className={cn(
+              "inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-medium",
+              scoreBandClass(score),
+            )}
+          >
+            {formatScore(score)}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
   const reason =
     details && typeof details.reason === "string" ? details.reason : null
   const perChunk =
@@ -232,6 +365,8 @@ function EvaluationItem({ evaluation }: { evaluation: EvaluationScore }) {
     details && Array.isArray(details.joins) ? details.joins : null
   const runPassed =
     details && typeof details.run_passed === "boolean" ? details.run_passed : null
+  const judgePrompts =
+    details && Array.isArray(details.judge_prompts) ? details.judge_prompts : null
 
   return (
     <div className="rounded-md border border-border/60 bg-muted/30 px-3 py-2">
@@ -487,6 +622,92 @@ function EvaluationItem({ evaluation }: { evaluation: EvaluationScore }) {
               ))}
             </ul>
           ) : null}
+        </div>
+      ) : null}
+
+      {/* The exact judge prompt(s) that produced this score */}
+      {judgePrompts && judgePrompts.length > 0 ? (
+        <JudgePromptsBlock prompts={judgePrompts} />
+      ) : null}
+    </div>
+  )
+}
+
+const PROMPT_SOURCE_LABEL: Record<JudgePromptUsage["source"], string> = {
+  org: "customized",
+  platform: "platform",
+  default: "default",
+  custom: "custom judge",
+}
+
+function JudgePromptsBlock({ prompts }: { prompts: JudgePromptUsage[] }) {
+  const [open, setOpen] = useState(false)
+  const [expanded, setExpanded] = useState<string | null>(null)
+
+  return (
+    <div className="mt-2 rounded border border-border/60 bg-background/60">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between px-2 py-1.5 text-left"
+      >
+        <span className="text-[9px] font-medium uppercase tracking-wide text-muted-foreground">
+          Judge prompt{prompts.length > 1 ? "s" : ""}
+        </span>
+        <span className="text-[10px] text-muted-foreground">
+          {open ? "Hide" : `Show (${prompts.length})`}
+        </span>
+      </button>
+      {open ? (
+        <div className="space-y-1.5 border-t border-border/60 px-2 py-1.5">
+          {prompts.map((p) => (
+            <div key={p.name} className="rounded border border-border/40">
+              <button
+                type="button"
+                onClick={() => setExpanded(expanded === p.name ? null : p.name)}
+                className="flex w-full items-center justify-between gap-2 px-2 py-1 text-left"
+              >
+                <span className="min-w-0 truncate font-mono text-[10px] text-foreground">
+                  {p.name}
+                  {typeof p.version === "number" && p.version > 0 ? (
+                    <span className="text-muted-foreground"> v{p.version}</span>
+                  ) : null}
+                </span>
+                <span className="flex shrink-0 items-center gap-1.5">
+                  {p.calls && p.calls > 1 ? (
+                    <span className="text-[9px] text-muted-foreground">×{p.calls}</span>
+                  ) : null}
+                  <span
+                    className={cn(
+                      "rounded px-1 py-0.5 text-[9px] font-medium",
+                      p.source === "org" || p.source === "custom"
+                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {PROMPT_SOURCE_LABEL[p.source] ?? p.source}
+                  </span>
+                </span>
+              </button>
+              {expanded === p.name && p.rendered ? (
+                <div className="border-t border-border/40 px-2 py-1.5">
+                  <pre className="max-h-64 overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-muted-foreground">
+                    {p.rendered}
+                    {p.truncated ? "\n… (truncated)" : ""}
+                  </pre>
+                </div>
+              ) : null}
+            </div>
+          ))}
+          <p className="px-1 pb-0.5 text-[9px] text-muted-foreground">
+            Not what you want the judge to ask?{" "}
+            <Link
+              to="/dashboard/judge-prompts"
+              className="text-foreground underline-offset-2 hover:underline"
+            >
+              Customize judge prompts →
+            </Link>
+          </p>
         </div>
       ) : null}
     </div>

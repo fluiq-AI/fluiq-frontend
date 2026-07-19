@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "langfuse-alternative",
   name: "Langfuse",
-  metaTitle: "Fluiq vs Langfuse — Alternative With Security & Caching",
-  metaDescription: "Fluiq vs Langfuse: Fluiq needs zero manual spans, adds prompt injection blocking and Redis caching, and runs fully managed — no self-hosting required.",
+  metaTitle: "Fluiq vs Langfuse: An Alternative With Security & Caching",
+  metaDescription: "Fluiq vs Langfuse: Fluiq needs no manual spans, adds prompt injection blocking and Redis caching, and runs fully managed, so there is nothing to self-host.",
   canonicalPath: "/langfuse-alternative",
   heroHeadline: "The Langfuse Alternative: Zero Manual Spans, Security Included",
   heroSub: "Langfuse is a solid open-source observability platform. Fluiq auto-instruments the same frameworks with zero manual span calls, adds server-side security scanning, and runs fully managed, no infra to maintain.",
@@ -26,6 +26,9 @@ export const data: CompetitorData = {
     { feature: "Agentic evaluation (whole-run: tools, trajectory, coordination)", fluiq: "yes", competitor: "no" },
     { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
     { feature: "Whole-trajectory dataset capture (tools, MCP, media)", fluiq: "yes", competitor: "partial", competitorNote: "datasets store IO pairs, not full trajectories" },
+    { feature: "Run-vs-run regression comparison on datasets", fluiq: "yes", competitor: "yes" },
+    { feature: "End-user feedback & team annotations", fluiq: "yes", competitor: "yes" },
+    { feature: "Transparent judge prompts (exact prompt & version stamped on every score)", fluiq: "yes", competitor: "no", competitorNote: "judge templates are definable, but scores don't record the rendered prompt" },
     { feature: "CI/CD eval gates", fluiq: "yes", competitor: "yes" },
     { feature: "Prompt management", fluiq: "yes", competitor: "yes" },
     { feature: "Fully managed cloud (no self-hosting)", fluiq: "yes", competitor: "partial", competitorNote: "self-host or paid cloud" },
@@ -42,6 +45,7 @@ export const data: CompetitorData = {
     "Security layer baked in: prompt injection detection, jailbreak scoring, PII redaction, and secret leak prevention run server-side on every call.",
     "Trace-driven Redis caching: Fluiq mines your trace history and serves repeated prompts from cache, cutting API costs without code changes.",
     "Fully managed, no Docker Compose, no Postgres to maintain, no infrastructure cost to carry.",
+    "Evaluation with receipts: every score shows the exact judge prompt that produced it (editable per org), dataset runs diff against each other for regression reports, and python -m fluiq.ci gates your builds.",
     "One SDK covers the entire LLM ops stack: trace, secure, cache, and evaluate.",
   ],
   migrationBefore: {

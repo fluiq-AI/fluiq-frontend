@@ -106,6 +106,23 @@ export const refreshThunk = createAsyncThunk<
   }
 })
 
+export const switchOrgThunk = createAsyncThunk<
+  AuthSession,
+  string,
+  { state: { auth: AuthState }; rejectValue: string }
+>("auth/switchOrg", async (orgId, { getState, rejectWithValue }) => {
+  const { accessToken } = getState().auth
+  try {
+    return await apiRequest<AuthSession>("/api/v1/organizations/switch", {
+      method: "POST",
+      body: { org_id: orgId },
+      token: accessToken,
+    })
+  } catch (err) {
+    return rejectWithValue(err instanceof ApiError ? err.detail : "Failed to switch organization")
+  }
+})
+
 export const logoutThunk = createAsyncThunk<void, void, { state: { auth: AuthState } }>(
   "auth/logout",
   async (_, { getState }) => {
@@ -188,6 +205,10 @@ const authSlice = createSlice({
       .addCase(loginThunk.rejected, (state, action) => {
         state.status = "failed"
         state.error = action.payload ?? action.error.message ?? "Login failed"
+      })
+      .addCase(switchOrgThunk.fulfilled, handleSession)
+      .addCase(switchOrgThunk.rejected, (state, action) => {
+        state.error = action.payload ?? "Failed to switch organization"
       })
       .addCase(refreshThunk.fulfilled, (state, action) => {
         state.accessToken = action.payload.access_token

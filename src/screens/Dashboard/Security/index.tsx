@@ -10,14 +10,15 @@ import { authFetch } from "@/lib/authFetch"
 import { useRealtimeStream } from "@/lib/useRealtimeStream"
 import { Pagination } from "@/components/Pagination"
 
-import type { TraceListResponse, TraceRecord } from "../Traces/utils/types"
-import { SecurityBadge, SecurityPanel } from "../Traces/components/SecurityPanel"
+import type { RootRollup, TraceListResponse, TraceRecord } from "../Traces/utils/types"
+import { SecurityBadge, SecurityPanel, levelFromScore } from "../Traces/components/SecurityPanel"
 import { extractRequestMessages } from "../Traces/helpers/extractors"
 import { formatDate, getModel, getStr } from "../Traces/utils"
 import { TRACES_PAGE_SIZE } from "../Traces/utils/constants"
 
 const SECURITY_PAGE_SIZE = TRACES_PAGE_SIZE * 2
 
+type RiskLevel = "clean" | "low" | "medium" | "high"
 type RiskFlag = "Blocked" | "PII" | "Injection" | "Jailbreak" | "Skeleton Key" | "Secrets" | "Crescendo" | "Response Gate"
 
 const FLAG_STYLES: Record<RiskFlag, string> = {
@@ -29,16 +30,6 @@ const FLAG_STYLES: Record<RiskFlag, string> = {
   Secrets: "bg-rose-500/15 text-rose-600",
   Crescendo: "bg-orange-500/15 text-orange-700",
   "Response Gate": "bg-red-500/15 text-red-700",
-}
-
-function hasSecurityData(event: Record<string, unknown>): boolean {
-  return "security_risk_level" in event || event["status"] === "blocked"
-}
-
-function isSecurityRisk(event: Record<string, unknown>): boolean {
-  if (event["status"] === "blocked") return true
-  const level = event["security_risk_level"]
-  return level === "low" || level === "medium" || level === "high"
 }
 
 function extractFirstUserPrompt(event: Record<string, unknown>): string | null {
@@ -85,6 +76,43 @@ function SecurityOverview() {
   const [reloadKey, setReloadKey]     = useState(0)
   const [error, setError]             = useState<string | null>(null)
   const [selected, setSelected]       = useState<TraceRecord | null>(null)
+  // Per-run security rollups keyed by root_trace_id. A run's detections usually
+  // live on child spans, so the root row's own scan can read "clean"; these
+  // aggregate the whole subtree (see get_root_rollups) and drive the badge/score.
+  const [rollups, setRollups]         = useState<Map<string, RootRollup>>(new Map())
+
+  const rootId = (t: TraceRecord): string | null =>
+    getStr(t.event, "root_trace_id") ?? getStr(t.event, "trace_id")
+
+  // Fetch per-run rollups for a page of roots in one request, then merge.
+  const fetchRollups = useCallback(async (roots: TraceRecord[]) => {
+    const ids = roots.map(rootId).filter((id): id is string => Boolean(id))
+    if (ids.length === 0) return
+    try {
+      const data = await authFetch<{ rollups: Record<string, RootRollup> }>(
+        "/api/v1/traces/rollups",
+        { method: "POST", body: { root_ids: ids } },
+      )
+      setRollups((prev) => {
+        const next = new Map(prev)
+        for (const [id, item] of Object.entries(data.rollups)) next.set(id, item)
+        return next
+      })
+    } catch {
+      // Non-fatal — the badge falls back to the root span's own scan level.
+    }
+  }, [])
+
+  // Run-level risk: pre-call block → high; else the rollup (should_block or
+  // score); else the root span's own scan.
+  const runLevel = useCallback((t: TraceRecord): RiskLevel => {
+    if (t.event["status"] === "blocked") return "high"
+    const id = rootId(t)
+    const r = id ? rollups.get(id) : undefined
+    if (r) return r.security_should_block ? "high" : levelFromScore(r.security_risk_max)
+    const v = t.event["security_risk_level"]
+    return v === "low" || v === "medium" || v === "high" ? v : "clean"
+  }, [rollups])
 
   // Live SSE updates only make sense on the first (newest) page — pageRef lets
   // the stream callbacks see the current page without re-subscribing.
@@ -97,14 +125,19 @@ function SecurityOverview() {
     if (pageRef.current !== 0) return
     try {
       const data = await authFetch<TraceListResponse>(
-        `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=0&roots_only=true`,
+        `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=0&roots_only=true&security=flagged`,
       )
-      setTraces(data.traces.filter((t) => hasSecurityData(t.event) && isSecurityRisk(t.event)))
+      // The server's security=flagged filter is authoritative (subtree-aware),
+      // so trust it and only drop prepended in-flight rows (offset-0 running
+      // entries), which aren't scanned yet.
+      const flagged = data.traces.filter((t) => t.event["status"] !== "running")
+      setTraces(flagged)
+      void fetchRollups(flagged)
       setHasMore(data.traces.length >= SECURITY_PAGE_SIZE)
     } catch {
       // silent — a transient stream refresh failure must not disrupt the view
     }
-  }, [])
+  }, [fetchRollups])
 
   useRealtimeStream({
     path: "/api/v1/traces/stream",
@@ -160,11 +193,16 @@ function SecurityOverview() {
     setLoading(true)
     setError(null)
     authFetch<TraceListResponse>(
-      `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=${page * SECURITY_PAGE_SIZE}&roots_only=true`,
+      `/api/v1/traces?limit=${SECURITY_PAGE_SIZE}&offset=${page * SECURITY_PAGE_SIZE}&roots_only=true&security=flagged`,
     )
       .then((data) => {
         if (cancelled) return
-        setTraces(data.traces.filter((t) => hasSecurityData(t.event) && isSecurityRisk(t.event)))
+        // The server's security=flagged filter is authoritative (subtree-aware),
+      // so trust it and only drop prepended in-flight rows (offset-0 running
+      // entries), which aren't scanned yet.
+      const flagged = data.traces.filter((t) => t.event["status"] !== "running")
+        setTraces(flagged)
+        void fetchRollups(flagged)
         setHasMore(data.traces.length >= SECURITY_PAGE_SIZE)
       })
       .catch((err) => {
@@ -173,7 +211,7 @@ function SecurityOverview() {
       })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [page, reloadKey])
+  }, [page, reloadKey, fetchRollups])
 
   const refresh = useCallback(() => {
     setPage(0)
@@ -192,7 +230,8 @@ function SecurityOverview() {
       {!loading && traces.length > 0 && (() => {
         const blocked      = traces.filter((t) => t.event["status"] === "blocked").length
         const gateBlocked  = traces.filter((t) => t.event["response_gate_blocked"]).length
-        const highRisk     = traces.filter((t) => t.event["security_risk_level"] === "high").length
+        // Run-level (rollup-aware) so a run flagged high on a child span counts.
+        const highRisk     = traces.filter((t) => runLevel(t) === "high").length
         const crescendo    = traces.filter((t) => t.event["crescendo_detected"]).length
         const stats = [
           { label: "Flagged traces",    value: traces.length,  color: "text-foreground" },
@@ -269,10 +308,13 @@ function SecurityOverview() {
                   {traces.map((trace, i) => {
                     const prompt = extractFirstUserPrompt(trace.event)
                     const flags = getRiskFlags(trace.event)
-                    const riskScore =
-                      typeof trace.event["security_risk_score"] === "number"
-                        ? (trace.event["security_risk_score"] as number).toFixed(2)
-                        : null
+                    const rollup = (() => { const id = rootId(trace); return id ? rollups.get(id) : undefined })()
+                    const scoreNum = rollup
+                      ? rollup.security_risk_max
+                      : (typeof trace.event["security_risk_score"] === "number"
+                          ? (trace.event["security_risk_score"] as number)
+                          : null)
+                    const riskScore = scoreNum !== null ? scoreNum.toFixed(2) : null
                     return (
                       <tr
                         key={getStr(trace.event, "trace_id") ?? i}
@@ -287,7 +329,7 @@ function SecurityOverview() {
                         </td>
                         <td className="px-6 py-3">
                           <div className="flex flex-col gap-1">
-                            <SecurityBadge event={trace.event} />
+                            <SecurityBadge event={trace.event} levelOverride={runLevel(trace)} />
                             {riskScore !== null && (
                               <span className="font-mono text-[10px] text-muted-foreground">
                                 score: {riskScore}

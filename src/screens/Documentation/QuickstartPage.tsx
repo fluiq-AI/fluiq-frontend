@@ -24,7 +24,7 @@ export default function QuickstartPage() {
           Fluiq {isTs ? "TypeScript" : "Python"} SDK
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Two lines of {isTs ? "TypeScript" : "Python"} instrument any AI agent or LLM pipeline. Auto-traced integrations for OpenAI, Anthropic, Gemini, LangChain, and MCP, plus a <code className="font-mono text-foreground">{isTs ? "trace()" : "@trace"}</code> {isTs ? "wrapper" : "decorator"} for everything else. Server-side security scanning, Redis caching, and LLM-as-judge evaluations are one method call each — all on Fluiq infrastructure, nothing to deploy.
+          Two lines of {isTs ? "TypeScript" : "Python"} instrument any AI agent or LLM pipeline. Auto-traced integrations for OpenAI, Anthropic, Gemini, LangChain, and MCP, plus a <code className="font-mono text-foreground">{isTs ? "trace()" : "@trace"}</code> {isTs ? "wrapper" : "decorator"} for everything else. Server-side security scanning, Redis caching, and LLM-as-judge evaluations are one method call each, all on Fluiq infrastructure, nothing to deploy.
         </p>
       </div>
 
@@ -65,21 +65,21 @@ export default function QuickstartPage() {
 fluiq.instrument(api_key="fl_...") # or set FLUIQ_API_KEY to environment
 
 # Every OpenAI / Anthropic / Gemini / LangChain / MCP call from this
-# point on is traced automatically — free and unlimited on every tier.
+# point on is traced automatically, free and unlimited on every tier.
 # Opt in to more when you want it:
 fluiq.eval(thresholds={"hallucination": 0.8})  # LLM-as-judge scoring
-fluiq.optimize()   # Redis caching — Team+
-fluiq.secure()     # Security scanning — Growth+`,
+fluiq.optimize()   # Redis caching (Team+)
+fluiq.secure()     # Security scanning (Growth+)`,
                 `import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." }); // or set FLUIQ_API_KEY in your environment
 
 // Every OpenAI / Anthropic / Gemini / LangChain / MCP call from this
-// point on is traced automatically — free and unlimited on every tier.
+// point on is traced automatically, free and unlimited on every tier.
 // Opt in to more when you want it:
 fluiq.eval({ thresholds: { hallucination: 0.8 } }); // LLM-as-judge scoring
-fluiq.optimize(); // Redis caching — Team+
-fluiq.secure();   // Security scanning — Growth+`,
+fluiq.optimize(); // Redis caching (Team+)
+fluiq.secure();   // Security scanning (Growth+)`,
               )}</Code>
             </div>
           </div>

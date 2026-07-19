@@ -7,6 +7,7 @@ import {
   Loading03Icon,
   PlayIcon,
   RoboticIcon,
+  TestTube01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -22,6 +23,7 @@ interface RunSummary {
   total?: number
   completed?: number
   avg_run_score?: number | null
+  avg_score?: number | null
   pass_rate?: number | null
   layers?: Record<string, number | null>
   metrics?: Record<string, number | null>
@@ -31,9 +33,11 @@ interface RunSummary {
   threats?: Record<string, number>
 }
 
+type RunKind = "agentic" | "security" | "metrics"
+
 interface DatasetRun {
   run_id: string
-  kind: "agentic" | "security"
+  kind: RunKind
   status: "running" | "complete" | "failed"
   total: number
   item_count: number
@@ -41,11 +45,51 @@ interface DatasetRun {
   created_at: string | null
 }
 
+interface ReportItem {
+  example_id: string
+  trace_id: string
+  input?: string | null
+  expected_output?: string | null
+  done: boolean
+  result?: { metric: string; score: number | null }[] | Record<string, unknown> | null
+}
+
 interface RunReport {
   run: DatasetRun
   summary: RunSummary
-  items: unknown[]
+  items: ReportItem[]
 }
+
+interface CompareMetric {
+  metric: string
+  avg: number
+  baseline_avg: number
+  delta: number
+}
+
+interface CompareExample {
+  example_id: string
+  input: string
+  score: number | null
+  baseline_score: number | null
+  delta: number | null
+  status: "regressed" | "improved" | "unchanged" | "added" | "pending"
+}
+
+interface CompareReport {
+  run: DatasetRun
+  baseline: DatasetRun
+  metrics: CompareMetric[]
+  examples: CompareExample[]
+  summary: { regressed: number; improved: number; unchanged: number; added: number; missing: number }
+}
+
+const METRIC_CHOICES = [
+  "hallucination", "faithfulness", "relevance",
+  "toxicity", "coherence", "completeness",
+] as const
+
+const DEFAULT_METRICS = ["hallucination", "relevance", "completeness"]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -82,10 +126,14 @@ export function DatasetRuns({
 }) {
   const [runs, setRuns] = useState<DatasetRun[]>([])
   const [loading, setLoading] = useState(true)
-  const [launching, setLaunching] = useState<"agentic" | "security" | null>(null)
+  const [launching, setLaunching] = useState<RunKind | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const [report, setReport] = useState<RunReport | null>(null)
+  const [pickingMetrics, setPickingMetrics] = useState(false)
+  const [chosenMetrics, setChosenMetrics] = useState<string[]>(DEFAULT_METRICS)
+  const [compare, setCompare] = useState<CompareReport | null>(null)
+  const [comparing, setComparing] = useState(false)
   const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadRuns = useCallback(async () => {
@@ -128,17 +176,21 @@ export function DatasetRuns({
     }
   }, [selectedRunId, report, loadReport])
 
-  async function launch(kind: "agentic" | "security") {
+  async function launch(kind: RunKind) {
     setLaunching(kind)
     setError(null)
+    setPickingMetrics(false)
     try {
+      const body: Record<string, unknown> = { kind }
+      if (kind === "metrics") body.metrics = chosenMetrics
       const run = await authFetch<DatasetRun>(`/api/v1/datasets/${dataset.dataset_id}/runs`, {
         method: "POST",
-        body: { kind },
+        body,
       })
       setRuns((prev) => [run, ...prev])
       setSelectedRunId(run.run_id)
       setReport(null)
+      setCompare(null)
       loadReport(run.run_id)
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : "Failed to start run")
@@ -150,7 +202,23 @@ export function DatasetRuns({
   function selectRun(runId: string) {
     setSelectedRunId(runId)
     setReport(null)
+    setCompare(null)
     loadReport(runId)
+  }
+
+  async function loadCompare(runId: string, baselineId: string) {
+    setComparing(true)
+    setError(null)
+    try {
+      const data = await authFetch<CompareReport>(
+        `/api/v1/datasets/runs/${runId}/compare?against=${baselineId}`,
+      )
+      setCompare(data)
+    } catch (err) {
+      setError(err instanceof ApiError ? err.detail : "Failed to compare runs")
+    } finally {
+      setComparing(false)
+    }
   }
 
   const noExamples = dataset.example_count === 0
@@ -184,10 +252,63 @@ export function DatasetRuns({
           )}
           Run Security
         </Button>
+        <Button
+          variant={pickingMetrics ? "default" : "outline"}
+          size="sm"
+          disabled={noExamples || launching !== null}
+          onClick={() => setPickingMetrics((v) => !v)}
+        >
+          {launching === "metrics" ? (
+            <HugeiconsIcon icon={Loading03Icon} size={13} className="animate-spin" />
+          ) : (
+            <HugeiconsIcon icon={TestTube01Icon} size={13} />
+          )}
+          Run Metrics Eval
+        </Button>
         {noExamples ? (
           <span className="text-[11px] text-muted-foreground">Add examples to run a job.</span>
         ) : null}
       </div>
+
+      {pickingMetrics ? (
+        <div className="rounded-md border border-border/60 bg-muted/20 px-3 py-2.5">
+          <p className="mb-2 text-[11px] text-muted-foreground">
+            Grade every example's answer against its expected output with:
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            {METRIC_CHOICES.map((m) => {
+              const on = chosenMetrics.includes(m)
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() =>
+                    setChosenMetrics((prev) =>
+                      on ? prev.filter((x) => x !== m) : [...prev, m],
+                    )
+                  }
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-[11px] transition-colors",
+                    on
+                      ? "border-primary/40 bg-primary/10 font-medium text-foreground"
+                      : "border-border/60 text-muted-foreground hover:bg-muted/40",
+                  )}
+                >
+                  {m}
+                </button>
+              )
+            })}
+            <Button
+              size="sm"
+              disabled={chosenMetrics.length === 0 || launching !== null}
+              onClick={() => launch("metrics")}
+            >
+              <HugeiconsIcon icon={PlayIcon} size={13} />
+              Start
+            </Button>
+          </div>
+        </div>
+      ) : null}
 
       {error ? (
         <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
@@ -222,7 +343,13 @@ export function DatasetRuns({
                 )}
               >
                 <HugeiconsIcon
-                  icon={r.kind === "security" ? AiSecurity02Icon : RoboticIcon}
+                  icon={
+                    r.kind === "security"
+                      ? AiSecurity02Icon
+                      : r.kind === "metrics"
+                        ? TestTube01Icon
+                        : RoboticIcon
+                  }
                   size={13}
                   className="shrink-0 text-muted-foreground"
                 />
@@ -242,7 +369,23 @@ export function DatasetRuns({
                 Select a run to view its report.
               </p>
             ) : (
-              <ReportView report={report} />
+              <ReportView
+                report={report}
+                baselines={runs.filter(
+                  (r) =>
+                    r.run_id !== report.run.run_id &&
+                    r.kind === report.run.kind &&
+                    r.kind !== "security" &&
+                    r.status === "complete",
+                )}
+                compare={compare}
+                comparing={comparing}
+                onCompare={(baselineId) =>
+                  baselineId
+                    ? loadCompare(report.run.run_id, baselineId)
+                    : setCompare(null)
+                }
+              />
             )}
           </div>
         </div>
@@ -265,20 +408,57 @@ function StatusPill({ status }: { status: string }) {
   )
 }
 
-function ReportView({ report }: { report: RunReport }) {
+function ReportView({
+  report,
+  baselines,
+  compare,
+  comparing,
+  onCompare,
+}: {
+  report: RunReport
+  baselines: DatasetRun[]
+  compare: CompareReport | null
+  comparing: boolean
+  onCompare: (baselineId: string) => void
+}) {
   const { run, summary } = report
   const done = summary.completed ?? 0
   const total = summary.total ?? run.total
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h4 className="text-sm font-semibold capitalize">{run.kind} report</h4>
-        <span className="text-[11px] text-muted-foreground">
-          {done}/{total} examples scored
-          {run.status === "running" ? " · updating…" : ""}
-        </span>
+        <div className="flex items-center gap-2">
+          {baselines.length > 0 ? (
+            <select
+              value={compare?.baseline.run_id ?? ""}
+              onChange={(e) => onCompare(e.target.value)}
+              className="rounded-md border border-border/60 bg-background px-2 py-1 text-[11px] text-muted-foreground focus-visible:outline-none"
+            >
+              <option value="">Compare vs…</option>
+              {baselines.map((b) => (
+                <option key={b.run_id} value={b.run_id}>
+                  {fmtDate(b.created_at)}
+                </option>
+              ))}
+            </select>
+          ) : null}
+          <span className="text-[11px] text-muted-foreground">
+            {done}/{total} examples scored
+            {run.status === "running" ? " · updating…" : ""}
+          </span>
+        </div>
       </div>
+
+      {comparing ? (
+        <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
+          <HugeiconsIcon icon={Loading03Icon} size={13} className="animate-spin" />
+          Comparing runs…
+        </div>
+      ) : compare ? (
+        <CompareView compare={compare} />
+      ) : null}
 
       {run.kind === "agentic" ? (
         <div className="space-y-4">
@@ -292,6 +472,17 @@ function ReportView({ report }: { report: RunReport }) {
           {summary.metrics && Object.keys(summary.metrics).length > 0 ? (
             <ScoreRows title="Metrics (text examples)" rows={summary.metrics} />
           ) : null}
+        </div>
+      ) : run.kind === "metrics" ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Stat label="Avg score" value={pct(summary.avg_score)} color={scoreColor(summary.avg_score)} />
+            <Stat label="Examples scored" value={`${done}/${total}`} color="text-muted-foreground" />
+          </div>
+          {summary.metrics && Object.keys(summary.metrics).length > 0 ? (
+            <ScoreRows title="Metrics" rows={summary.metrics} />
+          ) : null}
+          <MetricsItemTable items={report.items} />
         </div>
       ) : (
         <div className="space-y-4">
@@ -329,6 +520,135 @@ function ReportView({ report }: { report: RunReport }) {
             <p className="text-xs text-emerald-600 dark:text-emerald-400">No security risks detected across the dataset.</p>
           ) : null}
         </div>
+      )}
+    </div>
+  )
+}
+
+function MetricsItemTable({ items }: { items: ReportItem[] }) {
+  const scored = items.filter((it) => Array.isArray(it.result) && it.result.length > 0)
+  if (scored.length === 0) return null
+  return (
+    <div>
+      <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
+        Per example
+      </p>
+      <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
+        {scored.map((it) => {
+          const rows = it.result as { metric: string; score: number | null }[]
+          const scores = rows.map((r) => r.score).filter((s): s is number => typeof s === "number")
+          const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null
+          return (
+            <div
+              key={it.example_id}
+              className="flex items-center gap-2 rounded border border-border/40 bg-background/60 px-2 py-1.5 text-[11px]"
+            >
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">
+                {(it.input || "").slice(0, 120) || it.example_id}
+              </span>
+              <span className="flex shrink-0 items-center gap-2">
+                {rows.map((r) => (
+                  <span key={r.metric} className="font-mono text-[10px] text-muted-foreground">
+                    {r.metric.slice(0, 4)}{" "}
+                    <b className={scoreColor(r.score)}>{pct(r.score)}</b>
+                  </span>
+                ))}
+                <span className={cn("w-10 text-right font-mono font-semibold", scoreColor(avg))}>
+                  {pct(avg)}
+                </span>
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const COMPARE_STATUS_STYLE: Record<CompareExample["status"], string> = {
+  regressed: "bg-destructive/10 text-destructive",
+  improved: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  unchanged: "bg-muted text-muted-foreground",
+  added: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+}
+
+function CompareView({ compare }: { compare: CompareReport }) {
+  const { summary, metrics, examples, baseline } = compare
+  return (
+    <div className="space-y-3 rounded-md border border-border/60 bg-muted/10 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-medium">
+          vs baseline <span className="text-muted-foreground">{fmtDate(baseline.created_at)}</span>
+        </p>
+        <div className="flex gap-1.5 text-[10px]">
+          {summary.regressed > 0 ? (
+            <span className="rounded-full bg-destructive/10 px-2 py-0.5 font-medium text-destructive">
+              {summary.regressed} regressed
+            </span>
+          ) : null}
+          {summary.improved > 0 ? (
+            <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-600 dark:text-emerald-400">
+              {summary.improved} improved
+            </span>
+          ) : null}
+          <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+            {summary.unchanged} unchanged
+          </span>
+        </div>
+      </div>
+
+      {metrics.length > 0 ? (
+        <div className="space-y-1">
+          {metrics.map((m) => (
+            <div key={m.metric} className="flex items-center gap-2 text-[11px]">
+              <span className="w-32 shrink-0 truncate capitalize text-muted-foreground">
+                {m.metric.replace(/_/g, " ")}
+              </span>
+              <span className="font-mono tabular-nums text-muted-foreground">
+                {pct(m.baseline_avg)} → <b className={scoreColor(m.avg)}>{pct(m.avg)}</b>
+              </span>
+              <span
+                className={cn(
+                  "font-mono text-[10px] tabular-nums",
+                  m.delta < -0.01 ? "text-destructive" : m.delta > 0.01 ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+                )}
+              >
+                {m.delta >= 0 ? "+" : ""}{Math.round(m.delta * 100)}pp
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {examples.some((e) => e.status === "regressed") ? (
+        <div>
+          <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
+            Regressed examples
+          </p>
+          <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+            {examples
+              .filter((e) => e.status === "regressed")
+              .map((e) => (
+                <div
+                  key={e.example_id}
+                  className="flex items-center gap-2 rounded border border-border/40 bg-background/60 px-2 py-1.5 text-[11px]"
+                >
+                  <span className={cn("shrink-0 rounded px-1.5 py-0.5 text-[9px] font-medium", COMPARE_STATUS_STYLE[e.status])}>
+                    {e.delta !== null ? `${Math.round(e.delta * 100)}pp` : e.status}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-muted-foreground">{e.input || e.example_id}</span>
+                  <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
+                    {pct(e.baseline_score)} → <b className={scoreColor(e.score)}>{pct(e.score)}</b>
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      ) : (
+        <p className="text-[11px] text-emerald-600 dark:text-emerald-400">
+          No regressions against this baseline.
+        </p>
       )}
     </div>
   )

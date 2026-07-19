@@ -15,13 +15,13 @@ export default function OptimizationPage() {
       <PageHeading
         icon={MagicWand01Icon}
         title="Optimization"
-        description="Call fluiq.optimize() after instrument() to enable trace-driven Redis caching. Fluiq's backend analyses your historical traces, identifies which LLM calls repeat most, and provisions a dedicated Redis instance for your account. On the first call the SDK fetches that profile and begins serving repeated prompts from cache — saving both latency and LLM spend with no extra code."
+        description="Call fluiq.optimize() after instrument() to enable trace-driven Redis caching. Fluiq's backend analyses your historical traces, identifies which LLM calls repeat most, and provisions a dedicated Redis instance for your account. On the first call the SDK fetches that profile and begins serving repeated prompts from cache, which saves latency and LLM spend with no extra code."
       />
 
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
         <p className="font-semibold text-amber-700 dark:text-amber-400">Team plan and above</p>
         <p className="mt-1 text-muted-foreground">
-          <code className="font-mono text-foreground">fluiq.optimize()</code> requires a Team, Growth, or Enterprise plan. Calling it on a Free account logs a warning and skips caching — tracing continues normally, your application is never interrupted.
+          <code className="font-mono text-foreground">fluiq.optimize()</code> requires a Team, Growth, or Enterprise plan. Calling it on a Free account logs a warning and skips caching; tracing continues normally, and your application is never interrupted.
         </p>
       </div>
 
@@ -34,7 +34,7 @@ fluiq.instrument(api_key="fl_...")
 fluiq.optimize()
 
 # All LLM calls from this point are transparently intercepted.
-# Repeated (model, messages) pairs are served from Redis instantly —
+# Repeated (model, messages) pairs are served from Redis instantly;
 # no LLM API call is made and your spend drops accordingly.`,
         `import fluiq from "@fluiq/sdk";
 
@@ -42,7 +42,7 @@ fluiq.instrument({ apiKey: "fl_..." });
 fluiq.optimize();
 
 // All LLM calls from this point are transparently intercepted.
-// Repeated (model, messages) pairs are served from Redis instantly —
+// Repeated (model, messages) pairs are served from Redis instantly;
 // no LLM API call is made and your spend drops accordingly.`,
       )}</Code>
 
@@ -50,8 +50,8 @@ fluiq.optimize();
       <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
         <li>On the first LLM call after startup the SDK fetches your <strong className="text-foreground">optimization profile</strong> from the Fluiq backend.</li>
         <li>The profile contains which models to cache, the suggested TTL, and the connection URL for your dedicated Redis instance.</li>
-        <li>Subsequent calls with an identical <code className="font-mono text-foreground">(model, messages)</code> combination are served from Redis instantly — your LLM provider is never contacted.</li>
-        <li>Real responses are cached automatically — there is nothing extra to instrument.</li>
+        <li>Subsequent calls with an identical <code className="font-mono text-foreground">(model, messages)</code> combination are served from Redis instantly; your LLM provider is never contacted.</li>
+        <li>Real responses are cached automatically; there is nothing extra to instrument.</li>
         <li>The dashboard <span className="text-foreground">Optimization</span> tab shows cache hit rate and estimated spend saved alongside your traces.</li>
       </ol>
 
@@ -66,7 +66,7 @@ fluiq.optimize();
           {
             name: `"observe"`,
             badge: "optional",
-            body: "No interception. The SDK records what would have been a cache hit so you can review potential savings — latency and spend — before opting into full caching.",
+            body: "No interception. The SDK records what would have been a cache hit so you can review potential savings (latency and spend) before opting into full caching.",
           },
         ].map((m) => (
           <div key={m.name} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
@@ -102,10 +102,10 @@ fluiq.optimize({ mode: "cache" });   // then enable full caching`,
       </p>
       <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
         <li>
-          <code className="font-mono text-foreground">{isTs ? "listTools()" : "list_tools()"}</code> — response cached in Redis keyed by server URL. Automatically invalidated when <code className="font-mono text-foreground">{isTs ? "client.connect()" : "session.initialize()"}</code> is called (server restart).
+          <code className="font-mono text-foreground">{isTs ? "listTools()" : "list_tools()"}</code>: response cached in Redis keyed by server URL. Automatically invalidated when <code className="font-mono text-foreground">{isTs ? "client.connect()" : "session.initialize()"}</code> is called (server restart).
         </li>
         <li>
-          <code className="font-mono text-foreground">{isTs ? "callTool({ name, arguments })" : "call_tool(name, arguments)"}</code> — result cached keyed by <code className="font-mono text-foreground">(server_url, tool_name, sorted_arguments)</code>. Error results are never cached.
+          <code className="font-mono text-foreground">{isTs ? "callTool({ name, arguments })" : "call_tool(name, arguments)"}</code>: result cached keyed by <code className="font-mono text-foreground">(server_url, tool_name, sorted_arguments)</code>. Error results are never cached.
         </li>
       </ul>
       <p className="text-sm text-muted-foreground">
@@ -113,7 +113,7 @@ fluiq.optimize({ mode: "cache" });   // then enable full caching`,
       </p>
       <Code>{byLang(
         lang,
-        `# No extra code required — MCP caching is transparent once optimize() is called.
+        `# No extra code required; MCP caching is transparent once optimize() is called.
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
 
@@ -122,7 +122,7 @@ async with streamablehttp_client("https://your-mcp-server/mcp") as (r, w, _):
         await session.initialize()
         tools = await session.list_tools()   # cached after first call
         result = await session.call_tool("search", {"query": "fluiq"})  # cached`,
-        `// No extra code required — MCP caching is transparent once optimize() is called.
+        `// No extra code required; MCP caching is transparent once optimize() is called.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 

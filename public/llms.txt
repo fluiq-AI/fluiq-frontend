@@ -1,23 +1,23 @@
 # Fluiq
 
-Fluiq is the AI Ops stack for Python and TypeScript LLM applications. Two lines of SDK code give every LLM call automatic tracing, cost attribution, security scanning, response caching, and quality evaluation — all visible in one real-time dashboard. Observability is free and unlimited on every plan; retention is the only paid axis.
+Fluiq is the control plane for AI agents in production, with Python and TypeScript SDKs. Two lines of SDK code give every agent run and LLM call automatic tracing, cost attribution, pre-call security blocking, response caching, and quality evaluation, all visible in one real-time dashboard. Observability is free and unlimited on every plan; retention is the only paid axis.
 
 ## What Fluiq does
 
-Fluiq replaces separate AI tooling concerns with a single SDK. It auto-instruments every supported provider and framework at the function-call level, so no changes are needed to existing prompt or agent code. The four SDK pillars are:
+Fluiq replaces separate AI tooling concerns with a single SDK. It auto-instruments every supported provider and framework at the function-call level, so existing prompt and agent code stays as it is. The four SDK pillars are:
 
-- **Observe** (`fluiq.instrument()`) — full span tree for agents, chains, and raw LLM calls; per-node token counts, USD cost at provider rates, p50/p95/p99 latency; multi-agent runs render as real DAGs (fan-outs, joins, loops across LangGraph, CrewAI, Google ADK); streamed live to the dashboard. Unlimited traces on every plan.
-- **Secure** (`fluiq.secure()`) — pre-call jailbreak and prompt-injection blocking; PII detection (credit cards, SSNs, IBAN, emails, phone numbers, IP addresses, names); secret and high-entropy string redaction; agentic threat detection across the trace tree: indirect injection, RAG poisoning, tool-input exfiltration, tool allowlist violations, cross-agent injection, and trust-boundary escalation; warn or block mode.
-- **Optimize** (`fluiq.optimize()`) — trace-driven server-side Redis caching for LLM responses; MCP tool result caching (list_tools and call_tool, keyed by server URL and arguments); automatic Anthropic prompt-prefix caching via cache_control injection; cached token tracking for OpenAI and Gemini; an Insights page surfacing repeated-prompt cache candidates, cacheable spend, and model-downgrade hints.
-- **Evaluate** (`fluiq.eval()`) — opt-in LLM-as-judge scoring (instrument() alone only traces); six metrics: hallucination, faithfulness, relevance, toxicity, coherence, completeness; warn mode logs scores; block mode raises FluiqEvalError before bad responses reach the user; CI/CD GitHub Actions gate. **Agentic evaluation** judges whole runs — deterministic checks, tool-selection quality, trajectory against the goal, and multi-agent coordination — with borderline verdicts decided by a multi-model judge jury whose every vote is kept for audit.
+- **Observe** (`fluiq.instrument()`): full span tree for agents, chains, and raw LLM calls; per-node token counts, USD cost at provider rates, p50/p95/p99 latency; multi-agent runs render as real DAGs (fan-outs, joins, loops across LangGraph, CrewAI, Google ADK); streamed live to the dashboard. Unlimited traces on every plan.
+- **Secure** (`fluiq.secure()`): pre-call jailbreak and prompt-injection blocking; PII detection (credit cards, SSNs, IBAN, emails, phone numbers, IP addresses, names); secret and high-entropy string redaction; agentic threat detection across the trace tree: indirect injection, RAG poisoning, tool-input exfiltration, tool allowlist violations, cross-agent injection, and trust-boundary escalation; warn or block mode.
+- **Optimize** (`fluiq.optimize()`): trace-driven server-side Redis caching for LLM responses; MCP tool result caching (list_tools and call_tool, keyed by server URL and arguments); automatic Anthropic prompt-prefix caching via cache_control injection; cached token tracking for OpenAI and Gemini; an Insights page that surfaces repeated-prompt cache candidates, cacheable spend, and model-downgrade hints.
+- **Evaluate** (`fluiq.eval()`): opt-in LLM-as-judge scoring (instrument() alone only traces); six metrics: hallucination, faithfulness, relevance, toxicity, coherence, completeness; warn mode logs scores; block mode raises FluiqEvalError before bad responses reach the user; CI/CD GitHub Actions gate. **Agentic evaluation** judges whole runs: deterministic checks, tool-selection quality, trajectory against the goal, and multi-agent coordination. Borderline verdicts are decided by a multi-model judge jury, and every vote is kept for audit.
 
-Two more pillars live in the dashboard: **Datasets** (golden sets built from real traces — each example pins the whole agent trajectory including tools, MCP calls, and media, so batch agentic-eval and security runs work as a regression gate forever) and **Prompt Management** (versioned templates with per-environment deployment).
+Two more pillars live in the dashboard: **Datasets** (golden sets built from real traces; each example pins the whole agent trajectory including tools, MCP calls, and media, so batch agentic-eval and security runs keep working as a regression gate after retention ends) and **Prompt Management** (versioned templates with per-environment deployment).
 
 ## Supported integrations
 
 Fluiq patches at the function-call level and is framework-agnostic. Auto-instrumented providers and frameworks:
 
-- **LLM providers**: OpenAI (chat completions, responses, parse, streaming, embeddings, images, audio — sync and async), Anthropic (Messages API and Beta client, sync and async), Google Gemini, Google Vertex AI
+- **LLM providers**: OpenAI (chat completions, responses, parse, streaming, embeddings, images, audio, sync and async), Anthropic (Messages API and Beta client, sync and async), Google Gemini, Google Vertex AI
 - **Agent frameworks**: LangChain, LangGraph, CrewAI, Google ADK, MCP (Model Context Protocol)
 - **Vector databases**: Pinecone, Chroma, Weaviate, FAISS, Qdrant
 - **Custom code**: `@trace` decorator for any Python function not covered by auto-instrumentation
@@ -50,7 +50,7 @@ fluiq.eval(
 
 ## Prompt management
 
-Fluiq discovers named prompts from production traffic and stores them as versioned templates. Teams edit templates in the dashboard with `{{variable}}` substitution, test them against production traces using an LLM-as-judge playground, then deploy to development, staging, or production environments independently. No redeployment required.
+Fluiq discovers named prompts from production traffic and stores them as versioned templates. Teams edit templates in the dashboard with `{{variable}}` substitution, test them against production traces using an LLM-as-judge playground, then deploy to development, staging, or production environments independently. No redeployment is required.
 
 ```python
 prompt = fluiq.fetch_prompt("summarise-ticket", env="production")
@@ -59,20 +59,20 @@ text = prompt.render(ticket_body=raw_text)
 
 ## Dashboard features (authenticated users)
 
-- **Trace viewer** — JSON view and visual span tree; filter by agent, model, latency, cost, or eval score; live streaming
-- **Cost analytics** — per-trace and per-agent USD cost; rolled-up totals across nested spans; anomaly alerts to Slack
-- **Security panel** — detected PII types, attack scores, and redacted fields per trace
-- **Evaluations** — per-trace quality scores across all enabled metrics
-- **Optimize dashboard** — Redis cache hit rate by type (LLM, MCP tools, embeddings, vector stores); provider prompt cache card showing Anthropic cache_read/creation tokens and OpenAI/Gemini cached tokens
-- **Agents view** — agent-level aggregation sorted by cost, token count, and latency; multi-agent runs named by their graph (e.g. LangGraph(research, synthesize, write) or Crew(Researcher, Writer))
-- **Prompts manager** — version history, playground, environment deployments
-- **API key management** — create, reveal, and revoke workspace keys
-- **Datasets** — golden sets from traces with whole-trajectory capture (steps, tools, MCP calls, media), Connect Agents auto-sync, and batch agentic-eval / security regression runs
-- **Insights** — repeated-prompt cache candidates with projected savings, cacheable-spend headline, top models and agents by cost, slowest models, error hotspots, and model-downgrade hints
+- **Trace viewer**: JSON view and visual span tree; filter by agent, model, latency, cost, or eval score; live streaming
+- **Cost analytics**: per-trace and per-agent USD cost; rolled-up totals across nested spans; anomaly alerts to Slack
+- **Security panel**: detected PII types, attack scores, and redacted fields per trace
+- **Evaluations**: per-trace quality scores across all enabled metrics
+- **Optimize dashboard**: Redis cache hit rate by type (LLM, MCP tools, embeddings, vector stores); provider prompt cache card showing Anthropic cache_read/creation tokens and OpenAI/Gemini cached tokens
+- **Agents view**: agent-level aggregation sorted by cost, token count, and latency; multi-agent runs named by their graph (e.g. LangGraph(research, synthesize, write) or Crew(Researcher, Writer))
+- **Prompts manager**: version history, playground, environment deployments
+- **API key management**: create, reveal, and revoke workspace keys
+- **Datasets**: golden sets from traces with whole-trajectory capture (steps, tools, MCP calls, media), Connect Agents auto-sync, and batch agentic-eval / security regression runs
+- **Insights**: repeated-prompt cache candidates with projected savings, cacheable-spend headline, top models and agents by cost, slowest models, error hotspots, and model-downgrade hints
 
 ## Pages
 
-- [Home](https://getfluiq.com/): Product overview — the pillars, integration list, code samples, stats, and getting-started CTA.
+- [Home](https://getfluiq.com/): Product overview covering the pillars, integration list, code samples, stats, and getting-started CTA.
 - [Pricing](https://getfluiq.com/pricing): Free (unlimited traces, 14-day retention), Team $299/mo, Growth $599/mo, Enterprise custom. 5-day free trial, no card.
 - [Datasets](https://getfluiq.com/datasets): Golden datasets with whole-trajectory capture for agent regression testing.
 - [Documentation](https://getfluiq.com/documentation): Full SDK reference covering installation, auto-instrumentation, the @trace decorator, agent tracing, security scanning, optimization, evaluation, datasets, prompt management, cost analytics, and configuration.
@@ -82,9 +82,9 @@ text = prompt.render(ticket_body=raw_text)
 
 ## Key facts
 
-- Free tier: unlimited traces, 1,000 evals/month, 1 seat, 14-day rolling retention — no card required
-- Paid plans: Team $299/mo (unlimited/never-expiring trace retention, caching), Growth $599/mo (full security scanning, SSO), Enterprise custom (VPC/on-prem, SAML/SCIM)
-- 5-day free trial of Team or Growth — no card required
+- Free tier: unlimited traces, 1,000 evals/month, 1 seat, 14-day rolling retention, no card required
+- Paid plans: Team $299/mo (unlimited, never-expiring trace retention, caching), Growth $599/mo (full security scanning, SSO), Enterprise custom (VPC/on-prem, SAML/SCIM)
+- 5-day free trial of Team or Growth, no card required
 - Install with: `pip install fluiq` (Python) or `npm install @fluiq/sdk` (TypeScript)
 - SDK languages: Python 3.9+ and TypeScript / Node.js
 - Dashboard URL: https://getfluiq.com
@@ -92,4 +92,4 @@ text = prompt.render(ticket_body=raw_text)
 - Support: https://getfluiq.com/contact
 - Full docs: https://getfluiq.com/documentation
 - Extended LLM reference: https://getfluiq.com/llms-full.txt
-- Category: AI Ops, LLM monitoring, AI security, LLM evaluation, response caching
+- Category: AI agent governance, agent observability, AI security, LLM evaluation, response caching

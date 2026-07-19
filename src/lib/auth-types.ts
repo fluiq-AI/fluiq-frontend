@@ -29,8 +29,47 @@ export interface OrganizationModel {
   api_keys: ApiKey[]
   api_key_limit: number
   api_key_usage: number
+  plan_tier?: string | null
   created_at: string
   updated_at: string | null
+}
+
+export type OrgRole = "owner" | "admin" | "member"
+
+export interface OrgMembership {
+  org_id: string
+  name: string
+  role: OrgRole
+  plan: string | null
+  member_count: number
+  is_current: boolean
+  created_at: string
+}
+
+export interface OrgMember {
+  user_id: string
+  name: string
+  email: string
+  role: OrgRole
+  created_at: string
+  is_you: boolean
+}
+
+export interface OrgInvitation {
+  invite_id: string
+  email: string
+  role: OrgRole
+  created_at: string
+  expires_at: string
+}
+
+export interface InvitePreview {
+  valid: boolean
+  org_name?: string | null
+  email?: string | null
+  role?: OrgRole | null
+  inviter_name?: string | null
+  reason?: string | null
 }
 
 export interface AuthSession {

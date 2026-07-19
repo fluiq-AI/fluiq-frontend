@@ -14,6 +14,17 @@ function getRiskLevel(event: Record<string, unknown>): RiskLevel {
   return "clean"
 }
 
+// Map a risk score (0–1) to a level, matching the worker's _risk_from_score
+// thresholds. Used to render a RUN-level badge from the per-run rollup's
+// security_risk_max (which aggregates child-span detections) instead of only
+// the root span's own scan.
+export function levelFromScore(score: number): RiskLevel {
+  if (score >= 0.9) return "high"
+  if (score >= 0.5) return "medium"
+  if (score >= 0.3) return "low"
+  return "clean"
+}
+
 const RISK_CONFIG: Record<
   RiskLevel,
   { dot: string; pill: string; label: string }
@@ -27,11 +38,16 @@ const RISK_CONFIG: Record<
 export function SecurityBadge({
   event,
   className,
+  levelOverride,
 }: {
   event: Record<string, unknown>
   className?: string
+  // When provided, render this level instead of the event's own scan level.
+  // The Security page passes the per-run rollup level so a run flagged only on
+  // a child span doesn't show "Clean".
+  levelOverride?: RiskLevel
 }) {
-  const level = getRiskLevel(event)
+  const level = levelOverride ?? getRiskLevel(event)
   const { dot, pill, label } = RISK_CONFIG[level]
   return (
     <span

@@ -107,7 +107,7 @@ export default function Privacy() {
             <Section id="overview" title="Overview">
               <P>
                 Fluiq is a developer infrastructure product. Our core purpose is to help engineering teams
-                instrument, monitor, and improve their AI pipelines — not to monetise user data. We collect
+                instrument, monitor, and improve their AI pipelines, not to monetise user data. We collect
                 the minimum information needed to operate the service and we never sell your data or your
                 users' data to third parties.
               </P>
@@ -123,13 +123,13 @@ export default function Privacy() {
               <p className="font-medium text-foreground">Account & identity</p>
               <Ul items={[
                 "Name and email address when you register or log in via GitHub/Google OAuth",
-                "Password hash (bcrypt) — we never store plaintext passwords",
+                "Password hash (bcrypt); we never store plaintext passwords",
                 "Organization name and your role within it",
                 "Billing contact details if you subscribe to a paid plan (processed by Stripe; we store only Stripe customer IDs)",
               ]} />
               <p className="font-medium text-foreground mt-4">Usage & product telemetry</p>
               <Ul items={[
-                "API key metadata (name, prefix, creation date) — not the raw key value after creation",
+                "API key metadata (name, prefix, creation date), not the raw key value after creation",
                 "Dashboard page views and feature interactions for product analytics",
                 "Errors and performance metrics from the Fluiq web application itself",
                 "Timestamps of logins and session activity",
@@ -143,7 +143,7 @@ export default function Privacy() {
 
             <Section id="trace-data" title="LLM Trace Data">
               <P>
-                The primary data you send to Fluiq via our SDK is LLM trace data — the requests and
+                The primary data you send to Fluiq via our SDK is LLM trace data: the requests and
                 responses flowing through your AI pipelines. This is the most sensitive data type we
                 handle, and we apply the following principles to it:
               </P>
@@ -151,7 +151,7 @@ export default function Privacy() {
                 "Trace data is stored under your organization's namespace and is never mixed with another organization's data.",
                 "Traces are transmitted over TLS and stored encrypted at rest using AES-256.",
                 "We access trace content only when required to operate the service (e.g. rendering it in your dashboard, running your configured eval prompts, or performing security scans you have enabled).",
-                "We do not use your trace data to train any AI model — ours or a third party's — without your explicit written consent.",
+                "We do not use your trace data to train any AI model, ours or a third party's, without your explicit written consent.",
                 "If your traces contain personal data about your end-users, you are the data controller for that data and Fluiq is the data processor. You are responsible for ensuring you have the appropriate legal basis to share that data with us.",
               ]} />
               <P>
@@ -171,7 +171,7 @@ export default function Privacy() {
                 "Send transactional emails (password resets, plan confirmations, usage alerts)",
                 "Detect and prevent abuse, fraud, or violations of our Terms of Service",
                 "Comply with legal obligations",
-                "Send product updates and announcements — you can opt out at any time",
+                "Send product updates and announcements; you can opt out at any time",
               ]} />
               <P>
                 We do not use your data for advertising, we do not build ad profiles, and we do not

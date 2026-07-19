@@ -1,7 +1,7 @@
 # Fluiq Frontend
 
-Marketing site + product app for [Fluiq](https://getfluiq.com) — the AI Ops stack
-for LLM applications. Built with **Next.js 16 (App Router)**, React 19, TypeScript,
+Marketing site + product app for [Fluiq](https://getfluiq.com), the control
+plane for AI agents in production. Built with **Next.js 16 (App Router)**, React 19, TypeScript,
 Tailwind CSS v4, and Redux Toolkit.
 
 > Migrated from Vite + react-router + a puppeteer prerender step to Next.js App

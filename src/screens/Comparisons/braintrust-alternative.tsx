@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "braintrust-alternative",
   name: "Braintrust",
-  metaTitle: "Fluiq vs Braintrust — Observability + Security Alternative",
-  metaDescription: "Fluiq vs Braintrust: production LLM tracing, security scanning, and caching alongside evals — everything Braintrust covers, plus the ops layer it doesn't.",
+  metaTitle: "Fluiq vs Braintrust: Observability + Security Alternative",
+  metaDescription: "Fluiq vs Braintrust: production LLM tracing, security scanning, and caching alongside evals. Everything Braintrust covers, plus the production ops layer.",
   canonicalPath: "/braintrust-alternative",
   heroHeadline: "The Braintrust Alternative: Evals Plus the Full Ops Stack",
   heroSub: "Braintrust is a strong evaluation platform. Fluiq adds production tracing, security scanning, and response caching alongside evals, all from two lines of Python, with no manual scoring scaffolding.",
@@ -27,6 +27,9 @@ export const data: CompetitorData = {
     { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
     { feature: "Whole-trajectory dataset capture (tools, MCP, media)", fluiq: "yes", competitor: "partial", competitorNote: "datasets are IO-centric; no pinned tool/MCP trajectories" },
     { feature: "Eval warn / block modes (inline)", fluiq: "yes", competitor: "no" },
+    { feature: "Run-vs-run regression comparison on datasets", fluiq: "yes", competitor: "yes" },
+    { feature: "End-user feedback & team annotations", fluiq: "yes", competitor: "yes" },
+    { feature: "Transparent judge prompts (exact prompt & version stamped on every score)", fluiq: "yes", competitor: "partial", competitorNote: "code scorers are inspectable; LLM-judge scores don't carry the rendered prompt" },
     { feature: "CI/CD eval gates", fluiq: "yes", competitor: "yes" },
     { feature: "Dataset management", fluiq: "yes", competitor: "yes" },
     { feature: "Prompt management", fluiq: "yes", competitor: "yes" },
@@ -42,6 +45,7 @@ export const data: CompetitorData = {
     "Inline eval modes: fluiq.eval(mode='warn') flags low-scoring responses on the trace; mode='block' intercepts them before they reach users.",
     "Security included: prompt injection blocking, PII redaction, jailbreak scoring, and secret leak prevention run on every production call, not just in eval scripts.",
     "Response caching: trace-driven Redis caching serves repeated prompts instantly, cutting LLM spend without any code changes.",
+    "Transparent judging: every score records the exact judge prompt and version behind it, and each org can edit those prompts — then diff any two dataset runs to see what regressed, and gate CI with python -m fluiq.ci.",
     "Two lines replace an entire boilerplate setup, no manual span context, no custom scorers to wire up.",
   ],
   migrationBefore: {

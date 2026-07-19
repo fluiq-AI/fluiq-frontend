@@ -86,6 +86,13 @@ async function fetchBlogSlugs(): Promise<string[]> {
   }
 }
 
+// Cross-host entries (subdomains). Google only honors these when the host is
+// verified under the same Search Console property — a domain property for
+// getfluiq.com covers polygate.getfluiq.com.
+const SUBDOMAIN_URLS: { url: string; changeFrequency: ChangeFreq; priority: number }[] = [
+  { url: "https://polygate.getfluiq.com", changeFrequency: "monthly", priority: 0.8 },
+]
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date()
 
@@ -94,6 +101,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified,
     changeFrequency: e.changeFrequency,
     priority: e.priority,
+  }))
+
+  const subdomainEntries: MetadataRoute.Sitemap = SUBDOMAIN_URLS.map((e) => ({
+    ...e,
+    lastModified,
   }))
 
   const integrationEntries: MetadataRoute.Sitemap = INTEGRATIONS.map((i) => ({
@@ -110,5 +122,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }))
 
-  return [...staticEntries, ...integrationEntries, ...blogEntries]
+  return [...staticEntries, ...subdomainEntries, ...integrationEntries, ...blogEntries]
 }

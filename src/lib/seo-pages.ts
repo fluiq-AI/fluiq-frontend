@@ -63,11 +63,11 @@ export function faqPageLd(items: Array<{ q: string; a: string }>) {
 /** Per-route SEO descriptors ported from the SPA's <Helmet> tags. */
 export const SEO = {
   home: {
-    title: "Fluiq — The AI Ops Stack for Production LLM Applications",
+    title: "Fluiq | The Control Plane for AI Agents in Production",
     description:
-      "The unified ops layer for LLM applications: security scanning, intelligent caching, deep observability, and automated evaluation on every request.",
+      "Fluiq blocks prompt attacks, scores agent trajectories, caches repeated work, and traces every step of every run. Two lines of Python, one dashboard.",
     keywords:
-      "AI Ops, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, AI security, hallucination detection",
+      "AI agent observability, agent evaluation, AI agent governance, MCP security, LangGraph monitoring, CrewAI tracing, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, AI security, hallucination detection",
     path: "/",
     jsonLd: {
       "@context": "https://schema.org",
@@ -79,7 +79,7 @@ export const SEO = {
       operatingSystem: "Any",
       programmingLanguage: "Python",
       description:
-        "Fluiq is the AI Ops stack for production LLM applications. It auto-instruments OpenAI, Anthropic, Gemini, LangChain, LangGraph, Google ADK, CrewAI, MCP, and major vector databases. Two lines of Python add tracing, security scanning, response caching, and LLM-as-judge evaluation to any LLM app.",
+        "Fluiq is the control plane for AI agents in production. It auto-instruments OpenAI, Anthropic, Gemini, LangChain, LangGraph, Google ADK, CrewAI, MCP, and major vector databases. Two lines of Python add tracing, pre-call security blocking, response caching, and trajectory-level LLM-as-judge evaluation to any agent or LLM app.",
       featureList: [
         "Automatic LLM call tracing with full span tree",
         "Per-node token attribution and USD cost tracking at provider rates",
@@ -103,7 +103,7 @@ export const SEO = {
         "API key management",
       ],
       applicationSubCategory:
-        "AI Ops, LLM Monitoring, AI Security, LLM Evaluation, Response Caching",
+        "AI Agent Governance, LLM Monitoring, AI Security, LLM Evaluation, Response Caching",
       softwareVersion: "latest",
       offers: {
         "@type": "Offer",
@@ -118,11 +118,11 @@ export const SEO = {
   },
 
   pricing: {
-    title: "Fluiq Pricing — Free LLM Observability, Evals & Caching",
+    title: "Fluiq Pricing | Free LLM Observability, Evals & Caching",
     description:
       "Start free with unlimited traces and 1,000 evals. Upgrade to Team ($299/mo) for unlimited retention & caching, Growth ($599/mo) for security, or Enterprise for SSO & SLAs.",
     keywords:
-      "Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI ops pricing, LLM evaluation pricing, LLM security pricing",
+      "Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI agent platform pricing, LLM evaluation pricing, LLM security pricing",
     path: "/pricing",
     jsonLd: {
       "@context": "https://schema.org",
@@ -139,7 +139,7 @@ export const SEO = {
           "@type": "Product",
           name: "Fluiq",
           description:
-            "The AI Ops platform for LLM applications: observability, security scanning, response caching, and LLM-as-judge evaluation.",
+            "The control plane for AI agents: observability, pre-call security blocking, response caching, and trajectory-level evaluation.",
           brand: { "@type": "Brand", name: "Fluiq" },
           offers: {
             "@type": "AggregateOffer",
@@ -211,7 +211,7 @@ export const SEO = {
   },
 
   contact: {
-    title: "Contact Fluiq — Sales, Support & LLM Integration Help",
+    title: "Contact Fluiq | Sales, Support & LLM Integration Help",
     description:
       "Get in touch with the Fluiq team for sales enquiries, integration support, feature requests, and partnerships. We reply within one business day.",
     keywords:
@@ -237,7 +237,7 @@ export const SEO = {
   },
 
   privacy: {
-    title: "Privacy Policy — How Fluiq Handles Your LLM Trace Data",
+    title: "Privacy Policy: How Fluiq Handles Your LLM Trace Data",
     description:
       "Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA.",
     keywords:
@@ -248,7 +248,7 @@ export const SEO = {
       "@graph": [
         {
           "@type": "WebPage",
-          name: "Privacy Policy — Fluiq",
+          name: "Privacy Policy | Fluiq",
           description:
             "Fluiq's privacy policy: what data we collect, how we use LLM trace data, data retention, and your rights under GDPR and CCPA.",
           url: `${SITE}/privacy`,
@@ -263,7 +263,7 @@ export const SEO = {
   },
 
   terms: {
-    title: "Terms of Service — Acceptable Use & Billing for Fluiq",
+    title: "Terms of Service: Acceptable Use & Billing for Fluiq",
     description:
       "Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements.",
     keywords:
@@ -274,7 +274,7 @@ export const SEO = {
       "@graph": [
         {
           "@type": "WebPage",
-          name: "Terms of Service — Fluiq",
+          name: "Terms of Service | Fluiq",
           description:
             "Fluiq's terms of service: acceptable use, data ownership, API usage, billing, and enterprise agreements.",
           url: `${SITE}/terms`,
@@ -329,13 +329,13 @@ function techArticle(
 
 export const DOC_SEO = {
   quickstart: techArticle(
-    "Quickstart — Add LLM Observability in 60 Seconds | Fluiq",
+    "Quickstart: Add LLM Observability in 60 Seconds | Fluiq",
     "Install the Fluiq SDK and add full LLM observability to your Python app in under 60 seconds. Works with OpenAI, Anthropic, LangChain, and 13+ more.",
     "Fluiq quickstart, LLM observability setup, Python LLM SDK, install Fluiq, LLM tracing tutorial, getting started",
     "/documentation/quickstart",
   ),
   observability: techArticle(
-    "LLM Observability — Tracing, Token & Cost Docs | Fluiq",
+    "LLM Observability: Tracing, Token & Cost Docs | Fluiq",
     "Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency histograms. Real-time streaming to your Fluiq dashboard.",
     "LLM observability, LLM tracing, token attribution, USD cost tracking, latency histograms, span tree, real-time traces",
     "/documentation/observability",
@@ -347,37 +347,37 @@ export const DOC_SEO = {
     "/documentation/optimization",
   ),
   security: techArticle(
-    "LLM Security — Prompt Injection & PII Defense Docs | Fluiq",
+    "LLM Security: Prompt Injection & PII Defense Docs | Fluiq",
     "Block prompt injection, jailbreaks, and PII leakage before they reach your model. fluiq.secure() adds pre-call and post-call scanning with zero false positives.",
     "LLM security, prompt injection detection, jailbreak detection, PII redaction, LLM guardrails, secret redaction",
     "/documentation/security",
   ),
   evaluation: techArticle(
-    "LLM Evaluation — LLM-as-Judge Quality Scoring | Fluiq Docs",
+    "LLM Evaluation: LLM-as-Judge Quality Scoring | Fluiq Docs",
     "Score every LLM response for hallucination, faithfulness, relevance, and toxicity using LLM-as-judge. Warn or block based on configurable per-metric thresholds.",
     "LLM evaluation, LLM-as-judge, hallucination detection, faithfulness scoring, relevance scoring, toxicity detection, eval gates",
     "/documentation/evaluation",
   ),
   datasets: techArticle(
-    "Datasets — Golden Sets & Agent Trajectory Capture | Fluiq Docs",
-    "Curate golden datasets from real traces. Trace-backed examples pin the whole agent trajectory — every span, tool call, and MCP call — so you can re-run agentic evaluation and security offline, retention-independent.",
+    "Datasets: Golden Sets & Agent Trajectory Capture | Fluiq Docs",
+    "Curate golden datasets from real traces. Each example pins the whole agent trajectory (every span, tool call, and MCP call), so agentic evaluation and security checks can re-run offline after retention expires.",
     "LLM datasets, golden dataset, agent trajectory, agentic evaluation, dataset from traces, batch evaluation, regression testing",
     "/documentation/datasets",
   ),
   prompts: techArticle(
-    "Prompt Management — Versioning & Deployment Docs | Fluiq",
+    "Prompt Management: Versioning & Deployment Docs | Fluiq",
     "Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison.",
     "prompt management, prompt versioning, prompt templates, prompt deployment, prompt playground, prompt engineering",
     "/documentation/prompts",
   ),
   configuration: techArticle(
-    "Configuration — Fluiq SDK Options & Environment Variables",
-    "Full reference for Fluiq SDK configuration options — API keys, environment variables, log levels, timeout settings, and per-feature toggles.",
+    "Configuration: Fluiq SDK Options & Environment Variables",
+    "Full reference for Fluiq SDK configuration: API keys, environment variables, log levels, timeout settings, and per-feature toggles.",
     "Fluiq configuration, SDK configuration, API keys, environment variables, LLM SDK settings, feature toggles",
     "/documentation/configuration",
   ),
   alerts: techArticle(
-    "Alerts — Slack Notifications for Evals & Security | Fluiq",
+    "Alerts: Slack Notifications for Evals & Security | Fluiq",
     "Send eval regressions and security events to Slack. Configure per-metric thresholds and risk levels in the dashboard; Fluiq posts to your Incoming Webhook in real time or as a digest.",
     "LLM alerts, Slack alerts, eval regression alerts, security alerts, LLM monitoring alerts, anomaly alerts, Slack webhook",
     "/documentation/alerts",
@@ -412,13 +412,13 @@ function pillarPage(title: string, description: string, keywords: string, path: 
 
 export const PLATFORM_SEO = {
   observability: pillarPage(
-    "LLM Observability — Tracing, Token & Cost Tracking | Fluiq",
+    "LLM Observability: Tracing, Token & Cost Tracking | Fluiq",
     "Trace every LLM call with per-node token attribution, USD cost tracking, and p50/p95/p99 latency. Real-time streaming to your Fluiq dashboard, no code changes.",
     "LLM observability, LLM tracing, token attribution, LLM cost tracking, latency monitoring, agent tracing, real-time traces",
     "/observability",
   ),
   security: pillarPage(
-    "LLM Security & Guardrails — Block Injection & PII | Fluiq",
+    "LLM Security & Guardrails: Block Injection & PII | Fluiq",
     "Block prompt injection, jailbreaks, and PII leakage before they reach your model. Pre-call and post-call scanning with named guardrail policies, fails open by design.",
     "LLM security, prompt injection detection, jailbreak detection, PII redaction, LLM guardrails, secret redaction, AI security",
     "/security",
@@ -430,25 +430,25 @@ export const PLATFORM_SEO = {
     "/optimization",
   ),
   evaluation: pillarPage(
-    "LLM Evaluation & Quality Gates — LLM-as-Judge | Fluiq",
-    "Score every LLM response for hallucination, faithfulness, relevance, and toxicity with LLM-as-judge — plus agentic evaluation of whole runs: tool selection, trajectory, and multi-agent coordination, judged by a multi-model jury.",
+    "LLM Evaluation & Quality Gates: LLM-as-Judge | Fluiq",
+    "Score every LLM response for hallucination, faithfulness, relevance, and toxicity with LLM-as-judge. Agentic evaluation judges whole runs: tool selection, trajectory, and multi-agent coordination, with a multi-model jury deciding borderline cases.",
     "LLM evaluation, LLM-as-judge, agentic evaluation, agent trajectory evaluation, tool selection quality, judge panel, hallucination detection, eval gates",
     "/evaluation",
   ),
   datasets: pillarPage(
-    "Agent Datasets — Golden Sets & Trajectory Capture | Fluiq",
-    "Curate golden datasets from real traces. Every example pins the whole agent run — steps, tools, MCP calls, media — so agentic evaluation and security re-run offline as your regression gate.",
+    "Agent Datasets: Golden Sets & Trajectory Capture | Fluiq",
+    "Curate golden datasets from real traces. Every example pins the whole agent run (steps, tools, MCP calls, media), so agentic evaluation and security checks re-run offline as your regression gate.",
     "LLM datasets, golden dataset, agent trajectory capture, agent regression testing, batch evaluation, dataset from traces, agentic eval",
     "/datasets",
   ),
   prompts: pillarPage(
-    "Prompt Management & Versioning — Templates & Deploy | Fluiq",
+    "Prompt Management & Versioning: Templates & Deploy | Fluiq",
     "Version, deploy, and iterate on prompt templates with an IDE-style editor. Variable injection, environment-based deployment, and side-by-side model comparison.",
     "prompt management, prompt versioning, prompt templates, prompt deployment, prompt playground, prompt engineering",
     "/prompts",
   ),
   alerts: pillarPage(
-    "LLM Alerts to Slack — Eval & Security Notifications | Fluiq",
+    "LLM Alerts to Slack: Eval & Security Notifications | Fluiq",
     "Push eval regressions and security events straight to Slack. Configure per-metric thresholds and risk levels in the dashboard; Fluiq posts to your Incoming Webhook in real time or as a digest.",
     "LLM alerts, Slack alerts, eval regression alerts, security alerts, LLM monitoring alerts, anomaly alerts, Slack webhook",
     "/alerts",
@@ -488,31 +488,31 @@ export function comparisonSeo(d: {
 
 export const EXAMPLE_SEO = {
   observability: techArticle(
-    "Observability Examples — OpenAI, LangChain & More | Fluiq",
+    "Observability Examples: OpenAI, LangChain & More | Fluiq",
     "Code examples for Fluiq observability: tracing OpenAI, Anthropic, LangChain, LangGraph, CrewAI, Google ADK, and vector database calls.",
     "Fluiq tracing examples, OpenAI tracing code, LangChain tracing, CrewAI tracing examples, LLM observability code, span tree example",
     "/examples/observability",
   ),
   security: techArticle(
-    "Security Examples — Block Injection, Jailbreaks & PII",
+    "Security Examples: Block Injection, Jailbreaks & PII",
     "Code examples for fluiq.secure(): blocking prompt injection, jailbreaks, PII leakage, and skeleton-key attacks across OpenAI, Anthropic, and LangChain.",
     "fluiq.secure examples, prompt injection code, PII redaction example, LLM security code, jailbreak blocking, LLM guardrails example",
     "/examples/security",
   ),
   evaluation: techArticle(
-    "Evaluation Examples — Score LLM Responses With Judge | Fluiq",
+    "Evaluation Examples: Score LLM Responses With Judge | Fluiq",
     "Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers.",
     "fluiq.eval examples, LLM evaluation code, hallucination scoring example, LLM-as-judge code, toxicity scoring, eval modes",
     "/examples/evaluation",
   ),
   optimization: techArticle(
-    "Optimization Examples — Trace-Driven LLM Caching | Fluiq",
+    "Optimization Examples: Trace-Driven LLM Caching | Fluiq",
     "Code examples for fluiq.optimize(): trace-driven LLM response caching with observe mode, configurable TTL, and per-model scope.",
     "fluiq.optimize examples, LLM caching code, response caching example, cache TTL, prompt caching code, observe mode",
     "/examples/optimization",
   ),
   prompts: techArticle(
-    "Prompt Management Examples — Versioned Templates | Fluiq",
+    "Prompt Management Examples: Versioned Templates | Fluiq",
     "Code examples for Fluiq prompt management: fetching versioned prompt templates by environment, variable injection, and deployment across dev, staging, and production.",
     "prompt management examples, versioned prompts code, prompt deployment example, variable injection, prompt templates code",
     "/examples/prompts",

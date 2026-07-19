@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon } from "@hugeicons/core-free-icons"
+import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon } from "@hugeicons/core-free-icons"
 
 const NAV_DEVELOPER = [
   {
@@ -23,6 +23,13 @@ const NAV_DEVELOPER = [
     to: "/llm-cost-calculator",
     description: "Compare OpenAI, Claude & Gemini pricing",
     icon: Calculator01Icon,
+  },
+  {
+    name: "polygate",
+    slug: "polygate",
+    href: "https://polygate.getfluiq.com",
+    description: "Open-source unified LLM client",
+    icon: GithubIcon,
   },
 ]
 
@@ -60,14 +67,12 @@ export function NavDeveloperDropdown({
           style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)" }}>
 
           <ul className="space-y-0.5">
-            {NAV_DEVELOPER.map((item) => (
-              <li key={item.slug}>
-                <Link
-                  to={item.to}
-                  className="flex items-start gap-3 rounded-xl px-3 py-2.5
+            {NAV_DEVELOPER.map((item) => {
+              const itemClass = `flex items-start gap-3 rounded-xl px-3 py-2.5
                              hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A]
-                             transition-colors group/item"
-                >
+                             transition-colors group/item`
+              const inner = (
+                <>
                   <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg
                                    border border-[#E5E1D6] dark:border-[#2A2A2A]
                                    bg-white dark:bg-[#0A0A0A]
@@ -91,9 +96,22 @@ export function NavDeveloperDropdown({
                                group-hover/item:opacity-100 group-hover/item:translate-x-0
                                transition-all"
                   />
-                </Link>
-              </li>
-            ))}
+                </>
+              )
+              return (
+                <li key={item.slug}>
+                  {"href" in item ? (
+                    <a href={item.href} target="_blank" rel="noopener noreferrer" className={itemClass}>
+                      {inner}
+                    </a>
+                  ) : (
+                    <Link to={item.to} className={itemClass}>
+                      {inner}
+                    </Link>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </div>
       </div>

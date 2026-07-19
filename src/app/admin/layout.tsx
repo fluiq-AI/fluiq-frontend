@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { AdminShell } from "./shell"
 
 export const metadata: Metadata = {
-  title: { absolute: "Admin Console — Manage Fluiq Blog, Content & Platform Data" },
+  title: { absolute: "Admin Console | Fluiq" },
   robots: { index: false, follow: false },
 }
 

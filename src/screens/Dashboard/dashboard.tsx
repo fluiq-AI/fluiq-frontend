@@ -12,18 +12,21 @@ import {
   AiContentGenerator01Icon,
   Alert02Icon,
   FileEditIcon,
+  JusticeScale01Icon,
   Settings01Icon,
   TestTube01Icon,
   Rocket02Icon,
   UserCircleIcon,
   RoboticIcon,
   SparklesIcon,
+  UserMultiple02Icon,
 } from "@hugeicons/core-free-icons"
 
 import { Badge } from "@/components/ui/badge"
 import { useAppSelector } from "@/store/hooks"
 import { cn } from "@/lib/utils"
 import { NotificationWatcher } from "@/components/NotificationWatcher"
+import { OrgSwitcher } from "@/components/OrgSwitcher"
 const NAV_SECTIONS = [
   {
     section: "",
@@ -31,7 +34,13 @@ const NAV_SECTIONS = [
       { to: "/dashboard/getting-started", label: "Getting Started", icon: Rocket02Icon},
       { to: "/dashboard/overview", label: "Overview", icon: DashboardSquare01Icon },
       { to: "/dashboard/alerts", label: "Alerts", icon: Alert02Icon },
-      { to: "/dashboard/audit",       label: "Audit Log",   icon: FileEditIcon     },
+      { to: "/dashboard/audit",       label: "Audit Log",   icon: FileEditIcon     },   
+    ]
+  },
+  {
+    section: "Prompts and Datasets",
+    items: [
+      { to: "/dashboard/prompts", label: "Prompts", icon: AiContentGenerator01Icon },
       { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon },
     ]
   },
@@ -46,7 +55,7 @@ const NAV_SECTIONS = [
     section: "Evaluation",
     items: [
       { to: "/dashboard/tests", label: "Tests", icon: TestTube01Icon },
-      { to: "/dashboard/prompts", label: "Prompts", icon: AiContentGenerator01Icon },
+      { to: "/dashboard/judge-prompts", label: "Judge Prompts", icon: JusticeScale01Icon },
     ],
   },
   {
@@ -67,6 +76,7 @@ const NAV_SECTIONS = [
     section: "Account",
     items: [
       { to: "/dashboard/api-management", label: "API Management", icon: ApiIcon },
+      { to: "/dashboard/user-management", label: "User Management", icon: UserMultiple02Icon },
       { to: "/dashboard/profile", label: "Profile", icon: UserCircleIcon },
     ],
   },
@@ -87,6 +97,10 @@ function Dashboard() {
             <span className="font-heading text-lg font-semibold tracking-tight">Fluiq</span>
             <Badge variant="muted" className="ml-1">Dashboard</Badge>
           </Link>
+        </div>
+
+        <div className="border-b border-border/60 p-3">
+          <OrgSwitcher />
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3">

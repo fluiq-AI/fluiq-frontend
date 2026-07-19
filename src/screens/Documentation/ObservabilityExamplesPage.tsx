@@ -6,7 +6,7 @@ import { IntegrationTabs, PageHeading, type CodeTab } from "./_docComponents"
 const pythonTabs: CodeTab[] = [
   {
     label: "OpenAI",
-    description: "Patches chat completions, streaming, embeddings, images, and audio — sync and async.",
+    description: "Patches chat completions, streaming, embeddings, images, and audio, sync and async.",
     code: `import openai
 from fluiq import instrument
 
@@ -14,13 +14,13 @@ instrument(api_key="fl_...")
 
 client = openai.OpenAI()
 
-# Chat completions — traced automatically
+# Chat completions: traced automatically
 response = client.chat.completions.create(
     model="gpt-4o",
     messages=[{"role": "user", "content": "Summarise this document"}],
 )
 
-# Streaming — also traced
+# Streaming: also traced
 with client.chat.completions.stream(
     model="gpt-4o",
     messages=[{"role": "user", "content": "Write a haiku"}],
@@ -36,7 +36,7 @@ client.embeddings.create(
   },
   {
     label: "Anthropic",
-    description: "Patches the Messages API and the Beta client — sync, async, and streaming.",
+    description: "Patches the Messages API and the Beta client, sync, async, and streaming.",
     code: `import anthropic
 from fluiq import instrument
 
@@ -44,7 +44,7 @@ instrument(api_key="fl_...")
 
 client = anthropic.Anthropic()
 
-# Messages — traced automatically
+# Messages: traced automatically
 response = client.messages.create(
     model="claude-sonnet-4-6",
     max_tokens=512,
@@ -64,7 +64,7 @@ with client.messages.stream(
   },
   {
     label: "Gemini",
-    description: "Patches google-genai and Vertex AI — generation, streaming, and count_tokens, sync and async.",
+    description: "Patches google-genai and Vertex AI: generation, streaming, and count_tokens, sync and async.",
     code: `from google import genai
 from fluiq import instrument
 
@@ -72,7 +72,7 @@ instrument(api_key="fl_...")
 
 client = genai.Client()
 
-# Text generation — traced automatically
+# Text generation: traced automatically
 response = client.models.generate_content(
     model="gemini-2.5-pro",
     contents="Explain quantum entanglement in simple terms",
@@ -86,7 +86,7 @@ for chunk in client.models.generate_content_stream(
 ):
     print(chunk.text, end="", flush=True)
 
-# Token counting — also traced
+# Token counting: also traced
 count = client.models.count_tokens(
     model="gemini-2.5-pro",
     contents="How many tokens is this sentence?",
@@ -106,7 +106,7 @@ llm = ChatOpenAI(model="gpt-4o")
 # Direct invocation
 llm.invoke("What is observability?")
 
-# Full chain — every step is a traced span
+# Full chain: every step is a traced span
 prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful assistant. Be concise."),
     ("human", "{question}"),
@@ -176,7 +176,7 @@ graph = (
     .compile()
 )
 
-# All node calls traced automatically — visible in the trace tree
+# All node calls traced automatically; visible in the trace tree
 result = graph.invoke({"question": "What is semantic caching?"})
 print(result["answer"])`,
   },
@@ -274,7 +274,7 @@ asyncio.run(main())`,
   },
   {
     label: "@trace decorator",
-    description: "Wrap any Python function — sync or async — to record inputs, outputs, latency, and errors as a named span.",
+    description: "Wrap any Python function (sync or async) to record inputs, outputs, latency, and errors as a named span.",
     code: `from fluiq import instrument, trace
 import openai
 
@@ -283,7 +283,7 @@ client = openai.OpenAI()
 
 @trace
 def retrieve(question: str) -> list[str]:
-    """Custom retrieval step — its own span in the trace tree."""
+    """Custom retrieval step: its own span in the trace tree."""
     return vector_store.similarity_search(question, k=4)
 
 @trace(name="rag_agent")
@@ -315,13 +315,13 @@ fluiq.instrument({ apiKey: "fl_..." });
 
 const client = new OpenAI();
 
-// Chat completions — traced automatically
+// Chat completions: traced automatically
 const response = await client.chat.completions.create({
   model: "gpt-4o",
   messages: [{ role: "user", content: "Summarise this document" }],
 });
 
-// Streaming — also traced
+// Streaming: also traced
 const stream = await client.chat.completions.create({
   model: "gpt-4o",
   messages: [{ role: "user", content: "Write a haiku" }],
@@ -339,7 +339,7 @@ await client.embeddings.create({
   },
   {
     label: "Anthropic",
-    description: "Patches the Messages API and the Beta client — including streaming and countTokens.",
+    description: "Patches the Messages API and the Beta client, including streaming and countTokens.",
     code: `import Anthropic from "@anthropic-ai/sdk";
 import fluiq from "@fluiq/sdk";
 
@@ -347,7 +347,7 @@ fluiq.instrument({ apiKey: "fl_..." });
 
 const client = new Anthropic();
 
-// Messages — traced automatically
+// Messages: traced automatically
 const response = await client.messages.create({
   model: "claude-sonnet-4-6",
   max_tokens: 512,
@@ -370,7 +370,7 @@ for await (const event of stream) {
   },
   {
     label: "Gemini",
-    description: "Patches @google/genai and Vertex AI — generation, streaming, countTokens, and embeddings.",
+    description: "Patches @google/genai and Vertex AI: generation, streaming, countTokens, and embeddings.",
     code: `import { GoogleGenAI } from "@google/genai";
 import fluiq from "@fluiq/sdk";
 
@@ -378,7 +378,7 @@ fluiq.instrument({ apiKey: "fl_..." });
 
 const client = new GoogleGenAI({});
 
-// Text generation — traced automatically
+// Text generation: traced automatically
 const response = await client.models.generateContent({
   model: "gemini-2.5-pro",
   contents: "Explain quantum entanglement in simple terms",
@@ -394,7 +394,7 @@ for await (const chunk of stream) {
   process.stdout.write(chunk.text ?? "");
 }
 
-// Token counting — also traced
+// Token counting: also traced
 const count = await client.models.countTokens({
   model: "gemini-2.5-pro",
   contents: "How many tokens is this sentence?",
@@ -414,7 +414,7 @@ const llm = new ChatOpenAI({ model: "gpt-4o" });
 // Direct invocation
 await llm.invoke("What is observability?");
 
-// Full chain — every step is a traced span
+// Full chain: every step is a traced span
 const prompt = ChatPromptTemplate.fromMessages([
   ["system", "You are a helpful assistant. Be concise."],
   ["human", "{question}"],
@@ -486,7 +486,7 @@ const graph = new StateGraph(State)
   .addEdge("refine", END)
   .compile();
 
-// All node calls traced automatically — visible in the trace tree
+// All node calls traced automatically; visible in the trace tree
 const result = await graph.invoke({ question: "What is semantic caching?" });
 console.log(result.answer);`,
   },
@@ -499,18 +499,18 @@ fluiq.instrument({ apiKey: "fl_..." }); // patches @google/genai used by ADK
 
 // @google/adk agent, model, and tool calls are traced automatically.
 // Each model call appears as a span in the Fluiq trace tree, with the
-// agent run grouped as the parent — no extra instrumentation required.`,
+// agent run grouped as the parent; no extra instrumentation required.`,
   },
   {
     label: "trace() wrapper",
-    description: "Wrap any function — sync or async — to record inputs, outputs, latency, and errors as a named span.",
+    description: "Wrap any function (sync or async) to record inputs, outputs, latency, and errors as a named span.",
     code: `import fluiq from "@fluiq/sdk";
 import OpenAI from "openai";
 
 fluiq.instrument({ apiKey: "fl_..." });
 const client = new OpenAI();
 
-// Custom retrieval step — its own span in the trace tree
+// Custom retrieval step: its own span in the trace tree
 const retrieve = fluiq.trace((question: string): string[] => {
   return vectorStore.similaritySearch(question, 4);
 });
@@ -542,7 +542,7 @@ export default function ObservabilityExamplesPage() {
       <PageHeading
         icon={ChartLineData01Icon}
         title="Observability"
-        description="Fluiq auto-instruments every supported library after a single instrument() call — free and unlimited on every tier. Multi-agent runs are captured as a real DAG (fan-out, joins, loop-backs). Select an integration below to see how traces flow into your dashboard."
+        description="Fluiq auto-instruments every supported library after a single instrument() call, free and unlimited on every tier. Multi-agent runs are captured as a real DAG (fan-out, joins, loop-backs). Select an integration below to see how traces flow into your dashboard."
       />
       <IntegrationTabs tabs={{ python: pythonTabs, typescript: typescriptTabs }} />
     </div>

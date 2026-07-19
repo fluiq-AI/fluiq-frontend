@@ -8,7 +8,7 @@ const SITE = "https://getfluiq.com"
 const PATH = "/llm-cost-calculator"
 
 export const metadata = buildMetadata({
-  title: "LLM Cost Calculator — OpenAI, Claude & Gemini Pricing",
+  title: "LLM Cost Calculator: OpenAI, Claude & Gemini Pricing",
   description:
     "Free LLM cost calculator: estimate and compare OpenAI, Claude, and Gemini API pricing by tokens and request volume, and see how much response caching saves.",
   keywords:

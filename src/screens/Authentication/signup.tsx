@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, type FormEvent } from "react"
-import { Link, useNavigate } from "react-router"
+import { Link, useLocation, useNavigate } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Alert02Icon,
@@ -38,14 +38,20 @@ const perks = [
 function Signup() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
   const { status, error, user } = useAppSelector((s) => s.auth)
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
+  const redirectTo =
+    typeof (location.state as { from?: unknown } | null)?.from === "string"
+      ? (location.state as { from: string }).from
+      : "/dashboard"
+
   useEffect(() => {
-    if (user) navigate("/dashboard", { replace: true })
-  }, [user, navigate])
+    if (user) navigate(redirectTo, { replace: true })
+  }, [user, navigate, redirectTo])
 
   useEffect(() => {
     return () => { dispatch(clearError()) }
@@ -57,7 +63,7 @@ function Signup() {
     e.preventDefault()
     const result = await dispatch(registerThunk({ name, email, password }))
     if (registerThunk.fulfilled.match(result)) {
-      navigate("/dashboard", { replace: true })
+      navigate(redirectTo, { replace: true })
     }
   }
 

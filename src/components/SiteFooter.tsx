@@ -28,6 +28,11 @@ const NAV_LINKS = [
   { label: "Contact",       to: "/contact" },
 ]
 
+const OPEN_SOURCE_LINKS = [
+  { label: "polygate",        href: "https://polygate.getfluiq.com" },
+  { label: "polygate GitHub", href: "https://github.com/SaurabhKumbhar24/polygate" },
+]
+
 const INTEGRATION_LINKS = [
   { label: "OpenAI",     to: "/integrations/openai" },
   { label: "Anthropic",  to: "/integrations/anthropic" },
@@ -84,6 +89,13 @@ export function SiteFooter() {
               <span className={headingCls}>Integrations</span>
               {INTEGRATION_LINKS.map((l) => (
                 <Link key={l.to} to={l.to} className={linkCls}>{l.label}</Link>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <span className={headingCls}>Open Source</span>
+              {OPEN_SOURCE_LINKS.map((l) => (
+                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={linkCls}>{l.label}</a>
               ))}
             </div>
           </div>

@@ -88,7 +88,7 @@ export const PILLARS: Record<PillarSlug, Pillar> = {
         Full trace visibility across every <span className={cobalt}>LLM call</span>
       </>
     ),
-    lede: "Every token, latency, and dollar attributed to the exact agent node that spent it. Unlimited traces on every plan — retention is the only paid axis.",
+    lede: "Every token, latency, and dollar attributed to the exact agent node that spent it. Unlimited traces on every plan; retention is the only paid axis.",
     Mockup: TracesMockup,
     docHref: "/documentation/observability",
     capabilities: [
@@ -132,7 +132,7 @@ def answer(question: str) -> str:
         <span className={cobalt}>Block attacks</span> before they reach your model
       </>
     ),
-    lede: "Pre-call scanning stops jailbreaks and injections. Post-call scanning redacts PII and secrets, and inspects the whole trace tree for agentic threats — RAG poisoning, tool misuse, and multi-agent trust attacks.",
+    lede: "Pre-call scanning stops jailbreaks and injections. Post-call scanning redacts PII and secrets, and inspects the whole trace tree for agentic threats: RAG poisoning, tool misuse, and multi-agent trust attacks.",
     Mockup: SecurityMockup,
     docHref: "/documentation/security",
     capabilities: [
@@ -142,10 +142,10 @@ def answer(question: str) -> str:
       { kicker: "Resilient", title: "Fails open by design", body: "A scanner error or plan change never blocks traffic. Security degrades to observe, not to an outage." },
     ],
     mechanism: {
-      heading: "Guard the prompt, then guard the response — and the whole trace tree.",
+      heading: "Guard the prompt, the response, and the whole trace tree.",
       points: [
         "Block mode raises FluiqSecurityError before a high-risk prompt hits the model",
-        "Named guardrail policies — block categories, tool allowlist, PII policy — set per call site from the dashboard",
+        "Named guardrail policies (block categories, tool allowlist, PII policy) set per call site from the dashboard",
         "The response gate scans model output for PII and secrets",
         "Post-call scanning reads sibling tool outputs, retrieved docs, and the agent DAG to catch indirect injection, RAG poisoning, tool exfiltration, and cross-agent attacks",
       ],
@@ -219,21 +219,21 @@ answer(question)`,
         Gate responses that fail <span className={cobalt}>quality thresholds</span>
       </>
     ),
-    lede: "LLM-as-judge scores every response server-side — and agentic evaluation judges whole runs: tool choice, trajectory, and multi-agent coordination.",
+    lede: "LLM-as-judge scores every response server-side. Agentic evaluation judges whole runs: tool choice, trajectory, and multi-agent coordination.",
     Mockup: EvalMockup,
     docHref: "/documentation/evaluation",
     capabilities: [
       { kicker: "Metrics", title: "Six judge metrics", body: "Hallucination, faithfulness, relevance, toxicity, coherence, and completeness, scored per response." },
       { kicker: "Thresholds", title: "Per-metric gates", body: "Set a threshold for each metric. Warn mode logs the score; block mode stops the response." },
       { kicker: "Agentic", title: "Whole-run evaluation", body: "Layered judging of a full agent run: deterministic checks, tool-selection quality, trajectory against the goal, and multi-agent coordination across fan-outs and joins." },
-      { kicker: "Jury", title: "Multi-model judge panel", body: "Borderline verdicts convene a jury of different judge models and aggregate their votes — with every member's score and reasoning kept for audit." },
+      { kicker: "Jury", title: "Multi-model judge panel", body: "Borderline verdicts convene a jury of different judge models and aggregate their votes, with every member's score and reasoning kept for audit." },
     ],
     mechanism: {
       heading: "The judge runs server-side. Opt in with one call.",
       points: [
-        "instrument() only traces — scoring starts when you call fluiq.eval()",
+        "instrument() only traces; scoring starts when you call fluiq.eval()",
         "Warn mode logs scores; block mode raises FluiqEvalError below threshold",
-        "Run Agentic Eval on any root trace to judge the whole run — tools, trajectory, coordination",
+        "Run Agentic Eval on any root trace to judge the whole run: tools, trajectory, coordination",
         "CI gates run the same checks in GitHub Actions",
       ],
       file: "app.py",
@@ -263,13 +263,13 @@ fluiq.eval(
         Regression-test agents on <span className={cobalt}>real trajectories</span>
       </>
     ),
-    lede: "Curate golden datasets from production traffic. Each example pins the whole agent run — every step, tool, and MCP call — forever.",
+    lede: "Curate golden datasets from production traffic. Each example pins the whole agent run (every step, tool, and MCP call) forever.",
     Mockup: DatasetsMockup,
     docHref: "/documentation/datasets",
     capabilities: [
-      { kicker: "Capture", title: "Whole-trajectory examples", body: "Add any run from the trace drawer and Fluiq pins its full trajectory — LLM calls, agent steps, tool and MCP calls, media — independent of trace retention." },
-      { kicker: "Sync", title: "Connect Agents", body: "Link a traced agent to a dataset and every run it has ever made is imported, deduplicated — and future runs keep appending automatically." },
-      { kicker: "Batch", title: "Agentic eval & security runs", body: "Re-run agentic evaluation or the full security scan over every example and get a scored report — the regression gate for prompt and model changes." },
+      { kicker: "Capture", title: "Whole-trajectory examples", body: "Add any run from the trace drawer and Fluiq pins its full trajectory (LLM calls, agent steps, tool and MCP calls, media), independent of trace retention." },
+      { kicker: "Sync", title: "Connect Agents", body: "Link a traced agent to a dataset and every run it has ever made is imported and deduplicated, and future runs keep appending automatically." },
+      { kicker: "Batch", title: "Agentic eval & security runs", body: "Re-run agentic evaluation or the full security scan over every example and get a scored report: the regression gate for prompt and model changes." },
       { kicker: "Enriched", title: "Live quality signals", body: "Each example carries its run's eval scores, security verdicts, and cost, backfilled automatically as workers finish." },
     ],
     mechanism: {
@@ -345,7 +345,7 @@ message = p.render(name="Ada", topic="billing")
         Get paged the moment <span className={cobalt}>quality or safety</span> slips
       </>
     ),
-    lede: "Send eval regressions and security events straight to Slack. Configured in the dashboard — no SDK code or redeploy.",
+    lede: "Send eval regressions and security events straight to Slack. Configured in the dashboard, with no SDK code or redeploy.",
     Mockup: AlertsMockup,
     docHref: "/documentation/alerts",
     capabilities: [
@@ -355,16 +355,16 @@ message = p.render(name="Ada", topic="billing")
       { kicker: "Quiet", title: "Debounced and digestible", body: "Realtime, hourly, or daily digests, with failure-rate alerts debounced so a sustained regression pings you once." },
     ],
     mechanism: {
-      heading: "No new scans, no added latency — just delivery.",
+      heading: "No new scans and no added latency, just delivery.",
       points: [
         "Reads the eval and security results Fluiq already computes for your traces",
         "Eval alerts on score_below and failure_rate_above; security alerts by risk level and category",
         "Configured entirely in Dashboard → Alerts; changes apply within ~60 seconds",
-        "Delivery fails open — a webhook outage never interrupts trace processing",
+        "Delivery fails open: a webhook outage never interrupts trace processing",
       ],
       file: "dashboard",
       signature: "Dashboard → Alerts",
-      code: `# No SDK code required — alerts are configured in the dashboard.
+      code: `# No SDK code required; alerts are configured in the dashboard.
 # They fire off the eval and security scans already running:
 
 import fluiq

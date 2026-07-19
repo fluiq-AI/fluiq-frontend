@@ -5,15 +5,15 @@ import Component from "@/pages/Integrations/index"
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Fluiq Integrations — LLM Monitoring for 14 Frameworks & DBs",
+    absolute: "Fluiq Integrations: LLM Monitoring for 14 Frameworks & DBs",
   },
   description:
-    "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases, OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python.",
+    "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases, including OpenAI, Anthropic, LangChain, CrewAI, and Pinecone. Two lines of Python.",
   keywords:
     "Fluiq integrations, LLM integrations, OpenAI integration, LangChain integration, vector database monitoring, agent framework monitoring, CrewAI integration",
   alternates: { canonical: "/integrations" },
   openGraph: {
-    title: "Fluiq Integrations, LLM Monitoring for 14 Frameworks",
+    title: "Fluiq Integrations: LLM Monitoring for 14 Frameworks",
     description:
       "Auto-instrument OpenAI, Anthropic, Gemini, LangChain, CrewAI, Pinecone, and more with two lines of Python.",
     url: "/integrations",
@@ -26,7 +26,7 @@ const jsonLd = {
   "@type": "CollectionPage",
   name: "Fluiq Integrations",
   description:
-    "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases, OpenAI, Anthropic, LangChain, CrewAI, Pinecone, and more. Two lines of Python.",
+    "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases, including OpenAI, Anthropic, LangChain, CrewAI, and Pinecone. Two lines of Python.",
   url: "https://getfluiq.com/integrations",
   isPartOf: { "@id": "https://getfluiq.com" },
 }

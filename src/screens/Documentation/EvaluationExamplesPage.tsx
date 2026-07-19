@@ -7,14 +7,14 @@ const pythonTabs: CodeTab[] = [
   {
     label: "Warn mode",
     description:
-      "Call fluiq.eval() once after instrument() — every subsequent traced LLM call is scored in the background. Results appear in the Evaluations dashboard; a warning is logged when a score falls below its threshold.",
+      "Call fluiq.eval() once after instrument(); every subsequent traced LLM call is scored in the background. Results appear in the Evaluations dashboard; a warning is logged when a score falls below its threshold.",
     code: `import openai
 import fluiq
 
 fluiq.instrument(api_key="fl_...")
 fluiq.eval(
     metrics=["hallucination", "relevance"],  # scored on every LLM call
-    mode="warn",                             # default — never blocks
+    mode="warn",                             # default; never blocks
     thresholds={"hallucination": 0.8, "relevance": 0.7},
 )
 
@@ -31,7 +31,7 @@ print(response.choices[0].message.content)
   {
     label: "Block mode",
     description:
-      "In block mode fluiq.eval() runs synchronously after each LLM call and raises FluiqEvalError if any metric falls below its threshold — the response never reaches your application.",
+      "In block mode fluiq.eval() runs synchronously after each LLM call and raises FluiqEvalError if any metric falls below its threshold; the response never reaches your application.",
     code: `import openai
 import fluiq
 from fluiq.exceptions import FluiqEvalError
@@ -52,7 +52,7 @@ try:
     )
     answer = response.choices[0].message.content
 except FluiqEvalError as e:
-    # Score fell below threshold — handle gracefully
+    # Score fell below threshold; handle gracefully
     print(f"Eval blocked response: {e}")
     answer = "I can't answer that right now."`,
   },
@@ -86,7 +86,7 @@ fluiq.eval(
   {
     label: "LangChain",
     description:
-      "Evaluation fires automatically on every LangChain LLM call — chains, agents, and direct invocations are all covered.",
+      "Evaluation fires automatically on every LangChain LLM call: chains, agents, and direct invocations are all covered.",
     code: `from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 import fluiq
@@ -107,7 +107,7 @@ chain.invoke({"question": "Explain the difference between RAG and fine-tuning"})
   {
     label: "LangGraph",
     description:
-      "Each LLM call inside a graph node is evaluated independently — scores are attached to the corresponding span in the trace tree.",
+      "Each LLM call inside a graph node is evaluated independently; scores are attached to the corresponding span in the trace tree.",
     code: `from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
 import fluiq
@@ -146,7 +146,7 @@ result = graph.invoke({"question": "What are the benefits of semantic caching?"}
   {
     label: "CrewAI",
     description:
-      "Every LLM call made by a CrewAI agent is evaluated — scores appear as individual spans under the agent in the trace tree.",
+      "Every LLM call made by a CrewAI agent is evaluated; scores appear as individual spans under the agent in the trace tree.",
     code: `from crewai import Agent, Task, Crew, Process
 import fluiq
 
@@ -189,7 +189,7 @@ crew.kickoff(inputs={"topic": "LLM observability best practices"})`,
   {
     label: "Google ADK",
     description:
-      "ADK agent calls are evaluated through the google-genai patch — each Gemini call gets a score attached to its trace span.",
+      "ADK agent calls are evaluated through the google-genai patch; each Gemini call gets a score attached to its trace span.",
     code: `from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
@@ -235,8 +235,8 @@ await ask("u1", "How do I upgrade my subscription?")`,
   {
     label: "CI/CD eval gate",
     description:
-      "Use block mode in CI — set thresholds tight and catch FluiqEvalError to fail the build when response quality regresses.",
-    code: `# evaluate.py — run in your CI pipeline before merging
+      "Use block mode in CI: set thresholds tight and catch FluiqEvalError to fail the build when response quality regresses.",
+    code: `# evaluate.py: run in your CI pipeline before merging
 import asyncio
 import fluiq
 from fluiq.exceptions import FluiqEvalError
@@ -287,14 +287,14 @@ const typescriptTabs: CodeTab[] = [
   {
     label: "Warn mode",
     description:
-      "Call fluiq.eval() once after instrument() — every subsequent traced LLM call is scored in the background. Results appear in the Evaluations dashboard; a warning is logged when a score falls below its threshold.",
+      "Call fluiq.eval() once after instrument(); every subsequent traced LLM call is scored in the background. Results appear in the Evaluations dashboard; a warning is logged when a score falls below its threshold.",
     code: `import OpenAI from "openai";
 import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." });
 fluiq.eval({
   metrics: ["hallucination", "relevance"], // scored on every LLM call
-  mode: "warn",                            // default — never blocks
+  mode: "warn",                            // default; never blocks
   thresholds: { hallucination: 0.8, relevance: 0.7 },
 });
 
@@ -311,7 +311,7 @@ console.log(response.choices[0].message.content);
   {
     label: "Block mode",
     description:
-      "In block mode fluiq.eval() runs synchronously after each LLM call and throws FluiqEvalError if any metric falls below its threshold — the response never reaches your application.",
+      "In block mode fluiq.eval() runs synchronously after each LLM call and throws FluiqEvalError if any metric falls below its threshold; the response never reaches your application.",
     code: `import OpenAI from "openai";
 import fluiq, { FluiqEvalError } from "@fluiq/sdk";
 
@@ -333,7 +333,7 @@ try {
   answer = response.choices[0].message.content ?? "";
 } catch (e) {
   if (e instanceof FluiqEvalError) {
-    // Score fell below threshold — handle gracefully
+    // Score fell below threshold; handle gracefully
     console.log(\`Eval blocked response: \${e.message}\`);
     answer = "I can't answer that right now.";
   } else {
@@ -371,7 +371,7 @@ fluiq.eval({
   {
     label: "LangChain",
     description:
-      "Evaluation fires automatically on every LangChain LLM call — chains, agents, and direct invocations are all covered.",
+      "Evaluation fires automatically on every LangChain LLM call: chains, agents, and direct invocations are all covered.",
     code: `import { ChatOpenAI } from "@langchain/openai";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import fluiq from "@fluiq/sdk";
@@ -392,7 +392,7 @@ await chain.invoke({ question: "Explain the difference between RAG and fine-tuni
   {
     label: "LangGraph",
     description:
-      "Each LLM call inside a graph node is evaluated independently — scores are attached to the corresponding span in the trace tree.",
+      "Each LLM call inside a graph node is evaluated independently; scores are attached to the corresponding span in the trace tree.",
     code: `import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import { ChatOpenAI } from "@langchain/openai";
 import fluiq from "@fluiq/sdk";
@@ -433,21 +433,21 @@ const result = await graph.invoke({
   {
     label: "Google ADK",
     description:
-      "ADK agent calls are evaluated through the @google/genai patch — each Gemini call gets a score attached to its trace span.",
+      "ADK agent calls are evaluated through the @google/genai patch; each Gemini call gets a score attached to its trace span.",
     code: `import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." });
 fluiq.eval({ metrics: ["hallucination", "relevance", "coherence"], mode: "warn" });
 
 // @google/adk agents call Gemini under the hood. Every model call is traced
-// through Fluiq's @google/genai patch and evaluated automatically — no extra
+// through Fluiq's @google/genai patch and evaluated automatically; no extra
 // code is required. Scores are attached to each Gemini span in the trace tree.`,
   },
   {
     label: "CI/CD eval gate",
     description:
-      "Use block mode in CI — set thresholds tight and catch FluiqEvalError to fail the build when response quality regresses.",
-    code: `// evaluate.ts — run in your CI pipeline before merging
+      "Use block mode in CI: set thresholds tight and catch FluiqEvalError to fail the build when response quality regresses.",
+    code: `// evaluate.ts: run in your CI pipeline before merging
 import fluiq, { FluiqEvalError } from "@fluiq/sdk";
 import OpenAI from "openai";
 
@@ -501,7 +501,7 @@ export default function EvaluationExamplesPage() {
       <PageHeading
         icon={CheckmarkCircle02Icon}
         title="Evaluation"
-        description="Evaluation is opt-in: instrument() only traces, and scoring runs once you call fluiq.eval(). From that point Fluiq runs an LLM-as-judge on every traced LLM response, scores each metric (0–1), and stores results in your dashboard. Use block mode to gate on quality in CI. For whole-run scoring — tool selection, trajectory, and multi-agent coordination — run an agentic evaluation on a root trace or over a Dataset from the dashboard."
+        description="Evaluation is opt-in: instrument() only traces, and scoring runs once you call fluiq.eval(). From that point Fluiq runs an LLM-as-judge on every traced LLM response, scores each metric (0 to 1), and stores results in your dashboard. Use block mode to gate on quality in CI. For whole-run scoring (tool selection, trajectory, and multi-agent coordination), run an agentic evaluation on a root trace or over a Dataset from the dashboard."
       />
       <IntegrationTabs tabs={{ python: pythonTabs, typescript: typescriptTabs }} />
     </div>

@@ -7,7 +7,7 @@ const pythonTabs: CodeTab[] = [
   {
     label: "Warn mode",
     description:
-      "Default mode — every traced LLM call is scanned server-side. Risks are flagged on the trace without blocking execution.",
+      "Default mode: every traced LLM call is scanned server-side. Risks are flagged on the trace without blocking execution.",
     code: `import fluiq
 import openai
 
@@ -51,7 +51,7 @@ except FluiqSecurityError as e:
   {
     label: "Exception attributes",
     description:
-      "FluiqSecurityError carries three attributes from the server's detection result. Detection rules — attack patterns, PII types, topic filters — are configured per-organisation in the Fluiq Security dashboard, not in SDK code.",
+      "FluiqSecurityError carries three attributes from the server's detection result. Detection rules (attack patterns, PII types, topic filters) are configured per-organisation in the Fluiq Security dashboard, not in SDK code.",
     code: `import fluiq
 from fluiq.exceptions import FluiqSecurityError
 import openai
@@ -67,20 +67,20 @@ try:
         messages=[{"role": "user", "content": user_input}],
     )
 except FluiqSecurityError as e:
-    # e.block_reason  — human-readable explanation from the server
-    # e.risk_level    — "medium" or "high"
-    # e.attack_types  — detected categories, e.g.:
+    # e.block_reason : human-readable explanation from the server
+    # e.risk_level   : "medium" or "high"
+    # e.attack_types : detected categories, e.g.:
     #   ["prompt_injection", "jailbreak", "skeleton_key", "pii"]
     match e.risk_level:
         case "high":
             return 403, {"error": e.block_reason, "types": e.attack_types}
         case "medium":
-            return 400, {"error": "Request flagged — please rephrase."}`,
+            return 400, {"error": "Request flagged. Please rephrase."}`,
   },
   {
     label: "FastAPI integration",
     description:
-      "A realistic web handler pattern — catch FluiqSecurityError at the route level and return a clean HTTP response without leaking internal details.",
+      "A realistic web handler pattern: catch FluiqSecurityError at the route level and return a clean HTTP response without leaking internal details.",
     code: `from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import fluiq
@@ -104,7 +104,7 @@ async def chat(body: dict):
         return {"reply": response.choices[0].message.content}
 
     except FluiqSecurityError as e:
-        # Pre-call check blocked the request — don't surface internals
+        # Pre-call check blocked the request; don't surface internals
         status = 403 if e.risk_level == "high" else 400
         return JSONResponse(
             status_code=status,
@@ -114,7 +114,7 @@ async def chat(body: dict):
   {
     label: "Audit Log",
     description:
-      "Every SDK configuration call and API action is automatically written to an append-only, HMAC-signed audit trail. Query it via REST or browse and export it from the dashboard — no extra SDK code needed.",
+      "Every SDK configuration call and API action is automatically written to an append-only, HMAC-signed audit trail. Query it via REST or browse and export it from the dashboard; no extra SDK code needed.",
     code: `# Query the audit log via REST (server-side code)
 import requests
 
@@ -145,7 +145,7 @@ resp = requests.get(
   {
     label: "Guardrail policy",
     description:
-      "Set per-org blocking rules, custom phrase lists, and alert webhooks via the REST API. Changes take effect within 60 seconds — no SDK update or redeployment required.",
+      "Set per-org blocking rules, custom phrase lists, and alert webhooks via the REST API. Changes take effect within 60 seconds; no SDK update or redeployment required.",
     code: `import requests
 
 headers = {
@@ -161,11 +161,11 @@ requests.put(
         "block_threshold": "high",
         # Warn on medium-risk findings too
         "warn_threshold": "medium",
-        # Only these categories trigger a block — PII is warn-only.
+        # Only these categories trigger a block; PII is warn-only.
         # Agentic categories are also available: rag_poisoning,
         # tool_exfiltration, tool_policy_violation, cross_agent_injection
         "block_categories": ["prompt_injection", "jailbreak", "skeleton_key"],
-        # Tools the agent may call — anything else is flagged as a
+        # Tools the agent may call; anything else is flagged as a
         # tool_policy_violation. Empty = all tools allowed.
         "allowed_tools": ["search_web", "read_file", "get_weather"],
         # Exact phrases always blocked before any scan
@@ -188,7 +188,7 @@ const typescriptTabs: CodeTab[] = [
   {
     label: "Warn mode",
     description:
-      "Default mode — every traced LLM call is scanned server-side. Risks are flagged on the trace without blocking execution.",
+      "Default mode: every traced LLM call is scanned server-side. Risks are flagged on the trace without blocking execution.",
     code: `import fluiq from "@fluiq/sdk";
 import OpenAI from "openai";
 
@@ -237,7 +237,7 @@ try {
   {
     label: "Exception attributes",
     description:
-      "FluiqSecurityError carries three properties from the server's detection result. Detection rules — attack patterns, PII types, topic filters — are configured per-organisation in the Fluiq Security dashboard, not in SDK code.",
+      "FluiqSecurityError carries three properties from the server's detection result. Detection rules (attack patterns, PII types, topic filters) are configured per-organisation in the Fluiq Security dashboard, not in SDK code.",
     code: `import fluiq, { FluiqSecurityError } from "@fluiq/sdk";
 import OpenAI from "openai";
 
@@ -253,14 +253,14 @@ try {
   });
 } catch (e) {
   if (e instanceof FluiqSecurityError) {
-    // e.blockReason  — human-readable explanation from the server
-    // e.riskLevel    — "medium" or "high"
-    // e.attackTypes  — detected categories, e.g.:
+    // e.blockReason : human-readable explanation from the server
+    // e.riskLevel   : "medium" or "high"
+    // e.attackTypes : detected categories, e.g.:
     //   ["prompt_injection", "jailbreak", "skeleton_key", "pii"]
     if (e.riskLevel === "high") {
       return res.status(403).json({ error: e.blockReason, types: e.attackTypes });
     }
-    return res.status(400).json({ error: "Request flagged — please rephrase." });
+    return res.status(400).json({ error: "Request flagged. Please rephrase." });
   }
   throw e;
 }`,
@@ -268,7 +268,7 @@ try {
   {
     label: "Express integration",
     description:
-      "A realistic web handler pattern — catch FluiqSecurityError at the route level and return a clean HTTP response without leaking internal details.",
+      "A realistic web handler pattern: catch FluiqSecurityError at the route level and return a clean HTTP response without leaking internal details.",
     code: `import express from "express";
 import fluiq, { FluiqSecurityError } from "@fluiq/sdk";
 import OpenAI from "openai";
@@ -290,7 +290,7 @@ app.post("/chat", async (req, res) => {
     res.json({ reply: response.choices[0].message.content });
   } catch (e) {
     if (e instanceof FluiqSecurityError) {
-      // Pre-call check blocked the request — don't surface internals
+      // Pre-call check blocked the request; don't surface internals
       const status = e.riskLevel === "high" ? 403 : 400;
       return res.status(status).json({
         error: "Your message was flagged by our safety policy.",
@@ -303,7 +303,7 @@ app.post("/chat", async (req, res) => {
   {
     label: "Audit Log",
     description:
-      "Every SDK configuration call and API action is automatically written to an append-only, HMAC-signed audit trail. Query it via REST or browse and export it from the dashboard — no extra SDK code needed.",
+      "Every SDK configuration call and API action is automatically written to an append-only, HMAC-signed audit trail. Query it via REST or browse and export it from the dashboard; no extra SDK code needed.",
     code: `import axios from "axios";
 
 const headers = { Authorization: \`Bearer \${fluiqApiKey}\` };
@@ -328,7 +328,7 @@ resp = await axios.get("https://api.getfluiq.com/api/v1/audit", {
   {
     label: "Guardrail policy",
     description:
-      "Set per-org blocking rules, custom phrase lists, and alert webhooks via the REST API. Changes take effect within 60 seconds — no SDK update or redeployment required.",
+      "Set per-org blocking rules, custom phrase lists, and alert webhooks via the REST API. Changes take effect within 60 seconds; no SDK update or redeployment required.",
     code: `import axios from "axios";
 
 const headers = {
@@ -344,11 +344,11 @@ await axios.put(
     block_threshold: "high",
     // Warn on medium-risk findings too
     warn_threshold: "medium",
-    // Only these categories trigger a block — PII is warn-only.
+    // Only these categories trigger a block; PII is warn-only.
     // Agentic categories also available: rag_poisoning, tool_exfiltration,
     // tool_policy_violation, cross_agent_injection
     block_categories: ["prompt_injection", "jailbreak", "skeleton_key"],
-    // Tools the agent may call — anything else is flagged as a
+    // Tools the agent may call; anything else is flagged as a
     // tool_policy_violation. Empty = all tools allowed.
     allowed_tools: ["search_web", "read_file", "get_weather"],
     // Exact phrases always blocked before any scan

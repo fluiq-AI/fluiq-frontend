@@ -22,14 +22,14 @@ export default function ConfigurationPage() {
       <Code>{byLang(
         lang,
         `fluiq.instrument(
-    api_key  = "fl_...",          # required — or set FLUIQ_API_KEY env var
-    endpoint = "https://...",     # optional — override for self-hosted
-    version  = "v1",              # optional — pin for stable schema
+    api_key  = "fl_...",          # required; or set FLUIQ_API_KEY env var
+    endpoint = "https://...",     # optional; override for self-hosted
+    version  = "v1",              # optional; pin for stable schema
 )`,
         `fluiq.instrument({
-  apiKey: "fl_...",        // required — or set FLUIQ_API_KEY env var
-  endpoint: "https://...", // optional — override for self-hosted
-  version: "v1",           // optional — pin for stable schema
+  apiKey: "fl_...",        // required; or set FLUIQ_API_KEY env var
+  endpoint: "https://...", // optional; override for self-hosted
+  version: "v1",           // optional; pin for stable schema
 });`,
       )}</Code>
       <p className="text-sm text-muted-foreground">
@@ -55,9 +55,9 @@ export default function ConfigurationPage() {
               <Badge variant="outline" className="ml-2">Team+ required</Badge>
             </p>
             <p className="mt-1 text-muted-foreground">
-              <code className="font-mono text-foreground">"cache"</code> — full Redis caching enabled (default).{" "}
-              <code className="font-mono text-foreground">"observe"</code> — records what would be hits without intercepting calls.
-              Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open — if the backend is unreachable or the plan check fails, all LLM calls proceed normally.
+              <code className="font-mono text-foreground">"cache"</code>: full Redis caching enabled (default).{" "}
+              <code className="font-mono text-foreground">"observe"</code>: records what would be hits without intercepting calls.
+              Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open: if the backend is unreachable or the plan check fails, all LLM calls proceed normally.
             </p>
           </div>
         </div>
@@ -82,9 +82,9 @@ export default function ConfigurationPage() {
               <Badge variant="outline" className="ml-2">Growth+ required</Badge>
             </p>
             <p className="mt-1 text-muted-foreground">
-              <code className="font-mono text-foreground">"warn"</code> — post-call scan only; security metadata enriched on the trace (default).{" "}
-              <code className="font-mono text-foreground">"block"</code> — pre-call guard; raises <code className="font-mono text-foreground">FluiqSecurityError</code> before the LLM call when a HIGH-risk prompt is detected.
-              Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open — a plan downgrade or endpoint outage never blocks your LLM calls.
+              <code className="font-mono text-foreground">"warn"</code>: post-call scan only; security metadata enriched on the trace (default).{" "}
+              <code className="font-mono text-foreground">"block"</code>: pre-call guard; raises <code className="font-mono text-foreground">FluiqSecurityError</code> before the LLM call when a HIGH-risk prompt is detected.
+              Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open: a plan downgrade or endpoint outage never blocks your LLM calls.
             </p>
           </div>
         </div>
@@ -94,12 +94,12 @@ export default function ConfigurationPage() {
       <Code>{byLang(
         lang,
         `fluiq.fetch_prompt(
-    slug  = "my-prompt",       # required — the unique identifier
-    env   = "production",      # optional — "development" | "staging" | "production" (default)
+    slug  = "my-prompt",       # required; the unique identifier
+    env   = "production",      # optional; "development" | "staging" | "production" (default)
 )`,
         `fluiq.fetchPrompt(
-  "my-prompt",           // required — the unique identifier
-  { env: "production" }, // optional — "development" | "staging" | "production" (default)
+  "my-prompt",           // required; the unique identifier
+  { env: "production" }, // optional; "development" | "staging" | "production" (default)
 );`,
       )}</Code>
       <div className="grid gap-3 text-sm">

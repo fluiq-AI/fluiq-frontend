@@ -23,7 +23,7 @@ export default function PromptsPage() {
       <PageHeading
         icon={FileScriptIcon}
         title="Prompts"
-        description={`The Prompts dashboard turns every LLM trace into a managed prompt template. Discover prompts from production traffic, edit them with ${isTs ? "{variable}" : "{{variable}}"} substitution, run LLM-as-judge evaluations in the playground, then promote them to named environments so your SDK can fetch the right version at runtime — with no redeploy required.`}
+        description={`The Prompts dashboard turns every LLM trace into a managed prompt template. Discover prompts from production traffic, edit them with ${isTs ? "{variable}" : "{{variable}}"} substitution, run LLM-as-judge evaluations in the playground, then promote them to named environments so your SDK can fetch the right version at runtime, with no redeploy required.`}
       />
 
       <div className="flex items-center gap-2 pt-2">
@@ -31,11 +31,11 @@ export default function PromptsPage() {
         <p className="font-medium">Dashboard workflow</p>
       </div>
       <ol className="list-decimal space-y-2 pl-5 text-sm text-muted-foreground">
-        <li><span className="text-foreground">Discover</span> — the Prompts page surfaces every LLM call from your traces as a row. Click any row to open it in the evaluation playground alongside its full trace tree.</li>
-        <li><span className="text-foreground">Edit</span> — refine the template in the editor. Add <code className="font-mono text-foreground">{isTs ? "{variable}" : "{{variable}}"}</code> placeholders; the UI detects them and renders input fields for test values.</li>
-        <li><span className="text-foreground">Evaluate</span> — run LLM-as-judge metrics (hallucination, faithfulness, relevance …) on the template + response pair. Results appear inline as scored cards.</li>
-        <li><span className="text-foreground">Save</span> — give the prompt a name and a unique slug. Every subsequent edit creates a version snapshot so you can restore any previous state.</li>
-        <li><span className="text-foreground">Promote</span> — deploy to <span className="font-medium text-blue-500">development</span>, <span className="font-medium text-amber-500">staging</span>, and <span className="font-medium text-emerald-500">production</span> independently. Each environment stores a full snapshot of the template at promote time, so rolling back is one click.</li>
+        <li><span className="text-foreground">Discover</span>: the Prompts page surfaces every LLM call from your traces as a row. Click any row to open it in the evaluation playground alongside its full trace tree.</li>
+        <li><span className="text-foreground">Edit</span>: refine the template in the editor. Add <code className="font-mono text-foreground">{isTs ? "{variable}" : "{{variable}}"}</code> placeholders; the UI detects them and renders input fields for test values.</li>
+        <li><span className="text-foreground">Evaluate</span>: run LLM-as-judge metrics (hallucination, faithfulness, relevance …) on the template + response pair. Results appear inline as scored cards.</li>
+        <li><span className="text-foreground">Save</span>: give the prompt a name and a unique slug. Every subsequent edit creates a version snapshot so you can restore any previous state.</li>
+        <li><span className="text-foreground">Promote</span>: deploy to <span className="font-medium text-blue-500">development</span>, <span className="font-medium text-amber-500">staging</span>, and <span className="font-medium text-emerald-500">production</span> independently. Each environment stores a full snapshot of the template at promote time, so rolling back is one click.</li>
       </ol>
 
       <div className="flex items-center gap-2 pt-2">
@@ -63,7 +63,7 @@ Answer the following question in {language}: {question}`,
         <p className="font-medium">Environment-based deployment</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Each named environment stores an independent snapshot — promoting to <code className="font-mono text-foreground">staging</code> never touches <code className="font-mono text-foreground">production</code>. The typical promotion flow:
+        Each named environment stores an independent snapshot; promoting to <code className="font-mono text-foreground">staging</code> never touches <code className="font-mono text-foreground">production</code>. The typical promotion flow:
       </p>
       <div className="overflow-x-auto rounded-xl border border-border/60">
         <table className="w-full text-sm">
@@ -91,7 +91,7 @@ Answer the following question in {language}: {question}`,
             <tr>
               <td className="px-4 py-2 font-medium text-emerald-600 dark:text-emerald-400">production</td>
               <td className="px-4 py-2"><span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-600 dark:text-emerald-400">prod</span></td>
-              <td className="px-4 py-2 text-muted-foreground">Live traffic — the default</td>
+              <td className="px-4 py-2 text-muted-foreground">Live traffic (the default)</td>
               <td className="px-4 py-2 font-mono text-muted-foreground text-xs">{isTs ? "fetchPrompt(slug)" : "fetch_prompt(slug)"}</td>
             </tr>
           </tbody>
@@ -103,7 +103,7 @@ Answer the following question in {language}: {question}`,
         <p className="font-medium">SDK fetch</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Call <code className="font-mono text-foreground">{fetchName}</code> anywhere in your application to retrieve the deployed template for an environment. The call is authenticated with your API key and returns the snapshot that was promoted — not the current editor draft.
+        Call <code className="font-mono text-foreground">{fetchName}</code> anywhere in your application to retrieve the deployed template for an environment. The call is authenticated with your API key and returns the snapshot that was promoted, not the current editor draft.
       </p>
       <Code>{byLang(
         lang,
@@ -193,16 +193,16 @@ const response = await client.chat.completions.create({
         <p className="font-medium">Version history</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        Every time you save an edited template, the previous version is automatically snapshotted. Open the <span className="font-medium text-foreground">History</span> panel on any saved prompt to browse past versions — each shows its version number, the template preview, the model, and when it was saved. Click <span className="font-medium text-foreground">Restore</span> to roll back; the current state is snapshotted first so no work is ever lost.
+        Every time you save an edited template, the previous version is automatically snapshotted. Open the <span className="font-medium text-foreground">History</span> panel on any saved prompt to browse past versions; each shows its version number, the template preview, the model, and when it was saved. Click <span className="font-medium text-foreground">Restore</span> to roll back; the current state is snapshotted first so no work is ever lost.
       </p>
       <p className="text-sm text-muted-foreground">
-        Environments pin to their snapshot independently — restoring v3 to the head does not change what <code className="font-mono text-foreground">production</code> is serving until you explicitly re-promote.
+        Environments pin to their snapshot independently; restoring v3 to the head does not change what <code className="font-mono text-foreground">production</code> is serving until you explicitly re-promote.
       </p>
 
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 text-sm">
         <p className="font-medium">Decoupled from your deploy pipeline</p>
         <p className="mt-1 text-muted-foreground">
-          Because <code className="font-mono text-foreground">{fetchName}</code> fetches at runtime, you can update a production prompt — fix a hallucination-prone instruction, add a guardrail, tweak tone — in the dashboard without touching your codebase or triggering a new deployment. The change is live the next time your SDK calls <code className="font-mono text-foreground">{isTs ? "fetchPrompt()" : "fetch_prompt()"}</code>.
+          Because <code className="font-mono text-foreground">{fetchName}</code> fetches at runtime, you can update a production prompt (fix a hallucination-prone instruction, add a guardrail, tweak tone) in the dashboard without touching your codebase or triggering a new deployment. The change is live the next time your SDK calls <code className="font-mono text-foreground">{isTs ? "fetchPrompt()" : "fetch_prompt()"}</code>.
         </p>
       </div>
     </div>

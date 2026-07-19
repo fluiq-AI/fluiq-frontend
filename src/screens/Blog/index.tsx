@@ -56,7 +56,7 @@ export default function BlogIndex() {
         ) : error ? (
           <p className="text-[#6B6B66] dark:text-[#9A9A92]">Couldn’t load posts right now. Please try again later.</p>
         ) : posts.length === 0 ? (
-          <p className="text-[#6B6B66] dark:text-[#9A9A92]">No posts yet — check back soon.</p>
+          <p className="text-[#6B6B66] dark:text-[#9A9A92]">No posts yet. Check back soon.</p>
         ) : (
           <>
             {featured && (
