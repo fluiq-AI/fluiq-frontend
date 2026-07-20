@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon } from "@hugeicons/core-free-icons"
+import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon } from "@hugeicons/core-free-icons"
 
 const NAV_DEVELOPER = [
   {
@@ -30,6 +30,13 @@ const NAV_DEVELOPER = [
     href: "https://polygate.getfluiq.com",
     description: "Open-source unified LLM client",
     icon: GithubIcon,
+  },
+  {
+    name: "Infrager",
+    slug: "infrager",
+    to: "/infrager",
+    description: "Cloud diagrams to secure Terraform",
+    icon: CloudServerIcon,
   },
 ]
 

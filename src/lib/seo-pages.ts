@@ -236,6 +236,38 @@ export const SEO = {
     },
   },
 
+  infrager: {
+    title: "Infrager | Cloud Architecture Diagrams to Secure Terraform",
+    description:
+      "Infrager is a free, open-source tool from the Fluiq team. Drag AWS and Google Cloud resources onto a canvas, connect them, and get dependency-ordered Terraform with security linting that runs while you draw.",
+    keywords:
+      "diagram to Terraform, Terraform generator, infrastructure as code, cloud architecture diagram, AWS Terraform generator, GCP Terraform generator, IaC security scanning, open source Terraform tool, drag and drop cloud designer",
+    path: "/infrager",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          name: "Infrager",
+          applicationCategory: "DeveloperApplication",
+          operatingSystem: "Web",
+          url: "https://infrager.getfluiq.com",
+          description:
+            "Open-source tool that converts drag-and-drop AWS and Google Cloud architecture diagrams into production-ready Terraform, with security linting for open security groups, public buckets, unencrypted storage, and overprivileged IAM.",
+          license: "https://opensource.org/licenses/MIT",
+          author: ORG,
+          publisher: ORG,
+          isPartOf: ISPART,
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        },
+        breadcrumb([
+          ["Home", "/"],
+          ["Infrager", "/infrager"],
+        ]),
+      ],
+    },
+  },
+
   privacy: {
     title: "Privacy Policy: How Fluiq Handles Your LLM Trace Data",
     description:

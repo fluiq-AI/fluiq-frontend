@@ -16,7 +16,10 @@ import {
   SparklesIcon,
   AiContentGenerator01Icon,
   Database01Icon,
+  ArrowRight02Icon,
+  CloudServerIcon,
 } from "@hugeicons/core-free-icons"
+import { Link } from "react-router"
 import { CodeBlock } from "@/components/code-block"
 import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
 
@@ -589,6 +592,65 @@ export default function Home() {
                 <CodeLangToggle lang={codeLang} onChange={setCodeLang} />
               </div>
               <CodeBlock variant="dark" highlighted={syntaxHighlight(isTs ? PIPE_TS : PIPE_PY, codeLang)}>{isTs ? PIPE_TS : PIPE_PY}</CodeBlock>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Infrager (open source) ───────────────────────────────────────── */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
+        <div className="mx-auto max-w-6xl px-6">
+          <div data-animate className="grid gap-10 md:grid-cols-12 md:items-center">
+            <div className="md:col-span-7">
+              <p className="mb-4 text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF]">
+                Also from Fluiq
+              </p>
+              <h2 className="font-heading text-3xl font-bold leading-snug tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] mb-4">
+                Infrager turns cloud diagrams into secure Terraform.
+              </h2>
+              <p className="text-[15px] leading-[1.7] text-[#6B6B66] dark:text-[#9A9A92] mb-6">
+                Drag AWS and Google Cloud resources onto a canvas, connect them, and get
+                dependency-ordered HCL with security linting that runs while you draw. Free, MIT
+                licensed, and separate from your Fluiq account.
+              </p>
+              <div className="flex flex-wrap items-center gap-4">
+                <Link
+                  to="/infrager"
+                  className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1860D3] hover:underline dark:text-[#6FA8FF]"
+                >
+                  How it works
+                  <HugeiconsIcon icon={ArrowRight02Icon} size={13} />
+                </Link>
+                <a
+                  href="https://infrager.getfluiq.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[14px] font-medium text-[#6B6B66] hover:text-[#0a0a0a] dark:text-[#9A9A92] dark:hover:text-[#FAF9F6]"
+                >
+                  Open the app
+                </a>
+              </div>
+            </div>
+
+            <div className="md:col-span-5">
+              <div className="grid gap-px overflow-hidden rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#D4CFC1] dark:bg-[#2A2A2A] sm:grid-cols-2">
+                {[
+                  { icon: CloudServerIcon, label: "AWS + GCP", detail: "150+ services" },
+                  { icon: ShieldIcon, label: "Security lint", detail: "On every edit" },
+                  { icon: CheckmarkCircle02Icon, label: "Ordered HCL", detail: "Copy or download" },
+                  { icon: SparklesIcon, label: "Free", detail: "MIT licensed" },
+                ].map((c) => (
+                  <div key={c.label} className="bg-[#FAF9F6] p-5 dark:bg-[#1A1A1A]">
+                    <span className="mb-3 inline-flex size-8 items-center justify-center rounded-lg border border-[#E5E1D6] dark:border-[#2A2A2A] bg-white text-[#1860D3] dark:bg-[#0A0A0A] dark:text-[#6FA8FF]">
+                      <HugeiconsIcon icon={c.icon} size={15} />
+                    </span>
+                    <p className="text-[13.5px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">
+                      {c.label}
+                    </p>
+                    <p className="text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">{c.detail}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

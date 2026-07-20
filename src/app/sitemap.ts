@@ -19,6 +19,7 @@ const STATIC_ROUTES: Entry[] = [
 
   // Free tools (linkable assets)
   { path: "/llm-cost-calculator", changeFrequency: "monthly", priority: 0.8 },
+  { path: "/infrager", changeFrequency: "monthly", priority: 0.8 },
 
   // Platform pillars
   { path: "/observability", changeFrequency: "monthly", priority: 0.8 },
@@ -91,6 +92,7 @@ async function fetchBlogSlugs(): Promise<string[]> {
 // getfluiq.com covers polygate.getfluiq.com.
 const SUBDOMAIN_URLS: { url: string; changeFrequency: ChangeFreq; priority: number }[] = [
   { url: "https://polygate.getfluiq.com", changeFrequency: "monthly", priority: 0.8 },
+  { url: "https://infrager.getfluiq.com", changeFrequency: "monthly", priority: 0.8 },
 ]
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

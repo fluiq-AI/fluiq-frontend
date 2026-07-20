@@ -31,6 +31,8 @@ const NAV_LINKS = [
 const OPEN_SOURCE_LINKS = [
   { label: "polygate",        href: "https://polygate.getfluiq.com" },
   { label: "polygate GitHub", href: "https://github.com/SaurabhKumbhar24/polygate" },
+  { label: "Infrager",        href: "https://infrager.getfluiq.com" },
+  { label: "Infrager GitHub", href: "https://github.com/SaurabhKumbhar24/Infrager" },
 ]
 
 const INTEGRATION_LINKS = [
