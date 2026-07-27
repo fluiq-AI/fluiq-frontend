@@ -37,12 +37,14 @@ interface PromptVersion {
   created_at: string
 }
 
-// $var or ${var}
-const PLACEHOLDER_RE = /\$(?:\{(\w+)\}|(\w+))/g
+// {{ var }} is the product-wide standard; $var / ${var} are legacy forms that
+// prompts saved before the switch still contain. All three count as present,
+// mirroring the worker's _IDENT_RE in jobs/helper/judge_prompts.py.
+const PLACEHOLDER_RE = /\{\{\s*(\w+)\s*\}\}|\$\{(\w+)\}|\$(\w+)/g
 
 function identifiers(template: string): Set<string> {
   const out = new Set<string>()
-  for (const m of template.matchAll(PLACEHOLDER_RE)) out.add(m[1] || m[2])
+  for (const m of template.matchAll(PLACEHOLDER_RE)) out.add(m[1] || m[2] || m[3])
   return out
 }
 
@@ -208,7 +210,7 @@ function JudgePrompts() {
         Edit a prompt to change how a metric is graded. The change applies only to your
         organization, within ~a minute, and every score records which prompt version
         produced it. Use{" "}
-        <code className="rounded bg-muted px-1 py-0.5 text-xs">$variable</code>{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">{"{{variable}}"}</code>{" "}
         placeholders; required ones must stay present.
       </p>
 
@@ -337,7 +339,7 @@ function JudgePrompts() {
                             : "bg-destructive/10 text-destructive"
                         }`}
                       >
-                        ${v}
+                        {`{{${v}}}`}
                       </span>
                     )
                   })}
@@ -353,7 +355,7 @@ function JudgePrompts() {
 
               {missingVars.length > 0 && (
                 <p className="border-t border-border/60 px-4 py-2 text-xs text-destructive">
-                  Missing required placeholder(s): {missingVars.map((v) => `$${v}`).join(", ")} — add them to save.
+                  Missing required placeholder(s): {missingVars.map((v) => `{{${v}}}`).join(", ")} — add them to save.
                 </p>
               )}
 

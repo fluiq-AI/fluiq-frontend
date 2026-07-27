@@ -37,12 +37,13 @@ interface PromptVersion {
   created_at: string
 }
 
-// {{var}} standard, with legacy $var / ${var} still accepted
-const PLACEHOLDER_RE = /\$(?:\{(\w+)\}|(\w+))/g
+// {{var}} standard, with legacy $var / ${var} still accepted — mirrors the
+// worker's _IDENT_RE in jobs/helper/judge_prompts.py.
+const PLACEHOLDER_RE = /\{\{\s*(\w+)\s*\}\}|\$\{(\w+)\}|\$(\w+)/g
 
 function identifiers(template: string): Set<string> {
   const out = new Set<string>()
-  for (const m of template.matchAll(PLACEHOLDER_RE)) out.add(m[1] || m[2])
+  for (const m of template.matchAll(PLACEHOLDER_RE)) out.add(m[1] || m[2] || m[3])
   return out
 }
 
@@ -203,7 +204,7 @@ function AdminJudgePrompts() {
         </h1>
         <p className="mt-2 text-muted-foreground">
           The LLM-as-Judge prompts your evaluation workers use. Edits apply within ~a minute, with
-          no worker redeploy. Use <code className="rounded bg-muted px-1 py-0.5 text-xs">$variable</code>{" "}
+          no worker redeploy. Use <code className="rounded bg-muted px-1 py-0.5 text-xs">{"{{variable}}"}</code>{" "}
           placeholders; required ones must stay present.
         </p>
       </div>
@@ -354,7 +355,7 @@ function AdminJudgePrompts() {
                             : "bg-destructive/10 text-destructive"
                         }`}
                       >
-                        ${v}
+                        {`{{${v}}}`}
                       </span>
                     )
                   })}
@@ -370,7 +371,7 @@ function AdminJudgePrompts() {
 
               {missingVars.length > 0 && (
                 <p className="border-t border-border/60 px-4 py-2 text-xs text-destructive">
-                  Missing required placeholder(s): {missingVars.map((v) => `$${v}`).join(", ")} — add them to save.
+                  Missing required placeholder(s): {missingVars.map((v) => `{{${v}}}`).join(", ")} — add them to save.
                 </p>
               )}
 
@@ -520,7 +521,7 @@ function CreatePromptForm({
                         : "bg-destructive/10 text-destructive"
                     }`}
                   >
-                    ${v}
+                    {`{{${v}}}`}
                   </span>
                 )
               })}
@@ -530,7 +531,7 @@ function CreatePromptForm({
 
         <div>
           <label className="mb-1 block text-xs font-medium text-muted-foreground">
-            Template — use <code className="font-mono">$variable</code> placeholders
+            Template — use <code className="font-mono">{"{{variable}}"}</code> placeholders
           </label>
           <textarea
             value={template}
@@ -541,7 +542,7 @@ function CreatePromptForm({
           />
           {missing.length > 0 && (
             <p className="mt-1 text-xs text-destructive">
-              Template is missing: {missing.map((v) => `$${v}`).join(", ")}
+              Template is missing: {missing.map((v) => `{{${v}}}`).join(", ")}
             </p>
           )}
         </div>
