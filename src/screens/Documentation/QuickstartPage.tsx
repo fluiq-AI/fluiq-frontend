@@ -69,7 +69,7 @@ fluiq.instrument(api_key="fl_...") # or set FLUIQ_API_KEY to environment
 # Opt in to more when you want it:
 fluiq.eval(thresholds={"hallucination": 0.8})  # LLM-as-judge scoring
 fluiq.optimize()   # Redis caching (Team+)
-fluiq.secure()     # Security scanning (Growth+)`,
+fluiq.secure()     # Security scanning (all plans)`,
                 `import fluiq from "@fluiq/sdk";
 
 fluiq.instrument({ apiKey: "fl_..." }); // or set FLUIQ_API_KEY in your environment
@@ -79,7 +79,7 @@ fluiq.instrument({ apiKey: "fl_..." }); // or set FLUIQ_API_KEY in your environm
 // Opt in to more when you want it:
 fluiq.eval({ thresholds: { hallucination: 0.8 } }); // LLM-as-judge scoring
 fluiq.optimize(); // Redis caching (Team+)
-fluiq.secure();   // Security scanning (Growth+)`,
+fluiq.secure();   // Security scanning (all plans)`,
               )}</Code>
             </div>
           </div>

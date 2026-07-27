@@ -15,6 +15,7 @@ const STATIC_ROUTES: Entry[] = [
   // Marketing
   { path: "/", changeFrequency: "weekly", priority: 1.0 },
   { path: "/pricing", changeFrequency: "monthly", priority: 0.9 },
+  { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
   { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
 
   // Free tools (linkable assets)

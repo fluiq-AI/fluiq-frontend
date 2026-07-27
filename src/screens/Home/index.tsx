@@ -41,7 +41,7 @@ import { INTEGRATIONS, STATS, EASE_OUT } from "./utils/constants"
 
 type CodeLang = "python" | "typescript"
 
-/* Complete-setup sample — Python + TypeScript. */
+/* Complete-setup sample: Python and TypeScript. */
 const SETUP_PY = `import fluiq, openai
 
 # 1. Wire instrumentation once at startup
@@ -93,7 +93,7 @@ const response = await client.chat.completions.create({
 });
 // ↑ Traced, scanned, cached, and evaluated automatically`
 
-/* Framework-agnostic sample — Python + TypeScript. */
+/* Framework-agnostic sample: Python and TypeScript. */
 const PIPE_PY = `from fluiq import instrument, trace
 
 instrument(api_key="fl_...")
@@ -300,12 +300,14 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div data-animate className="mx-auto max-w-3xl text-center">
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] md:text-5xl">
-              Observability tools tell you what broke.<br />
-              <span className="text-[#6B6B66] dark:text-[#9A9A92]">Fluiq helps you <span className="text-[#1860D3] dark:text-[#6FA8FF]">prevent it.</span></span>
+              An agent makes hundreds of calls you never see.<br />
+              <span className="text-[#6B6B66] dark:text-[#9A9A92]">Fluiq <span className="text-[#1860D3] dark:text-[#6FA8FF]">judges every one of them.</span></span>
             </h2>
             <p className="mt-5 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
-              Most platforms stop at tracing. Fluiq adds a security layer, a caching layer,
-              and a quality gate, so you catch problems before your users do.
+              It chooses tools, chains steps, reads whatever the retriever returns, and hands
+              work to other agents. Fluiq scores those decisions against criteria you set. It
+              blocks the unsafe ones before they reach the model, and fails your build when
+              quality drops.
             </p>
           </div>
         </div>
@@ -322,7 +324,7 @@ export default function Home() {
               <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Full trace visibility across every <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM call</span></h2>
               <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns, without changing how you write code.</p>
               <ul className="space-y-2 mb-6">
-                {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Multi-agent runs render as real DAGs: fan-outs, joins, and loops across LangGraph, CrewAI, and Google ADK", "Real-time trace streaming"].map(pt => (
+                {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Multi-agent runs render as real DAGs: fan-outs, joins, and loops across LangGraph, CrewAI, and Google ADK", "Real-time trace streaming", "Import existing history from LangSmith, Langfuse, Phoenix, or Braintrust"].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
                     {pt}
@@ -360,6 +362,8 @@ export default function Home() {
                   "RAG poisoning & indirect injection: retrieved docs and tool outputs scanned across the trace tree",
                   "Tool misuse: exfiltration through tool arguments, plus allowlist enforcement",
                   "Multi-agent trust: cross-agent injection and trust-boundary escalation across the DAG",
+                  "Images and other media are scanned alongside the text",
+                  "Included on every plan, starting with 1,000 scans a month on Free",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
@@ -390,6 +394,8 @@ export default function Home() {
                   "Server-side caching, zero infra to manage",
                   "Profile built from your real traffic patterns",
                   "Configurable TTL and model scope",
+                  "Observe mode prices the saving before you let it intercept anything",
+                  "Insights ranks your repeated prompts by what caching them would save",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
@@ -427,6 +433,8 @@ export default function Home() {
                   "Agentic eval scores tool selection, trajectory-vs-goal, and multi-agent coordination across the run's DAG",
                   "Borderline verdicts convene a multi-model judge jury; every member's score and reasoning is kept for audit",
                   "Block mode prevents bad responses reaching users",
+                  "Choose which model judges, and which models sit on the jury",
+                  "Bring your own provider key so judge tokens bill to your account",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
@@ -458,6 +466,7 @@ export default function Home() {
                   "Connect Agents imports every run an agent has made, and keeps auto-appending future ones",
                   "Batch agentic-eval and security runs produce a scored regression report",
                   "Examples carry live eval, security, and cost signals from their source runs",
+                  "Compare any two runs to see exactly what regressed",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
@@ -497,6 +506,7 @@ export default function Home() {
                   "One-click deployment to dev, staging, and production environments",
                   "Side-by-side model comparison with the same prompt across models",
                   "Pull directly from live traces and iterate on real-world prompts",
+                  "Save a prompt as a judge and score your evals with it",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
@@ -557,7 +567,7 @@ export default function Home() {
             {STATS.map((s, i) => (
               <div key={s.label} data-animate data-delay={String(i + 1)} className="bg-[#FAF9F6] dark:bg-[#1A1A1A] px-8 py-10 text-center">
                 <p className="font-heading text-5xl font-bold text-[#1860D3] dark:text-[#6FA8FF] tracking-tight tabular-nums">
-                  <AnimatedCounter target={s.value} suffix={s.suffix} />
+                  <AnimatedCounter target={s.value} suffix={s.suffix} display={s.display} />
                 </p>
                 <p className="mt-2 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] leading-snug">{s.label}</p>
               </div>
@@ -666,7 +676,7 @@ export default function Home() {
             </div>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl"><span className="text-[#1860D3] dark:text-[#6FA8FF]">Unlimited</span> traces, always free.</h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
-              Start with observability on the free tier. Add security, optimization, and evaluation as your pipeline grows. No code changes required.
+              Tracing, security scanning, and evaluation all run on the free tier. Caching unlocks on Team. No code changes required.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <IslandCta to="/signup">Start free</IslandCta>

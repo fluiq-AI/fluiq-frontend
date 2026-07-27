@@ -45,7 +45,7 @@ export const data: CompetitorData = {
     "Inline eval modes: fluiq.eval(mode='warn') flags low-scoring responses on the trace; mode='block' intercepts them before they reach users.",
     "Security included: prompt injection blocking, PII redaction, jailbreak scoring, and secret leak prevention run on every production call, not just in eval scripts.",
     "Response caching: trace-driven Redis caching serves repeated prompts instantly, cutting LLM spend without any code changes.",
-    "Transparent judging: every score records the exact judge prompt and version behind it, and each org can edit those prompts — then diff any two dataset runs to see what regressed, and gate CI with python -m fluiq.ci.",
+    "Transparent judging: every score records the exact judge prompt and version behind it, and each org can edit those prompts. You can then diff any two dataset runs to see what regressed, and gate CI with python -m fluiq.ci.",
     "Two lines replace an entire boilerplate setup, no manual span context, no custom scorers to wire up.",
   ],
   migrationBefore: {
@@ -84,6 +84,22 @@ def run_pipeline(query: str) -> str:
     return response.choices[0].message.content`,
   },
   migrationNote: "Remove init_logger, @traced, and manual score calls. Fluiq runs LLM-as-judge automatically on every traced response.",
+  pricing: {
+    asOf: "July 2026",
+    fluiq: [
+      { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
+      { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
+    ],
+    competitor: [
+      { plan: "Starter", price: "$0", note: "$10 of model credits, 10,000 scores, 1 GB data, 14-day retention." },
+      { plan: "Pro", price: "$249/mo", note: "$249 of credits, 50,000 scores, 5 GB data, 30-day retention." },
+      { plan: "Enterprise", price: "Custom", note: "Custom retention and export." },
+    ],
+    takeaway:
+      "Braintrust is the closest comparison, and its model is the sanest in the category: a platform fee plus token pass-through, with scores at $2.50 per 1,000 falling to $1.50 on Pro. Fluiq prices the same way but splits by depth, because a three-model jury reading a forty-step trajectory is not the same work as one relevance check and should not cost the same. Braintrust has the better playground; Fluiq adds production tracing and security scanning that Braintrust does not ship.",
+  },
 }
 
 export default function BraintrustAlternative() {

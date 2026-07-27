@@ -95,9 +95,9 @@ fluiq.eval({
         <span className="font-medium text-foreground">Prompts</span>, write your judge prompt, and{" "}
         <span className="font-medium text-foreground">Save</span> it with type{" "}
         <span className="font-mono text-foreground">Judge</span>. The template uses{" "}
-        <code className="font-mono text-foreground">$question</code>,{" "}
-        <code className="font-mono text-foreground">$answer</code> and{" "}
-        <code className="font-mono text-foreground">$context</code> placeholders and should ask the
+        <code className="font-mono text-foreground">{"{{question}}"}</code>,{" "}
+        <code className="font-mono text-foreground">{"{{answer}}"}</code> and{" "}
+        <code className="font-mono text-foreground">{"{{context}}"}</code> placeholders and should ask the
         model to return a JSON object with a numeric <code className="font-mono text-foreground">score</code>{" "}
         (0 to 1) and a <code className="font-mono text-foreground">reason</code>. Then reference it by its
         slug in {isTs ? <code className="font-mono text-foreground">customJudges</code> : <code className="font-mono text-foreground">custom_judges</code>}{" "}
@@ -110,9 +110,9 @@ fluiq.eval({
         `# Saved in Prompts (type: Judge), slug "refund-policy":
 #
 #   You are auditing a support reply for refund-policy compliance.
-#   QUESTION: $question
-#   ANSWER:   $answer
-#   POLICY:   $context
+#   QUESTION: {{question}}
+#   ANSWER:   {{answer}}
+#   POLICY:   {{context}}
 #   Return JSON: {"score": <0-1>, "reason": "<why>"}
 
 fluiq.eval(
@@ -127,9 +127,9 @@ fluiq.eval(
         `// Saved in Prompts (type: Judge), slug "refund-policy":
 //
 //   You are auditing a support reply for refund-policy compliance.
-//   QUESTION: $question
-//   ANSWER:   $answer
-//   POLICY:   $context
+//   QUESTION: {{question}}
+//   ANSWER:   {{answer}}
+//   POLICY:   {{context}}
 //   Return JSON: {"score": <0-1>, "reason": "<why>"}
 
 fluiq.eval({
@@ -314,9 +314,10 @@ jobs:
           </thead>
           <tbody className="divide-y divide-border/60">
             {[
-              ["Free",       "Unlimited",  "14 days",  "1,000"],
+              ["Free",       "Unlimited",  "14 days",  "100"],
+              ["Starter",    "Unlimited",  "Forever",  "2,000"],
               ["Team",       "Unlimited",  "Forever",  "10,000"],
-              ["Growth",     "Unlimited",  "Forever",  "100,000"],
+              ["Growth",     "Unlimited",  "Forever",  "50,000"],
               ["Enterprise", "Unlimited",  "Forever",  "Unlimited"],
             ].map(([tier, traces, retention, evals]) => (
               <tr key={tier}>
@@ -330,7 +331,7 @@ jobs:
         </table>
       </div>
       <p className="text-xs text-muted-foreground/70">
-        Team and Growth include a no-card 5-day trial so you can try unlimited retention and higher eval budgets before upgrading.
+        Starter, Team, and Growth include a no-card 5-day trial so you can try unlimited retention and higher eval budgets before upgrading.
       </p>
     </div>
     </>

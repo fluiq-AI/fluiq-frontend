@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 
-export function AnimatedCounter({ target, suffix = "" }: { target: number; suffix?: string }) {
+/**
+ * Counts up to `target` when scrolled into view.
+ *
+ * Pass `display` for a value that is not a number to count toward (an
+ * infinity glyph, say). It renders immediately and the animation is skipped,
+ * because there is nothing meaningful to count from zero to.
+ */
+export function AnimatedCounter({ target, suffix = "", display }: { target: number; suffix?: string; display?: string }) {
   const [count, setCount] = useState(0)
   const [started, setStarted] = useState(false)
   const ref = useRef<HTMLSpanElement>(null)
@@ -14,7 +21,7 @@ export function AnimatedCounter({ target, suffix = "" }: { target: number; suffi
   }, [])
 
   useEffect(() => {
-    if (!started) return
+    if (!started || display !== undefined) return
     let frame = 0; const total = 60
     const timer = setInterval(() => {
       frame++
@@ -23,7 +30,8 @@ export function AnimatedCounter({ target, suffix = "" }: { target: number; suffi
       if (frame >= total) { setCount(target); clearInterval(timer) }
     }, 25)
     return () => clearInterval(timer)
-  }, [started, target])
+  }, [started, target, display])
 
+  if (display !== undefined) return <span ref={ref}>{display}{suffix}</span>
   return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
 }

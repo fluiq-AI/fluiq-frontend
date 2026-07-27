@@ -84,6 +84,22 @@ def run_safely(query: str) -> str:
     return response.choices[0].message.content`,
   },
   migrationNote: "Remove the guard.detect() call. fluiq.secure(mode='block') intercepts requests server-side before they reach the LLM, no client-side API call needed.",
+  pricing: {
+    asOf: "July 2026",
+    fluiq: [
+      { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
+      { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
+    ],
+    competitor: [
+      { plan: "Free", price: "$0", note: "Trial allowance; limits not published." },
+      { plan: "Paid", price: "Sales-led", note: "Not published. Reported entry around $500/mo." },
+      { plan: "Production", price: "Sales-led", note: "Per-API-call pricing; reported in the low thousands per month at 1-5M requests." },
+    ],
+    takeaway:
+      "Lakera does not publish pricing, which itself tells you the shape: sales-led, per-API-call, and reportedly a few thousand a month at production volume. Fluiq includes 1,000 security scans on the free plan and 500,000 on a $149 plan, at a published $0.0005 a scan beyond that. Lakera is a dedicated security vendor with deeper standalone tooling; Fluiq's scanning sits inside the trace you already have, so a flagged prompt is one click from the run that produced it.",
+  },
 }
 
 export default function LakeraAlternative() {

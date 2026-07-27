@@ -6,6 +6,7 @@ import {
   AiSecurity02Icon,
   Alert02Icon,
   CheckmarkCircle02Icon,
+  Link01Icon,
 } from "@hugeicons/core-free-icons"
 import { Badge } from "@/components/ui/badge"
 import { PageHeading } from "./_docComponents"
@@ -102,7 +103,7 @@ export default function AlertsPage() {
       <div className="mt-6 flex items-center gap-2.5">
         <HugeiconsIcon icon={AiSecurity02Icon} size={18} className="text-[#1860D3] dark:text-[#6FA8FF]" />
         <h2 className="font-heading text-xl font-semibold tracking-tight">Security alerts</h2>
-        <Badge variant="outline">Growth+ required</Badge>
+        <Badge variant="outline">Paid plan required</Badge>
       </div>
       <p className="text-muted-foreground leading-relaxed">
         Fired from the post-call scan behind <code className="font-mono text-foreground">fluiq.secure()</code> whenever a
@@ -134,12 +135,66 @@ export default function AlertsPage() {
         </Field>
       </div>
 
+      {/* ── Custom webhook ── */}
+      <div className="mt-6 flex items-center gap-2.5">
+        <HugeiconsIcon icon={Link01Icon} size={18} className="text-[#1860D3] dark:text-[#6FA8FF]" />
+        <h2 className="font-heading text-xl font-semibold tracking-tight">Custom webhook</h2>
+      </div>
+      <p className="text-muted-foreground leading-relaxed">
+        Not on Slack, or want alerts in PagerDuty, Opsgenie, a SIEM, or your own service? A guardrail policy can POST a small
+        JSON payload to any HTTPS endpoint the moment <code className="font-mono text-foreground">fluiq.secure()</code> blocks
+        a call. It is separate from the Slack destination above: it fires only on security blocks from the pre-call guard,
+        sends one request per block instead of a digest, and hands you raw JSON to route however you need.
+      </p>
+      <p className="text-muted-foreground leading-relaxed">
+        The webhook is a field on the guardrail policy your <code className="font-mono text-foreground">fluiq.secure()</code>{" "}
+        calls already use — the same policies you edit under{" "}
+        <span className="font-medium text-foreground">Dashboard → Guardrails</span>. Set it through the guardrails API:
+      </p>
+      <pre className="overflow-x-auto rounded-lg border border-border/60 bg-muted/40 p-3 font-mono text-[12px] leading-relaxed text-foreground">{`curl -X PUT "https://api.getfluiq.com/api/v1/guardrails?slug=default" \\
+  -H "Authorization: Bearer <your dashboard token>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "alert_webhook": "https://alerts.example.com/fluiq",
+    "alert_on": ["high", "medium"]
+  }'`}</pre>
+      <div className="grid gap-3 text-sm">
+        <Field name="alert_webhook">
+          The <code className="font-mono text-foreground">https://</code> URL Fluiq POSTs to on a block. It must resolve to a
+          public host: loopback, private-range, and link-local addresses are rejected on save and re-checked on every send
+          (SSRF protection), and redirects are never followed.
+        </Field>
+        <Field name="alert_on">
+          Which risk levels fire the webhook: any combination of <code className="font-mono text-foreground">low</code>,{" "}
+          <code className="font-mono text-foreground">medium</code>, <code className="font-mono text-foreground">high</code>.
+          Defaults to <code className="font-mono text-foreground">[&quot;high&quot;]</code>.
+        </Field>
+      </div>
+      <p className="text-muted-foreground leading-relaxed">
+        On every block whose risk level matches <code className="font-mono text-foreground">alert_on</code>, Fluiq sends:
+      </p>
+      <pre className="overflow-x-auto rounded-lg border border-border/60 bg-muted/40 p-3 font-mono text-[12px] leading-relaxed text-foreground">{`{
+  "event": "security.block",
+  "org_id": "org_…",
+  "trace_id": "…",
+  "risk_level": "high",
+  "attack_types": ["jailbreak", "skeleton_key"]
+}`}</pre>
+      <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3 text-sm">
+        <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
+        <p className="text-muted-foreground">
+          Delivery retries up to three times with backoff and fails open: an unreachable endpoint or a slow response never
+          blocks or delays the underlying LLM call. The Slack destination and the webhook are independent, so you can enable
+          either or both.
+        </p>
+      </div>
+
       {/* ── How it works / cost ── */}
       <h2 className="mt-6 font-heading text-xl font-semibold tracking-tight">How it works &amp; cost</h2>
       <p className="text-muted-foreground leading-relaxed">
         Alerts read the eval and security results Fluiq already computes for your traces; there is no extra scan and no
         added latency on your LLM calls. Delivery uses Slack Incoming Webhooks, which are free. Eval alerts are included on
-        Team and above; security alerts on Growth and above. There is no per-alert or metered charge.
+        any paid plan, starting with Starter. There is no per-alert or metered charge.
       </p>
       <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3 text-sm">
         <HugeiconsIcon icon={Alert02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />

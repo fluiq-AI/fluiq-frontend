@@ -38,6 +38,18 @@ export interface CompetitorData {
   migrationBefore: { label: string; code: string }
   migrationAfter: { label: string; code: string }
   migrationNote?: string
+  pricing?: PricingComparison
+}
+
+export interface PricingComparison {
+  /** Fluiq plans, cheapest first. */
+  fluiq: { plan: string; price: string; note: string }[]
+  /** The competitor's published plans, cheapest first. */
+  competitor: { plan: string; price: string; note: string }[]
+  /** One honest sentence on where each is the better buy. */
+  takeaway: string
+  /** When their published pricing was last checked. */
+  asOf: string
 }
 
 function StatusCell({ status, note }: { status: "yes" | "no" | "partial"; note?: string }) {
@@ -268,6 +280,77 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
         </div>
       </section>
 
+      {/* ── Pricing comparison ───────────────────────────────────────────── */}
+      {data.pricing && (
+        <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
+          <div className="mx-auto max-w-5xl px-6">
+            <div data-animate className="mb-10 text-center">
+              <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
+                Pricing
+              </p>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
+                What each one costs
+              </h2>
+              <p className="mt-4 mx-auto max-w-2xl text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
+                {data.pricing.takeaway}
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-2">
+              {[
+                { title: "Fluiq", rows: data.pricing.fluiq, accent: true },
+                { title: data.name, rows: data.pricing.competitor, accent: false },
+              ].map((col) => (
+                <div
+                  key={col.title}
+                  data-animate
+                  className={`overflow-hidden rounded-2xl border ${
+                    col.accent
+                      ? "border-[#1860D3] dark:border-[#6FA8FF] bg-[#FAF9F6] dark:bg-[#1A1A1A]"
+                      : "border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A]"
+                  }`}
+                >
+                  <div
+                    className={`px-6 py-3 text-[13px] font-semibold ${
+                      col.accent
+                        ? "bg-[#1860D3] text-white dark:bg-[#6FA8FF] dark:text-[#0A0A0A]"
+                        : "bg-[#F2F0E9] text-[#0a0a0a] dark:bg-[#111111] dark:text-[#FAF9F6]"
+                    }`}
+                  >
+                    {col.title}
+                  </div>
+                  {col.rows.map((r, i) => (
+                    <div
+                      key={r.plan}
+                      className={`px-6 py-4 ${
+                        i > 0 ? "border-t border-[#E5E1D6] dark:border-[#2A2A2A]" : ""
+                      }`}
+                    >
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+                        <p className="text-[15px] font-medium text-[#0a0a0a] dark:text-[#FAF9F6]">
+                          {r.plan}
+                        </p>
+                        <p className="font-mono text-[14px] font-semibold text-[#1860D3] dark:text-[#6FA8FF]">
+                          {r.price}
+                        </p>
+                      </div>
+                      <p className="mt-1 text-[13px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
+                        {r.note}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-5 text-center text-[12px] text-[#9A9A92]">
+              {data.name} pricing from their public pricing page, checked {data.pricing.asOf}.
+              Plans change; check theirs before deciding.
+            </p>
+          </div>
+        </section>
+      )}
+
       {/* ── CTA ─────────────────────────────────────────────────────────── */}
       <section className="py-24">
         <div className="mx-auto max-w-2xl px-6 text-center" data-animate>
@@ -281,7 +364,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
             <IslandCta to="/signup">Start free</IslandCta>
           </div>
           <p className="mt-4 text-[12px] text-[#9A9A92]">
-            Unlimited free traces · 1,000 evals / month · 14-day retention
+            Unlimited free traces · 100 evals & 1,000 security scans / month · 14-day retention
           </p>
         </div>
       </section>

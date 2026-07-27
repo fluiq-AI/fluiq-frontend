@@ -9,7 +9,7 @@ import { NavIntegrationsDropdown } from "@/components/NavIntegrationsDropdown"
 import { NavDeveloperDropdown } from "@/components/NavDeveloperDropdown"
 import { NavPlatformDropdown } from "@/components/NavPlatformDropdown"
 
-type NavKey = "platform" | "integrations" | "pricing" | "developer" | "contact"
+type NavKey = "platform" | "integrations" | "pricing" | "developer" | "faq" | "contact"
 
 interface SiteNavbarProps {
   /** Visual theme. "marketing" matches the landing/marketing pages, "docs" matches the documentation/examples pages. */

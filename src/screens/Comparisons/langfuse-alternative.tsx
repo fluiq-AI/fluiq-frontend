@@ -82,6 +82,23 @@ def run_pipeline(query: str):
     return response.choices[0].message.content`,
   },
   migrationNote: "Replace langfuse.openai imports and @observe decorators. Fluiq instruments the standard SDK, no context managers needed.",
+  pricing: {
+    asOf: "July 2026",
+    fluiq: [
+      { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
+      { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
+    ],
+    competitor: [
+      { plan: "Hobby", price: "$0", note: "50,000 units a month, 30-day access, 2 users." },
+      { plan: "Core", price: "$29/mo", note: "100,000 units, then $8 per 100k. 90-day access." },
+      { plan: "Pro", price: "$199/mo", note: "Same 100,000 units included, 3-year access, unlimited users." },
+      { plan: "Enterprise", price: "$2,499/mo", note: "Same unit allowance, plus enterprise controls." },
+    ],
+    takeaway:
+      "Langfuse meters ingested units, so tracing volume drives the bill and evaluations are effectively free, because you supply the judge key and pay the model provider yourself. Fluiq meters evaluations, so tracing is free and unlimited, and the judge tokens are included unless you bring your own key. If you mostly want cheap high-volume tracing, Langfuse is hard to beat. If you want evaluation and security you do not have to assemble, that is the trade.",
+  },
 }
 
 export default function LangfuseAlternative() {

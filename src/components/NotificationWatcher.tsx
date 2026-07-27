@@ -11,7 +11,6 @@ import { useRealtimeStream } from "@/lib/useRealtimeStream"
 const COOLDOWN_5MIN   = 5  * 60 * 1000
 const COOLDOWN_1HOUR  = 60 * 60 * 1000
 const COOLDOWN_24HOUR = 24 * 60 * 60 * 1000
-const CACHE_POLL_MS   = 15 * 60 * 1000
 // Background notification checks wait this long after mount so their fetches
 // don't contend with the dashboard's first-paint queries.
 const NOTIFY_DEFER_MS = 4000
@@ -177,7 +176,7 @@ export function NotificationWatcher() {
     return () => clearTimeout(timer)
   }, [dispatch])
 
-  // ── 3. Cache hit rate (on mount + poll every 15 min, 1-hour notification cooldown) ──
+  // ── 3. Cache hit rate (one-shot on mount, 1-hour notification cooldown) ──
   useEffect(() => {
     function checkCache() {
       if (!cooldownExpired("fluiq.notify.cache", COOLDOWN_1HOUR)) return
@@ -202,10 +201,11 @@ export function NotificationWatcher() {
         .catch(() => {})
     }
 
-    // Defer the first check past first paint; keep the steady-state poll.
+    // One-shot on mount (matches the quota + eval-regression checks above),
+    // deferred past first paint. No steady-state interval — nothing polls the
+    // server on a timer.
     const initial = setTimeout(checkCache, NOTIFY_DEFER_MS)
-    const timer = setInterval(checkCache, CACHE_POLL_MS)
-    return () => { clearTimeout(initial); clearInterval(timer) }
+    return () => clearTimeout(initial)
   }, [dispatch])
 
   // ── 4. Security: real-time SSE (no cooldown for blocked; 5-min for enriched) ─

@@ -20,7 +20,6 @@ import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
 import { syntaxHighlight } from "@/pages/Documentation/syntaxHighlight"
-import {PricingFaqs} from "@/lib/faqs";
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -28,6 +27,7 @@ type Tier = {
   name: string
   price: { monthly: number | "custom"; annual: number | "custom" }
   traces: string
+  scans: string
   evals: string
   seats: string
   retention: string
@@ -41,59 +41,76 @@ const tiers: Tier[] = [
   {
     name: "Free",
     price: { monthly: 0, annual: 0 },
-    traces: "Unlimited traces",
-    evals: "1,000 evaluations / month",
+    traces: "Unlimited traces, forever",
+    scans: "1,000 security scans / month",
+    evals: "100 evaluations / month",
     seats: "1 seat",
     retention: "14-day trace retention",
     cta: "Start free",
     ctaHref: "/signup",
     highlighted: false,
     features: [
-      { label: "fluiq.instrument(): full observability", included: true },
+      { label: "full observability", included: true },
+      { label: "Full security scanning, warn or block mode", included: true },
+      { label: "Agentic evaluation (tool selection, trajectory)", included: true },
       { label: "Trace explorer & live dashboard", included: true },
-      { label: "Streaming traces", included: true },
       { label: "Community support", included: true },
-      { label: "fluiq.optimize(): response caching", included: false },
-      { label: "CI/CD eval gates", included: false },
-      { label: "Slack anomaly alerts", included: false },
-      { label: "fluiq.secure(): security scanning", included: "locked", note: "Growth+" },
+      { label: "Bring your own provider keys", included: true },
+      { label: "Choose your judge model", included: true },
+      { label: "Multi-model judge jury", included: "locked", note: "Paid" },
     ],
   },
   {
-    name: "Team",
-    price: { monthly: 299, annual: 2990 },
+    name: "Starter",
+    price: { monthly: 29, annual: 290 },
     traces: "Unlimited traces",
-    evals: "10,000 evaluations / month",
-    seats: "Up to 5 seats",
+    scans: "50,000 security scans / month",
+    evals: "2,000 evaluations / month",
+    seats: "3 seats",
     retention: "Unlimited trace retention",
     cta: "Start 5-day free trial",
     ctaHref: "/signup",
     highlighted: false,
     features: [
       { label: "Everything in Free", included: true },
-      { label: "fluiq.optimize(): response caching", included: true },
+      { label: "Multi-model judge jury with audit trail", included: true },
       { label: "CI/CD eval gates", included: true },
       { label: "Slack anomaly alerts", included: true },
-      { label: "Email support (48h SLA)", included: true },
-      { label: "fluiq.secure(): security scanning", included: "locked", note: "Growth+" },
     ],
   },
   {
-    name: "Growth",
-    price: { monthly: 599, annual: 5990 },
+    name: "Team",
+    price: { monthly: 149, annual: 1490 },
     traces: "Unlimited traces",
-    evals: "100,000 evaluations / month",
-    seats: "Up to 20 seats",
+    scans: "500,000 security scans / month",
+    evals: "10,000 evaluations / month",
+    seats: "10 seats",
     retention: "Unlimited trace retention",
     cta: "Start 5-day free trial",
     ctaHref: "/signup",
     highlighted: true,
     features: [
-      { label: "Everything in Team", included: true },
-      { label: "fluiq.secure(): security scanning", included: true },
-      { label: "Prompt injection, PII, jailbreak & secret-leak protection", included: true },
-      { label: "Custom eval thresholds", included: true },
+      { label: "Everything in Starter", included: true },
+      { label: "Optimization & Caching", included: true },
       { label: "SSO (single sign-on)", included: true },
+      { label: "Custom eval thresholds & judge prompts", included: true },
+      { label: "Email support (48h SLA)", included: true },
+    ],
+  },
+  {
+    name: "Growth",
+    price: { monthly: 499, annual: 4990 },
+    traces: "Unlimited traces",
+    scans: "2,000,000 security scans / month",
+    evals: "50,000 evaluations / month",
+    seats: "25 seats",
+    retention: "Unlimited trace retention",
+    cta: "Start 5-day free trial",
+    ctaHref: "/signup",
+    highlighted: false,
+    features: [
+      { label: "Everything in Team", included: true },
+      { label: "Volume discount on overage", included: true },
       { label: "Priority support (24h SLA)", included: true },
     ],
   },
@@ -101,6 +118,7 @@ const tiers: Tier[] = [
     name: "Enterprise",
     price: { monthly: "custom", annual: "custom" },
     traces: "Unlimited traces",
+    scans: "Unlimited security scans",
     evals: "Unlimited evaluations",
     seats: "Unlimited seats",
     retention: "Unlimited trace retention",
@@ -110,90 +128,142 @@ const tiers: Tier[] = [
     features: [
       { label: "Everything in Growth", included: true },
       { label: "VPC / on-prem deployment", included: true },
-      { label: "Custom SLA & dedicated support", included: true },
-      { label: "Audit logs & compliance exports", included: true },
       { label: "SAML / SCIM provisioning", included: true },
-      { label: "Dedicated onboarding", included: true },
+      { label: "Audit logs & compliance exports", included: true },
+      { label: "Custom SLA & dedicated support", included: true },
     ],
   },
 ]
 
+// Rates beyond the included allowance. Priced per depth because depth is what
+// actually drives cost: a deep run convenes a jury and reads the whole
+// trajectory, a fast one runs deterministic checks plus one judge call.
+const usageRates: { label: string; price: string; detail: string }[] = [
+  { label: "LLM evaluation", price: "$0.007", detail: "Single judge: relevance, faithfulness, hallucination" },
+  { label: "Agentic eval, fast", price: "$0.015", detail: "Deterministic checks and tool selection" },
+  { label: "Agentic eval, standard", price: "$0.065", detail: "Adds trajectory and multi-agent coordination" },
+  { label: "Agentic eval, deep", price: "$0.545", detail: "Adds a multi-model jury with a per-juror audit trail" },
+  { label: "Security scan", price: "$0.0005", detail: "Pattern and NER based, so no judge tokens at all" },
+]
+
 type Cell = string | boolean
-const comparison: { category: string; rows: { label: string; values: [Cell, Cell, Cell, Cell] }[] }[] = [
+const comparison: { category: string; rows: { label: string; values: [Cell, Cell, Cell, Cell, Cell] }[] }[] = [
   {
     category: "Observability",
     rows: [
-      { label: "Traces / month", values: ["Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
-      { label: "Trace retention", values: ["14 days", "Unlimited", "Unlimited", "Unlimited"] },
-      { label: "Live dashboard", values: [true, true, true, true] },
-      { label: "Trace explorer", values: [true, true, true, true] },
-      { label: "Multi-agent DAG rendering (LangGraph, CrewAI, ADK)", values: [true, true, true, true] },
-      { label: "Streaming traces", values: [true, true, true, true] },
+      { label: "Traces / month", values: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
+      { label: "Trace retention", values: ["14 days", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
+      { label: "Live dashboard & trace explorer", values: [true, true, true, true, true] },
+      { label: "Per-node token & cost attribution", values: [true, true, true, true, true] },
+      { label: "p50 / p95 / p99 latency tracking", values: [true, true, true, true, true] },
+      { label: "Spend breakdown by provider & model", values: [true, true, true, true, true] },
+      { label: "Multi-agent DAG rendering (LangGraph, CrewAI, ADK)", values: [true, true, true, true, true] },
+      { label: "Agent summaries & per-run rollups", values: [true, true, true, true, true] },
+      { label: "Streaming traces", values: [true, true, true, true, true] },
+      { label: "Multimodal trace capture (images, audio)", values: [true, true, true, true, true] },
+      { label: "Import from LangSmith, Langfuse, Phoenix, Braintrust", values: [true, true, true, true, true] },
+      { label: "Tamper-evident audit log", values: [true, true, true, true, true] },
     ],
   },
   {
     category: "Evaluation",
     rows: [
-      { label: "Evals / month", values: ["1,000", "10,000", "100,000", "Unlimited"] },
-      { label: "LLM-as-judge metrics", values: [true, true, true, true] },
-      { label: "Agentic evaluation (tool selection, trajectory, coordination)", values: [true, true, true, true] },
-      { label: "Multi-model judge jury with audit trail", values: [true, true, true, true] },
-      { label: "CI/CD eval gates", values: [false, true, true, true] },
-      { label: "Custom eval thresholds", values: [false, false, true, true] },
+      { label: "Evals / month included", values: ["100", "2,000", "10,000", "50,000", "Unlimited"] },
+      { label: "LLM-as-judge metrics", values: [true, true, true, true, true] },
+      { label: "Agentic evaluation: tool selection & trajectory", values: [true, true, true, true, true] },
+      { label: "Multi-agent coordination scoring", values: [true, true, true, true, true] },
+      { label: "Depth control (fast / standard / deep)", values: [true, true, true, true, true] },
+      { label: "Choose your judge model", values: [true, true, true, true, true] },
+      { label: "Bring your own provider keys (BYOK)", values: [true, true, true, true, true] },
+      { label: "Transparent judge prompts (exact prompt & version on every score)", values: [true, true, true, true, true] },
+      { label: "Vision / multimodal judging", values: [true, true, true, true, true] },
+      { label: "Warn & block eval modes", values: [true, true, true, true, true] },
+      { label: "End-user feedback & team annotations", values: [true, true, true, true, true] },
+      { label: "Multi-model judge jury with per-juror audit trail", values: [false, true, true, true, true] },
+      { label: "CI/CD eval gates (python -m fluiq.ci)", values: [false, true, true, true, true] },
+      { label: "Custom eval thresholds", values: [false, false, true, true, true] },
+      { label: "Editable judge prompts (per-org overrides)", values: [false, false, true, true, true] },
+      { label: "Custom client judges (your own prompt as a scorer)", values: [false, false, true, true, true] },
+      { label: "Pay-as-you-go beyond the allowance", values: [false, true, true, true, "Committed"] },
+    ],
+  },
+  {
+    category: "Security",
+    rows: [
+      { label: "Security scans / month included", values: ["1,000", "50,000", "500,000", "2,000,000", "Unlimited"] },
+      { label: "Prompt injection detection", values: [true, true, true, true, true] },
+      { label: "Jailbreak & skeleton-key detection", values: [true, true, true, true, true] },
+      { label: "Semantic attack scoring", values: [true, true, true, true, true] },
+      { label: "PII detection & redaction", values: [true, true, true, true, true] },
+      { label: "Secret leak prevention", values: [true, true, true, true, true] },
+      { label: "Indirect injection detection", values: [true, true, true, true, true] },
+      { label: "RAG poisoning detection", values: [true, true, true, true, true] },
+      { label: "Tool-input exfiltration & allowlist enforcement", values: [true, true, true, true, true] },
+      { label: "Cross-agent injection & trust-boundary escalation", values: [true, true, true, true, true] },
+      { label: "Image & multimodal scanning", values: [true, true, true, true, true] },
+      { label: "Warn or block mode", values: [true, true, true, true, true] },
+      { label: "Custom guardrail policies", values: [false, true, true, true, true] },
+    ],
+  },
+  {
+    category: "Prompt management",
+    rows: [
+      { label: "Versioned prompt registry", values: [true, true, true, true, true] },
+      { label: "Fetch by slug from the SDK", values: [true, true, true, true, true] },
+      { label: "Version history & one-click restore", values: [true, true, true, true, true] },
+      { label: "Environment deploys (dev / staging / prod)", values: [true, true, true, true, true] },
+      { label: "Prompts reusable as custom judges", values: [false, false, true, true, true] },
     ],
   },
   {
     category: "Datasets",
     rows: [
-      { label: "Golden datasets from traces", values: [true, true, true, true] },
-      { label: "Whole-trajectory capture (steps, tools, MCP, media)", values: [true, true, true, true] },
-      { label: "Connect Agents auto-sync", values: [true, true, true, true] },
-      { label: "Batch agentic-eval & security runs", values: [true, true, true, true] },
+      { label: "Golden datasets built from traces", values: [true, true, true, true, true] },
+      { label: "Whole-trajectory capture (steps, tools, MCP, media)", values: [true, true, true, true, true] },
+      { label: "Connect Agents auto-sync", values: [true, true, true, true, true] },
+      { label: "Batch eval & security runs over a dataset", values: [true, true, true, true, true] },
+      { label: "Run-vs-run regression comparison", values: [true, true, true, true, true] },
+      { label: "Per-run judge & jury selection", values: [false, true, true, true, true] },
     ],
   },
   {
-    category: "Security: fluiq.secure()",
+    category: "Optimization",
     rows: [
-      { label: "Prompt injection blocking", values: [false, false, true, true] },
-      { label: "PII detection & redaction", values: [false, false, true, true] },
-      { label: "Jailbreak detection", values: [false, false, true, true] },
-      { label: "Secret leak prevention", values: [false, false, true, true] },
-      { label: "Indirect injection detection", values: [false, false, true, true] },
-      { label: "RAG poisoning detection", values: [false, false, true, true] },
-      { label: "Tool-input exfiltration & allowlist", values: [false, false, true, true] },
-      { label: "Cross-agent injection & trust-boundary escalation", values: [false, false, true, true] },
-    ],
-  },
-  {
-    category: "Optimization: fluiq.optimize()",
-    rows: [
-      { label: "Response caching", values: [false, true, true, true] },
-      { label: "Cache hit dashboard", values: [false, true, true, true] },
+      { label: "Trace-driven cache profiling", values: [false, false, true, true, true] },
+      { label: "Prompt response caching", values: [false, false, true, true, true] },
+      { label: "Embedding caching", values: [false, false, true, true, true] },
+      { label: "Observe mode (measure savings before intercepting)", values: [false, false, true, true, true] },
+      { label: "Cache hit-rate dashboard", values: [false, false, true, true, true] },
+      { label: "Optimization Insights: cache candidates & projected savings", values: [false, false, true, true, true] },
+      { label: "Cost hotspots: slowest calls, error rates, top spenders", values: [false, false, true, true, true] },
     ],
   },
   {
     category: "Team & Access",
     rows: [
-      { label: "Seats", values: ["1", "5", "20", "Unlimited"] },
-      { label: "SSO", values: [false, false, true, true] },
-      { label: "SAML / SCIM", values: [false, false, false, true] },
-      { label: "Audit logs", values: [false, false, false, true] },
+      { label: "Seats", values: ["1", "3", "10", "25", "Unlimited"] },
+      { label: "API keys", values: ["1", "3", "5", "15", "50"] },
+      { label: "Multiple organizations", values: [true, true, true, true, true] },
+      { label: "Teammate invitations & roles", values: [false, true, true, true, true] },
+      { label: "SSO", values: [false, false, true, true, true] },
+      { label: "SAML / SCIM provisioning", values: [false, false, false, false, true] },
+      { label: "Compliance exports", values: [false, false, false, false, true] },
     ],
   },
   {
     category: "Support",
     rows: [
-      { label: "Community support", values: [true, true, true, true] },
-      { label: "Email support", values: [false, "48h SLA", "24h SLA", "Dedicated"] },
-      { label: "Slack alerts", values: [false, true, true, true] },
-      { label: "Dedicated onboarding", values: [false, false, false, true] },
+      { label: "Community support", values: [true, true, true, true, true] },
+      { label: "Slack alerts on eval & security events", values: [false, true, true, true, true] },
+      { label: "Email support", values: [false, "72h SLA", "48h SLA", "24h SLA", "Dedicated"] },
+      { label: "Dedicated onboarding", values: [false, false, false, false, true] },
     ],
   },
   {
     category: "Deployment",
     rows: [
-      { label: "Cloud (managed)", values: [true, true, true, true] },
-      { label: "VPC / on-prem", values: [false, false, false, true] },
+      { label: "Cloud (managed)", values: [true, true, true, true, true] },
+      { label: "VPC / on-prem", values: [false, false, false, false, true] },
     ],
   },
 ]
@@ -202,18 +272,21 @@ const powerFeatures = [
   {
     icon: ShieldKeyIcon,
     name: "fluiq.secure()",
-    badge: "Included in Growth & Enterprise",
+    badge: "On every plan, including Free",
     tagline: "One call. Full pipeline protection.",
     description:
-      "Wrap your pipeline with server-side security scanning before any data is stored. Fluiq checks every prompt and response, so attack patterns are never shipped in the public SDK.",
+      "Wrap your pipeline with server-side security scanning before any data is stored. Fluiq checks every prompt, response, tool call, and retrieved document, so attack patterns are never shipped in the public SDK.",
     capabilities: [
       { label: "PII Detection & Redaction", desc: "Names, emails, phone numbers, SSNs, and credit cards, detected and redacted before persistence." },
-      { label: "Prompt Injection Blocking", desc: "Catches injection patterns, jailbreak attempts, and skeleton key attacks in real time." },
-      { label: "Jailbreak & Semantic Attack Scoring", desc: "Semantic similarity scoring against known attack vectors, even when phrasing varies." },
-      { label: "Secret Leak Prevention", desc: "Scans LLM outputs for leaked API keys, tokens, and high-entropy credential strings." },
-      { label: "Indirect Injection & RAG Poisoning", desc: "Inspects tool outputs and retrieved documents for second-order injection, and flags chunks that semantically resemble an attack." },
-      { label: "Tool Abuse Defense", desc: "Catches sensitive data exfiltrated through tool-call arguments and tools invoked outside your configured allowlist." },
+      { label: "Prompt Injection Blocking", desc: "Catches injection patterns in real time, before the prompt reaches your model." },
+      { label: "Jailbreak & Skeleton Key Detection", desc: "Dedicated scanners for jailbreak framings and skeleton-key attacks that try to unlock restricted behaviour." },
+      { label: "Semantic Attack Scoring", desc: "Similarity scoring against known attack vectors, so a reworded attack still scores as one." },
+      { label: "Secret Leak Prevention", desc: "Scans model output for leaked API keys, tokens, and high-entropy credential strings." },
+      { label: "Indirect Injection & RAG Poisoning", desc: "Inspects tool outputs and retrieved chunks for second-order injection, and flags documents that read like an attack." },
+      { label: "Tool Abuse Defense", desc: "Catches sensitive data exfiltrated through tool-call arguments, and tools invoked outside your allowlist." },
       { label: "Multi-Agent Trust", desc: "Detects cross-agent injection and risk escalating across agent handoffs in the trace DAG." },
+      { label: "Image & Multimodal Scanning", desc: "Images and other media attached to a call are scanned alongside the text." },
+      { label: "Custom Guardrail Policies", desc: "Set your own thresholds and categories per organisation instead of taking the defaults." },
       { label: "Warn or Block mode", desc: "warn (default) flags risks and attaches security metadata to the trace. block intercepts before the LLM call and raises FluiqSecurityError." },
     ],
     code: `fluiq.instrument(api_key="fl_...")\nfluiq.secure()  # warn mode flags risks on the trace\nfluiq.secure(mode="block")  # block mode`,
@@ -221,17 +294,19 @@ const powerFeatures = [
   {
     icon: FlashIcon,
     name: "fluiq.optimize()",
-    badge: "Included in Team & above",
-    tagline: "Serve repeated prompts from cache.",
+    badge: "Included from Team",
+    tagline: "Stop paying twice for the same answer.",
     description:
-      "Fluiq analyses your historical traces to find which LLM calls repeat most often and provisions a dedicated Redis cache for your account. Repeated prompts are served instantly, saving both latency and cost.",
+      "Fluiq mines your trace history to find which calls repeat, provisions a dedicated Redis cache for your account, and serves the repeats. You get the latency back as well as the money.",
     capabilities: [
-      { label: "Trace-Driven Cache Profiling", desc: "The backend mines your trace history to build a cache profile, no manual configuration needed." },
-      { label: "Automatic Cache Population", desc: "Real LLM responses are stored automatically on the first call; subsequent matches are served from Redis." },
-      { label: "Cache mode", desc: "Full interception: matching prompts never reach the LLM API." },
-      { label: "Observe mode", desc: "Records what would have been a cache hit without intercepting: review your savings before opting in." },
-      { label: "Zero code changes", desc: "One fluiq.optimize() call after instrument(). The SDK handles connection, profiling, and cache lookup." },
-      { label: "Cache hit dashboard", desc: "See hit rates, latency savings, and estimated cost savings in your Fluiq dashboard." },
+      { label: "Trace-Driven Cache Profiling", desc: "The backend mines your trace history to build a cache profile. No manual configuration." },
+      { label: "Prompt Response Caching", desc: "Real responses are stored on the first call; matching prompts afterwards are served from Redis." },
+      { label: "Embedding Caching", desc: "Repeated embedding calls are cached separately from prompts, with their own hit rate." },
+      { label: "Observe mode", desc: "Records what would have been a cache hit without intercepting, so you can price the saving before you opt in." },
+      { label: "Cache hit dashboard", desc: "Hit rates, latency saved, and estimated cost saved, split by cache kind." },
+      { label: "Optimization Insights", desc: "Ranks your repeated prompts by how much they would save if cached, with a projected monthly figure." },
+      { label: "Cost Hotspots", desc: "Surfaces your top-spending models and agents, slowest calls, and where errors cluster." },
+      { label: "Zero code changes", desc: "One fluiq.optimize() call after instrument(). The SDK handles connection, profiling, and lookup." },
     ],
     code: `fluiq.instrument(api_key="fl_...")\nfluiq.optimize()  # cache mode\nfluiq.optimize(mode="observe")  # observe mode`,
   },
@@ -282,7 +357,7 @@ export default function Pricing() {
             className="mt-6 mx-auto max-w-xl text-[18px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
-            Start free. Add security and scale as you grow. Every plan includes full LLM observability.
+            Unlimited tracing on every plan, free forever. Security scanning on every plan too, including Free. You pay for evaluation volume, nothing else.
           </motion.p>
 
           {/* Billing toggle */}
@@ -324,16 +399,16 @@ export default function Pricing() {
 
       {/* ── Pricing cards ────────────────────────────────────────────────── */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-6 lg:grid-cols-4 md:grid-cols-2 items-start">
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {tiers.map((tier, i) => {
               const p = priceLabel(tier, annual)
               return (
                 <div
                   key={tier.name}
                   data-animate
-                  data-delay={String((i % 4) + 1)}
-                  className={`relative flex flex-col rounded-2xl border p-7 ${
+                  data-delay={String((i % 5) + 1)}
+                  className={`relative flex h-full flex-col rounded-2xl border p-7 ${
                     tier.highlighted
                       ? "border-[#1860D3] dark:border-[#6FA8FF] bg-[#FAF9F6] dark:bg-[#1A1A1A] shadow-xl shadow-[#1860D3]/10 lg:-translate-y-2"
                       : "border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A]"
@@ -366,14 +441,15 @@ export default function Pricing() {
                     {tier.cta}
                   </IslandCta>
 
-                  <div className="mt-6 space-y-1.5 border-t border-[#E5E1D6] dark:border-[#2A2A2A] pt-5 text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">
+                  <div className="mt-6 shrink-0 space-y-1.5 border-t border-[#E5E1D6] dark:border-[#2A2A2A] pt-5 text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <p className="font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">{tier.traces}</p>
+                    <p>{tier.scans}</p>
                     <p>{tier.evals}</p>
                     <p>{tier.retention}</p>
                     <p>{tier.seats}</p>
                   </div>
 
-                  <ul className="mt-5 space-y-2.5">
+                  <ul className="mt-5 flex-1 space-y-2.5">
                     {tier.features.map((f) => (
                       <li key={f.label} className="flex items-start gap-2.5">
                         {f.included === true ? (
@@ -403,9 +479,64 @@ export default function Pricing() {
         </div>
       </section>
 
+      {/* ── Usage rates ──────────────────────────────────────────────────── */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div data-animate className="mb-10 text-center">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
+              Beyond your allowance
+            </p>
+            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
+              Priced by what an evaluation actually costs
+            </h2>
+            <p className="mt-4 mx-auto max-w-2xl text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
+              A three-model jury reading a forty-step trajectory is not the same
+              work as one relevance check, so it is not the same price. Most
+              tools bill both as &ldquo;one evaluation&rdquo;. Bring your own
+              provider keys and you pay the platform rate only.
+            </p>
+          </div>
+
+          <div
+            data-animate
+            className="overflow-hidden rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A]"
+          >
+            {usageRates.map((r, i) => (
+              <div
+                key={r.label}
+                className={`flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 px-6 py-4 ${
+                  i > 0 ? "border-t border-[#E5E1D6] dark:border-[#2A2A2A]" : ""
+                }`}
+              >
+                <div className="min-w-[220px] flex-1">
+                  <p className="text-[15px] font-medium text-[#0a0a0a] dark:text-[#FAF9F6]">
+                    {r.label}
+                  </p>
+                  <p className="mt-0.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
+                    {r.detail}
+                  </p>
+                </div>
+                <p className="font-mono text-[15px] font-semibold text-[#1860D3] dark:text-[#6FA8FF]">
+                  {r.price}
+                  <span className="ml-1 text-[12px] font-normal text-[#6B6B66] dark:text-[#9A9A92]">
+                    each
+                  </span>
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-5 text-center text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
+            Every price includes the judge tokens. Connect your own OpenAI,
+            Anthropic, or Google key and those tokens bill to your provider
+            account instead, at whatever rate you already negotiated.
+          </p>
+        </div>
+      </section>
+
       {/* ── Comparison table ─────────────────────────────────────────────── */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 bg-[#F2F0E9] dark:bg-[#0A0A0A]">
-        <div className="mx-auto max-w-5xl px-6">
+        <div className="mx-auto max-w-6xl px-6">
           <div data-animate className="mb-12 text-center">
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
               Compare plans
@@ -417,7 +548,7 @@ export default function Pricing() {
 
           <div data-animate className="rounded-[1.75rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-28px_rgba(24,96,211,0.18)] dark:bg-white/[0.04] dark:ring-white/10">
           <div className="overflow-x-auto rounded-[1.25rem] border border-[#E5E1D6] bg-[#FAF9F6] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)] dark:border-white/[0.06] dark:bg-[#1A1A1A] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-            <table className="w-full min-w-[640px] border-collapse text-left">
+            <table className="w-full min-w-[820px] border-collapse text-left">
               <thead>
                 <tr className="border-b border-[#E5E1D6] dark:border-[#2A2A2A]">
                   <th className="sticky left-0 bg-[#FAF9F6] dark:bg-[#1A1A1A] px-5 py-4 text-[13px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">Features</th>
@@ -543,32 +674,24 @@ export default function Pricing() {
         </div>
       </section>
 
-      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
-        <div className="mx-auto max-w-3xl px-6">
-          <div data-animate className="mb-12 text-center">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">
-              FAQ
-            </p>
-            <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
-              Frequently asked questions
-            </h2>
-          </div>
-          <div className="grid gap-3">
-            {PricingFaqs.map((f, i) => (
-              <div
-                key={f.q}
-                data-animate
-                data-delay={String((i % 4) + 1)}
-                className="rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] px-6 py-5"
-              >
-                <h3 className="font-heading text-[15px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6] mb-2 tracking-tight">
-                  {f.q}
-                </h3>
-                <p className="text-[14px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">{f.a}</p>
-              </div>
-            ))}
-          </div>
+      {/* ── FAQ link ─────────────────────────────────────────────────────── */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-16 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
+        <div className="mx-auto max-w-3xl px-6 text-center" data-animate>
+          <h2 className="font-heading text-2xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-3xl">
+            Questions about billing, evals, or security?
+          </h2>
+          <p className="mt-3 text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
+            What counts as an evaluation, how the judge jury is priced, what
+            happens when you bring your own provider keys, and where your data
+            lives.
+          </p>
+          <a
+            href="/faq"
+            className="mt-6 inline-flex items-center gap-1.5 text-[15px] font-medium text-[#1860D3] transition-opacity hover:opacity-80 dark:text-[#6FA8FF]"
+          >
+            Read the FAQ
+            <span aria-hidden="true">&rarr;</span>
+          </a>
         </div>
       </section>
 

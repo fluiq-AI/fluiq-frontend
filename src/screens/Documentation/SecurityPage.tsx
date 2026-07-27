@@ -25,9 +25,9 @@ export default function SecurityPage() {
       </div>
 
       <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
-        <p className="font-semibold text-amber-700 dark:text-amber-400">Growth plan and above</p>
+        <p className="font-semibold text-amber-700 dark:text-amber-400">Every plan, metered by volume</p>
         <p className="mt-1 text-muted-foreground">
-          <code className="font-mono text-foreground">fluiq.secure()</code> requires a Growth or Enterprise plan. Calling it on a Free or Team account logs a warning and skips scanning; tracing continues normally, and your application is never interrupted.
+          <code className="font-mono text-foreground">fluiq.secure()</code> runs on every plan, including Free, and is metered by scan volume rather than gated by tier: 1,000 scans a month on Free, up to 2,000,000 on Growth. Calling it on a Free or Team account logs a warning and skips scanning; tracing continues normally, and your application is never interrupted.
         </p>
       </div>
 

@@ -188,7 +188,7 @@ function Documentation() {
                       # call from this point on is traced automatically.
                       # Optionally add paid features:
                       fluiq.optimize()   # Redis caching (Team+)
-                      fluiq.secure()     # Security scanning (Growth+)`
+                      fluiq.secure()     # Security scanning (all plans)`
                       }
                   </Code>
                 </div>
@@ -380,9 +380,9 @@ fluiq.optimize(mode="cache")     # then enable full caching`}</Code>
             </p>
 
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
-              <p className="font-semibold text-amber-700 dark:text-amber-400">Growth plan and above</p>
+              <p className="font-semibold text-amber-700 dark:text-amber-400">Every plan, metered by volume</p>
               <p className="mt-1 text-muted-foreground">
-                <code className="font-mono text-foreground">fluiq.secure()</code> requires a Growth or Enterprise plan. Calling it on a Free or Team account logs a warning and skips scanning; tracing continues normally, and your application is never interrupted.
+                <code className="font-mono text-foreground">fluiq.secure()</code> runs on every plan including Free, metered by scan volume rather than gated by tier. Not Growth or Enterprise plan. Calling it on a Free or Team account logs a warning and skips scanning; tracing continues normally, and your application is never interrupted.
               </p>
             </div>
 
@@ -693,9 +693,10 @@ jobs:
                 </thead>
                 <tbody className="divide-y divide-border/60">
                   {[
-                    ["Free", "Unlimited", "1,000"],
+                    ["Free", "Unlimited", "100"],
+                    ["Starter", "Unlimited", "2,000"],
                     ["Team", "Unlimited", "10,000"],
-                    ["Growth", "Unlimited", "100,000"],
+                    ["Growth", "Unlimited", "50,000"],
                     ["Enterprise", "Unlimited", "Unlimited"],
                   ].map(([tier, traces, evals]) => (
                     <tr key={tier}>
@@ -916,7 +917,7 @@ response = client.chat.completions.create(
                 <div>
                   <p className="font-mono text-sm text-foreground">
                     mode
-                    <Badge variant="outline" className="ml-2">Growth+ required</Badge>
+                    <Badge variant="outline" className="ml-2">All plans</Badge>
                   </p>
                   <p className="mt-1 text-muted-foreground">
                     <code className="font-mono text-foreground">"warn"</code>: post-call scan only; security metadata enriched on the trace (default).{" "}

@@ -190,6 +190,19 @@ html.dark::-webkit-scrollbar-thumb:hover,
   background: #2A2A2A;
 }
 
+/* ── Dashboard branded loading bar ── */
+@keyframes fluiq-loading-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(110%);
+  }
+  100% {
+    transform: translateX(-120%);
+  }
+}
+
 .dark .react-flow__controls-button svg {
   fill: #FAF9F6;
 }

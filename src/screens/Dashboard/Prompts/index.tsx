@@ -28,7 +28,8 @@ import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/help
 import type { AgentRow } from "@/pages/Dashboard/Agents/utils/types"
 
 import type { CompareResult, MetricResult, PlaygroundResponse, SavedPrompt, PromptRow, PromptVersion, PromptEnv, EnvDeployment, PromptKind } from "./utils/types"
-import { COMPARE_MODELS, JUDGE_MODELS, PROMPTS_PAGE_SIZE } from "./utils/types"
+import { DEFAULT_COMPARE_MODELS, DEFAULT_JUDGE_MODEL, PROMPTS_PAGE_SIZE } from "./utils/types"
+import type { ModelOption } from "./utils/types"
 import { detectVars, renderTemplate, toPromptRow, toSlug } from "./utils"
 import { SpanTimeline, spanTypeIcon } from "./components/SpanTimeline"
 import { EvalPlayground } from "./components/EvalPlayground"
@@ -82,11 +83,11 @@ function makeTab(overrides: Partial<PromptTab> = {}): PromptTab {
     activeRow: null,
     context: "",
     selectedMetrics: new Set(["hallucination", "relevance"]),
-    judgeModel: JUDGE_MODELS[0].value,
+    judgeModel: DEFAULT_JUDGE_MODEL,
     runLoading: false,
     runError: null,
     runResults: null,
-    compareModels: [COMPARE_MODELS[0].value, COMPARE_MODELS[1].value],
+    compareModels: [...DEFAULT_COMPARE_MODELS],
     compareResults: null,
     compareLoading: false,
     compareError: null,
@@ -132,6 +133,10 @@ function Prompts() {
 
   const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([])
   const [savedLoading, setSavedLoading] = useState(true)
+
+  // Chat-capable models to compare/judge with, fetched from the price table so
+  // the playground never ships its own hardcoded model catalog.
+  const [modelOptions, setModelOptions] = useState<ModelOption[]>([])
 
   const [agentSummary, setAgentSummary] = useState<AgentRow[]>([])
   const [agentSummaryLoading, setAgentSummaryLoading] = useState(true)
@@ -216,6 +221,14 @@ function Prompts() {
         // silent
       } finally {
         setAgentSummaryLoading(false)
+      }
+    })()
+    ;(async () => {
+      try {
+        const data = await authFetch<{ models: ModelOption[] }>("/api/v1/evaluate/models")
+        setModelOptions(data.models)
+      } catch {
+        // silent — the drawer falls back to whatever ids are already selected
       }
     })()
   }, [])
@@ -383,6 +396,9 @@ function Prompts() {
         body: {
           prompt: activeRenderedPrompt || activeTab.templateText,
           models: activeTab.compareModels,
+          metrics: Array.from(activeTab.selectedMetrics),
+          judge_model: activeTab.judgeModel,
+          context: activeTab.context,
         },
       })
       updateTab(tabId, { compareResults: resp.results, compareLoading: false })
@@ -853,6 +869,7 @@ function Prompts() {
               templateVars={activeTab.templateVars}
               detectedVars={activeDetectedVars}
               renderedPrompt={activeRenderedPrompt}
+              modelOptions={modelOptions}
               compareModels={activeTab.compareModels}
               compareResults={activeTab.compareResults}
               compareLoading={activeTab.compareLoading}
@@ -868,6 +885,7 @@ function Prompts() {
               onRemoveCompareModel={(idx) =>
                 updateActiveTab({ compareModels: activeTab.compareModels.filter((_, i) => i !== idx) })
               }
+              onSetCompareModels={(models) => updateActiveTab({ compareModels: models })}
               onRunCompare={handleRunCompare}
               showSaveForm={activeTab.showSaveForm}
               saveName={activeTab.saveName}
@@ -893,7 +911,7 @@ function Prompts() {
               selectedMetrics={activeTab.selectedMetrics}
               judgeModel={activeTab.judgeModel}
               judgeModelLabel={
-                JUDGE_MODELS.find((m) => m.value === activeTab.judgeModel)?.label ??
+                modelOptions.find((m) => m.id === activeTab.judgeModel)?.label ??
                 activeTab.judgeModel
               }
               context={activeTab.context}

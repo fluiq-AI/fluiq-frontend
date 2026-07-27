@@ -12,7 +12,9 @@ import {
   AiContentGenerator01Icon,
   Alert02Icon,
   FileEditIcon,
+  InvoiceIcon,
   JusticeScale01Icon,
+  Key01Icon,
   Settings01Icon,
   TestTube01Icon,
   Rocket02Icon,
@@ -76,6 +78,8 @@ const NAV_SECTIONS = [
     section: "Account",
     items: [
       { to: "/dashboard/api-management", label: "API Management", icon: ApiIcon },
+      { to: "/dashboard/billing", label: "Billing & Payments", icon: InvoiceIcon },
+      { to: "/dashboard/credentials", label: "Provider Keys", icon: Key01Icon },
       { to: "/dashboard/user-management", label: "User Management", icon: UserMultiple02Icon },
       { to: "/dashboard/profile", label: "Profile", icon: UserCircleIcon },
     ],

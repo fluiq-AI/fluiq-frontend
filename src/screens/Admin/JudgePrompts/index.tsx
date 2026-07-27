@@ -37,7 +37,7 @@ interface PromptVersion {
   created_at: string
 }
 
-// $var or ${var}
+// {{var}} standard, with legacy $var / ${var} still accepted
 const PLACEHOLDER_RE = /\$(?:\{(\w+)\}|(\w+))/g
 
 function identifiers(template: string): Set<string> {
@@ -536,7 +536,7 @@ function CreatePromptForm({
             value={template}
             onChange={(e) => setTemplate(e.target.value)}
             spellCheck={false}
-            placeholder={'Evaluate the ANSWER…\nReturn JSON: {"score": float, "reason": str}.\n\nQUESTION: $question\nANSWER: $answer'}
+            placeholder={'Evaluate the ANSWER…\nReturn JSON: {"score": float, "reason": str}.\n\nQUESTION: {{question}}\nANSWER: {{answer}}'}
             className="block min-h-[14rem] w-full resize-y rounded-md border border-border/60 bg-background px-3 py-2 font-mono text-[13px] leading-relaxed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
           {missing.length > 0 && (

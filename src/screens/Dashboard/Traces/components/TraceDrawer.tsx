@@ -10,7 +10,9 @@ import { SecurityPanel } from "./SecurityPanel"
 import { TraceUiView } from "./TraceUiView"
 import { ArchitectureView } from "./ArchitectureView"
 import { SpanTimeline } from "@/pages/Dashboard/Prompts/components/SpanTimeline"
+import { buildUserPrompt, extractOutput } from "@/pages/Dashboard/Prompts/utils"
 import { synthesizeAggregatedEvent } from "../helpers/aggregation"
+import { buildToolGrounding } from "../helpers/grounding"
 import { findGroupForTrace } from "../helpers/treeBuilder"
 import type { DrawerTab, SelectedTool, ToolSelectFn, TraceRecord } from "../utils/types"
 import { formatCost, formatDate, formatLatency, getModel, getStr, isFailed, traceToDatasetExample } from "../utils"
@@ -76,6 +78,19 @@ export function TraceDrawer({
     if (!rtid || rtid === tid) return true
     return getStr(group?.root?.trace?.event ?? {}, "trace_id") === tid
   }, [trace, group])
+
+  // "Multi" (agentic) means more than one LLM/agent turn — a trajectory or
+  // multiple agents. A single prompt is one LLM node even when it makes tool
+  // calls, so tool/MCP spans must not count; only LLM spans do.
+  const isMultiRun = useMemo(() => {
+    const countLlm = (n: { trace: TraceRecord; children: unknown[] } | undefined): number => {
+      if (!n) return 0
+      let c = getStr(n.trace.event, "type") === "llm" ? 1 : 0
+      for (const ch of n.children) c += countLlm(ch as { trace: TraceRecord; children: unknown[] })
+      return c
+    }
+    return countLlm(group?.root) > 1
+  }, [group])
   return (
     <div
       role="dialog"
@@ -263,6 +278,10 @@ export function TraceDrawer({
                         undefined
                       : undefined
                   }
+                  isMulti={isMultiRun}
+                  prompt={buildUserPrompt(detailTrace.event as Record<string, unknown>)}
+                  response={extractOutput(detailTrace.event as Record<string, unknown>)}
+                  toolContext={buildToolGrounding(group, detailTrace.event as Record<string, unknown>)}
                 />
               ) : (
                 <SecurityPanel trace={detailTrace} />

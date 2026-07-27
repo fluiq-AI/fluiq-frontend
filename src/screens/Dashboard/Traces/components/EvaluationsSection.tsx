@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Link } from "react-router"
 import {
   CheckmarkCircle02Icon,
@@ -13,121 +13,7 @@ import { authFetch } from "@/lib/authFetch"
 import { cn } from "@/lib/utils"
 import type { EvaluationScore, JudgePromptUsage } from "../utils/types"
 import { formatScore, scoreBandClass } from "../utils"
-
-interface AgenticEvalResponse {
-  ok: boolean
-  status: string
-  events: number
-  detail?: string
-}
-
-// Watchdog: if results never stream back, re-enable the button after this so
-// it can't get stuck disabled forever.
-const AGENTIC_EVAL_TIMEOUT_MS = 90_000
-
-function RunAgenticEvalButton({
-  traceId,
-  rootTraceId,
-  evaluations,
-}: {
-  traceId: string
-  rootTraceId?: string
-  evaluations?: EvaluationScore[]
-}) {
-  const [running, setRunning] = useState(false)
-  const toastId = useRef<string | number | null>(null)
-  const baseline = useRef(0)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  // Agentic results arrive via SSE (trace.enriched → evaluations). Track the
-  // count so we can tell when this run has produced output.
-  const agenticCount = (evaluations ?? []).filter(
-    (e) => e.evaluator === "fluiq.agent_eval",
-  ).length
-
-  const stop = () => {
-    setRunning(false)
-    if (timer.current) {
-      clearTimeout(timer.current)
-      timer.current = null
-    }
-  }
-
-  // Re-enable + confirm once new agentic scores land beyond the baseline.
-  useEffect(() => {
-    if (running && agenticCount > baseline.current) {
-      stop()
-      toast.success("Agentic evaluation complete.", { id: toastId.current ?? undefined })
-    }
-  }, [running, agenticCount])
-
-  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
-
-  async function run() {
-    if (running) return
-    baseline.current = agenticCount
-    setRunning(true)
-    toastId.current = toast.loading("Running agentic evaluation…")
-    timer.current = setTimeout(() => {
-      stop()
-      toast.info("Agentic evaluation is taking a while — results will appear as they finish.", {
-        id: toastId.current ?? undefined,
-      })
-    }, AGENTIC_EVAL_TIMEOUT_MS)
-    try {
-      const res = await authFetch<AgenticEvalResponse>("/api/v1/evaluate/agentic", {
-        method: "POST",
-        body: { trace_id: traceId, root_trace_id: rootTraceId },
-      })
-      if (res.ok) {
-        toast.loading(
-          `Evaluating ${res.events} span${res.events === 1 ? "" : "s"} — results streaming in…`,
-          { id: toastId.current ?? undefined },
-        )
-      } else {
-        stop()
-        toast.error(res.detail || "Could not queue agentic evaluation.", {
-          id: toastId.current ?? undefined,
-        })
-      }
-    } catch (err) {
-      stop()
-      toast.error(err instanceof Error ? err.message : "Request failed.", {
-        id: toastId.current ?? undefined,
-      })
-    }
-  }
-
-  return (
-    <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-foreground">Agentic evaluation</p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
-            Tool selection · trajectory · multi-agent panel
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={run}
-          disabled={running}
-          className={cn(
-            "inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition",
-            "bg-foreground text-background hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed",
-          )}
-        >
-          {running ? (
-            <svg className="size-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-            </svg>
-          ) : null}
-          {running ? "Evaluating…" : "Run Agentic Eval"}
-        </button>
-      </div>
-    </div>
-  )
-}
+import { TraceEvalConfig } from "./TraceEvalConfig"
 
 interface LocalAnnotation {
   value: boolean
@@ -215,13 +101,33 @@ export function EvaluationsSection({
   evaluations,
   traceId,
   rootTraceId,
+  isMulti = false,
+  prompt = "",
+  response = "",
+  toolContext = "",
 }: {
   evaluations: EvaluationScore[] | undefined
   traceId?: string
   rootTraceId?: string
+  /** Multi-node / multi-agent run → agentic config; else single-trace metrics. */
+  isMulti?: boolean
+  /** The trace's input, for single-trace metric scoring. */
+  prompt?: string
+  /** The trace's answer, for single-trace metric scoring. */
+  response?: string
+  /** Tool/MCP outputs from this run, fed to the judge as grounding. */
+  toolContext?: string
 }) {
   const button = traceId ? (
-    <RunAgenticEvalButton traceId={traceId} rootTraceId={rootTraceId} evaluations={evaluations} />
+    <TraceEvalConfig
+      traceId={traceId}
+      rootTraceId={rootTraceId}
+      isMulti={isMulti}
+      prompt={prompt}
+      response={response}
+      toolContext={toolContext}
+      evaluations={evaluations}
+    />
   ) : null
   const annotate = traceId ? <AnnotateBar traceId={traceId} rootTraceId={rootTraceId} /> : null
 

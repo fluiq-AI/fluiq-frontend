@@ -26,7 +26,7 @@ export const LLMCostFAQS = [
 export const PricingFaqs = [
   {
     q: "What counts as a trace?",
-    a: "One traced span, typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5-20 traces depending on how many tools and LLM calls it makes. Trace ingestion is unlimited and free on every plan — the Free plan keeps a rolling 14-day history, while Team and above retain your traces indefinitely.",
+    a: "One traced span, typically one LLM call, one retriever call, or one decorated function invocation. A single end-to-end agent run usually emits 5-20 traces depending on how many tools and LLM calls it makes. Trace ingestion is unlimited and free on every plan. The Free plan keeps a rolling 14-day history, while Team and above retain your traces indefinitely.",
   },
   {
     q: "Which frameworks does Fluiq support?",
@@ -34,11 +34,11 @@ export const PricingFaqs = [
   },
   {
     q: "What counts as an evaluation?",
-    a: "One LLM-as-judge scoring call: e.g. a hallucination check on an answer or a relevance score over a retrieved chunk set. Metrics include hallucination, faithfulness, relevance, toxicity, coherence, and completeness. Free includes 1,000 evals/month, Team 10,000, Growth 100,000, and Enterprise is unlimited.",
+    a: "One LLM-as-judge scoring call: e.g. a hallucination check on an answer or a relevance score over a retrieved chunk set. Metrics include hallucination, faithfulness, relevance, toxicity, coherence, and completeness. Free includes 100 evals/month, Starter 2,000, Team 10,000, Growth 50,000, and Enterprise is unlimited. Beyond your allowance you pay per evaluation, priced by depth: $0.007 for a single-judge metric up to $0.545 for a deep agentic run with a multi-model jury, because those are genuinely different amounts of work.",
   },
   {
     q: "When do I need fluiq.secure()?",
-    a: "fluiq.secure() runs server-side security scanning: PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, indirect-injection and RAG-poisoning detection, tool-input exfiltration and allowlist enforcement, and multi-agent trust checks (cross-agent injection and trust-boundary escalation). It is included on the Growth and Enterprise plans. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
+    a: "fluiq.secure() runs server-side security scanning: PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, indirect-injection and RAG-poisoning detection, tool-input exfiltration and allowlist enforcement, and multi-agent trust checks (cross-agent injection and trust-boundary escalation). It is available on every plan, including Free, and metered by scan volume rather than locked behind a tier: 1,000 scans a month on Free, up to 2,000,000 on Growth. Scanning is pattern and NER based with no LLM call, so it costs a fraction of an evaluation to run and we price it that way. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
   },
   {
     q: "How does fluiq.optimize() work?",
@@ -54,11 +54,11 @@ export const PricingFaqs = [
   },
   {
     q: "How do I know if my LLM is actually working in production?",
-    a: "Fluiq traces every LLM call, tool call, and decorated function automatically, so you watch live token usage, latency (p50/p95/p99), USD cost per agent node, and pass/fail status stream onto the dashboard as runs complete. Automated LLM-as-judge evals score hallucination, faithfulness, relevance, and more on real production traffic, and Slack alerts fire the moment quality regresses or failure rates climb — so \"is it working?\" becomes a number you watch, not a guess.",
+    a: "Fluiq traces every LLM call, tool call, and decorated function automatically, so you watch live token usage, latency (p50/p95/p99), USD cost per agent node, and pass/fail status stream onto the dashboard as runs complete. Automated LLM-as-judge evals score hallucination, faithfulness, relevance, and more on real production traffic, and Slack alerts fire the moment quality regresses or failure rates climb, so \"is it working?\" becomes a number you watch rather than a guess.",
   },
   {
     q: "What's the cheapest way to monitor my LLM application?",
-    a: "Start on Fluiq's Free plan: unlimited traces and 1,000 evaluations per month at no cost, with full tracing, cost attribution, and latency analytics included. Instrumentation is one line — fluiq.instrument() — so there's no agent to run and no infrastructure to host. Free keeps a rolling 14-day history; when you outgrow it, Team and above retain traces indefinitely, and fluiq.optimize() caches repeated prompts to cut model spend, so monitoring can actually lower your bill instead of adding to it.",
+    a: "Start on Fluiq's Free plan: unlimited traces, 100 evaluations, and 1,000 security scans per month at no cost, with full tracing, cost attribution, and latency analytics included. Instrumentation is one line, fluiq.instrument(), so there's no agent to run and no infrastructure to host. Free keeps a rolling 14-day history; when you outgrow it, Starter and above retain traces indefinitely, and fluiq.optimize() caches repeated prompts to cut model spend, so monitoring can actually lower your bill instead of adding to it.",
   },
   {
     q: "Will adding observability slow down my LLM?",
@@ -66,11 +66,11 @@ export const PricingFaqs = [
   },
   {
     q: "How do I know if my AI is actually secure?",
-    a: "fluiq.secure() scans both sides of every call. Before the model runs, pre-call scanning catches prompt injection, jailbreaks, and skeleton-key attacks; after it runs, post-call scanning redacts PII and secrets and inspects the whole trace tree for agentic threats — RAG poisoning, tool-input exfiltration, tools used outside their allowlist, and multi-agent trust attacks. Every risk is flagged on the trace with a severity and category, so security is something you see per request instead of assume.",
+    a: "fluiq.secure() scans both sides of every call. Before the model runs, pre-call scanning catches prompt injection, jailbreaks, and skeleton-key attacks; after it runs, post-call scanning redacts PII and secrets and inspects the whole trace tree for agentic threats: RAG poisoning, tool-input exfiltration, tools used outside their allowlist, and multi-agent trust attacks. Every risk is flagged on the trace with a severity and category, so security is something you see per request instead of assume.",
   },
   {
     q: "What happens when an AI system gets hacked?",
-    a: "Common attacks — a jailbreak prompt, a poisoned retrieved document, a tool tricked into leaking data — try to make your model ignore its instructions or exfiltrate sensitive information. With fluiq.secure() in block mode, Fluiq raises a FluiqSecurityError before a high-risk prompt ever reaches the model; in warn mode it records the attempt on the trace without interrupting traffic. Because scanning fails open, a scanner error degrades to observe-only instead of taking your app down, and every blocked or flagged event can alert your team in Slack.",
+    a: "Common attacks such as a jailbreak prompt, a poisoned retrieved document, or a tool tricked into leaking data all try to make your model ignore its instructions or exfiltrate sensitive information. With fluiq.secure() in block mode, Fluiq raises a FluiqSecurityError before a high-risk prompt ever reaches the model; in warn mode it records the attempt on the trace without interrupting traffic. Because scanning fails open, a scanner error degrades to observe-only instead of taking your app down, and every blocked or flagged event can alert your team in Slack.",
   },
   {
     q: "Can someone trick my LLM into giving away secrets?",

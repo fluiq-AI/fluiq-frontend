@@ -88,10 +88,10 @@ const DEFAULT_CONFIG: AlertsConfig = {
   },
 }
 
-// Plan gating — mirrors the pricing page. Eval alerts ship on Team+,
-// security alerts on Growth+ (they piggy-back on fluiq.secure()).
+// Plan gating — mirrors the pricing page: both alert kinds unlock on any paid
+// plan, matching the backend's _EVAL_TIERS / _SECURITY_TIERS.
 const TIER_RANK: Record<UserType, number> = {
-  Free: 0, Team: 1, Growth: 2, Enterprise: 3, Admin: 3,
+  Free: 0, Starter: 1, Team: 2, Growth: 3, Enterprise: 4, Admin: 4,
 }
 
 // ── Small switch (no shared component yet) ──────────────────────────────────────
@@ -147,8 +147,8 @@ export default function Alerts() {
   const [saved, setSaved]     = useState(false)
 
   const tier = user?.user_type ?? "Free"
-  const evalUnlocked     = TIER_RANK[tier] >= TIER_RANK.Team
-  const securityUnlocked = TIER_RANK[tier] >= TIER_RANK.Growth
+  const evalUnlocked     = TIER_RANK[tier] >= TIER_RANK.Starter
+  const securityUnlocked = TIER_RANK[tier] >= TIER_RANK.Starter
 
   // Load saved config on mount. Falls back to defaults if the endpoint is
   // not wired yet, so the page is always usable.

@@ -20,6 +20,8 @@ import { ApiError } from "@/lib/api"
 import { authFetch } from "@/lib/authFetch"
 import { buildTraceTree, findGroupForTrace } from "@/pages/Dashboard/Traces/helpers/treeBuilder"
 import { synthesizeAggregatedEvent } from "@/pages/Dashboard/Traces/helpers/aggregation"
+import { buildToolGrounding } from "@/pages/Dashboard/Traces/helpers/grounding"
+import { buildUserPrompt, extractOutput } from "@/pages/Dashboard/Prompts/utils"
 import type {
   DrawerTab,
   SelectedTool,
@@ -282,6 +284,29 @@ export function AgentDrawer({
   }, [selectedTrace, selectedTool])
   const evalCount =
     detailTrace?.evaluations?.filter((e) => e.evaluator !== "fluiq.security").length ?? 0
+
+  // Mirror the Traces drawer so the Evaluation tab can *run* an eval here too,
+  // not just display existing scores. Run controls only make sense on the run's
+  // root span; a single LLM turn (even with tool calls) is metric mode, 2+ LLM
+  // turns is agentic — counted the same way as TraceDrawer.
+  const isRootTrace = useMemo(() => {
+    if (!selectedTrace || !selectedGroup) return false
+    const tid = getStr(selectedTrace.event, "trace_id")
+    if (!tid) return false
+    const rtid = getStr(selectedTrace.event, "root_trace_id")
+    if (!rtid || rtid === tid) return true
+    return getStr(selectedGroup.root?.trace?.event ?? {}, "trace_id") === tid
+  }, [selectedTrace, selectedGroup])
+
+  const isMultiRun = useMemo(() => {
+    const countLlm = (n: { trace: TraceRecord; children: unknown[] } | undefined): number => {
+      if (!n) return 0
+      let c = getStr(n.trace.event, "type") === "llm" ? 1 : 0
+      for (const ch of n.children) c += countLlm(ch as { trace: TraceRecord; children: unknown[] })
+      return c
+    }
+    return countLlm(selectedGroup?.root) > 1
+  }, [selectedGroup])
 
   return (
     <div
@@ -589,7 +614,21 @@ export function AgentDrawer({
                   {drawerTab === "json" ? (
                     <JsonView value={detailTrace.event} />
                   ) : drawerTab === "evaluation" ? (
-                    <EvaluationsSection evaluations={detailTrace.evaluations?.filter(e => e.evaluator !== "fluiq.security")} />
+                    <EvaluationsSection
+                      evaluations={detailTrace.evaluations?.filter(e => e.evaluator !== "fluiq.security")}
+                      traceId={!selectedTool && isRootTrace ? getStr(detailTrace.event, "trace_id") || undefined : undefined}
+                      rootTraceId={
+                        !selectedTool && isRootTrace
+                          ? getStr(detailTrace.event, "root_trace_id") ||
+                            getStr(detailTrace.event, "trace_id") ||
+                            undefined
+                          : undefined
+                      }
+                      isMulti={isMultiRun}
+                      prompt={buildUserPrompt(detailTrace.event as Record<string, unknown>)}
+                      response={extractOutput(detailTrace.event as Record<string, unknown>)}
+                      toolContext={buildToolGrounding(selectedGroup, detailTrace.event as Record<string, unknown>)}
+                    />
                   ) : drawerTab === "security" ? (
                     <SecurityPanel trace={detailTrace} />
                   ) : (

@@ -1,4 +1,4 @@
-export type UserType = "Free" | "Team" | "Growth" | "Enterprise" | "Admin"
+export type UserType = "Free" | "Starter" | "Team" | "Growth" | "Enterprise" | "Admin"
 
 export interface UserPublic {
   user_id: string

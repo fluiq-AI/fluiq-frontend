@@ -1,8 +1,15 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon } from "@hugeicons/core-free-icons"
+import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon } from "@hugeicons/core-free-icons"
 
 const NAV_DEVELOPER = [
+  {
+    name: "FAQ",
+    slug: "faq",
+    to: "/faq",
+    description: "Pricing, evals, security & data",
+    icon: HelpCircleIcon,
+  },
   {
     name: "Fluiq Docs",
     slug: "documentation",
@@ -55,7 +62,7 @@ export function NavDeveloperDropdown({
         aria-haspopup="true"
         className={`flex items-center gap-1 ${triggerClassName}`}
       >
-        Developer
+        Resources
         <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"
           className="transition-transform duration-200 group-hover:rotate-180">
           <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5"

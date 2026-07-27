@@ -1,12 +1,13 @@
-import { HugeiconsIcon } from "@hugeicons/react"
-import { Loading03Icon } from "@hugeicons/core-free-icons"
+import { DashboardLoading } from "@/components/DashboardLoading"
 
-/** Neutral full-screen loader shown by the auth guards before the client has
- * hydrated the persisted auth state (see RequireAuth / RequireAdmin). */
+/** Branded full-screen loader shown by the auth guards before the client has
+ * hydrated the persisted auth state (see RequireAuth / RequireAdmin). Uses the
+ * same Fluiq loading screen as the dashboard route boundary so entering the app
+ * reads as one continuous branded load. */
 export function AuthGateLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30">
-      <HugeiconsIcon icon={Loading03Icon} size={22} className="animate-spin text-muted-foreground" />
+      <DashboardLoading />
     </div>
   )
 }

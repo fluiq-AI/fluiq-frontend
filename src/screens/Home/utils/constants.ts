@@ -6,7 +6,9 @@ export const INTEGRATIONS = [
 export const STATS = [
   { value: 4, suffix: "", label: "SDK functions to cover your full AI stack" },
   { value: 6, suffix: "", label: "Evaluation metrics scored server-side" },
-  { value: 50, suffix: "K", label: "Free traces every month, no card required" },
+  // `display` short-circuits the count-up animation: some values are symbols,
+  // not numbers. Everything else still animates from zero.
+  { value: 0, suffix: "", display: "∞", label: "Traces every month, free on every plan" },
   { value: 2, suffix: "", label: "Lines of Python to instrument any pipeline" },
 ]
 

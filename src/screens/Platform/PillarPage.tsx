@@ -44,6 +44,8 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
   const resetTilt = useCallback(() => { rotYRaw.set(-5); rotXRaw.set(2) }, [rotYRaw, rotXRaw])
 
   const { Mockup } = pillar
+  // The alerts pillar is configured in the dashboard rather than in code.
+  const isPython = pillar.mechanism.file.endsWith(".py")
 
   return (
     <div className="home-page min-h-screen bg-[#FAF9F6] text-[#0a0a0a] dark:bg-[#0A0A0A] dark:text-[#FAF9F6]">
@@ -136,19 +138,29 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
                   </li>
                 ))}
               </ul>
-              <span className={`inline-flex items-center rounded-full border ${panelBorder} bg-[#F2F0E9] px-3 py-1 font-mono text-[11px] text-[#6B6B66] dark:bg-[#1A1A1A] dark:text-[#9A9A92]`}>
-                {pillar.plan}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center rounded-full border ${panelBorder} bg-[#F2F0E9] px-3 py-1 font-mono text-[11px] text-[#0a0a0a] dark:bg-[#1A1A1A] dark:text-[#FAF9F6]`}>
+                  {pillar.mechanism.signature}
+                </span>
+                <span className={`inline-flex items-center rounded-full border ${panelBorder} bg-[#F2F0E9] px-3 py-1 font-mono text-[11px] text-[#6B6B66] dark:bg-[#1A1A1A] dark:text-[#9A9A92]`}>
+                  {pillar.plan}
+                </span>
+              </div>
             </div>
 
             <div data-animate data-delay="2" className="rounded-[1.75rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06] shadow-[0_30px_70px_-22px_rgba(24,96,211,0.2)] dark:bg-white/[0.04] dark:ring-white/10">
               <div className="overflow-hidden rounded-[1.25rem] border border-white/[0.07] bg-[#0a0a0a] shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] dark:bg-[#141414]">
                 <div className="flex items-center gap-2 border-b border-white/10 px-5 py-3">
                   <span className="flex items-center gap-2 font-mono text-[11px] text-[#6B6B66]">
-                    <HugeiconsIcon icon={PythonIcon} size={13} />
+                    {/* Not every pillar is configured in code: the alerts pillar
+                        is set up in the dashboard, so it gets no Python icon. */}
+                    {isPython && <HugeiconsIcon icon={PythonIcon} size={13} />}
                     {pillar.mechanism.file}
                   </span>
                 </div>
+                {/* Python highlighting suits every pillar: the dashboard-configured one
+                    is written entirely as `#` comments, which is Python's comment
+                    marker, so it renders as comment text either way. */}
                 <CodeBlock variant="dark" highlighted={syntaxHighlight(pillar.mechanism.code, "python")}>
                   {pillar.mechanism.code}
                 </CodeBlock>
@@ -202,7 +214,7 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
               <span className="text-[#1860D3] dark:text-[#6FA8FF]">Unlimited</span> traces, always free.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[16px] leading-relaxed text-[#6B6B66] dark:text-[#9A9A92]">
-              Start on the free tier and turn on each pillar as your pipeline grows. No code changes required.
+              Tracing, security, evaluation, datasets, and prompts all run on the free tier. Caching and Slack alerts unlock on a paid plan.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <IslandCta to="/signup">Start free</IslandCta>

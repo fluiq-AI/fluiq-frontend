@@ -4,7 +4,7 @@ const SITE = "https://getfluiq.com"
 const ISPART = { "@id": SITE }
 
 /**
- * schema.org BreadcrumbList node (no @context — embed inside an @graph).
+ * schema.org BreadcrumbList node (no @context; embed inside an @graph).
  * Pass an ordered trail of [name, path] pairs, root first.
  */
 function breadcrumb(trail: Array<[string, string]>) {
@@ -38,7 +38,7 @@ const ORG = { "@type": "Organization", name: "Fluiq", url: SITE }
 
 /**
  * Last meaningful content update for docs/examples. Bump this whenever you make
- * a substantive edit — AI answer engines weight fresh content heavily, so the
+ * a substantive edit. AI answer engines weight fresh content heavily, so the
  * dateModified signal directly affects AEO citation odds.
  */
 const DOCS_UPDATED = "2026-06-20"
@@ -117,10 +117,18 @@ export const SEO = {
     },
   },
 
+  faq: {
+    title: "Fluiq FAQ | Pricing, Evaluation, Security & Data",
+    description:
+      "Answers on Fluiq pricing and billing, how evaluation and the judge jury work, what fluiq.secure() checks, bring-your-own-key, and where your trace data lives.",
+    keywords:
+      "Fluiq FAQ, LLM observability FAQ, LLM evaluation pricing, AI security scanning, BYOK LLM evals, LLM tracing questions",
+    path: "/faq",
+  },
   pricing: {
     title: "Fluiq Pricing | Free LLM Observability, Evals & Caching",
     description:
-      "Start free with unlimited traces and 1,000 evals. Upgrade to Team ($299/mo) for unlimited retention & caching, Growth ($599/mo) for security, or Enterprise for SSO & SLAs.",
+      "Start free with unlimited traces, 100 evals and 1,000 security scans. Starter $29/mo, Team $149/mo, Growth $499/mo. Pay per evaluation beyond your allowance, or bring your own provider keys.",
     keywords:
       "Fluiq pricing, LLM monitoring pricing, LLM observability cost, free LLM tracing, AI agent platform pricing, LLM evaluation pricing, LLM security pricing",
     path: "/pricing",
@@ -131,7 +139,7 @@ export const SEO = {
           "@type": "WebPage",
           name: "Fluiq Pricing",
           description:
-            "Fluiq pricing plans: start free with unlimited traces and 1,000 evaluations/month, upgrade to Team ($299/mo), Growth ($599/mo) for security scanning, or Enterprise for VPC, SSO and custom SLAs.",
+            "Fluiq pricing plans: start free with unlimited traces, 100 evaluations and 1,000 security scans a month. Starter $29/mo, Team $149/mo, Growth $499/mo, or Enterprise for VPC, SSO and custom SLAs.",
           url: `${SITE}/pricing`,
           isPartOf: ISPART,
         },

@@ -9,18 +9,23 @@ export const ALL_METRICS = [
   "toxicity",
   "coherence",
   "completeness",
+  // RAG retrieval quality — needs the retrieved context pasted in the drawer.
+  "context_precision",
 ] as const
 
-export const JUDGE_MODELS = [
-  { label: "Haiku 4.5 (fast)", value: "claude-haiku-4-5-20251001" },
-  { label: "Sonnet 4.6 (accurate)", value: "claude-sonnet-4-6" },
-]
+// The compare/judge model list is NOT hardcoded here — it is fetched from
+// GET /api/v1/evaluate/models, which derives it live from the model_prices
+// table. These are only the initial selections a fresh playground tab opens
+// with; if an id is absent from the fetched list it simply stays unselected.
+export const DEFAULT_COMPARE_MODELS = ["claude-haiku-4-5", "claude-sonnet-4-6"]
+export const DEFAULT_JUDGE_MODEL = "claude-haiku-4-5"
 
-export const COMPARE_MODELS = [
-  { label: "Haiku 4.5",  value: "claude-haiku-4-5-20251001" },
-  { label: "Sonnet 4.6", value: "claude-sonnet-4-6" },
-  { label: "Opus 4.7",   value: "claude-opus-4-7" },
-] as const
+/** A chat-capable model as returned by GET /api/v1/evaluate/models. */
+export interface ModelOption {
+  id:       string
+  label:    string
+  provider: string
+}
 
 export const PROMPTS_PAGE_SIZE = 100
 export const VAR_RE = /\{\{([a-zA-Z_][a-zA-Z0-9_]*)\}\}/g
@@ -112,6 +117,7 @@ export interface CompareResult {
   output_tokens: number | null
   cost_usd:      number | null
   error:         string | null
+  metrics?:      MetricResult[] | null
 }
 
 export interface DatasetRef {

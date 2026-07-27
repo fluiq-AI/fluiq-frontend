@@ -16,24 +16,41 @@ import type { DecorationSet } from "@codemirror/view"
 import { EditorState } from "@codemirror/state"
 import { history, defaultKeymap, historyKeymap } from "@codemirror/commands"
 
-// ── {{variable}} highlighter ──────────────────────────────────────────────────
+// ── Template variable highlighters ────────────────────────────────────────────
+// Two placeholder dialects live in the app: prompts written on the Prompts page
+// use {{variable}}, while LLM-as-Judge prompts use Python string.Template
+// ($variable / ${variable}). Callers pick which one to highlight so a literal
+// "$" in a completion prompt is not painted as a placeholder.
 
-const varMatcher = new MatchDecorator({
-  regexp: /\{\{[^}]+\}\}/g,
-  decoration: Decoration.mark({ class: "cm-template-var" }),
-})
+function highlighterFor(matcher: MatchDecorator) {
+  return ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet
+      constructor(view: EditorView) {
+        this.decorations = matcher.createDeco(view)
+      }
+      update(update: ViewUpdate) {
+        this.decorations = matcher.updateDeco(update, this.decorations)
+      }
+    },
+    { decorations: (v) => v.decorations },
+  )
+}
 
-const templateVarHighlighter = ViewPlugin.fromClass(
-  class {
-    decorations: DecorationSet
-    constructor(view: EditorView) {
-      this.decorations = varMatcher.createDeco(view)
-    }
-    update(update: ViewUpdate) {
-      this.decorations = varMatcher.updateDeco(update, this.decorations)
-    }
-  },
-  { decorations: (v) => v.decorations },
+const bracesHighlighter = highlighterFor(
+  new MatchDecorator({
+    regexp: /\{\{[^}]+\}\}/g,
+    decoration: Decoration.mark({ class: "cm-template-var" }),
+  }),
+)
+
+// The braced form is listed first so ${var} is matched whole. An identifier must
+// follow the "$", which keeps prices such as "$100" unhighlighted.
+const dollarHighlighter = highlighterFor(
+  new MatchDecorator({
+    regexp: /\$\{[A-Za-z_]\w*\}|\$[A-Za-z_]\w*/g,
+    decoration: Decoration.mark({ class: "cm-template-var" }),
+  }),
 )
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
@@ -112,6 +129,12 @@ interface PromptEditorProps {
   onChange: (v: string) => void
   placeholder?: string
   className?: string
+  /**
+   * Which placeholder dialect to highlight. `"braces"` (default) highlights
+   * `{{variable}}`; `"dollar"` highlights `$variable` and `${variable}`, which
+   * is what judge prompts and custom scorers use; `"both"` highlights either.
+   */
+  varSyntax?: "braces" | "dollar" | "both"
 }
 
 export function PromptEditor({
@@ -119,6 +142,7 @@ export function PromptEditor({
   onChange,
   placeholder,
   className,
+  varSyntax = "braces",
 }: PromptEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -136,7 +160,9 @@ export function PromptEditor({
       drawSelection(),
       EditorView.lineWrapping,
       keymap.of([...defaultKeymap, ...historyKeymap]),
-      templateVarHighlighter,
+      ...(varSyntax === "dollar" ? [dollarHighlighter] : []),
+      ...(varSyntax === "braces" ? [bracesHighlighter] : []),
+      ...(varSyntax === "both" ? [bracesHighlighter, dollarHighlighter] : []),
       editorTheme,
       EditorView.updateListener.of((update) => {
         if (update.docChanged) {

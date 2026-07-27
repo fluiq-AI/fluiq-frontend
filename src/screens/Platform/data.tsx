@@ -96,6 +96,7 @@ export const PILLARS: Record<PillarSlug, Pillar> = {
       { kicker: "Latency", title: "p50 / p95 / p99", body: "Latency histograms per agent and per model, so you watch the tail, not just the average." },
       { kicker: "Multi-agent", title: "Real DAGs, not flat lists", body: "Fan-outs, joins, and loop-backs across LangGraph, CrewAI, and Google ADK render as the graph your agents actually executed." },
       { kicker: "Live", title: "Real-time streaming", body: "Traces land on the dashboard as calls complete. Watch a run unfold instead of refreshing." },
+      { kicker: "Migration", title: "Bring your history with you", body: "Import existing traces from LangSmith, Langfuse, Phoenix, or Braintrust, so switching does not mean starting from an empty dashboard." },
     ],
     mechanism: {
       heading: "One decorator turns any call into a span.",
@@ -126,7 +127,7 @@ def answer(question: str) -> str:
     summary: "Block attacks, redact PII and secrets.",
     icon: ShieldIcon,
     eyebrow: "Security",
-    plan: "Growth plan and up",
+    plan: "All plans · 1,000 scans free",
     headline: (
       <>
         <span className={cobalt}>Block attacks</span> before they reach your model
@@ -139,6 +140,8 @@ def answer(question: str) -> str:
       { kicker: "Pre-call", title: "Injection and jailbreak blocking", body: "Prompt injection, jailbreaks, and skeleton-key attacks are caught before the model call is made." },
       { kicker: "Redaction", title: "PII and secret stripping", body: "Credit cards, SSNs, emails, IBANs, and high-entropy secrets are redacted from stored traces." },
       { kicker: "Agentic", title: "RAG, tool & multi-agent defense", body: "Detects poisoned retrieved docs, sensitive data exfiltrated through tool calls, tools used outside an allowlist, and attacks that cross agent-to-agent boundaries." },
+      { kicker: "Multimodal", title: "Images scanned too", body: "Media attached to a call is scanned alongside the text, so an attack hidden in an image is not a blind spot." },
+      { kicker: "Tunable", title: "Your own guardrail policies", body: "Set your own categories and risk thresholds per organisation instead of accepting the defaults." },
       { kicker: "Resilient", title: "Fails open by design", body: "A scanner error or plan change never blocks traffic. Security degrades to observe, not to an outage." },
     ],
     mechanism: {
@@ -184,6 +187,7 @@ except FluiqSecurityError as err:
       { kicker: "Server-side", title: "Zero infra to manage", body: "A dedicated cache instance is provisioned for your account. Nothing to deploy or operate." },
       { kicker: "Profiled", title: "Built from real traffic", body: "The cache profile comes from your actual traces, not a generic one-size heuristic." },
       { kicker: "Tunable", title: "TTL and model scope", body: "Set time-to-live and which models are eligible. Observe mode measures savings before you commit." },
+      { kicker: "Insights", title: "See the saving before you cache", body: "Repeated prompts are ranked by what caching them would save, alongside your top-spending models, slowest calls, and where errors cluster." },
     ],
     mechanism: {
       heading: "Measure first. Cache what repeats.",
@@ -227,6 +231,9 @@ answer(question)`,
       { kicker: "Thresholds", title: "Per-metric gates", body: "Set a threshold for each metric. Warn mode logs the score; block mode stops the response." },
       { kicker: "Agentic", title: "Whole-run evaluation", body: "Layered judging of a full agent run: deterministic checks, tool-selection quality, trajectory against the goal, and multi-agent coordination across fan-outs and joins." },
       { kicker: "Jury", title: "Multi-model judge panel", body: "Borderline verdicts convene a jury of different judge models and aggregate their votes, with every member's score and reasoning kept for audit." },
+      { kicker: "Your call", title: "Pick the judge, or the whole jury", body: "Choose which model scores a run, and which models sit on the panel, per evaluation or per dataset batch." },
+      { kicker: "Your keys", title: "Bring your own provider key", body: "Save an OpenAI, Anthropic, or Google key and judge tokens bill to your account at the rate you already negotiated." },
+      { kicker: "Auditable", title: "Every score shows its prompt", body: "Each result carries the exact judge prompt and version that produced it, so a shifting metric is traceable to a prompt change." },
     ],
     mechanism: {
       heading: "The judge runs server-side. Opt in with one call.",
@@ -271,6 +278,7 @@ fluiq.eval(
       { kicker: "Sync", title: "Connect Agents", body: "Link a traced agent to a dataset and every run it has ever made is imported and deduplicated, and future runs keep appending automatically." },
       { kicker: "Batch", title: "Agentic eval & security runs", body: "Re-run agentic evaluation or the full security scan over every example and get a scored report: the regression gate for prompt and model changes." },
       { kicker: "Enriched", title: "Live quality signals", body: "Each example carries its run's eval scores, security verdicts, and cost, backfilled automatically as workers finish." },
+      { kicker: "Regression", title: "Compare any two runs", body: "Diff one batch run against another to see exactly which examples got worse, which is the point of keeping a golden set." },
     ],
     mechanism: {
       heading: "Pin a run once. Evaluate it forever.",
@@ -311,6 +319,7 @@ requests.post(f"{BASE}/datasets/{ds_id}/examples", headers=H, json={
       { kicker: "Templates", title: "{{variable}} injection", body: "Define slots in the editor and fill them at runtime through the SDK." },
       { kicker: "History", title: "Version and restore", body: "Save, browse, and roll back to any past version of a prompt instantly." },
       { kicker: "Deploy", title: "Dev, staging, prod", body: "Promote a prompt per environment and fetch the right snapshot at runtime." },
+      { kicker: "Reuse", title: "A prompt can be a judge", body: "Save a prompt as a judge and reference it by slug from fluiq.eval() to score your evaluations with your own criteria." },
     ],
     mechanism: {
       heading: "Fetch the deployed prompt at runtime.",
@@ -339,7 +348,7 @@ message = p.render(name="Ada", topic="billing")
     summary: "Push eval and security events to Slack.",
     icon: Notification01Icon,
     eyebrow: "Alerts",
-    plan: "Team plan and up",
+    plan: "Paid plans",
     headline: (
       <>
         Get paged the moment <span className={cobalt}>quality or safety</span> slips

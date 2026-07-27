@@ -76,6 +76,23 @@ response = client.chat.completions.create(
 result = response.choices[0].message.content`,
   },
   migrationNote: "Replace the Portkey client with the standard OpenAI client. If you need load-balancing across providers, those are typically handled at the infrastructure layer.",
+  pricing: {
+    asOf: "July 2026",
+    fluiq: [
+      { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
+      { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
+    ],
+    competitor: [
+      { plan: "Open Source", price: "$0", note: "Self-hosted gateway, unlimited requests, you run the infrastructure." },
+      { plan: "Developer", price: "$0", note: "10,000 logged requests, 3-day log retention. Not for production." },
+      { plan: "Production", price: "$49/mo", note: "100,000 logged requests, then $9 per 100k up to 3M. 30-day logs." },
+      { plan: "Enterprise", price: "Custom", note: "10M+ logs, VPC hosting, SSO, custom retention." },
+    ],
+    takeaway:
+      "Portkey is a gateway first: pricing follows logged requests, and its 3-day log retention on the free tier makes it a routing layer with observability attached. Fluiq is not a gateway and does not sit in your request path. Retention is unlimited from $29 and the meter is evaluation volume. Many teams run both, Portkey for routing and Fluiq for whether the output was any good.",
+  },
 }
 
 export default function PortkeyAlternative() {

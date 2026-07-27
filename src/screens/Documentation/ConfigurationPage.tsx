@@ -79,7 +79,7 @@ export default function ConfigurationPage() {
           <div>
             <p className="font-mono text-sm text-foreground">
               mode
-              <Badge variant="outline" className="ml-2">Growth+ required</Badge>
+              <Badge variant="outline" className="ml-2">All plans</Badge>
             </p>
             <p className="mt-1 text-muted-foreground">
               <code className="font-mono text-foreground">"warn"</code>: post-call scan only; security metadata enriched on the trace (default).{" "}

@@ -26,15 +26,16 @@ import { authFetch } from "@/lib/authFetch"
 type BillableTier = Exclude<UserType, "Admin">
 
 // Tier order matches the pricing page; index lookup gives the "next" tier.
-const TIER_ORDER: BillableTier[] = ["Free", "Team", "Growth", "Enterprise"]
+const TIER_ORDER: BillableTier[] = ["Free", "Starter", "Team", "Growth", "Enterprise"]
 
 // Plans a Free user can trial for 5 days, no card required. Mirrors the
 // backend's TRIALABLE_TIERS; keep the two in sync.
-const TRIALABLE_TIERS: BillableTier[] = ["Team", "Growth"]
+const TRIALABLE_TIERS: BillableTier[] = ["Starter", "Team", "Growth"]
 const TRIAL_DAYS = 5
 
 const TIER_ICON: Record<BillableTier, typeof RocketIcon> = {
   Free: RocketIcon,
+  Starter: RocketIcon,
   Team: RocketIcon,
   Growth: ChartLineData01Icon,
   Enterprise: Building01Icon,

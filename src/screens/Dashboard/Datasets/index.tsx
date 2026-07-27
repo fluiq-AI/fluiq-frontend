@@ -4,11 +4,11 @@ import {
   ArrowDown01Icon,
   Database01Icon,
   Delete02Icon,
-  FloppyDiskIcon,
   GridTableIcon,
   Loading03Icon,
   RefreshIcon,
   RoboticIcon,
+  Upload01Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
@@ -21,8 +21,6 @@ import { Button } from "@/components/ui/button"
 import { ConfirmDialog } from "@/components/ConfirmDialog"
 import { Tip } from "@/components/ui/tooltip"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Card,
   CardContent,
@@ -34,18 +32,10 @@ import { Pagination } from "@/components/Pagination"
 import { DatasetRuns } from "./DatasetRuns"
 import { ConnectAgentsModal } from "./ConnectAgentsModal"
 import { TrajectoryView } from "./TrajectoryView"
+import { NewDatasetDialog, type Dataset, type DatasetKind } from "./NewDatasetDialog"
+import { ImportDatasetDialog } from "./ImportDatasetDialog"
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-interface Dataset {
-  dataset_id:    string
-  org_id:        string
-  name:          string
-  description:   string | null
-  example_count: number
-  created_at:    string | null
-  updated_at:    string | null
-}
 
 interface ExampleEnrichment {
   eval?:     Record<string, number>
@@ -89,6 +79,26 @@ function truncate(s: string, max = 120): string {
   return s.length <= max ? s : s.slice(0, max) + "…"
 }
 
+const KIND_LABEL: Record<DatasetKind, string> = {
+  single:  "Single prompt",
+  agentic: "Agentic",
+}
+
+function KindBadge({ kind }: { kind: DatasetKind }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+        kind === "agentic"
+          ? "bg-primary/10 text-primary"
+          : "bg-muted text-muted-foreground",
+      )}
+    >
+      {KIND_LABEL[kind]}
+    </span>
+  )
+}
+
 const EXAMPLES_PAGE_SIZE = 50
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -99,12 +109,9 @@ function Datasets() {
   const [error,         setError]         = useState<string | null>(null)
   const [selectedId,    setSelectedId]    = useState<string | null>(null)
 
-  // Create form
+  // New-dataset dialog
   const [showCreate,    setShowCreate]    = useState(false)
-  const [createName,    setCreateName]    = useState("")
-  const [createDesc,    setCreateDesc]    = useState("")
-  const [createPending, setCreatePending] = useState(false)
-  const [createError,   setCreateError]   = useState<string | null>(null)
+  const [showImport,    setShowImport]    = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -121,26 +128,9 @@ function Datasets() {
 
   useEffect(() => { load() }, [load])
 
-  async function handleCreate() {
-    if (!createName.trim()) return
-    setCreatePending(true)
-    setCreateError(null)
-    try {
-      const row = await authFetch<Dataset>("/api/v1/datasets", {
-        method: "POST",
-        body: { name: createName.trim(), description: createDesc.trim() || null },
-      })
-      setDatasets((prev) => [row, ...prev])
-      setShowCreate(false)
-      setCreateName("")
-      setCreateDesc("")
-      setSelectedId(row.dataset_id)
-      toast.success(`Dataset "${row.name}" created`)
-    } catch (err) {
-      setCreateError(err instanceof ApiError ? err.detail : "Failed to create dataset")
-    } finally {
-      setCreatePending(false)
-    }
+  function handleCreated(row: Dataset) {
+    setDatasets((prev) => [row, ...prev])
+    setSelectedId(row.dataset_id)
   }
 
   async function handleDeleteDataset(datasetId: string) {
@@ -172,7 +162,7 @@ function Datasets() {
     <>
       <DashboardPageHeader
         title="Datasets"
-        description="Curated input/output pairs collected from traces — use them as golden sets for evaluation."
+        description="Curated input/output pairs collected from traces, used as golden sets for evaluation."
       />
       <div className="px-6 py-6">
       <div className="mb-4 flex items-center justify-end gap-2">
@@ -180,11 +170,28 @@ function Datasets() {
           <HugeiconsIcon icon={loading ? Loading03Icon : RefreshIcon} size={14} className={loading ? "animate-spin" : undefined} />
           Refresh
         </Button>
-        <Button size="sm" onClick={() => { setShowCreate((v) => !v); setCreateError(null) }}>
+        <Button variant="outline" size="sm" onClick={() => setShowImport(true)}>
+          <HugeiconsIcon icon={Upload01Icon} size={14} />
+          Import
+        </Button>
+        <Button size="sm" onClick={() => setShowCreate(true)}>
           <HugeiconsIcon icon={Database01Icon} size={14} />
           New Dataset
         </Button>
       </div>
+
+      <NewDatasetDialog
+        open={showCreate}
+        onOpenChange={setShowCreate}
+        onCreated={handleCreated}
+      />
+
+      <ImportDatasetDialog
+        open={showImport}
+        onOpenChange={setShowImport}
+        datasets={datasets}
+        onImported={load}
+      />
 
       {/* ── Error banner ── */}
       {error ? (
@@ -192,59 +199,6 @@ function Datasets() {
           <HugeiconsIcon icon={Alert02Icon} size={14} />
           {error}
         </div>
-      ) : null}
-
-      {/* ── Create form ── */}
-      {showCreate ? (
-        <Card className="mb-6">
-          <CardContent className="pt-5 space-y-3">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
-              New Dataset
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label className="text-xs">Name</Label>
-                <Input
-                  value={createName}
-                  onChange={(e) => setCreateName(e.target.value)}
-                  placeholder="e.g. customer-support-v1"
-                  className="h-8 text-sm"
-                  onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs">
-                  Description
-                  <span className="ml-1 font-normal text-muted-foreground/60">(optional)</span>
-                </Label>
-                <Input
-                  value={createDesc}
-                  onChange={(e) => setCreateDesc(e.target.value)}
-                  placeholder="What is this dataset for?"
-                  className="h-8 text-sm"
-                />
-              </div>
-            </div>
-            {createError ? <p className="text-xs text-destructive">{createError}</p> : null}
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                onClick={handleCreate}
-                disabled={createPending || !createName.trim()}
-              >
-                {createPending ? (
-                  <HugeiconsIcon icon={Loading03Icon} size={13} className="animate-spin" />
-                ) : (
-                  <HugeiconsIcon icon={FloppyDiskIcon} size={13} />
-                )}
-                Create
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
@@ -297,9 +251,12 @@ function Datasets() {
                     {d.example_count}
                   </span>
                 </div>
-                <p className="mt-1 text-[10px] text-muted-foreground/50">
-                  {formatDate(d.created_at)}
-                </p>
+                <div className="mt-1 flex items-center gap-1.5">
+                  <KindBadge kind={d.kind} />
+                  <span className="text-[10px] text-muted-foreground/50">
+                    {formatDate(d.created_at)}
+                  </span>
+                </div>
               </button>
             ))
           )}
@@ -348,6 +305,7 @@ function ExamplesPanel({
   const [showDeleteDataset, setShowDeleteDataset] = useState(false)
   const [deletingDataset, setDeletingDataset] = useState(false)
   const [showConnect,     setShowConnect]     = useState(false)
+  const [tab,             setTab]             = useState<"runs" | "dataset">("runs")
 
   async function confirmDeleteDataset() {
     setDeletingDataset(true)
@@ -411,16 +369,23 @@ function ExamplesPanel({
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base">{dataset.name}</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base">{dataset.name}</CardTitle>
+              <KindBadge kind={dataset.kind} />
+            </div>
             {dataset.description ? (
               <CardDescription className="mt-0.5">{dataset.description}</CardDescription>
             ) : null}
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => setShowConnect(true)}>
-              <HugeiconsIcon icon={RoboticIcon} size={13} />
-              Connect Agents
-            </Button>
+            {/* Connecting an agent imports whole run trajectories — only
+                meaningful for agentic datasets. */}
+            {dataset.kind === "agentic" ? (
+              <Button variant="outline" size="sm" onClick={() => setShowConnect(true)}>
+                <HugeiconsIcon icon={RoboticIcon} size={13} />
+                Connect Agents
+              </Button>
+            ) : null}
             <Button
               variant="outline"
               size="sm"
@@ -450,15 +415,19 @@ function ExamplesPanel({
         </p>
       </CardHeader>
 
-      {/* Batch evaluation / security runs over the whole dataset */}
+      {/* Batch actions, then the Runs / Dataset tabs. DatasetRuns owns the
+          buttons, the tab strip and the Runs tab; the Dataset tab content is
+          rendered below so the examples list stays with its own state. */}
       <div className="border-t border-border/60 px-6 py-4">
-        <p className="mb-2.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/60">
-          Batch evaluation
-        </p>
-        <DatasetRuns dataset={dataset} />
+        <DatasetRuns
+          dataset={dataset}
+          tab={tab}
+          onTabChange={setTab}
+          exampleCount={dataset.example_count}
+        />
       </div>
 
-      <CardContent className="p-0">
+      <CardContent className={cn("p-0", tab !== "dataset" && "hidden")}>
         {loading ? (
           <div className="flex items-center gap-2 px-4 py-6 text-xs text-muted-foreground">
             <HugeiconsIcon icon={Loading03Icon} size={13} className="animate-spin" />
@@ -651,7 +620,7 @@ function ExamplesPanel({
               reload()
               toast.success(`Imported ${n} example${n !== 1 ? "s" : ""} from the agent`)
             } else {
-              toast.success("Agent linked — its future runs will auto-append")
+              toast.success("Agent linked. Its future runs will auto-append")
             }
           }}
         />

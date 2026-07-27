@@ -14,6 +14,7 @@ import { CacheStatsCard } from "./CacheStatsCard"
 import { UsageCard } from "./UsageCard"
 import { SpendingChartCard } from "./SpendingChartCard"
 import { AgenticEvalCard } from "./AgenticEvalCard"
+import { JudgeUsageCard } from "./JudgeUsageCard"
 import { DashboardPageHeader } from "@/components/DashboardPageHeader"
 
 function Overview() {
@@ -68,6 +69,8 @@ function Overview() {
         <CacheStatsCard />
 
         <AgenticEvalCard />
+
+        <JudgeUsageCard />
       </div>
 
       

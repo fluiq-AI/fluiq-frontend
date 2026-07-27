@@ -80,6 +80,23 @@ response = client.chat.completions.create(
 )`,
   },
   migrationNote: "Remove the base_url override and Helicone-Auth header. Restore the standard OpenAI client and add two Fluiq lines at the top.",
+  pricing: {
+    asOf: "July 2026",
+    fluiq: [
+      { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
+      { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
+    ],
+    competitor: [
+      { plan: "Hobby", price: "$0", note: "10,000 requests, 1 GB storage, 7-day retention, 10 logs/min." },
+      { plan: "Pro", price: "$79/mo", note: "Usage-based above the free allowance, 1-month retention." },
+      { plan: "Team", price: "$799/mo", note: "Higher ingestion ceiling, 3-month retention." },
+      { plan: "Enterprise", price: "Custom", note: "Retention forever, bulk discounts." },
+    ],
+    takeaway:
+      "Helicone prices by logged request and caps retention hard on the lower tiers, which is the gateway-and-logging shape rather than an evaluation product. Fluiq keeps traces unlimited and retention unlimited from $29, and charges for evaluation instead. If all you need is a proxy with a log view, Helicone is cheaper; if you need to know whether the agent was actually right, that is not what request pricing measures.",
+  },
 }
 
 export default function HeliconeAlternative() {
