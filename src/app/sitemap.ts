@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next"
 import { API_BASE_URL } from "@/lib/api"
 import { INTEGRATIONS } from "@/pages/Integrations/data"
 
-const SITE = "https://getfluiq.com"
+import { headers } from "next/headers"
 
 // Regenerate hourly so newly published blog posts appear without a redeploy.
 export const revalidate = 3600
@@ -88,15 +88,17 @@ async function fetchBlogSlugs(): Promise<string[]> {
   }
 }
 
-// Cross-host entries (subdomains). Google only honors these when the host is
-// verified under the same Search Console property — a domain property for
-// getfluiq.com covers polygate.getfluiq.com.
-const SUBDOMAIN_URLS: { url: string; changeFrequency: ChangeFreq; priority: number }[] = [
-  { url: "https://polygate.getfluiq.com", changeFrequency: "monthly", priority: 0.8 },
-  { url: "https://infrager.getfluiq.com", changeFrequency: "monthly", priority: 0.8 },
-]
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  
+  const host = (await headers()).get("host") ?? "getfluiq.com"
+  const protocol = host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https"
+  const SITE = `${protocol}://${host}`
+
+  const SUBDOMAIN_URLS: { url: string; changeFrequency: ChangeFreq; priority: number }[] = [
+    { url: `https://polygate.${host}`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `https://infrager.${host}`, changeFrequency: "monthly", priority: 0.8 },
+  ]
+
   const lastModified = new Date()
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((e) => ({
