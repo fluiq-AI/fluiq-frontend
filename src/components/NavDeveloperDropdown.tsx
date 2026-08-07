@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon } from "@hugeicons/core-free-icons"
+import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon } from "@hugeicons/core-free-icons"
 
 const NAV_DEVELOPER = [
   {
@@ -23,6 +23,13 @@ const NAV_DEVELOPER = [
     to: "/examples",
     description: "Copy-paste integration snippets",
     icon: SourceCodeIcon,
+  },
+  {
+    name: "Response Gate Demo",
+    slug: "response-gate-demo",
+    to: "/response-gate-demo",
+    description: "See what an LLM leaks after it says no",
+    icon: ShieldKeyIcon,
   },
   {
     name: "LLM Cost Calculator",
