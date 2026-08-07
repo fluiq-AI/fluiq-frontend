@@ -562,7 +562,10 @@ export default function ResponseGateDemo() {
           <p className="mt-3 text-slate-600 dark:text-slate-400">
             Two lines. The gate reads the reply before your user does.
           </p>
-          <pre className="mx-auto mt-6 w-full max-w-md overflow-x-auto rounded-xl bg-slate-900 px-5 py-4 text-left font-mono text-[13px] leading-relaxed text-slate-100 dark:bg-black/50">
+          {/* Dark-on-dark needs its own edge, so this borrows the hero editor's
+              treatment: a hairline border plus an inset top highlight. A plain
+              translucent fill disappears into the page background. */}
+          <pre className="mx-auto mt-6 w-full max-w-md overflow-x-auto rounded-xl border border-transparent bg-slate-900 px-5 py-4 text-left font-mono text-[13px] leading-relaxed text-slate-100 dark:border-white/[0.07] dark:bg-[#0C0C0C] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.14)]">
             <code>{`import fluiq\n\nfluiq.instrument()\nfluiq.secure(mode="block")`}</code>
           </pre>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
