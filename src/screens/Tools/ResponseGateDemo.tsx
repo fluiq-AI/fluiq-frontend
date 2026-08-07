@@ -11,6 +11,7 @@ import {
   Cancel01Icon,
   FlashIcon,
   Loading03Icon,
+  ArrowRight02Icon,
 } from "@hugeicons/core-free-icons"
 import { IslandCta } from "@/components/IslandCta"
 import { SiteFooter } from "@/components/SiteFooter"
@@ -216,50 +217,96 @@ export default function ResponseGateDemo() {
       {/* Scoreboard */}
       {scenarios.length > 0 && (
         <section className="px-6 pb-14 mt-10">
+          <p className="mx-auto mb-3 max-w-5xl px-1 text-[13px] text-slate-500 dark:text-slate-400">
+            Pick any row to read the full exchange and what the gate made of it.
+          </p>
           <div className="mx-auto max-w-5xl overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.03]">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[560px] text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200/70 text-[11px] uppercase tracking-wide text-slate-500 dark:border-white/10 dark:text-slate-400">
-                    <th className="px-5 py-3 font-semibold">Attack</th>
+                    <th className="py-3 pl-5 pr-5 font-semibold">Attack</th>
                     <th className="px-5 py-3 font-semibold">Model alone</th>
                     <th className="px-5 py-3 font-semibold">+ fluiq.secure()</th>
+                    <th className="w-24 py-3 pr-5 text-right font-semibold">
+                      <span className="sr-only">Open transcript</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {scenarios.map((s, i) => (
-                    <tr
-                      key={s.key}
-                      onClick={() => setActive(i)}
-                      className={`cursor-pointer border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-900/[0.03] dark:border-white/5 dark:hover:bg-white/[0.04] ${
-                        i === active ? "bg-slate-900/[0.04] dark:bg-white/[0.06]" : ""
-                      }`}
-                    >
-                      <td className="px-5 py-3.5 font-medium">{s.label}</td>
-                      <td className="px-5 py-3.5">
-                        {s.model_withheld ? (
-                          <span className="text-emerald-600 dark:text-emerald-400">
-                            withheld the secret
+                  {scenarios.map((s, i) => {
+                    const on = i === active
+                    return (
+                      <tr
+                        key={s.key}
+                        onClick={() => setActive(i)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            setActive(i)
+                          }
+                        }}
+                        tabIndex={0}
+                        aria-current={on ? "true" : undefined}
+                        className={`group/row cursor-pointer border-b border-slate-100 outline-none transition-colors last:border-0 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-900/40 dark:border-white/5 dark:focus-visible:ring-white/40 ${
+                          on
+                            ? "bg-slate-900/[0.05] dark:bg-white/[0.07]"
+                            : "hover:bg-slate-900/[0.045] dark:hover:bg-white/[0.06]"
+                        }`}
+                      >
+                        {/* Left rail: solid on the open row, faint on hover. Lives on the
+                            cell rather than the row because <tr> borders are unreliable. */}
+                        <td
+                          className={`py-3.5 pl-4 pr-5 font-medium ${
+                            on
+                              ? "border-l-[3px] border-slate-900 dark:border-white"
+                              : "border-l-[3px] border-transparent group-hover/row:border-slate-300 dark:group-hover/row:border-white/25"
+                          }`}
+                        >
+                          {s.label}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          {s.model_withheld ? (
+                            <span className="text-emerald-600 dark:text-emerald-400">
+                              withheld the secret
+                            </span>
+                          ) : (
+                            <span className="font-semibold text-red-600 dark:text-red-400">
+                              leaked
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3.5">
+                          {s.gate.blocked ? (
+                            <span className="font-semibold text-red-600 dark:text-red-400">
+                              blocked at {s.gate.blocked_at}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 dark:text-slate-400">
+                              nothing to block
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 pr-5 text-right">
+                          <span
+                            className={`inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] font-medium transition-opacity ${
+                              on
+                                ? "text-slate-900 opacity-100 dark:text-slate-100"
+                                : "text-slate-500 opacity-0 group-hover/row:opacity-100 group-focus-visible/row:opacity-100 dark:text-slate-400"
+                            }`}
+                          >
+                            {on ? "Showing" : "View"}
+                            <HugeiconsIcon
+                              icon={ArrowRight02Icon}
+                              size={14}
+                              strokeWidth={2}
+                              className="transition-transform group-hover/row:translate-x-0.5"
+                            />
                           </span>
-                        ) : (
-                          <span className="font-semibold text-red-600 dark:text-red-400">
-                            leaked
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        {s.gate.blocked ? (
-                          <span className="font-semibold text-red-600 dark:text-red-400">
-                            blocked at {s.gate.blocked_at}
-                          </span>
-                        ) : (
-                          <span className="text-slate-500 dark:text-slate-400">
-                            nothing to block
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
