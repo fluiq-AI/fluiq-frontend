@@ -1,69 +1,131 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon, ChartLineData01Icon } from "@hugeicons/core-free-icons"
+import { Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon, ChartLineData01Icon, News01Icon } from "@hugeicons/core-free-icons"
 
-const NAV_DEVELOPER = [
+type NavItem = {
+  name: string
+  slug: string
+  description: string
+  icon: React.ComponentProps<typeof HugeiconsIcon>["icon"]
+} & ({ to: string; href?: never } | { to?: never; href: string })
+
+/** Three columns: what to read, what to build against, what to play with.
+ *
+ * The flat list this replaced put a hosted marketing page, the SDK reference and
+ * four standalone tools in one run of eight rows, so the only way to find
+ * anything was to read all of it. Grouping costs the width of a wider panel,
+ * which is affordable because this nav is desktop-only.
+ */
+const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
   {
-    name: "FAQ",
-    slug: "faq",
-    to: "/faq",
-    description: "Pricing, evals, security & data",
-    icon: HelpCircleIcon,
+    heading: "Learn",
+    items: [
+      {
+        name: "Blogs",
+        slug: "blog",
+        to: "/blog",
+        description: "Writing on evals, security & cost",
+        icon: News01Icon,
+      },
+      {
+        name: "FAQ",
+        slug: "faq",
+        to: "/faq",
+        description: "Pricing, evals, security & data",
+        icon: HelpCircleIcon,
+      },
+      {
+        name: "Guardrail Benchmark",
+        slug: "benchmark",
+        to: "/benchmark",
+        description: "Eight guardrails on public data",
+        icon: ChartLineData01Icon,
+      },
+    ],
   },
   {
-    name: "Fluiq Docs",
-    slug: "documentation",
-    to: "/documentation",
-    description: "Guides, concepts & SDK reference",
-    icon: Book02Icon,
+    heading: "Build",
+    items: [
+      {
+        name: "Fluiq Docs",
+        slug: "documentation",
+        to: "/documentation",
+        description: "Guides, concepts & SDK reference",
+        icon: Book02Icon,
+      },
+      {
+        name: "Code Samples",
+        slug: "examples",
+        to: "/examples",
+        description: "Copy-paste integration snippets",
+        icon: SourceCodeIcon,
+      },
+    ],
   },
   {
-    name: "Code Samples",
-    slug: "examples",
-    to: "/examples",
-    description: "Copy-paste integration snippets",
-    icon: SourceCodeIcon,
-  },
-  {
-    name: "Guardrail Benchmark",
-    slug: "benchmark",
-    to: "/benchmark",
-    description: "9 guardrails measured on public datasets",
-    icon: ChartLineData01Icon,
-  },
-  {
-    name: "Response Gate Demo",
-    slug: "response-gate-demo",
-    to: "/response-gate-demo",
-    description: "See what an LLM leaks after it says no",
-    icon: ShieldKeyIcon,
-  },
-  {
-    name: "LLM Cost Calculator",
-    slug: "llm-cost-calculator",
-    to: "/llm-cost-calculator",
-    description: "Compare OpenAI, Claude & Gemini pricing",
-    icon: Calculator01Icon,
-  },
-  {
-    name: "polygate",
-    slug: "polygate",
-    href: "https://polygate.getfluiq.com",
-    description: "Open-source unified LLM client",
-    icon: GithubIcon,
-  },
-  {
-    name: "Infrager",
-    slug: "infrager",
-    to: "/infrager",
-    description: "Cloud diagrams to secure Terraform",
-    icon: CloudServerIcon,
+    heading: "Tools",
+    items: [
+      {
+        name: "Response Gate Demo",
+        slug: "response-gate-demo",
+        to: "/response-gate-demo",
+        description: "What an LLM leaks after it says no",
+        icon: ShieldKeyIcon,
+      },
+      {
+        name: "LLM Cost Calculator",
+        slug: "llm-cost-calculator",
+        to: "/llm-cost-calculator",
+        description: "Compare OpenAI, Claude & Gemini",
+        icon: Calculator01Icon,
+      },
+      {
+        name: "polygate",
+        slug: "polygate",
+        href: "https://polygate.getfluiq.com",
+        description: "Open-source unified LLM client",
+        icon: GithubIcon,
+      },
+      {
+        name: "Infrager",
+        slug: "infrager",
+        to: "/infrager",
+        description: "Cloud diagrams to secure Terraform",
+        icon: CloudServerIcon,
+      },
+    ],
   },
 ]
 
 interface Props {
   /** Class names applied to the trigger button. Default matches the marketing-page nav style. */
   triggerClassName?: string
+}
+
+const ITEM_CLASS = `flex items-start gap-2.5 rounded-xl px-2.5 py-2
+                    hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A]
+                    transition-colors`
+
+function ItemBody({ item }: { item: NavItem }) {
+  return (
+    <>
+      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg
+                       border border-[#E5E1D6] dark:border-[#2A2A2A]
+                       bg-white dark:bg-[#0A0A0A]
+                       text-[#1860D3] dark:text-[#6FA8FF]">
+        <HugeiconsIcon icon={item.icon} size={16} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[13px] font-medium
+                         text-[#0a0a0a] dark:text-[#FAF9F6]">
+          {item.name}
+        </span>
+        <span className="block text-[12px] leading-snug text-[#6B6B66] dark:text-[#9A9A92]">
+          {item.description}
+        </span>
+      </span>
+    </>
+  )
 }
 
 export function NavDeveloperDropdown({
@@ -90,57 +152,36 @@ export function NavDeveloperDropdown({
                       group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto
                       group-focus-within:visible group-focus-within:opacity-100 group-focus-within:pointer-events-auto
                       transition-all duration-150">
-        <div className="w-[300px] rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A]
-                        bg-[#FAF9F6] dark:bg-[#111111] p-3"
+        <div className="w-[720px] max-w-[calc(100vw-2rem)]
+                        rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A]
+                        bg-[#FAF9F6] dark:bg-[#111111] p-4"
           style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)" }}>
 
-          <ul className="space-y-0.5">
-            {NAV_DEVELOPER.map((item) => {
-              const itemClass = `flex items-start gap-3 rounded-xl px-3 py-2.5
-                             hover:bg-[#F2F0E9] dark:hover:bg-[#1A1A1A]
-                             transition-colors group/item`
-              const inner = (
-                <>
-                  <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg
-                                   border border-[#E5E1D6] dark:border-[#2A2A2A]
-                                   bg-white dark:bg-[#0A0A0A]
-                                   text-[#1860D3] dark:text-[#6FA8FF]">
-                    <HugeiconsIcon icon={item.icon} size={16} />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[13px] font-medium
-                                     text-[#0a0a0a] dark:text-[#FAF9F6]">
-                      {item.name}
-                    </span>
-                    <span className="block text-[12px] text-[#6B6B66] dark:text-[#9A9A92]">
-                      {item.description}
-                    </span>
-                  </span>
-                  <HugeiconsIcon
-                    icon={ArrowRight02Icon}
-                    size={13}
-                    className="ml-auto mt-1.5 shrink-0 text-[#9A9A92]
-                               opacity-0 -translate-x-1
-                               group-hover/item:opacity-100 group-hover/item:translate-x-0
-                               transition-all"
-                  />
-                </>
-              )
-              return (
-                <li key={item.slug}>
-                  {"href" in item ? (
-                    <a href={item.href} target="_blank" rel="noopener noreferrer" className={itemClass}>
-                      {inner}
-                    </a>
-                  ) : (
-                    <Link to={item.to} className={itemClass}>
-                      {inner}
-                    </Link>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
+          <div className="grid grid-cols-3 gap-x-3">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.heading}>
+                <p className="px-2.5 pb-1.5 text-[10.5px] font-semibold uppercase tracking-wide
+                              text-[#9A9A92] dark:text-[#6B6B66]">
+                  {group.heading}
+                </p>
+                <ul className="space-y-0.5">
+                  {group.items.map((item) => (
+                    <li key={item.slug}>
+                      {item.href ? (
+                        <a href={item.href} target="_blank" rel="noopener noreferrer" className={ITEM_CLASS}>
+                          <ItemBody item={item} />
+                        </a>
+                      ) : (
+                        <Link to={item.to} className={ITEM_CLASS}>
+                          <ItemBody item={item} />
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
