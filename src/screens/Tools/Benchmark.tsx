@@ -19,7 +19,14 @@ import data from "@/lib/benchmarkData.json"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
-type Row = { name: string; family: string; recall: number; false_alarm: number; f1: number }
+type Row = {
+  name: string
+  slug: string
+  family: string
+  recall: number
+  false_alarm: number
+  f1: number
+}
 type Corpus = {
   key: string
   title: string
@@ -31,22 +38,171 @@ type Corpus = {
   block: number
   allow: number
   results: Row[]
+  secondary: Row[]
 }
 
 const CORPORA = data.corpora as Corpus[]
 const TOTAL_CASES = CORPORA.reduce((n, c) => n + c.cases, 0)
 
-/** Display name for the results table.
+/** Vendor logos, keyed by the slug the benchmark generator emits.
  *
- * The adapters are named after the code path they exercise, which is right for
- * the harness and needlessly internal here. Applied at render rather than in the
- * data so regenerating results does not undo it. The qualifiers stay: several
- * corpora list two Fluiq entries (the worker gate and the API fast path, which
- * are different endpoints with different scores) and they would otherwise
- * collide into two identical rows.
+ * Empty on purpose. We do not vendor competitors' trademarks into this
+ * repository, so every row falls back to a neutral monogram until a file is
+ * added. Dropping an SVG at public/logos/<slug>.svg and adding the entry here is
+ * the whole change; the same slug drives the marks in the PDF report.
  */
-function displayName(name: string): string {
-  return name.replace(/^fluiq\.secure/, "fluiq")
+const LOGOS: Record<string, string> = {}
+
+const MONOGRAM: Record<string, string> = {
+  fluiq: "F",
+  "llm-guard": "LG",
+  presidio: "Pr",
+  "nemo-guardrails": "NV",
+  "aws-comprehend": "AWS",
+  "lakera-guard": "Lk",
+  nightfall: "NF",
+  "regex-baseline": "re",
+}
+
+function Mark({ slug, ours }: { slug: string; ours: boolean }) {
+  const src = LOGOS[slug]
+  if (src) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt="" aria-hidden className="h-4 w-4 shrink-0 object-contain" />
+  }
+  return (
+    <span
+      aria-hidden
+      className={`inline-flex h-4 shrink-0 items-center justify-center rounded-[3px] px-1 text-[8.5px] font-bold leading-none tracking-tight ${
+        ours
+          ? "bg-[#1860D3] text-white dark:bg-[#6FA8FF] dark:text-[#0A0A0B]"
+          : "bg-slate-900/[0.08] text-slate-500 dark:bg-white/10 dark:text-slate-400"
+      }`}
+    >
+      {MONOGRAM[slug] ?? "?"}
+    </span>
+  )
+}
+
+/** One measure, one panel.
+ *
+ * Recall and false alarm both run 0 to 100% and point in opposite directions, so
+ * they get a panel each rather than a shared axis where the taller bar would read
+ * as the better product. Both panels keep the table's row order, which makes the
+ * pair readable across as well as down. Fluiq is the accent and every competitor
+ * is the same neutral grey: colour marks who we are, not who won, and the product
+ * name sits on every row so colour never carries identity by itself.
+ */
+function BarPanel({
+  title,
+  hint,
+  rows,
+  pick,
+  corpus,
+}: {
+  title: string
+  hint: string
+  rows: Row[]
+  pick: (r: Row) => number
+  corpus: Corpus
+}) {
+  return (
+    <div>
+      <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {title}{" "}
+        <span className="font-normal normal-case tracking-normal opacity-70">({hint})</span>
+      </h3>
+      {rows.map((r) => {
+        const ours = r.family === "Fluiq"
+        const v = pick(r)
+        return (
+          <div
+            key={r.name}
+            className="mb-3.5 last:mb-0"
+            title={`${r.name} on ${corpus.title}: recall ${r.recall.toFixed(
+              1,
+            )}%, false alarm ${r.false_alarm.toFixed(1)}%, F1 ${r.f1.toFixed(1)}%`}
+          >
+            <div
+              className={`mb-1.5 flex items-center gap-1.5 text-[12px] ${
+                ours
+                  ? "font-semibold text-slate-900 dark:text-slate-100"
+                  : "text-slate-500 dark:text-slate-400"
+              }`}
+            >
+              <Mark slug={r.slug} ours={ours} />
+              <span className="truncate">{r.name}</span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="h-2.5 flex-1 rounded-[4px] bg-slate-900/[0.06] dark:bg-white/[0.08]">
+                {/* Width comes from an inline style rather than an animation, so
+                    the bar is the right length in the server-rendered HTML.
+                    Growing it from zero on mount looks better but makes the
+                    score depend on JavaScript having run, and a bar stuck at
+                    zero misreports the result instead of just missing an
+                    effect. The min-width floor keeps a 0.7% bar visible; zero
+                    still has to render as nothing, or the regex control's 0.0%
+                    recall would read as a small score. */}
+                <div
+                  className={`h-full rounded-[4px] ${
+                    ours ? "bg-[#1860D3] dark:bg-[#6FA8FF]" : "bg-[#8B939E] dark:bg-[#6B7280]"
+                  }`}
+                  style={{ width: `${v}%`, minWidth: v > 0 ? 3 : 0 }}
+                />
+              </div>
+              <span
+                className={`w-11 shrink-0 text-right text-[12px] tabular-nums ${
+                  ours
+                    ? "font-semibold text-slate-900 dark:text-slate-100"
+                    : "text-slate-500 dark:text-slate-400"
+                }`}
+              >
+                {v.toFixed(1)}%
+              </span>
+            </div>
+          </div>
+        )
+      })}
+      <div className="mt-3 flex justify-between border-t border-slate-200/70 pt-1.5 text-[10px] text-slate-400 dark:border-white/10 dark:text-slate-500">
+        <span>0%</span>
+        <span>100%</span>
+      </div>
+    </div>
+  )
+}
+
+function ScoreChart({ corpus }: { corpus: Corpus }) {
+  return (
+    <div>
+      <div className="grid gap-9 sm:grid-cols-2 sm:gap-12">
+        <BarPanel
+          title="Recall"
+          hint="higher is better"
+          rows={corpus.results}
+          pick={(r) => r.recall}
+          corpus={corpus}
+        />
+        <BarPanel
+          title="False alarm"
+          hint="lower is better"
+          rows={corpus.results}
+          pick={(r) => r.false_alarm}
+          corpus={corpus}
+        />
+      </div>
+      <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-slate-500 dark:text-slate-400">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-[3px] bg-[#1860D3] dark:bg-[#6FA8FF]" />
+          Fluiq
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-[3px] bg-[#8B939E] dark:bg-[#6B7280]" />
+          Everything else
+        </span>
+        <span>Rows are ordered by F1, best first, and are identical in both panels.</span>
+      </div>
+    </div>
+  )
 }
 
 const FAMILY_TONE: Record<string, string> = {
@@ -80,7 +236,7 @@ function ResultTable({ corpus }: { corpus: Corpus }) {
                 }`}
               >
                 <td className="py-3 pl-5 pr-4">
-                  <code className="font-mono text-[12.5px]">{displayName(r.name)}</code>
+                  <code className="font-mono text-[12.5px]">{r.name}</code>
                 </td>
                 <td className="px-4 py-3">
                   <span
@@ -136,7 +292,7 @@ export default function Benchmark() {
               We benchmarked the guardrails. We came second.
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-pretty text-lg leading-relaxed text-slate-600 dark:text-slate-400">
-              Nine guardrails, {TOTAL_CASES} cases, four corpora. Two of those corpora are public
+              Eight guardrails, {TOTAL_CASES} cases, four corpora. Two of those corpora are public
               datasets nobody here curated. Everything is published: the harness, the attack
               corpus, the adapters, and every case each product missed.
             </p>
@@ -157,7 +313,7 @@ export default function Benchmark() {
       </section>
 
       {/* Disclosure, placed first rather than buried */}
-      <section className="px-6 pb-12">
+      <section className="px-6 pb-12 mt-10">
         <div className="mx-auto max-w-5xl rounded-2xl border-l-[3px] border-red-500 bg-red-500/[0.04] px-6 py-5 dark:bg-red-500/[0.07]">
           <p className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             <HugeiconsIcon
@@ -216,14 +372,43 @@ export default function Benchmark() {
             · licence {corpus.licence}
           </p>
 
-          <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-            <ResultTable corpus={corpus} />
+          <div className="mt-6 rounded-2xl border border-slate-200/70 bg-white/70 p-6 shadow-sm sm:p-8 dark:border-white/10 dark:bg-white/[0.03]">
+            <ScoreChart key={corpus.key} corpus={corpus} />
           </div>
-          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+
+          <p className="mt-4 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
             Recall is what it catches. False alarm is how often it blocks text that should have gone
             out. Neither means anything on its own, because a guardrail that blocks everything
-            scores 100% recall and gets switched off in week two.
+            scores 100% recall and gets switched off in week two. F1 in the table below combines
+            them.
           </p>
+
+          <details className="group mt-4">
+            <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[13px] font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-900 dark:text-slate-400 dark:decoration-white/25 dark:hover:text-slate-100">
+              Show the numbers as a table
+            </summary>
+            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-white/70 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+              <ResultTable corpus={corpus} />
+            </div>
+          </details>
+
+          {corpus.secondary.length > 0 && (
+            <p className="mt-5 max-w-3xl text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              Every contestant gets one row, ours included. We measured more than one configuration
+              of our own gate, and the one that ships as{" "}
+              <code className="font-mono text-[11px]">fluiq.secure()</code> is the one that competes
+              here, because nobody runs Lakera twice with its model switched off. The others score
+              lower, so they are published rather than quietly dropped:{" "}
+              {corpus.secondary.map((r, i) => (
+                <span key={r.name}>
+                  {i > 0 && ", "}
+                  <code className="font-mono text-[11px]">{r.name}</code> at {r.recall.toFixed(1)}%
+                  recall and {r.false_alarm.toFixed(1)}% false alarms
+                </span>
+              ))}
+              . The full report has the breakdown.
+            </p>
+          )}
         </div>
       </section>
 
