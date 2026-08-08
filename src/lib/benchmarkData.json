@@ -179,6 +179,13 @@
           "f1": 54.5
         },
         {
+          "name": "fluiq.secure (worker check)",
+          "family": "Fluiq",
+          "recall": 35.3,
+          "false_alarm": 0.7,
+          "f1": 52.0
+        },
+        {
           "name": "fluiq.secure (input)",
           "family": "Fluiq",
           "recall": 13.3,
@@ -220,11 +227,25 @@
           "f1": 69.4
         },
         {
+          "name": "fluiq.secure (worker check)",
+          "family": "Fluiq",
+          "recall": 53.3,
+          "false_alarm": 6.0,
+          "f1": 67.0
+        },
+        {
           "name": "fluiq.secure (input)",
           "family": "Fluiq",
           "recall": 42.0,
           "false_alarm": 5.3,
           "f1": 57.0
+        },
+        {
+          "name": "regex-baseline",
+          "family": "Control",
+          "recall": 0.7,
+          "false_alarm": 0.0,
+          "f1": 1.3
         }
       ]
     }
