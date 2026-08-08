@@ -44,6 +44,27 @@ type Corpus = {
 const CORPORA = data.corpora as Corpus[]
 const TOTAL_CASES = CORPORA.reduce((n, c) => n + c.cases, 0)
 
+/** The day the run happened, as an ISO date, straight from the generator.
+ *
+ * Every number on this page is dated because guardrails change underneath you:
+ * a vendor ships a new model, we ship a new layer, and a result quoted without
+ * a date is worthless. Re-running make_report.py stamps today and rewrites this
+ * file, so the page cannot claim to be fresher than the measurements.
+ */
+const MEASURED = data.generated as string
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+]
+
+/** Formatted without toLocaleDateString, whose output depends on the runtime's
+ *  locale and would differ between the server render and the browser. */
+function formatDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number)
+  return `${d} ${MONTHS[m - 1]} ${y}`
+}
+
 /** Vendor logos, keyed by the slug the benchmark generator emits.
  *
  * Empty on purpose. We do not vendor competitors' trademarks into this
@@ -308,6 +329,10 @@ export default function Benchmark() {
                 Try the live demo
               </IslandCta>
             </div>
+            <p className="mt-6 text-[13px] text-slate-500 dark:text-slate-400">
+              Measured <time dateTime={MEASURED}>{formatDate(MEASURED)}</time>. Guardrails change,
+              so every number here is dated and gets restated when the run is repeated.
+            </p>
           </motion.div>
         </div>
       </section>
@@ -369,7 +394,8 @@ export default function Benchmark() {
             ) : (
               corpus.source
             )}{" "}
-            · licence {corpus.licence}
+            · licence {corpus.licence} · measured{" "}
+            <time dateTime={MEASURED}>{formatDate(MEASURED)}</time>
           </p>
 
           <div className="mt-6 rounded-2xl border border-slate-200/70 bg-white/70 p-6 shadow-sm sm:p-8 dark:border-white/10 dark:bg-white/[0.03]">

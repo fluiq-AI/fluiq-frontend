@@ -69,7 +69,7 @@ const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
         name: "Response Gate Demo",
         slug: "response-gate-demo",
         to: "/response-gate-demo",
-        description: "What an LLM leaks after it says no",
+        description: "What an LLM leaks while refusing",
         icon: ShieldKeyIcon,
       },
       {
@@ -90,7 +90,7 @@ const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
         name: "Infrager",
         slug: "infrager",
         to: "/infrager",
-        description: "Cloud diagrams to secure Terraform",
+        description: "Diagrams to secure Terraform",
         icon: CloudServerIcon,
       },
     ],
@@ -152,7 +152,10 @@ export function NavDeveloperDropdown({
                       group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto
                       group-focus-within:visible group-focus-within:opacity-100 group-focus-within:pointer-events-auto
                       transition-all duration-150">
-        <div className="w-[720px] max-w-[calc(100vw-2rem)]
+        {/* Wide enough that the descriptions sit on one line each. At 720px
+            every one of them wrapped, which doubled the row height and made
+            three short columns read as one tall block. */}
+        <div className="w-[880px] max-w-[calc(100vw-2rem)]
                         rounded-2xl border border-[#E5E1D6] dark:border-[#2A2A2A]
                         bg-[#FAF9F6] dark:bg-[#111111] p-4"
           style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)" }}>

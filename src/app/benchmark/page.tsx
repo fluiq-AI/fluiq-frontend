@@ -2,12 +2,18 @@ import { buildMetadata } from "@/lib/seo"
 import { JsonLd } from "@/components/JsonLd"
 import { breadcrumbLd } from "@/lib/seo-pages"
 import Component from "@/pages/Tools/Benchmark"
+import benchmarkData from "@/lib/benchmarkData.json"
 
 const SITE = "https://getfluiq.com"
 const PATH = "/benchmark"
 
+// Read from the generated results rather than typed here, so re-running the
+// benchmark restates the date in the structured data too. A dated Dataset is
+// also what search engines use to decide the page is not stale.
+const MEASURED = benchmarkData.generated
+
 export const metadata = buildMetadata({
-  title: "Output Guardrail Benchmark: 9 Guardrails, 949 Cases",
+  title: "Output Guardrail Benchmark: 8 Guardrails, 949 Cases",
   description:
     "An open benchmark of LLM output guardrails and prompt-injection detectors. Fluiq, LLM Guard, Presidio, NeMo, AWS Comprehend, Lakera and Nightfall measured on public datasets. Harness, corpora and results published.",
   keywords:
@@ -25,6 +31,9 @@ const datasetLd = {
   license: "https://opensource.org/licenses/MIT",
   creator: { "@type": "Organization", name: "Fluiq", url: SITE },
   isAccessibleForFree: true,
+  datePublished: MEASURED,
+  dateModified: MEASURED,
+  temporalCoverage: MEASURED,
   keywords: [
     "LLM guardrails",
     "prompt injection",
