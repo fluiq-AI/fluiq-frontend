@@ -36,6 +36,19 @@ type Corpus = {
 const CORPORA = data.corpora as Corpus[]
 const TOTAL_CASES = CORPORA.reduce((n, c) => n + c.cases, 0)
 
+/** Display name for the results table.
+ *
+ * The adapters are named after the code path they exercise, which is right for
+ * the harness and needlessly internal here. Applied at render rather than in the
+ * data so regenerating results does not undo it. The qualifiers stay: several
+ * corpora list two Fluiq entries (the worker gate and the API fast path, which
+ * are different endpoints with different scores) and they would otherwise
+ * collide into two identical rows.
+ */
+function displayName(name: string): string {
+  return name.replace(/^fluiq\.secure/, "fluiq")
+}
+
 const FAMILY_TONE: Record<string, string> = {
   Fluiq: "bg-slate-900/[0.06] text-slate-700 dark:bg-white/10 dark:text-slate-200",
   "Open source": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
@@ -67,7 +80,7 @@ function ResultTable({ corpus }: { corpus: Corpus }) {
                 }`}
               >
                 <td className="py-3 pl-5 pr-4">
-                  <code className="font-mono text-[12.5px]">{r.name}</code>
+                  <code className="font-mono text-[12.5px]">{displayName(r.name)}</code>
                 </td>
                 <td className="px-4 py-3">
                   <span
