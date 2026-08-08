@@ -19,6 +19,7 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
 
   // Free tools (linkable assets)
+  { path: "/benchmark", changeFrequency: "monthly", priority: 0.9 },
   { path: "/response-gate-demo", changeFrequency: "monthly", priority: 0.9 },
   { path: "/llm-cost-calculator", changeFrequency: "monthly", priority: 0.8 },
   { path: "/infrager", changeFrequency: "monthly", priority: 0.8 },

@@ -1,0 +1,232 @@
+{
+  "generated": "2026-08-07",
+  "corpora": [
+    {
+      "key": "output_adversarial",
+      "title": "Output leakage: adversarial suite",
+      "source": "Written for this benchmark",
+      "source_url": null,
+      "licence": "MIT",
+      "blurb": "Leak shapes a PII corpus does not contain: obfuscated identifiers, credential formats, injected instructions echoed into output, and refusals that leak while refusing.",
+      "cases": 49,
+      "block": 32,
+      "allow": 17,
+      "results": [
+        {
+          "name": "llm-guard",
+          "family": "Open source",
+          "recall": 87.5,
+          "false_alarm": 17.6,
+          "f1": 88.9
+        },
+        {
+          "name": "fluiq.secure",
+          "family": "Fluiq",
+          "recall": 81.2,
+          "false_alarm": 11.8,
+          "f1": 86.7
+        },
+        {
+          "name": "aws-comprehend",
+          "family": "Commercial",
+          "recall": 84.4,
+          "false_alarm": 23.5,
+          "f1": 85.7
+        },
+        {
+          "name": "nightfall",
+          "family": "Commercial",
+          "recall": 71.9,
+          "false_alarm": 5.9,
+          "f1": 82.1
+        },
+        {
+          "name": "fluiq.secure (lite)",
+          "family": "Fluiq",
+          "recall": 68.8,
+          "false_alarm": 5.9,
+          "f1": 80.0
+        },
+        {
+          "name": "regex-baseline",
+          "family": "Control",
+          "recall": 62.5,
+          "false_alarm": 11.8,
+          "f1": 74.1
+        },
+        {
+          "name": "lakera-guard",
+          "family": "Commercial",
+          "recall": 46.9,
+          "false_alarm": 5.9,
+          "f1": 62.5
+        },
+        {
+          "name": "presidio",
+          "family": "Open source",
+          "recall": 43.8,
+          "false_alarm": 5.9,
+          "f1": 59.6
+        },
+        {
+          "name": "nemo-guardrails",
+          "family": "Open source",
+          "recall": 43.8,
+          "false_alarm": 17.6,
+          "f1": 57.1
+        }
+      ]
+    },
+    {
+      "key": "output_public",
+      "title": "Output leakage: public PII corpus",
+      "source": "ai4privacy/pii-masking-200k",
+      "source_url": "https://huggingface.co/datasets/ai4privacy/pii-masking-200k",
+      "licence": "Not stated on the dataset card",
+      "blurb": "Sampled from the most widely used public PII dataset. Negatives are the same rows with PII masked, so both halves share a distribution.",
+      "cases": 300,
+      "block": 200,
+      "allow": 100,
+      "results": [
+        {
+          "name": "aws-comprehend",
+          "family": "Commercial",
+          "recall": 92.5,
+          "false_alarm": 0.0,
+          "f1": 96.1
+        },
+        {
+          "name": "fluiq.secure",
+          "family": "Fluiq",
+          "recall": 81.0,
+          "false_alarm": 0.0,
+          "f1": 89.5
+        },
+        {
+          "name": "llm-guard",
+          "family": "Open source",
+          "recall": 80.0,
+          "false_alarm": 3.0,
+          "f1": 88.1
+        },
+        {
+          "name": "presidio",
+          "family": "Open source",
+          "recall": 69.0,
+          "false_alarm": 0.0,
+          "f1": 81.7
+        },
+        {
+          "name": "nightfall",
+          "family": "Commercial",
+          "recall": 68.0,
+          "false_alarm": 0.0,
+          "f1": 81.0
+        },
+        {
+          "name": "nemo-guardrails",
+          "family": "Open source",
+          "recall": 67.5,
+          "false_alarm": 0.0,
+          "f1": 80.6
+        },
+        {
+          "name": "lakera-guard",
+          "family": "Commercial",
+          "recall": 63.0,
+          "false_alarm": 5.0,
+          "f1": 76.1
+        },
+        {
+          "name": "regex-baseline",
+          "family": "Control",
+          "recall": 42.0,
+          "false_alarm": 0.0,
+          "f1": 59.2
+        },
+        {
+          "name": "fluiq.secure (lite)",
+          "family": "Fluiq",
+          "recall": 39.0,
+          "false_alarm": 0.0,
+          "f1": 56.1
+        }
+      ]
+    },
+    {
+      "key": "injection",
+      "title": "Prompt injection",
+      "source": "deepset/prompt-injections",
+      "source_url": "https://huggingface.co/datasets/deepset/prompt-injections",
+      "licence": "Apache-2.0",
+      "blurb": "The standard public prompt-injection set, balanced 150/150. About a third of the attacks are not in English.",
+      "cases": 300,
+      "block": 150,
+      "allow": 150,
+      "results": [
+        {
+          "name": "lakera-guard",
+          "family": "Commercial",
+          "recall": 94.7,
+          "false_alarm": 16.7,
+          "f1": 89.6
+        },
+        {
+          "name": "llm-guard (injection)",
+          "family": "Open source",
+          "recall": 38.0,
+          "false_alarm": 1.3,
+          "f1": 54.5
+        },
+        {
+          "name": "fluiq.secure (input)",
+          "family": "Fluiq",
+          "recall": 13.3,
+          "false_alarm": 0.0,
+          "f1": 23.5
+        },
+        {
+          "name": "regex-baseline",
+          "family": "Control",
+          "recall": 0.0,
+          "false_alarm": 0.0,
+          "f1": 0.0
+        }
+      ]
+    },
+    {
+      "key": "jailbreak",
+      "title": "Jailbreak",
+      "source": "jackhhao/jailbreak-classification",
+      "source_url": "https://huggingface.co/datasets/jackhhao/jailbreak-classification",
+      "licence": "Apache-2.0",
+      "blurb": "Balanced 150/150. The benign half is heavy on persona and roleplay prompts, which drives a labelling disagreement.",
+      "cases": 300,
+      "block": 150,
+      "allow": 150,
+      "results": [
+        {
+          "name": "llm-guard (injection)",
+          "family": "Open source",
+          "recall": 68.7,
+          "false_alarm": 0.7,
+          "f1": 81.1
+        },
+        {
+          "name": "lakera-guard",
+          "family": "Commercial",
+          "recall": 97.3,
+          "false_alarm": 83.3,
+          "f1": 69.4
+        },
+        {
+          "name": "fluiq.secure (input)",
+          "family": "Fluiq",
+          "recall": 42.0,
+          "false_alarm": 5.3,
+          "f1": 57.0
+        }
+      ]
+    }
+  ]
+}

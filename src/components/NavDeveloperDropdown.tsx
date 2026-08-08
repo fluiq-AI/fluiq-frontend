@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon } from "@hugeicons/core-free-icons"
+import { ArrowRight02Icon, Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon, ChartLineData01Icon } from "@hugeicons/core-free-icons"
 
 const NAV_DEVELOPER = [
   {
@@ -23,6 +23,13 @@ const NAV_DEVELOPER = [
     to: "/examples",
     description: "Copy-paste integration snippets",
     icon: SourceCodeIcon,
+  },
+  {
+    name: "Guardrail Benchmark",
+    slug: "benchmark",
+    to: "/benchmark",
+    description: "9 guardrails measured on public datasets",
+    icon: ChartLineData01Icon,
   },
   {
     name: "Response Gate Demo",
