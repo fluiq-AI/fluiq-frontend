@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { JsonLd } from "@/components/JsonLd"
 import { breadcrumbLd } from "@/lib/seo-pages"
+import { CANONICAL_ORIGIN } from "@/lib/site-url"
 import { INTEGRATIONS } from "@/pages/Integrations/data"
 import Component from "@/pages/Integrations/IntegrationRoute"
 
@@ -48,8 +49,8 @@ export default async function Page({
               "@type": "WebPage",
               name: data.metaTitle,
               description: data.metaDescription,
-              url: `https://getfluiq.com/integrations/${data.slug}`,
-              isPartOf: { "@id": "https://getfluiq.com" },
+              url: `${CANONICAL_ORIGIN}/integrations/${data.slug}`,
+              isPartOf: { "@id": CANONICAL_ORIGIN },
             }}
           />
           <JsonLd

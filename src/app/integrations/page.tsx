@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { JsonLd } from "@/components/JsonLd"
 import { breadcrumbLd } from "@/lib/seo-pages"
+import { CANONICAL_ORIGIN } from "@/lib/site-url"
 import Component from "@/pages/Integrations/index"
 
 export const metadata: Metadata = {
@@ -27,8 +28,8 @@ const jsonLd = {
   name: "Fluiq Integrations",
   description:
     "Fluiq auto-instruments 14 LLM providers, agent frameworks, and vector databases, including OpenAI, Anthropic, LangChain, CrewAI, and Pinecone. Two lines of Python.",
-  url: "https://getfluiq.com/integrations",
-  isPartOf: { "@id": "https://getfluiq.com" },
+  url: `${CANONICAL_ORIGIN}/integrations`,
+  isPartOf: { "@id": CANONICAL_ORIGIN },
 }
 
 export default function Page() {

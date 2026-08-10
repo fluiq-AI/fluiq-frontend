@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next"
-
-const SITE = "https://getfluiq.com"
+import { getSiteUrl } from "@/lib/site-url"
 
 const PRIVATE_PATHS = [
   "/dashboard/",
@@ -10,7 +9,11 @@ const PRIVATE_PATHS = [
   "/reset-password",
 ]
 
-export default function robots(): MetadataRoute.Robots {
+// Read the host inside the handler, not at module scope: `headers()` is
+// request-scoped, and a module-level read is evaluated once per module
+// instantiation, which would pin robots.txt to whichever host warmed it first.
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const SITE = await getSiteUrl()
   return {
     rules: [
       // Traditional search crawlers

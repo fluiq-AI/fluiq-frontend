@@ -3,8 +3,7 @@ import { JsonLd } from "@/components/JsonLd"
 import { breadcrumbLd } from "@/lib/seo-pages"
 import { fetchPost, mediaUrl, type BlogPostFull } from "@/lib/blog"
 import Component from "@/pages/Blog/BlogPost"
-
-const SITE = "https://getfluiq.com"
+import { getSiteUrl } from "@/lib/site-url"
 
 async function getPost(slug: string): Promise<BlogPostFull | null> {
   try {
@@ -48,7 +47,7 @@ export default async function Page({
 }) {
   const { slug } = await params
   const post = await getPost(slug)
-  const canonical = `${SITE}/blog/${slug}`
+  const canonical = `${await getSiteUrl()}/blog/${slug}`
   const cover = post?.cover_image_url ? mediaUrl(post.cover_image_url) : undefined
   return (
     <>

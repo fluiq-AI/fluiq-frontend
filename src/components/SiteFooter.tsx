@@ -23,7 +23,6 @@ const NAV_LINKS = [
   { label: "Integrations",  to: "/integrations" },
   { label: "Pricing",       to: "/pricing" },
   { label: "Docs",          to: "/documentation" },
-  { label: "Guardrail Benchmark", to: "/benchmark" },
   { label: "Response Gate Demo", to: "/response-gate-demo" },
   { label: "Cost Calculator", to: "/llm-cost-calculator" },
   { label: "Blog",          to: "/blog" },
