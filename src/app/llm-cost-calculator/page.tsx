@@ -3,8 +3,9 @@ import { JsonLd } from "@/components/JsonLd"
 import { breadcrumbLd, faqPageLd } from "@/lib/seo-pages"
 import Component from "@/pages/Tools/LlmCostCalculator"
 import { LLMCostFAQS } from "@/lib/faqs"
+import { CANONICAL_ORIGIN as SITE } from "@/lib/site-url"
 
-const SITE = "https://getfluiq.com"
+// SITE is the authored origin; <JsonLd> rewrites it to the request host.
 const PATH = "/llm-cost-calculator"
 
 export const metadata = buildMetadata({

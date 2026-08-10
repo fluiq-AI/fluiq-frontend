@@ -1,6 +1,13 @@
 import type { PageSeo } from "@/lib/seo"
+import { CANONICAL_ORIGIN } from "@/lib/site-url"
 
-const SITE = "https://getfluiq.com"
+/**
+ * These descriptors are static, so absolute URLs are authored against the
+ * canonical origin. `<JsonLd>` rewrites them to the host serving the request,
+ * which is what keeps canonicals correct when the site answers on several
+ * domains. Do not hardcode the origin here; see `@/lib/site-url`.
+ */
+const SITE = CANONICAL_ORIGIN
 const ISPART = { "@id": SITE }
 
 /**
@@ -73,8 +80,8 @@ export const SEO = {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       name: "Fluiq",
-      url: "https://getfluiq.com",
-      logo: "https://getfluiq.com/logo.svg",
+      url: SITE,
+      logo: `${SITE}/logo.svg`,
       applicationCategory: "DeveloperApplication",
       operatingSystem: "Any",
       programmingLanguage: "Python",
@@ -112,7 +119,7 @@ export const SEO = {
         description:
           "Free tier: unlimited traces, 1000 LLM-as-judge evaluations per month, 1 seat, 14-day retention. No credit card required.",
       },
-      author: { "@type": "Organization", name: "Fluiq", url: "https://getfluiq.com" },
+      author: ORG,
       sameAs: ["https://github.com/fluiq-AI/fluiq-sdk"],
     },
   },

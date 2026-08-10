@@ -2,8 +2,9 @@ import { buildMetadata } from "@/lib/seo"
 import { JsonLd } from "@/components/JsonLd"
 import { breadcrumbLd } from "@/lib/seo-pages"
 import Component from "@/pages/Tools/ResponseGateDemo"
+import { CANONICAL_ORIGIN as SITE } from "@/lib/site-url"
 
-const SITE = "https://getfluiq.com"
+// SITE is the authored origin; <JsonLd> rewrites it to the request host.
 const PATH = "/response-gate-demo"
 
 export const metadata = buildMetadata({

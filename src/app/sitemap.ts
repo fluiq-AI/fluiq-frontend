@@ -3,10 +3,12 @@ import type { MetadataRoute } from "next"
 import { API_BASE_URL } from "@/lib/api"
 import { INTEGRATIONS } from "@/pages/Integrations/data"
 
-import { headers } from "next/headers"
+import { getHost, originForHost } from "@/lib/site-url"
 
-// Regenerate hourly so newly published blog posts appear without a redeploy.
-export const revalidate = 3600
+// The sitemap reads the request host, so the route itself renders per request
+// (a route-segment `revalidate` would be ignored). This caches only the blog
+// slug fetch, so a new post shows up within the hour without hammering the API.
+const BLOG_SLUGS_TTL = 3600
 
 type ChangeFreq = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>
 type Entry = { path: string; changeFrequency: ChangeFreq; priority: number }
@@ -19,7 +21,6 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
 
   // Free tools (linkable assets)
-  { path: "/benchmark", changeFrequency: "monthly", priority: 0.9 },
   { path: "/response-gate-demo", changeFrequency: "monthly", priority: 0.9 },
   { path: "/llm-cost-calculator", changeFrequency: "monthly", priority: 0.8 },
   { path: "/infrager", changeFrequency: "monthly", priority: 0.8 },
@@ -80,7 +81,7 @@ const STATIC_ROUTES: Entry[] = [
 async function fetchBlogSlugs(): Promise<string[]> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/v1/blog/slugs`, {
-      next: { revalidate },
+      next: { revalidate: BLOG_SLUGS_TTL },
     })
     if (!res.ok) return []
     const data = (await res.json()) as { slugs?: string[] }
@@ -91,10 +92,8 @@ async function fetchBlogSlugs(): Promise<string[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  
-  const host = (await headers()).get("host") ?? "getfluiq.com"
-  const protocol = host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https"
-  const SITE = `${protocol}://${host}`
+  const host = await getHost()
+  const SITE = originForHost(host)
 
   const SUBDOMAIN_URLS: { url: string; changeFrequency: ChangeFreq; priority: number }[] = [
     { url: `https://polygate.${host}`, changeFrequency: "monthly", priority: 0.8 },

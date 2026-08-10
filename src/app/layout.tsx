@@ -4,41 +4,48 @@ import { Suspense } from "react"
 
 import "@/index.css"
 import { Providers } from "./providers"
+import { getSiteUrl } from "@/lib/site-url"
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://getfluiq.com"),
-  title: {
-    default: "Fluiq | The Control Plane for AI Agents in Production",
-    template: "%s | Fluiq",
-  },
-  description:
-    "The control plane for AI agents in production: block prompt attacks, score trajectories, cache repeated work, and trace every step with two lines of Python.",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
-      { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
-    ],
-    apple: "/apple-touch-icon.png",
-  },
-  manifest: "/site.webmanifest",
-  robots: { index: true, follow: true },
-  openGraph: {
-    type: "website",
-    siteName: "Fluiq",
-    images: [
-      {
-        url: "https://getfluiq.com/banner.png",
-        width: 1200,
-        height: 630,
-        alt: "Fluiq, the control plane for AI agents in production",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    images: ["https://getfluiq.com/banner.png"],
-  },
+// metadataBase is what makes every page's relative `alternates.canonical` and
+// `openGraph.url` absolute. Deriving it from the request host is what makes the
+// canonical follow the domain the visitor is actually on, across all routes.
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSiteUrl()
+  return {
+    metadataBase: new URL(site),
+    title: {
+      default: "Fluiq | The Control Plane for AI Agents in Production",
+      template: "%s | Fluiq",
+    },
+    description:
+      "The control plane for AI agents in production: block prompt attacks, score trajectories, cache repeated work, and trace every step with two lines of Python.",
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon-32x32.png", type: "image/png", sizes: "32x32" },
+        { url: "/favicon-16x16.png", type: "image/png", sizes: "16x16" },
+      ],
+      apple: "/apple-touch-icon.png",
+    },
+    manifest: "/site.webmanifest",
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: "website",
+      siteName: "Fluiq",
+      images: [
+        {
+          url: `${site}/banner.png`,
+          width: 1200,
+          height: 630,
+          alt: "Fluiq, the control plane for AI agents in production",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      images: [`${site}/banner.png`],
+    },
+  }
 }
 
 export const viewport: Viewport = {
@@ -47,29 +54,29 @@ export const viewport: Viewport = {
   initialScale: 1,
 }
 
-const websiteJsonLd = {
+const websiteJsonLd = (site: string) => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
   name: "Fluiq",
-  url: "https://getfluiq.com",
+  url: site,
   description:
     "The control plane for AI agents in production: block prompt attacks, score trajectories, cache repeated work, and trace every step with two lines of Python.",
   potentialAction: {
     "@type": "SearchAction",
-    target: "https://getfluiq.com/documentation",
+    target: `${site}/documentation`,
     "query-input": "required name=search_term_string",
   },
-}
+})
 
-const organizationJsonLd = {
+const organizationJsonLd = (site: string) => ({
   "@context": "https://schema.org",
   "@type": "Organization",
   name: "Fluiq",
   alternateName: "FluiqAI",
-  url: "https://getfluiq.com",
+  url: site,
   logo: {
     "@type": "ImageObject",
-    url: "https://getfluiq.com/logo.svg",
+    url: `${site}/logo.svg`,
     width: 512,
     height: 512,
   },
@@ -97,16 +104,17 @@ const organizationJsonLd = {
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer support",
-    url: "https://getfluiq.com/contact",
+    url: `${site}/contact`,
     availableLanguage: "English",
   },
   sameAs: ["https://github.com/fluiq-AI/fluiq-sdk"],
-}
+})
 
 // Set the theme class before first paint to avoid a flash / hydration mismatch.
 const themeInitScript = `(function(){try{var t=localStorage.getItem('fluiq-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const site = await getSiteUrl()
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -114,15 +122,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* LLM crawler discovery */}
         <link rel="alternate" type="text/plain" title="LLM context (summary)" href="/llms.txt" />
         <link rel="alternate" type="text/plain" title="LLM context (full reference)" href="/llms-full.txt" />
-        <meta name="llms-txt" content="https://getfluiq.com/llms.txt" />
-        <meta name="llms-full-txt" content="https://getfluiq.com/llms-full.txt" />
+        <meta name="llms-txt" content={`${site}/llms.txt`} />
+        <meta name="llms-full-txt" content={`${site}/llms-full.txt`} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd(site)) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd(site)) }}
         />
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
