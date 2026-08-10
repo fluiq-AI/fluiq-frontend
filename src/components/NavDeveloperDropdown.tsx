@@ -1,6 +1,6 @@
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon, ChartLineData01Icon, News01Icon } from "@hugeicons/core-free-icons"
+import { Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon, News01Icon } from "@hugeicons/core-free-icons"
 
 type NavItem = {
   name: string
@@ -33,13 +33,6 @@ const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
         to: "/faq",
         description: "Pricing, evals, security & data",
         icon: HelpCircleIcon,
-      },
-      {
-        name: "Guardrail Benchmark",
-        slug: "benchmark",
-        to: "/benchmark",
-        description: "Eight guardrails on public data",
-        icon: ChartLineData01Icon,
       },
     ],
   },
