@@ -13,8 +13,6 @@ import {
   ShieldIcon,
   TestTube01Icon,
   SparklesIcon,
-  AiContentGenerator01Icon,
-  Database01Icon,
   ArrowRight02Icon,
   CloudServerIcon,
 } from "@hugeicons/core-free-icons"
@@ -32,8 +30,6 @@ import {
   TracesMockup,
   SecurityMockup,
   EvalMockup,
-  PromptsMockup,
-  DatasetsMockup,
 } from "./components/DashboardMockups"
 import { INTEGRATIONS, STATS, EASE_OUT } from "./utils/constants"
 
@@ -192,16 +188,14 @@ export default function Home() {
                 className="font-heading text-[1.85rem] sm:text-[2.75rem] lg:text-[3.1rem] xl:text-[3.55rem] font-bold tracking-[-0.04em] leading-[1.04] text-[#0A0A0A] dark:text-[#FAF9F6] mb-7"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.15, ease: EASE_OUT }}>
-                Agents you can eval.<br />Agents you can govern.<br /><span className="text-[#1860D3] dark:text-[#6FA8FF]">Agents you can trust.</span>
+                See every agent run.<br />Block the dangerous ones.<br /><span className="text-[#1860D3] dark:text-[#6FA8FF]">Score the rest.</span>
               </motion.h1>
 
               <motion.p className="mb-9 max-w-[30rem] text-[15px] leading-[1.7] text-[#6B6B66] dark:text-[#9A9A92]"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
-                Fluiq sits on every agent run. It blocks prompt attacks before the
-                model executes, scores trajectories against your golden runs, and
-                traces every step across LangGraph, CrewAI, ADK, and MCP.
-                Two lines of Python.
+                Two lines of Python across LangGraph, CrewAI, ADK, and MCP.
+                Unlimited tracing, free forever.
               </motion.p>
 
               <motion.div className="flex flex-wrap items-center gap-3"
@@ -302,43 +296,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 1 · Observability */}
+      {/* 1 · Security — leads, matching the pillar order in the nav and footer */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div data-animate>
-              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={EyeIcon} size={16} />
-              </span>
-              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Full trace visibility across every <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM call</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns, without changing how you write code.</p>
-              <ul className="space-y-2 mb-6">
-                {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Multi-agent runs render as real DAGs: fan-outs, joins, and loops across LangGraph, CrewAI, and Google ADK", "Real-time trace streaming", "Import existing history from LangSmith, Langfuse, Phoenix, or Braintrust"].map(pt => (
-                  <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
-                    {pt}
-                  </li>
-                ))}
-              </ul>
-              <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
-                fluiq.instrument(api_key="fl_...")
-              </div>
-            </div>
-            <div data-animate data-delay="2">
-              <TracesMockup />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2 · Security (reversed) */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate data-delay="2" className="lg:order-1">
-              <SecurityMockup />
-            </div>
-            <div data-animate className="lg:order-2">
               <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={ShieldIcon} size={16} />
               </span>
@@ -364,11 +326,44 @@ export default function Home() {
                 fluiq.secure(mode="block")
               </div>
             </div>
+            <div data-animate data-delay="2">
+              <SecurityMockup />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 3 · Evaluation */}
+      {/* 2 · Observability (reversed) */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+            <div data-animate data-delay="2" className="lg:order-1">
+              <TracesMockup />
+            </div>
+            <div data-animate className="lg:order-2">
+              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
+                <HugeiconsIcon icon={EyeIcon} size={16} />
+              </span>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Full trace visibility across every <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM call</span></h2>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Every token, latency, and cost attributed to the exact agent node that spent it. Streaming traces, cost anomaly alerts, and per-model breakdowns, without changing how you write code.</p>
+              <ul className="space-y-2 mb-6">
+                {["Per-node token attribution", "p50 / p95 / p99 latency tracking", "Multi-agent runs render as real DAGs: fan-outs, joins, and loops across LangGraph, CrewAI, and Google ADK", "Real-time trace streaming", "Import existing history from LangSmith, Langfuse, Phoenix, or Braintrust"].map(pt => (
+                  <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
+                    {pt}
+                  </li>
+                ))}
+              </ul>
+              <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
+                fluiq.instrument(api_key="fl_...")
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3 · Evaluation — datasets and prompt management fold in here rather than
+          taking sections of their own; they are part of this pillar, not peers of it. */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
@@ -376,16 +371,17 @@ export default function Home() {
               <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={TestTube01Icon} size={16} />
               </span>
-              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Gate responses that fail <span className="text-[#1860D3] dark:text-[#6FA8FF]">quality thresholds</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge runs server-side after each call. Set per-metric thresholds. Warn mode logs quality scores to the dashboard; block mode raises FluiqEvalError before the response reaches your app. And for agents, agentic evaluation judges the <em>whole run</em>, not just single answers.</p>
+              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Catch the bad run <span className="text-[#1860D3] dark:text-[#6FA8FF]">before your users do</span></h2>
+              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">LLM-as-judge scores every response server-side, and agentic evaluation judges the <em>whole run</em>: which tools it picked, whether the path served the goal, and how agents coordinated. Pin real runs into golden datasets and re-run the same judges before you ship a prompt or model change.</p>
               <ul className="space-y-2 mb-6">
                 {[
-                  "hallucination, faithfulness, relevance, toxicity",
+                  "Six judge metrics: hallucination, faithfulness, relevance, toxicity, coherence, completeness",
                   "Agentic eval scores tool selection, trajectory-vs-goal, and multi-agent coordination across the run's DAG",
                   "Borderline verdicts convene a multi-model judge jury; every member's score and reasoning is kept for audit",
-                  "Block mode prevents bad responses reaching users",
-                  "Choose which model judges, and which models sit on the jury",
-                  "Bring your own provider key so judge tokens bill to your account",
+                  "Block mode raises FluiqEvalError before a failing response reaches your users",
+                  "Golden datasets pin the entire trajectory (steps, tools, MCP calls, media) and stay evaluable after retention ends",
+                  "Diff any two dataset runs to see exactly what regressed, and gate CI on it",
+                  "Version and deploy prompt templates, then promote any prompt to a custom judge by slug",
                 ].map(pt => (
                   <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
@@ -399,78 +395,6 @@ export default function Home() {
             </div>
             <div data-animate data-delay="2" className="lg:order-2">
               <EvalMockup />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4 · Datasets (reversed) */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate data-delay="2" className="lg:order-1">
-              <DatasetsMockup />
-            </div>
-            <div data-animate className="lg:order-2">
-              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={Database01Icon} size={16} />
-              </span>
-              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Regression-test agents on <span className="text-[#1860D3] dark:text-[#6FA8FF]">real trajectories</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Curate golden datasets straight from production traffic. Adding a run pins its <em>entire</em> trajectory (every agent step, tool call, and MCP call), so it stays evaluable forever, independent of trace retention. Then re-run agentic evaluation or the security suite over the whole set before you ship a prompt or model change.</p>
-              <ul className="space-y-2 mb-6">
-                {[
-                  "One click pins a whole run: steps, tools, MCP calls, and media",
-                  "Connect Agents imports every run an agent has made, and keeps auto-appending future ones",
-                  "Batch agentic-eval and security runs produce a scored regression report",
-                  "Examples carry live eval, security, and cost signals from their source runs",
-                  "Compare any two runs to see exactly what regressed",
-                ].map(pt => (
-                  <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
-                    {pt}
-                  </li>
-                ))}
-              </ul>
-              <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
-                Traces → Add to Dataset → Run Agentic Eval
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5 · Prompt Management (plain bg so the tinted "How it works" band
-          below keeps its edge) */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate className="lg:order-1">
-              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={AiContentGenerator01Icon} size={16} />
-              </span>
-              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Write, version, and <span className="text-[#1860D3] dark:text-[#6FA8FF]">deploy prompts</span> like software</h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">A dedicated IDE-style editor for your prompt templates, with <code className="font-mono text-[13px] text-[#0a0a0a] dark:text-[#FAF9F6]">{"{{variable}}"}</code> injection, full version history, and per-environment deployment. Iterate directly on real production traces, compare model outputs side-by-side, and ship with confidence.</p>
-              <ul className="space-y-2 mb-6">
-                {[
-                  "{{variable}} template syntax: define slots, fill at runtime via SDK",
-                  "Version history: save, browse, and restore any past version instantly",
-                  "One-click deployment to dev, staging, and production environments",
-                  "Side-by-side model comparison with the same prompt across models",
-                  "Pull directly from live traces and iterate on real-world prompts",
-                  "Save a prompt as a judge and score your evals with it",
-                ].map(pt => (
-                  <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
-                    {pt}
-                  </li>
-                ))}
-              </ul>
-              <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
-                fluiq.fetch_prompt("customer-support", env="production")
-              </div>
-            </div>
-            <div data-animate data-delay="2" className="lg:order-2">
-              <PromptsMockup />
             </div>
           </div>
         </div>
