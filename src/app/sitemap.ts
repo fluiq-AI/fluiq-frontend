@@ -28,7 +28,6 @@ const STATIC_ROUTES: Entry[] = [
   // Platform pillars
   { path: "/observability", changeFrequency: "monthly", priority: 0.8 },
   { path: "/security", changeFrequency: "monthly", priority: 0.8 },
-  { path: "/optimization", changeFrequency: "monthly", priority: 0.8 },
   { path: "/evaluation", changeFrequency: "monthly", priority: 0.8 },
   { path: "/datasets", changeFrequency: "monthly", priority: 0.8 },
   { path: "/prompts", changeFrequency: "monthly", priority: 0.8 },
@@ -38,7 +37,6 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/documentation/quickstart", changeFrequency: "weekly", priority: 0.9 },
   { path: "/documentation/observability", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/security", changeFrequency: "weekly", priority: 0.8 },
-  { path: "/documentation/optimization", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/evaluation", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/datasets", changeFrequency: "weekly", priority: 0.8 },
   { path: "/documentation/prompts", changeFrequency: "weekly", priority: 0.8 },
@@ -48,7 +46,6 @@ const STATIC_ROUTES: Entry[] = [
   // Examples
   { path: "/examples/observability", changeFrequency: "weekly", priority: 0.7 },
   { path: "/examples/security", changeFrequency: "weekly", priority: 0.7 },
-  { path: "/examples/optimization", changeFrequency: "weekly", priority: 0.7 },
   { path: "/examples/evaluation", changeFrequency: "weekly", priority: 0.7 },
   { path: "/examples/prompts", changeFrequency: "weekly", priority: 0.7 },
 

@@ -6,17 +6,15 @@ import {
   ChartLineData01Icon,
   CheckmarkCircle02Icon,
   FileScriptIcon,
-  MagicWand01Icon,
   SecurityCheckIcon,
 } from "@hugeicons/core-free-icons"
 import { cn } from "@/lib/utils"
 import { LanguageProvider, LanguageToggle } from "./LanguageContext"
 
 const NAV = [
-  { to: "/examples/observability", label: "Observability", icon: ChartLineData01Icon },
   { to: "/examples/security",      label: "Security",      icon: SecurityCheckIcon },
+  { to: "/examples/observability", label: "Observability", icon: ChartLineData01Icon },
   { to: "/examples/evaluation",    label: "Evaluation",    icon: CheckmarkCircle02Icon },
-  { to: "/examples/optimization",  label: "Optimization",  icon: MagicWand01Icon },
   { to: "/examples/prompts",       label: "Prompts",       icon: FileScriptIcon },
 ]
 

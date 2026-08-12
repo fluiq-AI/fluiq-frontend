@@ -8,12 +8,13 @@ Fluiq is the control plane for AI agents in production, shipped as a Python SDK.
 
 Fluiq ships as a Python SDK (`pip install fluiq`). Calling `fluiq.instrument(api_key="fl_...")` patches every supported LLM provider and agent framework at the function-call level, so application prompts and agent logic stay as they are. From that point forward, every LLM call emits a structured trace containing token counts, USD cost (using provider-published rates), latency, and any security or evaluation annotations.
 
-The platform has four independently controllable pillars:
+The platform has three independently controllable pillars:
 
-1. **Observe**: always-on tracing and cost attribution
-2. **Secure**: pre/post-call security scanning and PII redaction
-3. **Optimize**: server-side response caching driven by real traffic
-4. **Evaluate**: LLM-as-judge quality scoring with CI/CD gates
+1. **Secure**: pre/post-call security scanning and PII redaction
+2. **Observe**: always-on tracing and cost attribution
+3. **Evaluate**: LLM-as-judge and agentic quality scoring with CI/CD gates
+
+Dataset management and prompt management are part of the Evaluate pillar rather than products of their own.
 
 ---
 
@@ -28,6 +29,7 @@ The platform has four independently controllable pillars:
 - Per-span USD cost: calculated from provider-published per-token rates, accurate to the model version
 - Per-span latency: wall-clock time from call to first byte and to completion
 - Streaming support: traces stream to the dashboard in real time; no buffering until stream ends
+- Provider prompt-cache tokens: Anthropic `prompt_cache_read_tokens` / `prompt_cache_creation_tokens`, OpenAI `usage.prompt_tokens_details.cached_tokens`, and Gemini `usage_metadata.cached_content_token_count` are captured as `prompt_cached_tokens`, so reported cost matches what the provider actually bills
 - Aggregated totals: rolled up across all child spans so the root span shows the full agent cost
 
 ### Dashboard metrics
@@ -109,61 +111,7 @@ If the security service is unreachable, `fluiq.secure()` fails open: the origina
 
 ---
 
-## Pillar 3: Optimize (fluiq.optimize)
-
-`fluiq.optimize()` adds multiple layers of caching. Fluiq hosts the Redis cluster; there is nothing to provision.
-
-### Modes
-
-- **cache**: intercepts calls before they reach the LLM; returns cached responses for prompts that match; writes new responses to cache
-- **observe**: forwards all calls to the LLM as normal; records what would have been cache hits; shows projected savings on the Optimize dashboard without actually caching
-
-```python
-fluiq.optimize(mode="cache")    # full caching (default)
-fluiq.optimize(mode="observe")  # measure savings, don't cache
-```
-
-### LLM response caching
-
-Identical `(model, messages, system, tools)` combinations are served from Redis instantly. The cache profile (which models to cache, TTL) is fetched from the Fluiq backend on the first call and updated as traffic patterns evolve.
-
-### MCP tool caching
-
-When MCP servers are used, `fluiq.optimize()` patches `ClientSession` to cache two expensive operations transparently:
-
-- **`list_tools()`**: cached per server URL. Cleared automatically when `session.initialize()` is called (server restart signal).
-- **`call_tool(name, arguments)`**: cached per `(server_url, tool_name, sorted_arguments)`. Error results are never cached.
-
-Cache hits and misses are recorded as `type="mcp"` trace events and appear in the Optimize dashboard's "By cache type" breakdown (kinds: `mcp_list_tools`, `mcp_call`).
-
-### Provider prompt caching
-
-Fluiq surfaces provider-level prefix caching, where the LLM provider itself serves tokens from its own cache rather than reprocessing the full prompt.
-
-**Anthropic (automatic injection when optimize() is active)**
-
-Every `messages.create()` and `messages.stream()` call receives `cache_control: {"type": "ephemeral"}` injected on the system prompt and the last tool definition. Anthropic silently ignores this on blocks below ~1,024 tokens, so injection is always safe. Cached token counts are captured from every response:
-
-- `prompt_cache_read_tokens`: tokens served from Anthropic's cache (billed at ~10% of normal input rate)
-- `prompt_cache_creation_tokens`: tokens used to create the cache entry (billed at ~125%)
-
-**OpenAI (automatic, no injection)**
-
-OpenAI caches prompts ≥ 1,024 tokens automatically without any special configuration. Fluiq captures `usage.prompt_tokens_details.cached_tokens` from every response as `prompt_cached_tokens`.
-
-**Gemini (explicit CachedContent, user-managed)**
-
-Gemini context caching requires creating a `CachedContent` object via the Gemini API. Fluiq does not inject anything but captures `usage_metadata.cached_content_token_count` from every response as `prompt_cached_tokens`.
-
-### Optimize dashboard
-
-- **Cache performance card**: Redis hit rate per cache type (LLM, embeddings, vector stores, MCP tools, function calls); hits vs misses stacked bar; insights panel
-- **Prompt caching card**: total cached tokens read (Anthropic + OpenAI/Gemini); Anthropic cache creation overhead; hit rate across instrumented calls; per-provider breakdown
-- Time window selector: 1h, 6h, 24h, 7d, 30d
-
----
-
-## Pillar 4: Evaluate (fluiq.eval)
+## Pillar 3: Evaluate (fluiq.eval)
 
 `fluiq.eval()` runs LLM-as-judge scoring on every response, server-side and asynchronously. Evaluation is opt-in: `fluiq.instrument()` alone only traces, and scoring starts when `fluiq.eval()` is called.
 
@@ -295,7 +243,6 @@ The dashboard includes an LLM-as-judge playground: paste a prompt template, add 
 **MCP (Model Context Protocol)**
 - Instruments MCP server initialise, tool calls, and list_tools
 - Tool name and arguments captured per span
-- `fluiq.optimize()` caches list_tools() responses and call_tool() results in Redis
 
 ### Vector databases
 
@@ -307,7 +254,7 @@ Pinecone, Chroma, Weaviate, FAISS, and Qdrant are instrumented automatically. Ev
 
 ### Home: https://getfluiq.com/
 
-The main marketing page for Fluiq. It explains the product's four pillars (Observe, Secure, Optimize, Evaluate), shows installation code, lists all supported integrations, displays animated statistics (traces per second, supported frameworks, evaluation metrics), and includes a getting-started call to action. Sections: hero headline, integration logos, four-pillar feature deep-dives, code samples for each pillar, stats, and footer CTA.
+The main marketing page for Fluiq. It explains the product's three pillars (Secure, Observe, Evaluate) plus datasets and prompt management, shows installation code, lists all supported integrations, displays animated statistics (SDK functions, evaluation metrics, lines to instrument), and includes a getting-started call to action. Sections: hero headline, integration logos, pillar feature deep-dives, code samples for each pillar, stats, and footer CTA.
 
 Key claims on this page:
 - "Replace four AI tools with one SDK."
@@ -324,15 +271,13 @@ The full SDK reference, organized into eight sections accessible via a sticky si
 
 2. **Observability**: How `fluiq.instrument()` works; the @trace decorator; span tree structure; cost calculation; streaming trace support; agent-level aggregation.
 
-3. **Optimization**: `fluiq.optimize()` cache and observe modes; TTL configuration; model-scoped caching; how the traffic profile is built; what the Optimize dashboard shows.
+3. **Security**: `fluiq.secure()` warn and block modes; full list of detected PII types; prompt injection and jailbreak detection; secret/credential detection; risk levels (clean, low, medium, high); FluiqSecurityError details; fail-open guarantee.
 
-4. **Security**: `fluiq.secure()` warn and block modes; full list of detected PII types; prompt injection and jailbreak detection; secret/credential detection; risk levels (clean, low, medium, high); FluiqSecurityError details; fail-open guarantee.
+4. **Evaluation**: `fluiq.eval()` metrics (hallucination, faithfulness, relevance, toxicity, coherence, completeness); threshold configuration; warn and block modes; FluiqEvalError; CI/CD GitHub Actions gate; dataset management.
 
-5. **Evaluation**: `fluiq.eval()` metrics (hallucination, faithfulness, relevance, toxicity, coherence, completeness); threshold configuration; warn and block modes; FluiqEvalError; CI/CD GitHub Actions gate; dataset management.
+5. **Prompts**: `fluiq.fetch_prompt()` runtime fetch; template `{{variable}}` syntax; environment-based deployment; version history; playground usage.
 
-6. **Prompts**: `fluiq.fetch_prompt()` runtime fetch; template `{{variable}}` syntax; environment-based deployment; version history; playground usage.
-
-7. **Configuration**: All `fluiq.instrument()` kwargs; environment variable support; timeout and retry settings; self-hosting notes.
+6. **Configuration**: All `fluiq.instrument()` kwargs; environment variable support; timeout and retry settings; self-hosting notes.
 
 8. **Next steps**: Links to GitHub, contact page, and dashboard signup.
 
@@ -358,7 +303,6 @@ The `/dashboard` routes are gated behind authentication and are not exposed to L
 - `/dashboard/traces`: trace viewer with JSON and visual span tree
 - `/dashboard/agents`: agent-level aggregation sorted by cost
 - `/dashboard/security`: detected risks, redacted fields, attack scores
-- `/dashboard/optimize`: cache hit rate, latency savings, cost savings
 - `/dashboard/tests`: test run history and CI eval gate results
 - `/dashboard/datasets`: named datasets for regression testing
 - `/dashboard/prompts`: prompt templates, versions, environments, playground
@@ -402,5 +346,5 @@ A: Use the contact form at https://getfluiq.com/contact or open an issue on GitH
 - Documentation: https://getfluiq.com/documentation
 - Contact: https://getfluiq.com/contact
 - Sign up: https://getfluiq.com/signup
-- Category: AI agent governance, agent observability, AI security, LLM evaluation, response caching
-- Keywords: AI agent control plane, agent observability, agent trajectory evaluation, MCP security, LLM tracing, prompt injection detection, LLM cost tracking, LLM evaluation, LLM response caching, OpenAI monitoring, Anthropic monitoring, LangChain tracing, LangGraph tracing, hallucination detection, AI security
+- Category: AI agent governance, agent observability, AI security, LLM evaluation
+- Keywords: AI agent control plane, agent observability, agent trajectory evaluation, MCP security, LLM tracing, prompt injection detection, LLM cost tracking, LLM evaluation, OpenAI monitoring, Anthropic monitoring, LangChain tracing, LangGraph tracing, hallucination detection, AI security

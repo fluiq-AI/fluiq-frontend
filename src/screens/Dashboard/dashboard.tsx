@@ -7,7 +7,6 @@ import {
   ApiIcon,
   DashboardSquare01Icon,
   Database01Icon,
-  MagicWand01Icon,
   AiSecurity02Icon,
   AiContentGenerator01Icon,
   Alert02Icon,
@@ -20,7 +19,6 @@ import {
   Rocket02Icon,
   UserCircleIcon,
   RoboticIcon,
-  SparklesIcon,
   UserMultiple02Icon,
 } from "@hugeicons/core-free-icons"
 
@@ -40,11 +38,11 @@ const NAV_SECTIONS = [
     ]
   },
   {
-    section: "Prompts and Datasets",
+    section: "Security",
     items: [
-      { to: "/dashboard/prompts", label: "Prompts", icon: AiContentGenerator01Icon },
-      { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon },
-    ]
+      { to: "/dashboard/security",    label: "Security",    icon: AiSecurity02Icon },
+      { to: "/dashboard/guardrails",  label: "Guardrails",  icon: Settings01Icon   },
+    ],
   },
   {
     section: "Observability",
@@ -57,21 +55,9 @@ const NAV_SECTIONS = [
     section: "Evaluation",
     items: [
       { to: "/dashboard/tests", label: "Tests", icon: TestTube01Icon },
+      { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon },
+      { to: "/dashboard/prompts", label: "Prompts", icon: AiContentGenerator01Icon },
       { to: "/dashboard/judge-prompts", label: "Judge Prompts", icon: JusticeScale01Icon },
-    ],
-  },
-  {
-    section: "Security",
-    items: [
-      { to: "/dashboard/security",    label: "Security",    icon: AiSecurity02Icon },
-      { to: "/dashboard/guardrails",  label: "Guardrails",  icon: Settings01Icon   },
-    ],
-  },
-  {
-    section: "Optimization",
-    items: [
-      { to: "/dashboard/optimize", label: "Optimize", icon: MagicWand01Icon },
-      { to: "/dashboard/insights", label: "Insights", icon: SparklesIcon },
     ],
   },
   {

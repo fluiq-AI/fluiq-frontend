@@ -39,11 +39,6 @@ interface TraceListResponse {
   }>
 }
 
-interface CacheStatsResponse {
-  hit_rate: number
-  calls: number
-}
-
 interface QuotaResponse {
   traces: { used: number; limit: number }
   evaluations: { used: number; limit: number }
@@ -176,39 +171,7 @@ export function NotificationWatcher() {
     return () => clearTimeout(timer)
   }, [dispatch])
 
-  // ── 3. Cache hit rate (one-shot on mount, 1-hour notification cooldown) ──
-  useEffect(() => {
-    function checkCache() {
-      if (!cooldownExpired("fluiq.notify.cache", COOLDOWN_1HOUR)) return
-      authFetch<CacheStatsResponse>("/api/v1/optimize/cache-stats?window_hours=1")
-        .then((data) => {
-          // Only alert when there's meaningful traffic (≥10 calls) and hit rate is poor
-          if (data.calls < 10 || data.hit_rate >= 0.5) return
-          stampNotified("fluiq.notify.cache")
-          const pct = Math.round(data.hit_rate * 100)
-          dispatch(
-            addNotification({
-              id: uid(),
-              kind: "optimization",
-              title: "Cache hit rate dropped",
-              body: `Hit rate at ${pct}% over the last hour`,
-              href: "/dashboard/optimize",
-              timestamp: new Date().toISOString(),
-              read: false,
-            }),
-          )
-        })
-        .catch(() => {})
-    }
-
-    // One-shot on mount (matches the quota + eval-regression checks above),
-    // deferred past first paint. No steady-state interval — nothing polls the
-    // server on a timer.
-    const initial = setTimeout(checkCache, NOTIFY_DEFER_MS)
-    return () => clearTimeout(initial)
-  }, [dispatch])
-
-  // ── 4. Security: real-time SSE (no cooldown for blocked; 5-min for enriched) ─
+  // ── 3. Security: real-time SSE (no cooldown for blocked; 5-min for enriched) ─
   useRealtimeStream({
     path: "/api/v1/traces/stream",
     events: ["trace", "trace.enriched"],

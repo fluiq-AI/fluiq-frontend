@@ -8,7 +8,7 @@ import {
   CheckmarkCircle02Icon,
   SparklesIcon,
   ShieldKeyIcon,
-  FlashIcon,
+  TestTube01Icon,
   PythonIcon,
   SquareLock02Icon,
   Cancel01Icon,
@@ -91,7 +91,6 @@ const tiers: Tier[] = [
     highlighted: true,
     features: [
       { label: "Everything in Starter", included: true },
-      { label: "Optimization & Caching", included: true },
       { label: "SSO (single sign-on)", included: true },
       { label: "Custom eval thresholds & judge prompts", included: true },
       { label: "Email support (48h SLA)", included: true },
@@ -227,18 +226,6 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
     ],
   },
   {
-    category: "Optimization",
-    rows: [
-      { label: "Trace-driven cache profiling", values: [false, false, true, true, true] },
-      { label: "Prompt response caching", values: [false, false, true, true, true] },
-      { label: "Embedding caching", values: [false, false, true, true, true] },
-      { label: "Observe mode (measure savings before intercepting)", values: [false, false, true, true, true] },
-      { label: "Cache hit-rate dashboard", values: [false, false, true, true, true] },
-      { label: "Optimization Insights: cache candidates & projected savings", values: [false, false, true, true, true] },
-      { label: "Cost hotspots: slowest calls, error rates, top spenders", values: [false, false, true, true, true] },
-    ],
-  },
-  {
     category: "Team & Access",
     rows: [
       { label: "Seats", values: ["1", "3", "10", "25", "Unlimited"] },
@@ -292,23 +279,25 @@ const powerFeatures = [
     code: `fluiq.instrument(api_key="fl_...")\nfluiq.secure()  # warn mode flags risks on the trace\nfluiq.secure(mode="block")  # block mode`,
   },
   {
-    icon: FlashIcon,
-    name: "fluiq.optimize()",
-    badge: "Included from Team",
-    tagline: "Stop paying twice for the same answer.",
+    icon: TestTube01Icon,
+    name: "fluiq.eval()",
+    badge: "On every plan, including Free",
+    tagline: "One call. Every answer scored.",
     description:
-      "Fluiq mines your trace history to find which calls repeat, provisions a dedicated Redis cache for your account, and serves the repeats. You get the latency back as well as the money.",
+      "Scoring runs server-side on traces Fluiq already has. Single responses get LLM-as-judge metrics; whole agent runs get judged on the decisions they made; golden datasets turn both into a regression gate.",
     capabilities: [
-      { label: "Trace-Driven Cache Profiling", desc: "The backend mines your trace history to build a cache profile. No manual configuration." },
-      { label: "Prompt Response Caching", desc: "Real responses are stored on the first call; matching prompts afterwards are served from Redis." },
-      { label: "Embedding Caching", desc: "Repeated embedding calls are cached separately from prompts, with their own hit rate." },
-      { label: "Observe mode", desc: "Records what would have been a cache hit without intercepting, so you can price the saving before you opt in." },
-      { label: "Cache hit dashboard", desc: "Hit rates, latency saved, and estimated cost saved, split by cache kind." },
-      { label: "Optimization Insights", desc: "Ranks your repeated prompts by how much they would save if cached, with a projected monthly figure." },
-      { label: "Cost Hotspots", desc: "Surfaces your top-spending models and agents, slowest calls, and where errors cluster." },
-      { label: "Zero code changes", desc: "One fluiq.optimize() call after instrument(). The SDK handles connection, profiling, and lookup." },
+      { label: "Six Judge Metrics", desc: "Hallucination, faithfulness, relevance, toxicity, coherence, and completeness, scored per response." },
+      { label: "Per-Metric Thresholds", desc: "Set a gate for each metric. warn logs the score on the trace; block raises FluiqEvalError before the response reaches your app." },
+      { label: "Agentic Evaluation", desc: "Judges a whole run in layers: deterministic checks, tool-selection quality, trajectory against the goal, and multi-agent coordination across the DAG." },
+      { label: "Multi-Model Jury", desc: "Borderline verdicts convene a panel of different judge models, with every member's score and reasoning kept for audit." },
+      { label: "Your Judge, Your Keys", desc: "Choose which model judges and which models sit on the panel, and bring your own provider key so judge tokens bill at the rate you negotiated." },
+      { label: "Dataset Regression Runs", desc: "Batch the same judges over a golden dataset of pinned trajectories, then diff one run against another to see exactly what got worse." },
+      { label: "Prompt Management", desc: "Version and deploy prompt templates, and promote any saved prompt to a custom judge by slug." },
+      { label: "Auditable Prompts", desc: "Every result carries the exact judge prompt and version that produced it, so a shifting metric traces back to a prompt change." },
     ],
-    code: `fluiq.instrument(api_key="fl_...")\nfluiq.optimize()  # cache mode\nfluiq.optimize(mode="observe")  # observe mode`,
+    code: `fluiq.instrument(api_key="fl_...")
+fluiq.eval(thresholds={"hallucination": 0.8})  # warn mode
+fluiq.eval(thresholds={"hallucination": 0.8}, mode="block")`,
   },
 ]
 
@@ -604,13 +593,13 @@ export default function Pricing() {
               What you unlock
             </p>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
-              Two calls. <span className="text-[#1860D3] dark:text-[#6FA8FF]">Security and speed</span>, handled.
+              Two calls. <span className="text-[#1860D3] dark:text-[#6FA8FF]">Safety and quality</span>, handled.
             </h2>
             <p className="mt-4 mx-auto max-w-lg text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed">
-              <code className="rounded bg-[#E8F0FD] dark:bg-[#1860D3]/10 px-1.5 py-0.5 font-mono text-[12px] text-[#1860D3] dark:text-[#6FA8FF]">fluiq.optimize()</code>
-              {" "}ships with Team, and{" "}
               <code className="rounded bg-[#E8F0FD] dark:bg-[#1860D3]/10 px-1.5 py-0.5 font-mono text-[12px] text-[#1860D3] dark:text-[#6FA8FF]">fluiq.secure()</code>
-              {" "}unlocks on Growth.
+              {" "}and{" "}
+              <code className="rounded bg-[#E8F0FD] dark:bg-[#1860D3]/10 px-1.5 py-0.5 font-mono text-[12px] text-[#1860D3] dark:text-[#6FA8FF]">fluiq.eval()</code>
+              {" "}both run on every plan, including Free.
             </p>
           </div>
 

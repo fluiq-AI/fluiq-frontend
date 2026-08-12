@@ -15,7 +15,7 @@ export const LLMCostFAQS = [
   },
   {
     q: "How much can response caching save?",
-    a: "A cache hit serves a repeated prompt from storage instead of calling the model, so that request costs effectively nothing. At a 60% cache hit rate you cut model spend by about 60%. Fluiq's optimize() builds a cache profile from your real traces and serves duplicates automatically.",
+    a: "A cache hit serves a repeated prompt from storage instead of calling the model, so that request costs effectively nothing. At a 60% cache hit rate you cut model spend by about 60%. Most providers also bill cached input tokens at a steep discount, which the table above accounts for.",
   },
   {
     q: "Where do these prices come from?",
@@ -41,10 +41,6 @@ export const PricingFaqs = [
     a: "fluiq.secure() runs server-side security scanning: PII detection and redaction, prompt-injection and jailbreak blocking, secret-leak prevention, indirect-injection and RAG-poisoning detection, tool-input exfiltration and allowlist enforcement, and multi-agent trust checks (cross-agent injection and trust-boundary escalation). It is available on every plan, including Free, and metered by scan volume rather than locked behind a tier: 1,000 scans a month on Free, up to 2,000,000 on Growth. Scanning is pattern and NER based with no LLM call, so it costs a fraction of an evaluation to run and we price it that way. In warn mode it flags risks on the trace without blocking; in block mode it raises FluiqSecurityError before a HIGH-risk prompt reaches the LLM.",
   },
   {
-    q: "How does fluiq.optimize() work?",
-    a: "Available on Team and above. After you call fluiq.optimize(), the SDK fetches your trace-derived cache profile from the Fluiq backend, connects to a dedicated Redis instance provisioned for your account, and begins serving repeated prompts from cache. In observe mode it records what would have been a cache hit so you can review projected savings before enabling full interception.",
-  },
-  {
     q: "Do you support self-hosting?",
     a: "Yes. VPC and on-prem deployments are available on the Enterprise plan. The SDK is a thin instrumentation layer and can be pointed at your own backend endpoint if you prefer full self-hosting.",
   },
@@ -58,7 +54,7 @@ export const PricingFaqs = [
   },
   {
     q: "What's the cheapest way to monitor my LLM application?",
-    a: "Start on Fluiq's Free plan: unlimited traces, 100 evaluations, and 1,000 security scans per month at no cost, with full tracing, cost attribution, and latency analytics included. Instrumentation is one line, fluiq.instrument(), so there's no agent to run and no infrastructure to host. Free keeps a rolling 14-day history; when you outgrow it, Starter and above retain traces indefinitely, and fluiq.optimize() caches repeated prompts to cut model spend, so monitoring can actually lower your bill instead of adding to it.",
+    a: "Start on Fluiq's Free plan: unlimited traces, 100 evaluations, and 1,000 security scans per month at no cost, with full tracing, cost attribution, and latency analytics included. Instrumentation is one line, fluiq.instrument(), so there's no agent to run and no infrastructure to host. Free keeps a rolling 14-day history; when you outgrow it, Starter and above retain traces indefinitely, so the only thing you pay for is how long you keep the data.",
   },
   {
     q: "Will adding observability slow down my LLM?",

@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card"
 import { useAppSelector } from "@/store/hooks"
 import { UpgradePlanButton } from "@/components/UpgradePlanButton"
-import { CacheStatsCard } from "./CacheStatsCard"
 import { UsageCard } from "./UsageCard"
 import { SpendingChartCard } from "./SpendingChartCard"
 import { AgenticEvalCard } from "./AgenticEvalCard"
@@ -65,8 +64,6 @@ function Overview() {
         </Card>
 
         <UsageCard />
-
-        <CacheStatsCard />
 
         <AgenticEvalCard />
 

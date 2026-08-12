@@ -158,7 +158,7 @@ fluiq.secure({ mode: "block" });`,
           <span className="text-foreground">10-year retention</span>: rows are never updated or deleted. Meets requirements under the EU AI Act, China AIGC regulations, and the Colorado AI Act.
         </li>
         <li>
-          <span className="text-foreground">Event types logged</span>: <code className="font-mono text-foreground">api_key.created</code>, <code className="font-mono text-foreground">api_key.deleted</code>, <code className="font-mono text-foreground">guardrail.updated</code>, <code className="font-mono text-foreground">eval.configured</code>, <code className="font-mono text-foreground">secure.configured</code>, <code className="font-mono text-foreground">optimize.configured</code>, <code className="font-mono text-foreground">user.invited</code>, <code className="font-mono text-foreground">user.removed</code>, and more.
+          <span className="text-foreground">Event types logged</span>: <code className="font-mono text-foreground">api_key.created</code>, <code className="font-mono text-foreground">api_key.deleted</code>, <code className="font-mono text-foreground">guardrail.updated</code>, <code className="font-mono text-foreground">eval.configured</code>, <code className="font-mono text-foreground">secure.configured</code>, <code className="font-mono text-foreground">user.invited</code>, <code className="font-mono text-foreground">user.removed</code>, and more.
         </li>
         <li>
           <span className="text-foreground">Dashboard access</span>: browse, filter, and export as CSV at <code className="font-mono text-foreground">/dashboard/audit</code>. The <code className="font-mono text-foreground">row_hash</code> field is shown per event for compliance hand-off.

@@ -11,7 +11,6 @@ import {
   CheckmarkCircle02Icon,
   EyeIcon,
   ShieldIcon,
-  ZapIcon,
   TestTube01Icon,
   SparklesIcon,
   AiContentGenerator01Icon,
@@ -32,7 +31,6 @@ import { IslandCta } from "@/components/IslandCta"
 import {
   TracesMockup,
   SecurityMockup,
-  OptimizationMockup,
   EvalMockup,
   PromptsMockup,
   DatasetsMockup,
@@ -50,10 +48,7 @@ fluiq.instrument(api_key="fl_...")
 # 2. Block attacks before they reach the model (Team+)
 fluiq.secure(mode="block")
 
-# 3. Cache repeated prompts (Team+)
-fluiq.optimize()
-
-# 4. Score and gate every response (all tiers)
+# 3. Score and gate every response (all tiers)
 fluiq.eval(
     thresholds={"hallucination": 0.8, "relevance": 0.75},
     mode="warn",          # "block" raises FluiqEvalError
@@ -65,7 +60,7 @@ response = client.chat.completions.create(
     model="gpt-4o",
     messages=[{"role": "user", "content": "..."}],
 )
-# ↑ Traced, scanned, cached, and evaluated automatically`
+# ↑ Traced, scanned, and evaluated automatically`
 
 const SETUP_TS = `import fluiq from "@fluiq/sdk";
 import OpenAI from "openai";
@@ -76,10 +71,7 @@ fluiq.instrument({ apiKey: "fl_..." });
 // 2. Block attacks before they reach the model (Team+)
 fluiq.secure({ mode: "block" });
 
-// 3. Cache repeated prompts (Team+)
-fluiq.optimize();
-
-// 4. Score and gate every response (all tiers)
+// 3. Score and gate every response (all tiers)
 fluiq.eval({
   thresholds: { hallucination: 0.8, relevance: 0.75 },
   mode: "warn", // "block" throws FluiqEvalError
@@ -91,7 +83,7 @@ const response = await client.chat.completions.create({
   model: "gpt-4o",
   messages: [{ role: "user", content: "..." }],
 });
-// ↑ Traced, scanned, cached, and evaluated automatically`
+// ↑ Traced, scanned, and evaluated automatically`
 
 /* Framework-agnostic sample: Python and TypeScript. */
 const PIPE_PY = `from fluiq import instrument, trace
@@ -106,7 +98,6 @@ def answer_question(question: str) -> str:
 # Every call is now:
 # Traced with cost + latency
 # Security-scanned
-# Cached if repeated
 # Evaluated for quality`
 
 const PIPE_TS = `import fluiq from "@fluiq/sdk";
@@ -121,7 +112,6 @@ const answerQuestion = fluiq.trace((question: string): string => {
 // Every call is now:
 // Traced with cost + latency
 // Security-scanned
-// Cached if repeated
 // Evaluated for quality`
 
 /* Python / TypeScript switch shown in a code block's top-right header. */
@@ -152,10 +142,9 @@ const HERO_CODE: Array<Array<[string, string]>> = [
   [],
   [["fluiq", CC.sig], [".instrument(api_key=", CC.base], ["\"fl_...\"", CC.str], [")", CC.base]],
   [["fluiq", CC.sig], [".secure(mode=", CC.base], ["\"block\"", CC.str], [")", CC.base]],
-  [["fluiq", CC.sig], [".optimize()", CC.base]],
   [["fluiq", CC.sig], [".eval(thresholds=", CC.base], ["{\"hallucination\": 0.8}", CC.base], [")", CC.base]],
   [],
-  [["# every call: traced, scanned, cached, scored", CC.com]],
+  [["# every call: traced, scanned, scored", CC.com]],
 ]
 
 export default function Home() {
@@ -210,9 +199,9 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
                 Fluiq sits on every agent run. It blocks prompt attacks before the
-                model executes, scores trajectories against your golden runs, serves
-                repeated work from cache, and traces every step across LangGraph,
-                CrewAI, ADK, and MCP. Two lines of Python.
+                model executes, scores trajectories against your golden runs, and
+                traces every step across LangGraph, CrewAI, ADK, and MCP.
+                Two lines of Python.
               </motion.p>
 
               <motion.div className="flex flex-wrap items-center gap-3"
@@ -379,49 +368,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3 · Optimization */}
+      {/* 3 · Evaluation */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate>
-              <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
-                <HugeiconsIcon icon={ZapIcon} size={16} />
-              </span>
-              <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-[1.15] mb-4">Stop paying for duplicate <span className="text-[#1860D3] dark:text-[#6FA8FF]">LLM calls</span></h2>
-              <p className="text-[15px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed mb-5">Fluiq analyses your actual trace history to find which prompts repeat, then provisions a dedicated cache instance for your account. Repeated calls are served from cache automatically.</p>
-              <ul className="space-y-2 mb-6">
-                {[
-                  "Server-side caching, zero infra to manage",
-                  "Profile built from your real traffic patterns",
-                  "Configurable TTL and model scope",
-                  "Observe mode prices the saving before you let it intercept anything",
-                  "Insights ranks your repeated prompts by what caching them would save",
-                ].map(pt => (
-                  <li key={pt} className="flex items-start gap-2.5 text-[13px] text-[#6B6B66] dark:text-[#9A9A92]">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} className="mt-0.5 shrink-0 text-[#1860D3] dark:text-[#6FA8FF]" />
-                    {pt}
-                  </li>
-                ))}
-              </ul>
-              <div className="rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] px-3 py-2 font-mono text-[12px] text-[#6B6B66] dark:text-[#9A9A92] inline-block">
-                fluiq.optimize()&nbsp;&nbsp;&nbsp;# "cache" | "observe"
-              </div>
-            </div>
-            <div data-animate data-delay="2">
-              <OptimizationMockup />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4 · Evaluation (reversed) */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate data-delay="2" className="lg:order-1">
-              <EvalMockup />
-            </div>
-            <div data-animate className="lg:order-2">
+            <div data-animate className="lg:order-1">
               <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={TestTube01Icon} size={16} />
               </span>
@@ -446,15 +397,21 @@ export default function Home() {
                 fluiq.eval(thresholds={"{'hallucination': 0.8}"})
               </div>
             </div>
+            <div data-animate data-delay="2" className="lg:order-2">
+              <EvalMockup />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 5 · Datasets */}
-      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
+      {/* 4 · Datasets (reversed) */}
+      <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24 bg-[#F7F6F1] dark:bg-[#0D0D0D]">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate>
+            <div data-animate data-delay="2" className="lg:order-1">
+              <DatasetsMockup />
+            </div>
+            <div data-animate className="lg:order-2">
               <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={Database01Icon} size={16} />
               </span>
@@ -478,22 +435,16 @@ export default function Home() {
                 Traces → Add to Dataset → Run Agentic Eval
               </div>
             </div>
-            <div data-animate data-delay="2">
-              <DatasetsMockup />
-            </div>
           </div>
         </div>
       </section>
 
-      {/* 6 · Prompt Management (reversed layout so adjacent sections zigzag;
-          plain bg so the tinted "How it works" band below keeps its edge) */}
+      {/* 5 · Prompt Management (plain bg so the tinted "How it works" band
+          below keeps its edge) */}
       <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-24">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div data-animate data-delay="2" className="lg:order-1">
-              <PromptsMockup />
-            </div>
-            <div data-animate className="lg:order-2">
+            <div data-animate className="lg:order-1">
               <span className="inline-flex items-center justify-center size-9 rounded-lg bg-[#F2F0E9] dark:bg-[#1A1A1A] border border-[#E5E1D6] dark:border-[#2A2A2A] text-[#1860D3] dark:text-[#6FA8FF] mb-5">
                 <HugeiconsIcon icon={AiContentGenerator01Icon} size={16} />
               </span>
@@ -518,6 +469,9 @@ export default function Home() {
                 fluiq.fetch_prompt("customer-support", env="production")
               </div>
             </div>
+            <div data-animate data-delay="2" className="lg:order-2">
+              <PromptsMockup />
+            </div>
           </div>
         </div>
       </section>
@@ -528,15 +482,14 @@ export default function Home() {
           <div data-animate className="mb-14 text-center">
             <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#1860D3] dark:text-[#6FA8FF] mb-4">How it works</p>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] leading-snug">
-              Four functions. Production-ready in minutes.
+              Three functions. Production-ready in minutes.
             </h2>
           </div>
-          <div className="grid gap-px bg-[#D4CFC1] dark:bg-[#2A2A2A] rounded-2xl overflow-hidden md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-px bg-[#D4CFC1] dark:bg-[#2A2A2A] rounded-2xl overflow-hidden md:grid-cols-2 lg:grid-cols-3">
             {[
               { step: "01", fn: "instrument()", description: "Patches every LLM call automatically. Traces, costs, and latency start flowing to your dashboard." },
               { step: "02", fn: "secure()",      description: "Pre-call attack detection blocks bad prompts. Post-call scanning redacts PII from stored traces." },
-              { step: "03", fn: "optimize()",    description: "Fluiq analyses your trace history, provisions Fluiq Caching, and serves duplicate calls from cache." },
-              { step: "04", fn: "eval()",        description: "LLM-as-judge scores every response. Warn or block based on your quality thresholds." },
+              { step: "03", fn: "eval()",        description: "LLM-as-judge scores every response. Warn or block based on your quality thresholds." },
             ].map((item, i) => (
               <div key={item.step} data-animate data-delay={String(i + 1)} className="bg-[#FAF9F6] dark:bg-[#1A1A1A] p-7">
                 <p className="text-[11px] font-semibold text-[#1860D3] dark:text-[#6FA8FF] tracking-widest mb-4">{item.step}</p>
@@ -676,7 +629,7 @@ export default function Home() {
             </div>
             <h2 className="font-heading text-4xl font-bold tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6] md:text-5xl"><span className="text-[#1860D3] dark:text-[#6FA8FF]">Unlimited</span> traces, always free.</h2>
             <p className="mt-4 text-[16px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed max-w-xl mx-auto">
-              Tracing, security scanning, and evaluation all run on the free tier. Caching unlocks on Team. No code changes required.
+              Tracing, security scanning, and evaluation all run on the free tier. No code changes required.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <IslandCta to="/signup">Start free</IslandCta>

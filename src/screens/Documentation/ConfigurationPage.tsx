@@ -15,7 +15,7 @@ export default function ConfigurationPage() {
       <PageHeading
         icon={ZapIcon}
         title="Configuration"
-        description="Four top-level functions configure the SDK. instrument() is required; optimize(), secure(), and eval() are optional paid features."
+        description="Three top-level functions configure the SDK. instrument() is required and free; secure() and eval() are opt-in."
       />
 
       <p className="font-medium">fluiq.instrument()</p>
@@ -35,33 +35,6 @@ export default function ConfigurationPage() {
       <p className="text-sm text-muted-foreground">
         The SDK reads <code className="font-mono text-foreground">FLUIQ_API_KEY</code> and <code className="font-mono text-foreground">FLUIQ_API_ENDPOINT</code> from the environment automatically, so <code className="font-mono text-foreground">instrument()</code> can be called with no arguments in CI and production environments that set those variables.
       </p>
-
-      <p className="font-medium mt-2">fluiq.optimize()</p>
-      <Code>{byLang(
-        lang,
-        `fluiq.optimize(
-    mode = "cache",    # "cache" (default) | "observe"
-)`,
-        `fluiq.optimize({
-  mode: "cache", // "cache" (default) | "observe"
-});`,
-      )}</Code>
-      <div className="grid gap-3 text-sm">
-        <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3">
-          <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="mt-0.5 shrink-0 text-foreground/70" />
-          <div>
-            <p className="font-mono text-sm text-foreground">
-              mode
-              <Badge variant="outline" className="ml-2">Team+ required</Badge>
-            </p>
-            <p className="mt-1 text-muted-foreground">
-              <code className="font-mono text-foreground">"cache"</code>: full Redis caching enabled (default).{" "}
-              <code className="font-mono text-foreground">"observe"</code>: records what would be hits without intercepting calls.
-              Must be called after <code className="font-mono text-foreground">instrument()</code>. Fails open: if the backend is unreachable or the plan check fails, all LLM calls proceed normally.
-            </p>
-          </div>
-        </div>
-      </div>
 
       <p className="font-medium mt-2">fluiq.secure()</p>
       <Code>{byLang(

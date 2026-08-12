@@ -3,7 +3,6 @@ import {
   Activity01Icon,
   AiSecurity02Icon,
   ApiIcon,
-  FlashIcon,
   Notification01Icon,
   TestTube01Icon,
   AiContentGenerator01Icon,
@@ -48,11 +47,6 @@ const KIND_META: Record<
     icon: TestTube01Icon,
     dot: "bg-blue-500",
     label: "Evals",
-  },
-  optimization: {
-    icon: FlashIcon,
-    dot: "bg-amber-500",
-    label: "Optimization",
   },
   prompts: {
     icon: AiContentGenerator01Icon,

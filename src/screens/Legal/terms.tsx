@@ -117,8 +117,8 @@ export default function Terms() {
 
             <Section id="service" title="The Service">
               <P>
-                Fluiq provides a developer platform for LLM observability, security scanning, evaluation,
-                prompt management, and optimization. The service includes:
+                Fluiq provides a developer platform for LLM security scanning, observability, and
+                evaluation, including dataset and prompt management. The service includes:
               </P>
               <Ul items={[
                 "The Fluiq Python SDK and any future language SDKs",
