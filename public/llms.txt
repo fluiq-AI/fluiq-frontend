@@ -1,6 +1,6 @@
 # Fluiq
 
-Fluiq is the control plane for AI agents in production, with Python and TypeScript SDKs. Two lines of SDK code give every agent run and LLM call automatic tracing, cost attribution, pre-call security blocking, and quality evaluation, all visible in one real-time dashboard. Observability is free and unlimited on every plan; retention is the only paid axis.
+Fluiq is the control plane for AI agents in production, with Python and TypeScript SDKs. Two lines of SDK code give every agent run and LLM call automatic tracing, cost attribution, pre-call security blocking, and quality evaluation, all visible in one real-time dashboard. Observability is free and unlimited on every plan: no trace, span, or agent cap on any tier, including Free. Retention, evaluation volume, and security-scan volume are the paid axes.
 
 ## What Fluiq does
 
@@ -11,6 +11,12 @@ Fluiq replaces separate AI tooling concerns with a single SDK. It auto-instrumen
 - **Evaluate** (`fluiq.eval()`): opt-in LLM-as-judge scoring (instrument() alone only traces); six metrics: hallucination, faithfulness, relevance, toxicity, coherence, completeness; warn mode logs scores; block mode raises FluiqEvalError before bad responses reach the user; CI/CD GitHub Actions gate. **Agentic evaluation** judges whole runs: deterministic checks, tool-selection quality, trajectory against the goal, and multi-agent coordination. Borderline verdicts are decided by a multi-model judge jury, and every vote is kept for audit.
 
 **Datasets** and **Prompt Management** are part of the Evaluation pillar. Datasets are golden sets built from real traces; each example pins the whole agent trajectory including tools, MCP calls, and media, so batch agentic-eval and security runs keep working as a regression gate after retention ends. Prompt Management holds versioned templates with per-environment deployment, and any saved prompt can be promoted to a custom judge.
+
+## For AI agents integrating Fluiq
+
+If you are a coding agent adding observability, security, or evals to someone's
+AI application, read https://getfluiq.com/agents.md — it is a copy-paste
+integration brief with the exact call order, the failure modes, and what not to do.
 
 ## Supported integrations
 
@@ -69,18 +75,23 @@ text = prompt.render(ticket_body=raw_text)
 ## Pages
 
 - [Home](https://getfluiq.com/): Product overview covering the pillars, integration list, code samples, stats, and getting-started CTA.
-- [Pricing](https://getfluiq.com/pricing): Free (unlimited traces, 14-day retention), Team $299/mo, Growth $599/mo, Enterprise custom. 5-day free trial, no card.
+- [Pricing](https://getfluiq.com/pricing): Free $0, Starter $29/mo, Team $149/mo, Growth $499/mo, Enterprise custom. Annual billing is ~2 months free. 5-day free trial on any paid tier, no card. Usage beyond an allowance is billed per unit rather than blocked.
 - [Datasets](https://getfluiq.com/datasets): Golden datasets with whole-trajectory capture for agent regression testing.
 - [Documentation](https://getfluiq.com/documentation): Full SDK reference covering installation, auto-instrumentation, the @trace decorator, agent tracing, security scanning, evaluation, datasets, prompt management, cost analytics, and configuration.
 - [Contact](https://getfluiq.com/contact): Reach the Fluiq team for sales and pricing enquiries, integration support, feature requests, and partnership discussions. Replies within one business day.
-- [Sign up](https://getfluiq.com/signup): Create a free account (no credit card required) and receive an API key. The free tier includes unlimited traces (14-day retention) and 1,000 LLM-as-judge evaluations per month.
+- [Sign up](https://getfluiq.com/signup): Create a free account (no credit card required) and receive an API key. The free tier includes unlimited traces (14-day retention), 100 evaluations, and 1,000 security scans per month.
 - [Log in](https://getfluiq.com/login): Access the Fluiq dashboard.
 
 ## Key facts
 
-- Free tier: unlimited traces, 1,000 evals/month, 1 seat, 14-day rolling retention, no card required
-- Paid plans: Team $299/mo (unlimited, never-expiring trace retention, SSO), Growth $599/mo (higher scan and eval volume, priority support), Enterprise custom (VPC/on-prem, SAML/SCIM)
-- 5-day free trial of Team or Growth, no card required
+- Free tier: $0 forever — unlimited traces, 100 evaluations/month, 1,000 security scans/month, 1 seat, 14-day rolling retention, no card required
+- Starter $29/mo — unlimited (never-expiring) retention, 2,000 evals, 50,000 scans, 3 seats, multi-model judge jury, CI/CD eval gates, Slack alerts
+- Team $149/mo — 10,000 evals, 500,000 scans, 10 seats, SSO, custom eval thresholds and judge prompts, 48h email support
+- Growth $499/mo — 50,000 evals, 2,000,000 scans, 25 seats, volume discount on overage, 24h priority support
+- Enterprise custom — unlimited everything, VPC/on-prem, SAML/SCIM, audit-log exports, custom SLA
+- Annual billing is roughly two months free; a 5-day free trial of any paid tier needs no card
+- Overage is billed, not blocked: LLM evaluation $0.007, agentic eval $0.015 (fast) / $0.065 (standard) / $0.545 (deep), security scan $0.0005. Security scanning is pattern and NER based with no judge tokens, which is why it is ~14x cheaper than a single-judge eval
+- Bring your own OpenAI/Anthropic/Google key and judge tokens bill to your account at your negotiated rate instead of counting against the eval allowance
 - Install with: `pip install fluiq` (Python) or `npm install @fluiq/sdk` (TypeScript)
 - SDK languages: Python 3.9+ and TypeScript / Node.js
 - Dashboard URL: https://getfluiq.com
@@ -88,4 +99,5 @@ text = prompt.render(ticket_body=raw_text)
 - Support: https://getfluiq.com/contact
 - Full docs: https://getfluiq.com/documentation
 - Extended LLM reference: https://getfluiq.com/llms-full.txt
+- Agent integration brief: https://getfluiq.com/agents.md
 - Category: AI agent governance, agent observability, AI security, LLM evaluation

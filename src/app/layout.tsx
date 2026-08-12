@@ -120,8 +120,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* LLM crawler discovery */}
         <link rel="alternate" type="text/plain" title="LLM context (summary)" href="/llms.txt" />
         <link rel="alternate" type="text/plain" title="LLM context (full reference)" href="/llms-full.txt" />
+        <link rel="alternate" type="text/markdown" title="Agent integration brief" href="/agents.md" />
         <meta name="llms-txt" content={`${site}/llms.txt`} />
         <meta name="llms-full-txt" content={`${site}/llms-full.txt`} />
+        <meta name="agents-md" content={`${site}/agents.md`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd(site)) }}

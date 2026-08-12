@@ -41,7 +41,7 @@ const tiers: Tier[] = [
   {
     name: "Free",
     price: { monthly: 0, annual: 0 },
-    traces: "Unlimited traces, forever",
+    traces: "Unlimited traces",
     scans: "1,000 security scans / month",
     evals: "100 evaluations / month",
     seats: "1 seat",
@@ -50,7 +50,7 @@ const tiers: Tier[] = [
     ctaHref: "/signup",
     highlighted: false,
     features: [
-      { label: "full observability", included: true },
+      { label: "Full observability, no trace cap", included: true },
       { label: "Full security scanning, warn or block mode", included: true },
       { label: "Agentic evaluation (tool selection, trajectory)", included: true },
       { label: "Trace explorer & live dashboard", included: true },
@@ -148,6 +148,24 @@ const usageRates: { label: string; price: string; detail: string }[] = [
 type Cell = string | boolean
 const comparison: { category: string; rows: { label: string; values: [Cell, Cell, Cell, Cell, Cell] }[] }[] = [
   {
+    category: "Security",
+    rows: [
+      { label: "Security scans / month included", values: ["1,000", "50,000", "500,000", "2,000,000", "Unlimited"] },
+      { label: "Prompt injection detection", values: [true, true, true, true, true] },
+      { label: "Jailbreak & skeleton-key detection", values: [true, true, true, true, true] },
+      { label: "Semantic attack scoring", values: [true, true, true, true, true] },
+      { label: "PII detection & redaction", values: [true, true, true, true, true] },
+      { label: "Secret leak prevention", values: [true, true, true, true, true] },
+      { label: "Indirect injection detection", values: [true, true, true, true, true] },
+      { label: "RAG poisoning detection", values: [true, true, true, true, true] },
+      { label: "Tool-input exfiltration & allowlist enforcement", values: [true, true, true, true, true] },
+      { label: "Cross-agent injection & trust-boundary escalation", values: [true, true, true, true, true] },
+      { label: "Image & multimodal scanning", values: [true, true, true, true, true] },
+      { label: "Warn or block mode", values: [true, true, true, true, true] },
+      { label: "Custom guardrail policies", values: [false, true, true, true, true] },
+    ],
+  },
+  {
     category: "Observability",
     rows: [
       { label: "Traces / month", values: ["Unlimited", "Unlimited", "Unlimited", "Unlimited", "Unlimited"] },
@@ -187,25 +205,7 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
     ],
   },
   {
-    category: "Security",
-    rows: [
-      { label: "Security scans / month included", values: ["1,000", "50,000", "500,000", "2,000,000", "Unlimited"] },
-      { label: "Prompt injection detection", values: [true, true, true, true, true] },
-      { label: "Jailbreak & skeleton-key detection", values: [true, true, true, true, true] },
-      { label: "Semantic attack scoring", values: [true, true, true, true, true] },
-      { label: "PII detection & redaction", values: [true, true, true, true, true] },
-      { label: "Secret leak prevention", values: [true, true, true, true, true] },
-      { label: "Indirect injection detection", values: [true, true, true, true, true] },
-      { label: "RAG poisoning detection", values: [true, true, true, true, true] },
-      { label: "Tool-input exfiltration & allowlist enforcement", values: [true, true, true, true, true] },
-      { label: "Cross-agent injection & trust-boundary escalation", values: [true, true, true, true, true] },
-      { label: "Image & multimodal scanning", values: [true, true, true, true, true] },
-      { label: "Warn or block mode", values: [true, true, true, true, true] },
-      { label: "Custom guardrail policies", values: [false, true, true, true, true] },
-    ],
-  },
-  {
-    category: "Prompt management",
+    category: "Evaluation · Prompt management",
     rows: [
       { label: "Versioned prompt registry", values: [true, true, true, true, true] },
       { label: "Fetch by slug from the SDK", values: [true, true, true, true, true] },
@@ -215,7 +215,7 @@ const comparison: { category: string; rows: { label: string; values: [Cell, Cell
     ],
   },
   {
-    category: "Datasets",
+    category: "Evaluation · Datasets",
     rows: [
       { label: "Golden datasets built from traces", values: [true, true, true, true, true] },
       { label: "Whole-trajectory capture (steps, tools, MCP, media)", values: [true, true, true, true, true] },
@@ -346,7 +346,7 @@ export default function Pricing() {
             className="mt-6 mx-auto max-w-xl text-[18px] text-[#6B6B66] dark:text-[#9A9A92] leading-relaxed"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.25, ease: EASE_OUT }}>
-            Unlimited tracing on every plan, free forever. Security scanning on every plan too, including Free. You pay for evaluation volume, nothing else.
+            Unlimited tracing on every plan, free forever — no trace, span, or agent cap. Security scanning is on every plan too, including Free. You pay for how long traces are kept and how much you evaluate and scan.
           </motion.p>
 
           {/* Billing toggle */}

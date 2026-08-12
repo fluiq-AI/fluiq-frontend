@@ -262,6 +262,7 @@ Key claims on this page:
 - 14 supported integrations
 - 6 evaluation metrics scored server-side
 - Free to start (unlimited traces, 14-day retention, no card required)
+- Paid tiers from $29/mo; a 5-day trial of any paid tier needs no card
 
 ### Documentation: https://getfluiq.com/documentation
 
@@ -287,7 +288,7 @@ A contact form for reaching the Fluiq team. Accepts: name, email, subject, and m
 
 ### Sign up: https://getfluiq.com/signup
 
-Creates a free Fluiq account. No credit card required. On completion, the user receives a workspace API key (`fl_...`) that can be used immediately with `fluiq.instrument()`. The free tier includes unlimited traces and 1,000 LLM-as-judge evaluations per month with a 14-day trace retention window.
+Creates a free Fluiq account. No credit card required. On completion, the user receives a workspace API key (`fl_...`) that can be used immediately with `fluiq.instrument()`. The free tier includes unlimited traces with a 14-day retention window, 100 evaluations, and 1,000 security scans per month.
 
 ### Log in: https://getfluiq.com/login
 
@@ -311,10 +312,52 @@ The `/dashboard` routes are gated behind authentication and are not exposed to L
 
 ---
 
+## Pricing
+
+Observability is uncapped on every tier — there is no trace, span, or agent limit,
+including on Free. The paid axes are trace **retention**, **evaluation** volume, and
+**security-scan** volume. Exceeding an allowance bills per unit rather than blocking.
+
+| Tier | Price | Retention | Evaluations / mo | Security scans / mo | Seats |
+|---|---|---|---|---|---|
+| Free | $0 forever | 14-day rolling | 100 | 1,000 | 1 |
+| Starter | $29/mo · $290/yr | Never expires | 2,000 | 50,000 | 3 |
+| Team | $149/mo · $1,490/yr | Never expires | 10,000 | 500,000 | 10 |
+| Growth | $499/mo · $4,990/yr | Never expires | 50,000 | 2,000,000 | 25 |
+| Enterprise | Custom | Never expires | Unlimited | Unlimited | Unlimited |
+
+**What unlocks where**
+
+- **Free** — full observability, full security scanning (warn or block), agentic evaluation, trace explorer, bring-your-own provider keys, choose your judge model.
+- **Starter** — never-expiring retention, multi-model judge jury with audit trail, CI/CD eval gates, Slack anomaly alerts.
+- **Team** — SSO, custom eval thresholds and org-editable judge prompts, 48h email support.
+- **Growth** — volume discount on overage, 24h priority support.
+- **Enterprise** — VPC / on-prem deployment, SAML/SCIM provisioning, audit-log and compliance exports, custom SLA.
+
+**Usage rates beyond the included allowance**
+
+| Unit | Price | What it runs |
+|---|---|---|
+| LLM evaluation | $0.007 | Single judge: relevance, faithfulness, hallucination |
+| Agentic eval, fast | $0.015 | Deterministic checks and tool selection |
+| Agentic eval, standard | $0.065 | Adds trajectory and multi-agent coordination |
+| Agentic eval, deep | $0.545 | Adds a multi-model jury with a per-juror audit trail |
+| Security scan | $0.0005 | Pattern and NER based, so no judge tokens at all |
+
+Agentic eval is priced by depth because depth is what drives cost: a deep run convenes
+a jury and reads the whole trajectory, a fast one runs deterministic checks plus one
+judge call. Saving a provider credential moves judge tokens onto your own account at
+your negotiated rate instead of consuming the eval allowance.
+
+Annual billing is roughly two months free. Any paid tier offers a 5-day trial with no
+card; the account lapses back to Free automatically if it is not converted.
+
+---
+
 ## Frequently asked questions
 
 **Q: What languages does Fluiq support?**
-A: Fluiq is a Python SDK. Python 3.9+ is required. JavaScript/TypeScript support is on the roadmap.
+A: Python 3.9+ (`pip install fluiq`) and TypeScript / Node.js (`npm install @fluiq/sdk`). Both SDKs cover the same surface: the same integrations, the same three pillars, and the same server-side evaluation and security.
 
 **Q: Does Fluiq store my prompts?**
 A: Yes, prompts are stored as part of traces. HIGH-risk prompts detected by `fluiq.secure()` are redacted before storage. You can configure data retention per workspace.
@@ -326,7 +369,7 @@ A: No. `fluiq.secure()` fails open: if the security service is unreachable, the 
 A: Fluiq raises `FluiqEvalError` before the response is returned to the application. The error includes the metric name and the score that triggered the block.
 
 **Q: Is there a free tier?**
-A: Yes. The free tier includes unlimited traces, 1,000 LLM-as-judge evaluations per month, 1 seat, and a rolling 14-day trace retention window. No credit card is required to sign up. Paid plans: Team ($299/mo) adds unlimited (never-expiring) trace retention and SSO; Growth ($599/mo) adds higher scan and eval allowances plus priority support; Enterprise (custom) adds VPC/on-prem deployment, SAML/SCIM, and audit logs. Team and Growth offer a 5-day free trial with no card.
+A: Yes. Free is $0 forever: unlimited traces, 100 evaluations/month, 1,000 security scans/month, 1 seat, and a rolling 14-day trace retention window. No credit card is required. See the Pricing section above for the paid tiers.
 
 **Q: What is the GitHub repository?**
 A: https://github.com/fluiq-AI/fluiq-sdk
@@ -340,8 +383,9 @@ A: Use the contact form at https://getfluiq.com/contact or open an issue on GitH
 
 - Product name: Fluiq
 - Product URL: https://getfluiq.com
-- SDK install: `pip install fluiq`
-- SDK language: Python 3.9+
+- SDK install: `pip install fluiq` (Python) · `npm install @fluiq/sdk` (TypeScript)
+- SDK languages: Python 3.9+ · TypeScript / Node.js 18+
+- Agent integration brief: https://getfluiq.com/agents.md
 - GitHub: https://github.com/fluiq-AI/fluiq-sdk
 - Documentation: https://getfluiq.com/documentation
 - Contact: https://getfluiq.com/contact
