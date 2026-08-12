@@ -121,9 +121,10 @@ export const METRIC_FLOWS: Record<string, MetricFlow> = {
   completeness: singleStepFlow("completeness", "Answer", "Completeness score"),
   // The agentic evaluator's layered pipeline (jobs/agentic/orchestrator.py):
   // L0 normalize → L1 deterministic (no judge) → L2 tool selection →
-  // L3 trajectory → L4 multi-agent coordination → optional deep jury → gated
-  // run score. Depth decides how far it runs: fast stops after L2, standard
-  // adds L3/L4, deep adds the jury.
+  // L2.5 retrieval & ranking → L3 trajectory → L4 multi-agent coordination →
+  // optional deep jury → gated run score. Depth decides how far it runs: fast
+  // stops after L2.5, standard adds L3/L4, deep adds the jury. L2.5 runs at
+  // every depth but only when the run actually retrieved something.
   agentic: {
     steps: [
       { id: "in", kind: "input", label: "Normalize trace", note: "spans → agent run", x: 0, y: 0 },
@@ -133,20 +134,25 @@ export const METRIC_FLOWS: Record<string, MetricFlow> = {
         note: "L2 · right tools, args & MCP server", prompt: "tool_selection_quality", x: COL * 2, y: 0,
       },
       {
+        id: "lr", kind: "prompt", label: "Retrieval & ranking",
+        note: "L2.5 · relevance, nDCG, use", prompt: "retrieval_quality", x: COL * 3, y: 0,
+      },
+      {
         id: "l3", kind: "prompt", label: "Trajectory",
-        note: "L3 · goal progress", prompt: "trajectory_quality", x: COL * 3, y: 0,
+        note: "L3 · goal progress", prompt: "trajectory_quality", x: COL * 4, y: 0,
       },
       {
         id: "l4", kind: "prompt", label: "Coordination",
-        note: "L4 · multi-agent joins", prompt: "agent_coordination", x: COL * 4, y: 0,
+        note: "L4 · multi-agent joins", prompt: "agent_coordination", x: COL * 5, y: 0,
       },
-      { id: "panel", kind: "decision", label: "Jury", note: "deep only · re-score", x: COL * 5, y: 0 },
-      { id: "score", kind: "score", label: "Run score", note: "blended & gated", x: COL * 6, y: 0 },
+      { id: "panel", kind: "decision", label: "Jury", note: "deep only · re-score", x: COL * 6, y: 0 },
+      { id: "score", kind: "score", label: "Run score", note: "blended & gated", x: COL * 7, y: 0 },
     ],
     edges: [
       { from: "in", to: "l1" },
       { from: "l1", to: "l2" },
-      { from: "l2", to: "l3" },
+      { from: "l2", to: "lr" },
+      { from: "lr", to: "l3" },
       { from: "l3", to: "l4" },
       { from: "l4", to: "panel" },
       { from: "panel", to: "score" },

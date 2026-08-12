@@ -304,7 +304,9 @@ export function RunEvaluationDrawer({
   // extra model repeats the whole run. A metrics grader is a built-in metric or
   // a custom scorer; an agentic run's judged layers depend on depth (fast stops
   // after tool selection, standard/deep add trajectory + coordination). Treat
-  // it as a floor: multi-step metrics and a deep jury make more calls each.
+  // it as a floor: multi-step metrics and a deep jury make more calls each, and
+  // a run that retrieves adds one retrieval-layer call per retrieval step at
+  // every depth.
   const modelCount = Math.max(1, activeModels.length)
   const agenticLayers = judgeSel.depth === "fast" ? 1 : 3
   const graderCount =
@@ -316,7 +318,7 @@ export function RunEvaluationDrawer({
     effectiveMode === "agentic"
       ? judgeSel.depth === "deep"
         ? "Deep depth adds a jury, multiplying judge calls per layer."
-        : "Only spans with tool calls trigger the tool-selection layer."
+        : "Tool selection runs only on spans with tool calls; retrieval adds a call per retrieval step."
       : "Multi-step metrics like hallucination make more than one call each."
 
   function toggleScorer(slug: string, on: boolean) {
