@@ -187,7 +187,7 @@ export const SEO = {
                   unitText: "MONTH",
                 },
                 description:
-                  "Unlimited traces, fluiq.optimize() response caching, and 10,000 evals/month.",
+                  "Unlimited traces, unlimited retention, SSO, and 10,000 evals/month.",
               },
               {
                 "@type": "Offer",
@@ -387,12 +387,6 @@ export const DOC_SEO = {
     "LLM observability, LLM tracing, token attribution, USD cost tracking, latency histograms, span tree, real-time traces",
     "/documentation/observability",
   ),
-  optimization: techArticle(
-    "LLM Cost Optimization & Response Caching Docs | Fluiq",
-    "Cut LLM costs by caching repeated prompts server-side. fluiq.optimize() analyses your trace history, provisions a cache instance, and serves duplicates automatically.",
-    "LLM caching, prompt caching, LLM cost optimization, response caching, Redis LLM cache, reduce LLM costs",
-    "/documentation/optimization",
-  ),
   security: techArticle(
     "LLM Security: Prompt Injection & PII Defense Docs | Fluiq",
     "Block prompt injection, jailbreaks, and PII leakage before they reach your model. fluiq.secure() adds pre-call and post-call scanning with zero false positives.",
@@ -470,12 +464,6 @@ export const PLATFORM_SEO = {
     "LLM security, prompt injection detection, jailbreak detection, PII redaction, LLM guardrails, secret redaction, AI security",
     "/security",
   ),
-  optimization: pillarPage(
-    "LLM Cost Optimization & Response Caching | Fluiq Platform",
-    "Cut LLM costs by caching repeated prompts server-side. Fluiq profiles your real trace history, provisions a cache, and serves duplicate calls automatically.",
-    "LLM caching, prompt caching, LLM cost optimization, response caching, reduce LLM costs, observe mode",
-    "/optimization",
-  ),
   evaluation: pillarPage(
     "LLM Evaluation & Quality Gates: LLM-as-Judge | Fluiq",
     "Score every LLM response for hallucination, faithfulness, relevance, and toxicity with LLM-as-judge. Agentic evaluation judges whole runs: tool selection, trajectory, and multi-agent coordination, with a multi-model jury deciding borderline cases.",
@@ -551,12 +539,6 @@ export const EXAMPLE_SEO = {
     "Code examples for fluiq.eval(): scoring LLM responses for hallucination, relevance, and toxicity with warn and block modes across major providers.",
     "fluiq.eval examples, LLM evaluation code, hallucination scoring example, LLM-as-judge code, toxicity scoring, eval modes",
     "/examples/evaluation",
-  ),
-  optimization: techArticle(
-    "Optimization Examples: Trace-Driven LLM Caching | Fluiq",
-    "Code examples for fluiq.optimize(): trace-driven LLM response caching with observe mode, configurable TTL, and per-model scope.",
-    "fluiq.optimize examples, LLM caching code, response caching example, cache TTL, prompt caching code, observe mode",
-    "/examples/optimization",
   ),
   prompts: techArticle(
     "Prompt Management Examples: Versioned Templates | Fluiq",

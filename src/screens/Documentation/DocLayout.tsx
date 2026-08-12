@@ -8,7 +8,6 @@ import {
   CheckmarkCircle02Icon,
   Database01Icon,
   FileScriptIcon,
-  MagicWand01Icon,
   RocketIcon,
   SecurityCheckIcon,
   ZapIcon,
@@ -26,17 +25,21 @@ const NAV = [
   {
     section: "Pillars",
     items: [
-      { to: "/documentation/observability", label: "Observability", icon: ChartLineData01Icon },
       { to: "/documentation/security",      label: "Security",      icon: SecurityCheckIcon },
+      { to: "/documentation/observability", label: "Observability", icon: ChartLineData01Icon },
       { to: "/documentation/evaluation",    label: "Evaluation",    icon: CheckmarkCircle02Icon },
-      { to: "/documentation/optimization",  label: "Optimization",  icon: MagicWand01Icon },
+    ],
+  },
+  {
+    section: "Part of Evaluation",
+    items: [
+      { to: "/documentation/datasets",      label: "Datasets",      icon: Database01Icon },
+      { to: "/documentation/prompts",       label: "Prompts",       icon: FileScriptIcon },
     ],
   },
   {
     section: "Reference",
     items: [
-      { to: "/documentation/prompts",       label: "Prompts",       icon: FileScriptIcon },
-      { to: "/documentation/datasets",      label: "Datasets",      icon: Database01Icon },
       { to: "/documentation/configuration", label: "Configuration", icon: ZapIcon },
       { to: "/documentation/alerts",        label: "Alerts",        icon: Alert02Icon },
     ],

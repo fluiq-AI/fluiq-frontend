@@ -136,7 +136,7 @@ const GROUPED: FaqGroup[] = [
     title: "Data, privacy & deployment",
     blurb: "Where your data sits and how to get it back out.",
     entries: [
-      ...pick("Do you support self-hosting?", "How does fluiq.optimize() work?"),
+      ...pick("Do you support self-hosting?"),
       ...EXTRA.data,
     ],
   },

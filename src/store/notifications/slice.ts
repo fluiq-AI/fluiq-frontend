@@ -3,7 +3,6 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit"
 export type NotificationKind =
   | "security"
   | "evals"
-  | "optimization"
   | "prompts"
   | "observability"
   | "api"

@@ -16,11 +16,11 @@ function MockHead({ path }: { path: string }) {
 
 export function TracesMockup() {
   const rows = [
-    { fn: "answer_question", model: "gpt-4o",       ms: "1,243", cost: "$0.012", tag: "LangChain", cached: false },
-    { fn: "search_docs",     model: "claude-3.5-s", ms: "—",     cost: "$0.000", tag: "Cached",   cached: true  },
-    { fn: "generate_report", model: "gpt-4o",       ms: "2,108", cost: "$0.041", tag: "OpenAI",   cached: false },
-    { fn: "classify_intent", model: "gemini-1.5",   ms: "890",   cost: "$0.005", tag: "Google",   cached: false },
-    { fn: "answer_question", model: "gpt-4o",       ms: "1,540", cost: "$0.019", tag: "LangChain",cached: false },
+    { fn: "answer_question", model: "gpt-4o",       ms: "1,243", cost: "$0.012", tag: "LangChain" },
+    { fn: "search_docs",     model: "claude-3.5-s", ms: "412",   cost: "$0.003", tag: "Anthropic" },
+    { fn: "generate_report", model: "gpt-4o",       ms: "2,108", cost: "$0.041", tag: "OpenAI"    },
+    { fn: "classify_intent", model: "gemini-1.5",   ms: "890",   cost: "$0.005", tag: "Google"    },
+    { fn: "answer_question", model: "gpt-4o",       ms: "1,540", cost: "$0.019", tag: "LangChain" },
   ]
   return (
     <div className={_shell}>
@@ -50,14 +50,10 @@ export function TracesMockup() {
             <tr key={i} className={_tr}>
               <td className="px-3 py-2.5 font-mono text-[10px] text-[#0a0a0a] dark:text-[#FAF9F6]">{r.fn}</td>
               <td className="px-3 py-2.5 font-mono text-[10px] text-[#6B6B66] dark:text-[#9A9A92]">{r.model}</td>
-              <td className="px-3 py-2.5 font-mono text-[10px]">
-                {r.cached
-                  ? <span className="text-[#1860D3] dark:text-[#6FA8FF]">⚡ cached</span>
-                  : <span className="text-[#0a0a0a] dark:text-[#FAF9F6]">{r.ms}ms</span>}
-              </td>
+              <td className="px-3 py-2.5 font-mono text-[10px] text-[#0a0a0a] dark:text-[#FAF9F6]">{r.ms}ms</td>
               <td className="px-3 py-2.5 font-mono text-[10px] text-[#0a0a0a] dark:text-[#FAF9F6]">{r.cost}</td>
               <td className="px-3 py-2.5">
-                <span className={`text-[9px] rounded-full px-2 py-0.5 ${r.cached ? "bg-[#E8F0FD] dark:bg-[#1860D3]/20 text-[#1860D3] dark:text-[#6FA8FF]" : "bg-[#F2F0E9] dark:bg-[#2A2A2A] text-[#6B6B66] dark:text-[#9A9A92]"}`}>{r.tag}</span>
+                <span className="text-[9px] rounded-full bg-[#F2F0E9] dark:bg-[#2A2A2A] px-2 py-0.5 text-[#6B6B66] dark:text-[#9A9A92]">{r.tag}</span>
               </td>
             </tr>
           ))}
@@ -126,67 +122,6 @@ export function SecurityMockup() {
           ))}
         </tbody>
       </table>
-    </div>
-  )
-}
-
-export function OptimizationMockup() {
-  const perKind = [
-    { kind: "EmbeddingCache", rate: 0.912 },
-    { kind: "PromptCache",    rate: 0.775 },
-  ]
-  return (
-    <div className={_shell}>
-      <div className={_head}>
-        <img src="/logo.svg" alt="" className="size-[14px] opacity-40" />
-        <span className="text-[11px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6]">Fluiq</span>
-        <span className="text-[11px] text-[#9A9A92]">/ optimize</span>
-        <div className="ml-auto flex items-center gap-0.5 rounded-md border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#F2F0E9]/60 dark:bg-[#1A1A1A]/60 p-0.5">
-          {["1h","6h","24h","7d"].map((t, i) => (
-            <span key={t} className={`text-[9px] px-2 py-px rounded ${i === 2 ? "bg-[#FAF9F6] dark:bg-[#2A2A2A] text-[#0a0a0a] dark:text-[#FAF9F6] shadow-xs" : "text-[#9A9A92]"}`}>{t}</span>
-          ))}
-        </div>
-      </div>
-      <div className="grid grid-cols-3 gap-3 p-4">
-        {[
-          { label: "Hit Rate",     value: "84.3%", sub: "10.5k hits saved", vc: "text-[#2D7A4F]" },
-          { label: "Total Calls",  value: "12.4k", sub: "last 24h",         vc: "" },
-          { label: "Misses",       value: "1.9k",  sub: "15.7% miss rate",  vc: "text-[#6B6B66] dark:text-[#9A9A92]" },
-        ].map(s => (
-          <div key={s.label} className="rounded-xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] p-3">
-            <p className="text-[9px] uppercase tracking-wide text-[#9A9A92]">{s.label}</p>
-            <p className={`font-heading text-lg font-bold mt-0.5 ${s.vc || "text-[#0a0a0a] dark:text-[#FAF9F6]"}`}>{s.value}</p>
-            <p className="text-[9px] text-[#9A9A92] mt-0.5">{s.sub}</p>
-          </div>
-        ))}
-      </div>
-      <div className="px-4 pb-4">
-        <div className="rounded-xl border border-[#E5E1D6] dark:border-[#2A2A2A] bg-[#FAF9F6] dark:bg-[#1A1A1A] p-4">
-          <p className="text-[11px] font-semibold text-[#0a0a0a] dark:text-[#FAF9F6] mb-3">Cache Performance</p>
-          <div className="space-y-1 mb-3">
-            <div className="flex justify-between text-[10px]">
-              <span className="text-[#9A9A92]">Overall hit rate</span>
-              <span className="font-mono font-medium text-[#2D7A4F]">84.3%</span>
-            </div>
-            <div className="h-2 rounded-full bg-[#F2F0E9] dark:bg-[#2A2A2A]">
-              <div className="h-full rounded-full bg-[#2D7A4F] transition-all" style={{ width: "84.3%" }} />
-            </div>
-          </div>
-          <div className="border-t border-[#E5E1D6] dark:border-[#2A2A2A] pt-3 space-y-2.5">
-            {perKind.map(k => (
-              <div key={k.kind} className="space-y-1">
-                <div className="flex justify-between text-[10px]">
-                  <span className="font-mono text-[#6B6B66] dark:text-[#9A9A92]">{k.kind}</span>
-                  <span className={`font-mono font-medium ${k.rate >= 0.8 ? "text-[#2D7A4F]" : "text-amber-600 dark:text-amber-400"}`}>{(k.rate * 100).toFixed(1)}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-[#F2F0E9] dark:bg-[#2A2A2A]">
-                  <div className={`h-full rounded-full ${k.rate >= 0.8 ? "bg-[#2D7A4F]" : "bg-amber-500"}`} style={{ width: `${k.rate * 100}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

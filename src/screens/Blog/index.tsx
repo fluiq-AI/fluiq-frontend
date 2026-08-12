@@ -44,8 +44,8 @@ export default function BlogIndex() {
             Building reliable AI, in the open
           </h1>
           <p className="mt-4 max-w-2xl text-[#6B6B66] dark:text-[#9A9A92]">
-            Engineering notes, deep dives, and product updates on observability, evaluation,
-            security, and optimization for LLM applications.
+            Engineering notes, deep dives, and product updates on security, observability,
+            and evaluation for LLM applications.
           </p>
         </div>
       </header>

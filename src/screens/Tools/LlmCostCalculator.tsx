@@ -582,8 +582,8 @@ export default function LlmCostCalculator() {
                   </>
                 )}
                 <div className="mt-4">
-                  <IslandCta to="/optimization" variant="accent">
-                    How caching works
+                  <IslandCta to="/observability" variant="accent">
+                    Track your real spend
                   </IslandCta>
                 </div>
               </div>
@@ -790,15 +790,15 @@ export default function LlmCostCalculator() {
           <HugeiconsIcon icon={SparklesIcon} size={22} className="mx-auto mb-4 text-[#1860D3] dark:text-[#6FA8FF]" />
           <h2 className="font-heading text-3xl font-bold tracking-tight md:text-4xl">Stop estimating. Start measuring.</h2>
           <p className="mt-4 mx-auto max-w-lg text-[16px] leading-relaxed text-[#6B6B66] dark:text-[#9A9A92]">
-            Fluiq traces every LLM call with real token counts and USD cost at provider rates, then
-            caches repeated prompts automatically. Two lines of Python.
+            Fluiq traces every LLM call with real token counts and USD cost at provider rates,
+            attributed to the agent node that spent it. Two lines of Python.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <IslandCta to="/signup" variant="accent">
               Start free
             </IslandCta>
-            <IslandCta to="/optimization" variant="ghost">
-              How caching works
+            <IslandCta to="/observability" variant="ghost">
+              See how tracing works
               <HugeiconsIcon icon={ArrowRight02Icon} size={15} className="ml-2 inline" />
             </IslandCta>
           </div>

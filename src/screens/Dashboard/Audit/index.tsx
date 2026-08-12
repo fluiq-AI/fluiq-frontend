@@ -73,7 +73,9 @@ const EVENT_TYPE_STYLES: Record<string, string> = {
   api_request:     "bg-muted text-muted-foreground",
 }
 
-const ALL_EVENT_TYPES = Object.keys(EVENT_TYPE_LABELS)
+// optimize_call is no longer emitted, but historic rows still carry it, so it
+// keeps its label and style above and is only dropped from the filter list.
+const ALL_EVENT_TYPES = Object.keys(EVENT_TYPE_LABELS).filter((t) => t !== "optimize_call")
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

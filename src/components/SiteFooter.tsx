@@ -10,9 +10,8 @@ const COMPARE_LINKS = [
 ]
 
 const PLATFORM_LINKS = [
-  { label: "Observability",     to: "/observability" },
   { label: "Security",          to: "/security" },
-  { label: "Optimization",      to: "/optimization" },
+  { label: "Observability",     to: "/observability" },
   { label: "Evaluation",        to: "/evaluation" },
   { label: "Datasets",          to: "/datasets" },
   { label: "Prompt Management", to: "/prompts" },
@@ -61,7 +60,7 @@ export function SiteFooter() {
               <span className="font-heading font-semibold text-[#0a0a0a] dark:text-[#FAF9F6] text-[14px]">Fluiq</span>
             </div>
             <p className="text-[13px] text-[#9A9A92] max-w-50 leading-relaxed">
-              Observe, protect, optimize, evaluate.
+              Secure, observe, evaluate.
             </p>
           </div>
 

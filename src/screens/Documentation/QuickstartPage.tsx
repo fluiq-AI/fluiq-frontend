@@ -68,7 +68,6 @@ fluiq.instrument(api_key="fl_...") # or set FLUIQ_API_KEY to environment
 # point on is traced automatically, free and unlimited on every tier.
 # Opt in to more when you want it:
 fluiq.eval(thresholds={"hallucination": 0.8})  # LLM-as-judge scoring
-fluiq.optimize()   # Redis caching (Team+)
 fluiq.secure()     # Security scanning (all plans)`,
                 `import fluiq from "@fluiq/sdk";
 
@@ -78,7 +77,6 @@ fluiq.instrument({ apiKey: "fl_..." }); // or set FLUIQ_API_KEY in your environm
 // point on is traced automatically, free and unlimited on every tier.
 // Opt in to more when you want it:
 fluiq.eval({ thresholds: { hallucination: 0.8 } }); // LLM-as-judge scoring
-fluiq.optimize(); // Redis caching (Team+)
 fluiq.secure();   // Security scanning (all plans)`,
               )}</Code>
             </div>
@@ -122,13 +120,13 @@ fluiq.secure();   // Security scanning (all plans)`,
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Enable optimization</CardTitle>
-              <CardDescription>One method call activates Redis caching driven by your trace history.</CardDescription>
+              <CardTitle className="text-base">Build a golden dataset</CardTitle>
+              <CardDescription>Pin whole agent runs from production and batch-evaluate them before you ship a change.</CardDescription>
             </CardHeader>
             <CardContent>
               <Button variant="outline" className="w-full" asChild>
-                <Link to="/signup">
-                  Upgrade to Team
+                <Link to="/documentation/datasets">
+                  See dataset runs
                   <HugeiconsIcon icon={ArrowRight02Icon} />
                 </Link>
               </Button>

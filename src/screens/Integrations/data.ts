@@ -113,10 +113,10 @@ with client.messages.stream(model="claude-opus-4-8", max_tokens=256,
     metaTitle: "Google Gemini Monitoring, Cost Tracking & Tracing | Fluiq",
     metaDescription: "Auto-instrument every Google Gemini API call with two lines of Python. Full span traces, USD cost at Gemini rates, cached token tracking, and security scanning.",
     heroHeadline: "Google Gemini Monitoring & API Tracing",
-    heroSub: "Auto-instrument every Gemini generate_content call, streaming and non-streaming, with zero code changes. Get token-level traces, cost at Google's published rates, and cached token visibility in your dashboard.",
+    heroSub: "Auto-instrument every Gemini generate_content call, streaming and non-streaming, with zero code changes. Get token-level traces, cost at Google's published rates, and full token breakdowns in your dashboard.",
     features: [
       { icon: "eye", title: "Streaming + batch traces", desc: "Both streaming and non-streaming generate_content calls are traced, with per-token counts, model version, latency, and finish reason captured on every request." },
-      { icon: "zap", title: "Cached token tracking", desc: "Gemini cached token usage is tracked per call and surfaced in the Optimize dashboard, see exactly how much you're saving on context caching." },
+      { icon: "zap", title: "Cached token tracking", desc: "Gemini's own context-cache token usage is captured per call, so the cost Fluiq reports matches what Google actually bills you." },
       { icon: "sparkle", title: "Cost at Gemini rates", desc: "Token costs calculated at Google's published Gemini rates for each model tier, attributed per trace and visible in aggregate cost analytics." },
     ],
     setupCode: `import fluiq
@@ -364,12 +364,12 @@ response = runner.run(user_id="u1", session_id="s1",
     heroSub: "Auto-instrument every Model Context Protocol tool call (list_tools, call_tool, and read_resource) with zero code changes. Fluiq also caches repeated MCP tool results to avoid redundant server round-trips.",
     features: [
       { icon: "eye", title: "Tool call tracing", desc: "Every call_tool invocation is a traced span with the MCP server URL, tool name, input arguments, response, and end-to-end latency including server processing time." },
-      { icon: "zap", title: "MCP result caching", desc: "Fluiq caches repeated call_tool and list_tools responses keyed by server URL and arguments, identical requests are served instantly without a round-trip to the MCP server." },
-      { icon: "cpu", title: "list_tools tracing", desc: "list_tools calls are traced and cached so agents that enumerate available tools on every turn stop paying the network cost after the first request." },
+      { icon: "zap", title: "Tool argument scanning", desc: "Tool-call arguments are scanned for exfiltrated secrets and PII, and tools invoked outside your allowlist are flagged on the trace." },
+      { icon: "cpu", title: "list_tools tracing", desc: "list_tools calls are traced too, so an agent that re-enumerates its tools every turn shows that cost explicitly instead of hiding it." },
     ],
     setupCode: `import fluiq
 fluiq.instrument(api_key="fl_...")  # patches MCP client automatically
-fluiq.optimize()                     # also caches repeated tool results
+fluiq.secure()                       # scans tool arguments and results
 
 from mcp import ClientSession
 from mcp.client.stdio import stdio_client
@@ -834,7 +834,7 @@ const agent = new LlmAgent({
   mcp: {
     setupCode: `import fluiq from "@fluiq/sdk";
 fluiq.instrument({ apiKey: "fl_..." }); // patches the MCP client
-fluiq.optimize();                       // also caches repeated tool results
+fluiq.secure();                         // scans tool arguments and results
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";

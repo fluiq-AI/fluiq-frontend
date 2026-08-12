@@ -181,7 +181,7 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
               Compare plans
             </Link>
           </div>
-          <div data-animate data-delay="1" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div data-animate data-delay="1" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {others.map((p) => (
               <Link
                 key={p.slug}
@@ -214,7 +214,7 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
               <span className="text-[#1860D3] dark:text-[#6FA8FF]">Unlimited</span> traces, always free.
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-[16px] leading-relaxed text-[#6B6B66] dark:text-[#9A9A92]">
-              Tracing, security, evaluation, datasets, and prompts all run on the free tier. Caching and Slack alerts unlock on a paid plan.
+              Tracing, security, evaluation, datasets, and prompts all run on the free tier. Slack alerts unlock on a paid plan.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <IslandCta to="/signup">Start free</IslandCta>

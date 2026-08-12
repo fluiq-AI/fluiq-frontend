@@ -97,7 +97,7 @@ export default function Privacy() {
             </p>
             <p className="mt-4 text-[15px] leading-relaxed text-muted-foreground max-w-2xl">
               This policy explains what data Fluiq, Inc. ("Fluiq", "we", "our") collects when you use
-              our LLM observability, security, and optimization platform, how we use it, and the controls
+              our LLM security, observability, and evaluation platform, how we use it, and the controls
               you have over it.
             </p>
           </div>

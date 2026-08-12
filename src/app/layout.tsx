@@ -90,8 +90,6 @@ const organizationJsonLd = (site: string) => ({
     "AI security",
     "prompt injection detection",
     "PII redaction",
-    "LLM cost optimization",
-    "response caching",
     "LLM evaluation",
     "LLM-as-judge",
     "hallucination detection",

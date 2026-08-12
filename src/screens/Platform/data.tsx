@@ -2,7 +2,6 @@ import type { ReactNode } from "react"
 import {
   EyeIcon,
   ShieldIcon,
-  ZapIcon,
   TestTube01Icon,
   AiContentGenerator01Icon,
   Notification01Icon,
@@ -11,7 +10,6 @@ import {
 import {
   TracesMockup,
   SecurityMockup,
-  OptimizationMockup,
   EvalMockup,
   PromptsMockup,
   AlertsMockup,
@@ -21,7 +19,6 @@ import {
 export type PillarSlug =
   | "observability"
   | "security"
-  | "optimization"
   | "evaluation"
   | "datasets"
   | "prompts"
@@ -64,10 +61,12 @@ export interface Pillar {
 
 const cobalt = "text-[#1860D3] dark:text-[#6FA8FF]"
 
+/** The three pillars Fluiq leads with. Datasets and prompts sit under evaluation. */
+export const CORE_PILLARS: PillarSlug[] = ["security", "observability", "evaluation"]
+
 export const PILLAR_ORDER: PillarSlug[] = [
-  "observability",
   "security",
-  "optimization",
+  "observability",
   "evaluation",
   "datasets",
   "prompts",
@@ -167,49 +166,6 @@ except FluiqSecurityError as err:
     },
   },
 
-  optimization: {
-    slug: "optimization",
-    route: "/optimization",
-    name: "Optimization",
-    summary: "Cache repeated prompts automatically.",
-    icon: ZapIcon,
-    eyebrow: "Optimization",
-    plan: "Team plan and up",
-    headline: (
-      <>
-        Stop paying for duplicate <span className={cobalt}>LLM calls</span>
-      </>
-    ),
-    lede: "Fluiq profiles your real trace history, provisions a cache, and serves repeated prompts automatically.",
-    Mockup: OptimizationMockup,
-    docHref: "/documentation/optimization",
-    capabilities: [
-      { kicker: "Server-side", title: "Zero infra to manage", body: "A dedicated cache instance is provisioned for your account. Nothing to deploy or operate." },
-      { kicker: "Profiled", title: "Built from real traffic", body: "The cache profile comes from your actual traces, not a generic one-size heuristic." },
-      { kicker: "Tunable", title: "TTL and model scope", body: "Set time-to-live and which models are eligible. Observe mode measures savings before you commit." },
-      { kicker: "Insights", title: "See the saving before you cache", body: "Repeated prompts are ranked by what caching them would save, alongside your top-spending models, slowest calls, and where errors cluster." },
-    ],
-    mechanism: {
-      heading: "Measure first. Cache what repeats.",
-      points: [
-        "Observe mode records would-be hits without intercepting calls",
-        "Cache mode serves duplicates from a dedicated instance",
-        "Per-model scope and configurable TTL",
-      ],
-      file: "app.py",
-      signature: 'fluiq.optimize(mode="cache")',
-      code: `import fluiq
-
-fluiq.instrument(api_key="fl_...")
-
-# "observe" measures savings; "cache" serves duplicates
-fluiq.optimize(mode="cache")
-
-# Repeated prompts now resolve from your cache
-answer(question)`,
-    },
-  },
-
   evaluation: {
     slug: "evaluation",
     route: "/evaluation",
@@ -223,7 +179,7 @@ answer(question)`,
         Gate responses that fail <span className={cobalt}>quality thresholds</span>
       </>
     ),
-    lede: "LLM-as-judge scores every response server-side. Agentic evaluation judges whole runs: tool choice, trajectory, and multi-agent coordination.",
+    lede: "LLM-as-judge scores every response server-side. Agentic evaluation judges whole runs: tool choice, trajectory, and multi-agent coordination. Datasets and prompt management are part of it.",
     Mockup: EvalMockup,
     docHref: "/documentation/evaluation",
     capabilities: [
@@ -234,6 +190,8 @@ answer(question)`,
       { kicker: "Your call", title: "Pick the judge, or the whole jury", body: "Choose which model scores a run, and which models sit on the panel, per evaluation or per dataset batch." },
       { kicker: "Your keys", title: "Bring your own provider key", body: "Save an OpenAI, Anthropic, or Google key and judge tokens bill to your account at the rate you already negotiated." },
       { kicker: "Auditable", title: "Every score shows its prompt", body: "Each result carries the exact judge prompt and version that produced it, so a shifting metric is traceable to a prompt change." },
+      { kicker: "Datasets", title: "Golden sets from real traffic", body: "Curate datasets out of production runs and batch-evaluate every example. The regression gate for a prompt or model change." },
+      { kicker: "Prompts", title: "Versioned prompts and judges", body: "Version and deploy prompt templates next to the evals that score them, and promote any saved prompt to a custom judge by slug." },
     ],
     mechanism: {
       heading: "The judge runs server-side. Opt in with one call.",
@@ -241,6 +199,7 @@ answer(question)`,
         "instrument() only traces; scoring starts when you call fluiq.eval()",
         "Warn mode logs scores; block mode raises FluiqEvalError below threshold",
         "Run Agentic Eval on any root trace to judge the whole run: tools, trajectory, coordination",
+        "Batch the same judges over a golden dataset to catch regressions before release",
         "CI gates run the same checks in GitHub Actions",
       ],
       file: "app.py",
@@ -263,7 +222,7 @@ fluiq.eval(
     name: "Datasets",
     summary: "Golden sets that capture whole agent runs.",
     icon: Database01Icon,
-    eyebrow: "Datasets",
+    eyebrow: "Evaluation · Datasets",
     plan: "All plans",
     headline: (
       <>
@@ -305,7 +264,7 @@ requests.post(f"{BASE}/datasets/{ds_id}/examples", headers=H, json={
     name: "Prompt Management",
     summary: "Version and deploy prompt templates.",
     icon: AiContentGenerator01Icon,
-    eyebrow: "Prompt Management",
+    eyebrow: "Evaluation · Prompt Management",
     plan: "All plans",
     headline: (
       <>
