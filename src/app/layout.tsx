@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
       template: "%s | Fluiq",
     },
     description:
-      "The control plane for AI agents in production: block prompt attacks, score trajectories, cache repeated work, and trace every step with two lines of Python.",
+      "The control plane for AI agents in production: block prompt attacks, score trajectories, and trace every step with two lines of Python.",
     icons: {
       icon: [
         { url: "/favicon.ico", sizes: "any" },
@@ -60,7 +60,7 @@ const websiteJsonLd = (site: string) => ({
   name: "Fluiq",
   url: site,
   description:
-    "The control plane for AI agents in production: block prompt attacks, score trajectories, cache repeated work, and trace every step with two lines of Python.",
+    "The control plane for AI agents in production: block prompt attacks, score trajectories, and trace every step with two lines of Python.",
   potentialAction: {
     "@type": "SearchAction",
     target: `${site}/documentation`,
@@ -81,7 +81,7 @@ const organizationJsonLd = (site: string) => ({
     height: 512,
   },
   description:
-    "Fluiq is the control plane for AI agents in production. Two lines of Python add tracing, pre-call security blocking, response caching, and trajectory-level evaluation to any agent or LLM app.",
+    "Fluiq is the control plane for AI agents in production. Two lines of Python add tracing, pre-call security blocking, and trajectory-level evaluation to any agent or LLM app.",
   slogan: "The control plane for AI agents in production.",
   // Topic entities Fluiq should be associated with in AI answers (AEO).
   knowsAbout: [

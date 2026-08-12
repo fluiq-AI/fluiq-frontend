@@ -4,10 +4,10 @@ export const data: CompetitorData = {
   slug: "braintrust-alternative",
   name: "Braintrust",
   metaTitle: "Fluiq vs Braintrust: Observability + Security Alternative",
-  metaDescription: "Fluiq vs Braintrust: production LLM tracing, security scanning, and caching alongside evals. Everything Braintrust covers, plus the production ops layer.",
+  metaDescription: "Fluiq vs Braintrust: production LLM tracing and security scanning alongside evals. Everything Braintrust covers, plus the production ops layer.",
   canonicalPath: "/braintrust-alternative",
   heroHeadline: "The Braintrust Alternative: Evals Plus the Full Ops Stack",
-  heroSub: "Braintrust is a strong evaluation platform. Fluiq adds production tracing, security scanning, and response caching alongside evals, all from two lines of Python, with no manual scoring scaffolding.",
+  heroSub: "Braintrust is a strong evaluation platform. Fluiq adds production tracing and security scanning alongside evals, all from two lines of Python, with no manual scoring scaffolding.",
   stats: [
     { value: "Inline", label: "evals on every production LLM call" },
     { value: "Auto", label: "tracing, no @traced decorators needed" },
@@ -21,7 +21,6 @@ export const data: CompetitorData = {
     { feature: "Per-node token & cost tracking", fluiq: "yes", competitor: "partial" },
     { feature: "Prompt injection & jailbreak blocking", fluiq: "yes", competitor: "no" },
     { feature: "PII detection & redaction", fluiq: "yes", competitor: "no" },
-    { feature: "Trace-driven response caching", fluiq: "yes", competitor: "no" },
     { feature: "LLM-as-judge evals", fluiq: "yes", competitor: "yes" },
     { feature: "Agentic evaluation (whole-run: tools, trajectory, coordination)", fluiq: "yes", competitor: "partial", competitorNote: "agent evals without multi-model jury or DAG-aware layers" },
     { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
@@ -44,7 +43,6 @@ export const data: CompetitorData = {
     "Production-first: Fluiq auto-instruments every LLM call at the SDK level, you get full trace trees, latency histograms, and cost attribution without writing a single logging call.",
     "Inline eval modes: fluiq.eval(mode='warn') flags low-scoring responses on the trace; mode='block' intercepts them before they reach users.",
     "Security included: prompt injection blocking, PII redaction, jailbreak scoring, and secret leak prevention run on every production call, not just in eval scripts.",
-    "Response caching: trace-driven Redis caching serves repeated prompts instantly, cutting LLM spend without any code changes.",
     "Transparent judging: every score records the exact judge prompt and version behind it, and each org can edit those prompts. You can then diff any two dataset runs to see what regressed, and gate CI with python -m fluiq.ci.",
     "Two lines replace an entire boilerplate setup, no manual span context, no custom scorers to wire up.",
   ],
@@ -89,7 +87,7 @@ def run_pipeline(query: str) -> str:
     fluiq: [
       { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
       { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
-      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, SSO, dataset batch runs." },
       { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
     ],
     competitor: [

@@ -72,9 +72,9 @@ export const SEO = {
   home: {
     title: "Fluiq | The Control Plane for AI Agents in Production",
     description:
-      "Fluiq blocks prompt attacks, scores agent trajectories, caches repeated work, and traces every step of every run. Two lines of Python, one dashboard.",
+      "Fluiq blocks prompt attacks, scores agent trajectories, and traces every step of every run. Two lines of Python, one dashboard.",
     keywords:
-      "AI agent observability, agent evaluation, AI agent governance, MCP security, LangGraph monitoring, CrewAI tracing, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, LLM caching, OpenAI tracing, Anthropic tracing, LangChain monitoring, AI security, hallucination detection",
+      "AI agent observability, agent evaluation, AI agent governance, MCP security, LangGraph monitoring, CrewAI tracing, LLM monitoring, AI observability, prompt injection detection, LLM cost tracking, LLM evaluation, agent trajectory evaluation, OpenAI tracing, Anthropic tracing, LangChain monitoring, AI security, hallucination detection",
     path: "/",
     jsonLd: {
       "@context": "https://schema.org",
@@ -86,7 +86,7 @@ export const SEO = {
       operatingSystem: "Any",
       programmingLanguage: "Python",
       description:
-        "Fluiq is the control plane for AI agents in production. It auto-instruments OpenAI, Anthropic, Gemini, LangChain, LangGraph, Google ADK, CrewAI, MCP, and major vector databases. Two lines of Python add tracing, pre-call security blocking, response caching, and trajectory-level LLM-as-judge evaluation to any agent or LLM app.",
+        "Fluiq is the control plane for AI agents in production. It auto-instruments OpenAI, Anthropic, Gemini, LangChain, LangGraph, Google ADK, CrewAI, MCP, and major vector databases. Two lines of Python add tracing, pre-call security blocking, and trajectory-level LLM-as-judge evaluation to any agent or LLM app.",
       featureList: [
         "Automatic LLM call tracing with full span tree",
         "Per-node token attribution and USD cost tracking at provider rates",
@@ -96,9 +96,9 @@ export const SEO = {
         "PII detection: credit cards, SSNs, IBAN, emails, phone numbers, IP addresses, names",
         "Secret and high-entropy string redaction",
         "Semantic attack scoring with warn and block modes",
-        "Trace-driven server-side Redis response caching",
-        "Cache observe mode to measure savings without caching",
-        "Configurable TTL and per-model cache scoping",
+        "Agentic evaluation of whole runs: tool selection, trajectory, multi-agent coordination",
+        "Multi-model judge jury with per-member audit trail",
+        "Whole-trajectory golden datasets, independent of trace retention",
         "LLM-as-judge evaluation: hallucination, faithfulness, relevance, toxicity, coherence, completeness",
         "Evaluation warn and block modes with configurable thresholds",
         "CI/CD GitHub Actions eval gates",
@@ -110,7 +110,7 @@ export const SEO = {
         "API key management",
       ],
       applicationSubCategory:
-        "AI Agent Governance, LLM Monitoring, AI Security, LLM Evaluation, Response Caching",
+        "AI Agent Governance, LLM Monitoring, AI Security, LLM Evaluation, Agentic Evaluation",
       softwareVersion: "latest",
       offers: {
         "@type": "Offer",
@@ -133,7 +133,7 @@ export const SEO = {
     path: "/faq",
   },
   pricing: {
-    title: "Fluiq Pricing | Free LLM Observability, Evals & Caching",
+    title: "Fluiq Pricing | Free LLM Observability, Evals & Security",
     description:
       "Start free with unlimited traces, 100 evals and 1,000 security scans. Starter $29/mo, Team $149/mo, Growth $499/mo. Pay per evaluation beyond your allowance, or bring your own provider keys.",
     keywords:
@@ -154,7 +154,7 @@ export const SEO = {
           "@type": "Product",
           name: "Fluiq",
           description:
-            "The control plane for AI agents: observability, pre-call security blocking, response caching, and trajectory-level evaluation.",
+            "The control plane for AI agents: pre-call security blocking, observability, and trajectory-level evaluation.",
           brand: { "@type": "Brand", name: "Fluiq" },
           offers: {
             "@type": "AggregateOffer",

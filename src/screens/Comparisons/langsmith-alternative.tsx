@@ -4,10 +4,10 @@ export const data: CompetitorData = {
   slug: "langsmith-alternative",
   name: "LangSmith",
   metaTitle: "Fluiq vs LangSmith: An Alternative for Production LLM Apps",
-  metaDescription: "Fluiq vs LangSmith: Fluiq adds security scanning, caching, and support for frameworks beyond LangChain. Two lines of Python replace the tracing boilerplate.",
+  metaDescription: "Fluiq vs LangSmith: Fluiq adds security scanning, agentic evaluation, and support for frameworks beyond LangChain. Two lines of Python replace the tracing boilerplate.",
   canonicalPath: "/langsmith-alternative",
   heroHeadline: "The LangSmith Alternative Built Beyond LangChain",
-  heroSub: "LangSmith is excellent if your stack is LangChain. Fluiq auto-instruments OpenAI, Anthropic, Gemini, LangGraph, CrewAI, Google ADK, and 7 more, plus adds security scanning and response caching LangSmith doesn't touch.",
+  heroSub: "LangSmith is excellent if your stack is LangChain. Fluiq auto-instruments OpenAI, Anthropic, Gemini, LangGraph, CrewAI, Google ADK, and 7 more, plus adds security scanning and agentic evaluation LangSmith doesn't touch.",
   stats: [
     { value: "2 lines", label: "of Python to instrument any LLM app" },
     { value: "13+", label: "framework integrations (not just LangChain)" },
@@ -22,7 +22,6 @@ export const data: CompetitorData = {
     { feature: "Per-node token & USD cost tracking", fluiq: "yes", competitor: "yes" },
     { feature: "Prompt injection & jailbreak blocking", fluiq: "yes", competitor: "no" },
     { feature: "PII detection & redaction", fluiq: "yes", competitor: "no" },
-    { feature: "Trace-driven response caching", fluiq: "yes", competitor: "no" },
     { feature: "LLM-as-judge evals", fluiq: "yes", competitor: "yes" },
     { feature: "Agentic evaluation (whole-run: tools, trajectory, coordination)", fluiq: "yes", competitor: "partial", competitorNote: "trajectory evals exist; no layered run judging or judge jury" },
     { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
@@ -44,10 +43,9 @@ export const data: CompetitorData = {
     "Auto-instruments every major LLM framework, OpenAI, Anthropic, Gemini, LangChain, LangGraph, CrewAI, Google ADK, MCP, and more, not just the LangChain ecosystem.",
     "Two lines to full instrumentation. No @traceable decorators, no manual span management.",
     "Built-in security layer: prompt injection blocking, PII redaction, and jailbreak detection on every call, LangSmith has none of this.",
-    "Trace-driven Redis caching reduces repeated LLM calls to milliseconds and cuts API costs.",
     "Every eval score records the exact judge prompt and version that produced it, and each org can edit the judge prompts their evaluations use, so no score is a black box.",
     "Closed eval loop out of the box: grade datasets against expected outputs, diff any two runs to catch regressions, collect end-user feedback with fluiq.feedback(), and gate CI with python -m fluiq.ci.",
-    "Single SDK covers observability, security, caching, and evals, not four separate integrations.",
+    "Single SDK covers security, observability, and evals, not three separate integrations.",
   ],
   migrationBefore: {
     label: "Before, LangSmith",
@@ -88,7 +86,7 @@ def run_pipeline(query: str) -> str:
     fluiq: [
       { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
       { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
-      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, SSO, dataset batch runs." },
       { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
     ],
     competitor: [

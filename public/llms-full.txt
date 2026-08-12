@@ -326,7 +326,7 @@ A: No. `fluiq.secure()` fails open: if the security service is unreachable, the 
 A: Fluiq raises `FluiqEvalError` before the response is returned to the application. The error includes the metric name and the score that triggered the block.
 
 **Q: Is there a free tier?**
-A: Yes. The free tier includes unlimited traces, 1,000 LLM-as-judge evaluations per month, 1 seat, and a rolling 14-day trace retention window. No credit card is required to sign up. Paid plans: Team ($299/mo) adds unlimited (never-expiring) trace retention and response caching; Growth ($599/mo) unlocks fluiq.secure() security scanning and SSO; Enterprise (custom) adds VPC/on-prem deployment, SAML/SCIM, and audit logs. Team and Growth offer a 5-day free trial with no card.
+A: Yes. The free tier includes unlimited traces, 1,000 LLM-as-judge evaluations per month, 1 seat, and a rolling 14-day trace retention window. No credit card is required to sign up. Paid plans: Team ($299/mo) adds unlimited (never-expiring) trace retention and SSO; Growth ($599/mo) adds higher scan and eval allowances plus priority support; Enterprise (custom) adds VPC/on-prem deployment, SAML/SCIM, and audit logs. Team and Growth offer a 5-day free trial with no card.
 
 **Q: What is the GitHub repository?**
 A: https://github.com/fluiq-AI/fluiq-sdk

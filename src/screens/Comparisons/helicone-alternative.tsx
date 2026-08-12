@@ -22,7 +22,6 @@ export const data: CompetitorData = {
     { feature: "Full agent span tree", fluiq: "yes", competitor: "no" },
     { feature: "Prompt injection & jailbreak blocking", fluiq: "yes", competitor: "no" },
     { feature: "PII detection & redaction", fluiq: "yes", competitor: "no" },
-    { feature: "Trace-driven response caching", fluiq: "yes", competitor: "partial", competitorNote: "cache proxy, no trace-driven profiling" },
     { feature: "LLM-as-judge evals", fluiq: "yes", competitor: "no" },
     { feature: "Agentic evaluation (whole-run: tools, trajectory, coordination)", fluiq: "yes", competitor: "no" },
     { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
@@ -46,7 +45,7 @@ export const data: CompetitorData = {
     "Full agent trace trees: Fluiq traces multi-step LangGraph, CrewAI, and Google ADK pipelines end-to-end, not just individual OpenAI calls.",
     "Built-in security: prompt injection blocking, PII redaction, jailbreak detection, and secret leak scanning, all server-side, not accessible to attackers via the public SDK.",
     "LLM-as-judge evals run inline on every production call, flagging hallucination and toxicity automatically.",
-    "Trace-driven caching learns from your actual traffic patterns, not a generic proxy cache.",
+"Agentic evaluation scores the whole run, tools and trajectory included, not just the request/response pair a proxy can see.",
   ],
   migrationBefore: {
     label: "Before, Helicone (proxy setup)",
@@ -85,7 +84,7 @@ response = client.chat.completions.create(
     fluiq: [
       { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
       { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
-      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, SSO, dataset batch runs." },
       { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
     ],
     competitor: [

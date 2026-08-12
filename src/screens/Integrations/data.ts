@@ -34,7 +34,7 @@ export const INTEGRATIONS: IntegrationData[] = [
     heroSub: "Two lines of Python give every OpenAI call (chat completions, streaming, embeddings, images, audio) a full trace with token counts, USD cost at OpenAI rates, and security scanning. No wrappers or decorators needed.",
     features: [
       { icon: "eye", title: "Full span tree", desc: "Every chat completion, embedding, and image call becomes a structured span with input/output tokens, model version, latency, and USD cost at OpenAI's published rates." },
-      { icon: "zap", title: "Response caching", desc: "Fluiq mines your trace history to find repeated prompts and serves them from Redis, cutting both latency and API spend on high-repetition workloads." },
+      { icon: "zap", title: "Cached-input accounting", desc: "OpenAI's automatic prompt caching is captured per call, so the USD cost Fluiq reports matches what OpenAI actually bills instead of over-counting input tokens." },
       { icon: "shield", title: "Security scanning", desc: "Every prompt passes through Fluiq's server-side guard for prompt injection, jailbreak patterns, PII (SSNs, cards, emails), and secret string detection, before the response is returned." },
     ],
     setupCode: `import fluiq
@@ -359,9 +359,9 @@ response = runner.run(user_id="u1", session_id="s1",
     name: "MCP",
     category: "Agent Framework",
     metaTitle: "MCP Server Monitoring & Tool Call Tracing | Fluiq",
-    metaDescription: "Trace every MCP list_tools and call_tool request. Get tool call latency spans, MCP tool result caching, and server URL attribution, two lines of Python.",
+    metaDescription: "Trace every MCP list_tools and call_tool request. Get tool call latency spans, tool-argument security scanning, and server URL attribution, two lines of Python.",
     heroHeadline: "MCP Server Monitoring & Tool Call Tracing",
-    heroSub: "Auto-instrument every Model Context Protocol tool call (list_tools, call_tool, and read_resource) with zero code changes. Fluiq also caches repeated MCP tool results to avoid redundant server round-trips.",
+    heroSub: "Auto-instrument every Model Context Protocol tool call (list_tools, call_tool, and read_resource) with zero code changes. Tool arguments and results are scanned for exfiltration and allowlist violations.",
     features: [
       { icon: "eye", title: "Tool call tracing", desc: "Every call_tool invocation is a traced span with the MCP server URL, tool name, input arguments, response, and end-to-end latency including server processing time." },
       { icon: "zap", title: "Tool argument scanning", desc: "Tool-call arguments are scanned for exfiltrated secrets and PII, and tools invoked outside your allowlist are flagged on the trace." },

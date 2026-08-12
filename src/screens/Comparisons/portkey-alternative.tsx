@@ -21,7 +21,6 @@ export const data: CompetitorData = {
     { feature: "Per-node token & cost breakdown", fluiq: "yes", competitor: "yes" },
     { feature: "Prompt injection & jailbreak blocking", fluiq: "yes", competitor: "no" },
     { feature: "PII detection & redaction", fluiq: "yes", competitor: "no" },
-    { feature: "Trace-driven response caching", fluiq: "yes", competitor: "partial", competitorNote: "semantic cache via gateway" },
     { feature: "LLM-as-judge evals", fluiq: "yes", competitor: "no" },
     { feature: "Agentic evaluation (whole-run: tools, trajectory, coordination)", fluiq: "yes", competitor: "no" },
     { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
@@ -81,7 +80,7 @@ result = response.choices[0].message.content`,
     fluiq: [
       { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
       { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
-      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, SSO, dataset batch runs." },
       { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
     ],
     competitor: [

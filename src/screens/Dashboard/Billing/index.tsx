@@ -75,7 +75,7 @@ const PLAN_PRICE: Record<string, string> = {
 const PLAN_BLURB: Record<string, string> = {
   Free: "Unlimited tracing, 14-day retention.",
   Starter: "Unlimited retention, bring your own provider keys.",
-  Team: "Response caching, SSO, larger allowances.",
+  Team: "SSO, larger allowances, dataset batch runs.",
   Growth: "High-volume allowances and priority support.",
   Enterprise: "VPC, SAML/SCIM, custom SLA.",
 }

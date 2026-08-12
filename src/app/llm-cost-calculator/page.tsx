@@ -11,7 +11,7 @@ const PATH = "/llm-cost-calculator"
 export const metadata = buildMetadata({
   title: "LLM Cost Calculator: OpenAI, Claude & Gemini Pricing",
   description:
-    "Free LLM cost calculator: estimate and compare OpenAI, Claude, and Gemini API pricing by tokens and request volume, and see how much response caching saves.",
+    "Free LLM cost calculator: estimate and compare OpenAI, Claude, and Gemini API pricing by tokens and request volume, including cached-input rates.",
   keywords:
     "LLM cost calculator, OpenAI pricing calculator, Claude pricing, Gemini pricing, token cost calculator, LLM API cost, GPT-4o cost, LLM cost estimator",
   path: PATH,

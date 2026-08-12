@@ -3,8 +3,8 @@ import ComparisonPage, { type CompetitorData } from "./ComparisonPage"
 export const data: CompetitorData = {
   slug: "langfuse-alternative",
   name: "Langfuse",
-  metaTitle: "Fluiq vs Langfuse: An Alternative With Security & Caching",
-  metaDescription: "Fluiq vs Langfuse: Fluiq needs no manual spans, adds prompt injection blocking and Redis caching, and runs fully managed, so there is nothing to self-host.",
+  metaTitle: "Fluiq vs Langfuse: An Alternative With Built-In Security",
+  metaDescription: "Fluiq vs Langfuse: Fluiq needs no manual spans, adds prompt injection blocking and agentic evaluation, and runs fully managed, so there is nothing to self-host.",
   canonicalPath: "/langfuse-alternative",
   heroHeadline: "The Langfuse Alternative: Zero Manual Spans, Security Included",
   heroSub: "Langfuse is a solid open-source observability platform. Fluiq auto-instruments the same frameworks with zero manual span calls, adds server-side security scanning, and runs fully managed, no infra to maintain.",
@@ -21,7 +21,6 @@ export const data: CompetitorData = {
     { feature: "Full agent span tree", fluiq: "yes", competitor: "yes" },
     { feature: "Prompt injection & jailbreak blocking", fluiq: "yes", competitor: "no" },
     { feature: "PII detection & redaction", fluiq: "yes", competitor: "no" },
-    { feature: "Trace-driven response caching", fluiq: "yes", competitor: "no" },
     { feature: "LLM-as-judge evals", fluiq: "yes", competitor: "yes" },
     { feature: "Agentic evaluation (whole-run: tools, trajectory, coordination)", fluiq: "yes", competitor: "no" },
     { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
@@ -43,10 +42,9 @@ export const data: CompetitorData = {
   fluiqAdvantages: [
     "Zero manual spans, Fluiq patches the SDK at import time, so all LLM calls are traced without decorators or context management.",
     "Security layer baked in: prompt injection detection, jailbreak scoring, PII redaction, and secret leak prevention run server-side on every call.",
-    "Trace-driven Redis caching: Fluiq mines your trace history and serves repeated prompts from cache, cutting API costs without code changes.",
     "Fully managed, no Docker Compose, no Postgres to maintain, no infrastructure cost to carry.",
     "Evaluation with receipts: every score shows the exact judge prompt that produced it (editable per org), dataset runs diff against each other for regression reports, and python -m fluiq.ci gates your builds.",
-    "One SDK covers the entire LLM ops stack: trace, secure, cache, and evaluate.",
+    "One SDK covers the entire LLM ops stack: secure, observe, and evaluate.",
   ],
   migrationBefore: {
     label: "Before, Langfuse",
@@ -87,7 +85,7 @@ def run_pipeline(query: str):
     fluiq: [
       { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
       { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
-      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, SSO, dataset batch runs." },
       { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
     ],
     competitor: [

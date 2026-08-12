@@ -4,13 +4,13 @@ export const data: CompetitorData = {
   slug: "lakera-alternative",
   name: "Lakera Guard",
   metaTitle: "Fluiq vs Lakera: A Lakera Alternative With Tracing & Evals",
-  metaDescription: "Fluiq vs Lakera Guard: the same prompt injection and PII detection, plus full LLM observability, caching, and automated evals, without an extra API call per request.",
+  metaDescription: "Fluiq vs Lakera Guard: the same prompt injection and PII detection, plus full LLM observability and automated evals, without an extra API call per request.",
   canonicalPath: "/lakera-alternative",
   heroHeadline: "The Lakera Alternative: Security Plus the Full Ops Stack",
-  heroSub: "Lakera Guard is focused entirely on security. Fluiq covers the same prompt injection and PII detection, plus adds tracing, caching, and evals, all server-side with no extra round-trip API call per request.",
+  heroSub: "Lakera Guard is focused entirely on security. Fluiq covers the same prompt injection and PII detection, plus adds tracing and evals, all server-side with no extra round-trip API call per request.",
   stats: [
     { value: "No extra", label: "API call per request, runs server-side" },
-    { value: "5-in-1", label: "security, tracing, caching, evals, prompts" },
+    { value: "4-in-1", label: "security, tracing, evals, prompts" },
     { value: "2 lines", label: "to enable everything" },
   ],
   features: [
@@ -20,7 +20,6 @@ export const data: CompetitorData = {
     { feature: "No extra API call per request", fluiq: "yes", competitor: "no", competitorNote: "separate Guard API call required" },
     { feature: "Full LLM observability / tracing", fluiq: "yes", competitor: "no" },
     { feature: "Per-node cost & token tracking", fluiq: "yes", competitor: "no" },
-    { feature: "Trace-driven response caching", fluiq: "yes", competitor: "no" },
     { feature: "LLM-as-judge evals", fluiq: "yes", competitor: "no" },
     { feature: "Agentic evaluation (whole-run: tools, trajectory, coordination)", fluiq: "yes", competitor: "no" },
     { feature: "Multi-model judge jury with audit trail", fluiq: "yes", competitor: "no" },
@@ -42,7 +41,6 @@ export const data: CompetitorData = {
   fluiqAdvantages: [
     "No extra API round-trip: Fluiq's security scanning runs server-side as part of the trace processing pipeline, your latency profile doesn't change.",
     "Full observability included: trace every LLM call, map agent spans, track token counts, and attribute cost, security alone doesn't tell you what's happening inside your pipelines.",
-    "Trace-driven caching: Fluiq learns which prompts repeat and serves them from Redis, Lakera has nothing equivalent.",
     "LLM-as-judge evals run inline in production, flagging hallucination, toxicity, and coherence issues alongside security events.",
     "One SDK, one dashboard: security events, traces, evals, and cost data are all in the same place, not spread across separate tools.",
   ],
@@ -89,7 +87,7 @@ def run_safely(query: str) -> str:
     fluiq: [
       { plan: "Free", price: "$0", note: "Unlimited traces, 100 evals and 1,000 security scans a month. Bring your own provider keys." },
       { plan: "Starter", price: "$29/mo", note: "2,000 evals, 50k security scans, unlimited retention, multi-model judge jury." },
-      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, response caching, SSO." },
+      { plan: "Team", price: "$149/mo", note: "10,000 evals, 500k security scans, SSO, dataset batch runs." },
       { plan: "Growth", price: "$499/mo", note: "50,000 evals, 2M security scans, priority support." },
     ],
     competitor: [
