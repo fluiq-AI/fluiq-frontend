@@ -1,4 +1,9 @@
+"use client"
+
 import { Link } from "react-router"
+
+import { useSiteHost } from "@/contexts/SiteHostContext"
+import { siblingOrigin } from "@/lib/site-host"
 
 const COMPARE_LINKS = [
   { label: "vs LangSmith",  to: "/langsmith-alternative" },
@@ -28,10 +33,17 @@ const NAV_LINKS = [
   { label: "Contact",       to: "/contact" },
 ]
 
-const OPEN_SOURCE_LINKS = [
-  { label: "polygate",        href: "https://polygate.getfluiq.com" },
+// `sibling` links resolve against the domain the visitor is on (see
+// useSiblingOrigin), so the footer stays on-domain across all of the site's hosts.
+type ExternalLink = { label: string } & (
+  | { href: string; sibling?: never }
+  | { sibling: string; href?: never }
+)
+
+const OPEN_SOURCE_LINKS: ExternalLink[] = [
+  { label: "polygate",        sibling: "polygate" },
   { label: "polygate GitHub", href: "https://github.com/SaurabhKumbhar24/polygate" },
-  { label: "Infrager",        href: "https://infrager.getfluiq.com" },
+  { label: "Infrager",        sibling: "infrager" },
   { label: "Infrager GitHub", href: "https://github.com/SaurabhKumbhar24/Infrager" },
 ]
 
@@ -48,6 +60,7 @@ const linkCls = "text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] t
 const headingCls = "text-[11px] font-semibold uppercase tracking-widest text-[#D4CFC1] dark:text-[#333333]"
 
 export function SiteFooter() {
+  const host = useSiteHost()
   return (
     <footer className="border-t border-[#E5E1D6] dark:border-[#2A2A2A] py-12">
       <div className="mx-auto max-w-6xl px-6">
@@ -97,7 +110,7 @@ export function SiteFooter() {
             <div className="flex flex-col gap-3">
               <span className={headingCls}>Open Source</span>
               {OPEN_SOURCE_LINKS.map((l) => (
-                <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className={linkCls}>{l.label}</a>
+                <a key={l.label} href={l.sibling ? siblingOrigin(l.sibling, host) : l.href} target="_blank" rel="noopener noreferrer" className={linkCls}>{l.label}</a>
               ))}
             </div>
           </div>

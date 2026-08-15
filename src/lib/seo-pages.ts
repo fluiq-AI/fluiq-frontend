@@ -1,5 +1,5 @@
 import type { PageSeo } from "@/lib/seo"
-import { CANONICAL_ORIGIN } from "@/lib/site-url"
+import { CANONICAL_HOST, CANONICAL_ORIGIN, siblingOrigin } from "@/lib/site-url"
 
 /**
  * These descriptors are static, so absolute URLs are authored against the
@@ -9,6 +9,7 @@ import { CANONICAL_ORIGIN } from "@/lib/site-url"
  */
 const SITE = CANONICAL_ORIGIN
 const ISPART = { "@id": SITE }
+const INFRAGER_APP = siblingOrigin("infrager", CANONICAL_HOST)
 
 /**
  * schema.org BreadcrumbList node (no @context; embed inside an @graph).
@@ -266,7 +267,11 @@ export const SEO = {
           name: "Infrager",
           applicationCategory: "DeveloperApplication",
           operatingSystem: "Web",
-          url: "https://infrager.getfluiq.com",
+          // Authored against the canonical domain like every other URL here;
+          // `withSite` moves it to the host being served (infrager.<domain>).
+          // Derived rather than written out so it tracks CANONICAL_HOST — a
+          // stale literal here would silently stop being rewritten.
+          url: INFRAGER_APP,
           description:
             "Open-source tool that converts drag-and-drop AWS and Google Cloud architecture diagrams into production-ready Terraform, with security linting for open security groups, public buckets, unencrypted storage, and overprivileged IAM.",
           license: "https://opensource.org/licenses/MIT",

@@ -1,6 +1,11 @@
+"use client"
+
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon, News01Icon } from "@hugeicons/core-free-icons"
+
+import { useSiteHost } from "@/contexts/SiteHostContext"
+import { siblingOrigin } from "@/lib/site-host"
 
 type NavItem = {
   name: string
@@ -15,8 +20,11 @@ type NavItem = {
  * four standalone tools in one run of eight rows, so the only way to find
  * anything was to read all of it. Grouping costs the width of a wider panel,
  * which is affordable because this nav is desktop-only.
+ *
+ * Takes the request host because polygate is served as a subdomain of whichever
+ * domain the visitor is on, not of one hardcoded domain.
  */
-const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
+const navGroups = (host: string): { heading: string; items: NavItem[] }[] => [
   {
     heading: "Learn",
     items: [
@@ -75,7 +83,7 @@ const NAV_GROUPS: { heading: string; items: NavItem[] }[] = [
       {
         name: "polygate",
         slug: "polygate",
-        href: "https://polygate.getfluiq.com",
+        href: siblingOrigin("polygate", host),
         description: "Open-source unified LLM client",
         icon: GithubIcon,
       },
@@ -124,6 +132,7 @@ function ItemBody({ item }: { item: NavItem }) {
 export function NavDeveloperDropdown({
   triggerClassName = "hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6] transition-colors",
 }: Props) {
+  const NAV_GROUPS = navGroups(useSiteHost())
   return (
     <div className="relative group">
       <button

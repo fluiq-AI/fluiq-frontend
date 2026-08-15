@@ -19,16 +19,24 @@
  */
 import { headers } from "next/headers"
 
-/** Fallback host, and the origin the static SEO descriptors are written against. */
-export const CANONICAL_HOST = "getfluiq.com"
-export const CANONICAL_ORIGIN = `https://${CANONICAL_HOST}`
+import {
+  CANONICAL_HOST,
+  CANONICAL_ORIGIN,
+  originForHost,
+  siblingOrigin,
+  SIBLING_SUBDOMAINS,
+} from "@/lib/site-host"
 
-/** Local dev is plain HTTP; every real host is HTTPS. */
-export function originForHost(host: string): string {
-  const protocol =
-    host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https"
-  return `${protocol}://${host}`
-}
+// Re-exported so server callers keep a single import; the definitions live in
+// `@/lib/site-host` because client components cannot import `next/headers`.
+export {
+  CANONICAL_HOST,
+  CANONICAL_ORIGIN,
+  originForHost,
+  siteApex,
+  siblingOrigin,
+  SIBLING_SUBDOMAINS,
+} from "@/lib/site-host"
 
 /** Request hostname, including port in dev (e.g. "localhost:3000"). */
 export async function getHost(): Promise<string> {
@@ -41,17 +49,22 @@ export async function getSiteUrl(): Promise<string> {
 }
 
 /**
- * Swap the authored origin for the live one throughout a JSON-LD graph.
+ * Swap the authored origins for the live ones throughout a JSON-LD graph.
  *
  * Works on the serialized form so nested nodes (`isPartOf["@id"]`, breadcrumb
  * `item`, offer `url`) are all covered without walking the object by hand.
  *
- * Only the exact origin is replaced. Sibling products live on their own
- * subdomains (`polygate.getfluiq.com`, `infrager.getfluiq.com`) and the API on
- * `api.getfluiq.com`; none of those match `https://getfluiq.com`, so they are
- * left alone deliberately.
+ * Both the site origin and the sibling-product subdomains move with the host,
+ * because each domain the site answers on has its own `polygate.` / `infrager.`
+ * subdomain. Anything else — `api.getfluiq.com`, GitHub, external licences — is
+ * a single real host with no per-domain twin, so it is left alone.
  */
 export function withSite<T>(data: T, site: string): T {
   if (site === CANONICAL_ORIGIN) return data
-  return JSON.parse(JSON.stringify(data).split(CANONICAL_ORIGIN).join(site)) as T
+  const host = site.replace(/^https?:\/\//, "")
+  let json = JSON.stringify(data)
+  for (const sub of SIBLING_SUBDOMAINS) {
+    json = json.split(`https://${sub}.${CANONICAL_HOST}`).join(siblingOrigin(sub, host))
+  }
+  return JSON.parse(json.split(CANONICAL_ORIGIN).join(site)) as T
 }

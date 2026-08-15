@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next"
 import { API_BASE_URL } from "@/lib/api"
 import { INTEGRATIONS } from "@/pages/Integrations/data"
 
-import { getHost, originForHost } from "@/lib/site-url"
+import { getHost, originForHost, siblingOrigin } from "@/lib/site-url"
 
 // The sitemap reads the request host, so the route itself renders per request
 // (a route-segment `revalidate` would be ignored). This caches only the blog
@@ -93,8 +93,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const SITE = originForHost(host)
 
   const SUBDOMAIN_URLS: { url: string; changeFrequency: ChangeFreq; priority: number }[] = [
-    { url: `https://polygate.${host}`, changeFrequency: "monthly", priority: 0.8 },
-    { url: `https://infrager.${host}`, changeFrequency: "monthly", priority: 0.8 },
+    { url: siblingOrigin("polygate", host), changeFrequency: "monthly", priority: 0.8 },
+    { url: siblingOrigin("infrager", host), changeFrequency: "monthly", priority: 0.8 },
   ]
 
   const lastModified = new Date()

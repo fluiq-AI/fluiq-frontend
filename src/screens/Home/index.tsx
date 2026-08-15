@@ -4,6 +4,7 @@ import "@/styles/home.css";
 import React, { useCallback, useState } from "react"
 import { motion, useMotionValue, useSpring } from "motion/react"
 import { useReducedMotionSafe } from "@/lib/useReducedMotionSafe"
+import { useSiblingOrigin } from "@/contexts/SiteHostContext"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   PythonIcon,
@@ -146,6 +147,9 @@ const HERO_CODE: Array<Array<[string, string]>> = [
 export default function Home() {
   useScrollReveal()
   const reduce = useReducedMotionSafe()
+
+  // Infrager is a subdomain of whichever domain this page is being served on.
+  const infragerUrl = useSiblingOrigin("infrager")
 
   // Shared Python/TypeScript toggle for the code blocks below.
   const [codeLang, setCodeLang] = useState<CodeLang>("python")
@@ -510,7 +514,7 @@ export default function Home() {
                   <HugeiconsIcon icon={ArrowRight02Icon} size={13} />
                 </Link>
                 <a
-                  href="https://infrager.getfluiq.com"
+                  href={infragerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[14px] font-medium text-[#6B6B66] hover:text-[#0a0a0a] dark:text-[#9A9A92] dark:hover:text-[#FAF9F6]"

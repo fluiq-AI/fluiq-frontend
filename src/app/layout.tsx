@@ -4,7 +4,7 @@ import { Suspense } from "react"
 
 import "@/index.css"
 import { Providers } from "./providers"
-import { getSiteUrl } from "@/lib/site-url"
+import { getHost, getSiteUrl, originForHost } from "@/lib/site-url"
 
 // metadataBase is what makes every page's relative `alternates.canonical` and
 // `openGraph.url` absolute. Deriving it from the request host is what makes the
@@ -112,7 +112,8 @@ const organizationJsonLd = (site: string) => ({
 const themeInitScript = `(function(){try{var t=localStorage.getItem('fluiq-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');if(t==='dark')document.documentElement.classList.add('dark');}catch(e){}})();`
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const site = await getSiteUrl()
+  const host = await getHost()
+  const site = originForHost(host)
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -135,7 +136,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
-        <Providers>
+        <Providers host={host}>
           <Suspense fallback={null}>{children}</Suspense>
         </Providers>
 

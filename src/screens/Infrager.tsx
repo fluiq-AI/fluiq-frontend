@@ -4,6 +4,7 @@ import "@/styles/home.css"
 import React, { useCallback } from "react"
 import { motion, useMotionValue, useSpring } from "motion/react"
 import { useReducedMotionSafe } from "@/lib/useReducedMotionSafe"
+import { useSiblingOrigin } from "@/contexts/SiteHostContext"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   ArrowRight02Icon,
@@ -27,7 +28,6 @@ import { EASE_OUT } from "@/pages/Home/utils/constants"
 const border = "border-[#D4CFC1] dark:border-[#1A1A1A]"
 const panelBorder = "border-[#E5E1D6] dark:border-[#2A2A2A]"
 
-const APP_URL = "https://infrager.getfluiq.com"
 const REPO_URL = "https://github.com/SaurabhKumbhar24/Infrager"
 
 const GENERATED_TF = `resource "aws_security_group" "web_sg" {
@@ -94,6 +94,8 @@ const LINT_RULES = [
 ]
 
 export default function Infrager() {
+  // The app is a subdomain of whichever domain this page is being served on.
+  const APP_URL = useSiblingOrigin("infrager")
   useScrollReveal()
   const reduce = useReducedMotionSafe()
 
