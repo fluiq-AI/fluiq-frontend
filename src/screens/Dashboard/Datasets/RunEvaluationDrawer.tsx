@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import {
   Cancel01Icon,
+  Database02Icon,
   Delete02Icon,
   Loading03Icon,
   PencilEdit02Icon,
@@ -25,7 +26,8 @@ import {
   type JudgeSelection,
 } from "@/components/JudgePicker"
 import { MissingKeysCallout, ProviderKeyDialog } from "@/components/ProviderKeys"
-import { useModels, toSpecs } from "@/lib/useModels"
+import { SearchSelect } from "@/components/SearchSelect"
+import { useModels, toSpecs, specModel } from "@/lib/useModels"
 import { metricLabel } from "@/lib/metricLabels"
 import { PromptEditor } from "@/pages/Dashboard/Prompts/components/PromptEditor"
 import {
@@ -37,6 +39,23 @@ import {
 
 // Eval kinds the drawer can launch (security is a separate top-level button).
 export type EvalMode = "agentic" | "metrics"
+
+/**
+ * The thing being evaluated: a prompt + model executed against every example to
+ * produce fresh output, which is then what gets graded.
+ *
+ * Omitting the task grades the output each example already carries — the right
+ * choice when the dataset holds real production traces and you want to know how
+ * *those* scored. Supplying one is how you answer the other question: if I
+ * change this prompt or this model, do my scores go up or down?
+ */
+export interface TaskConfig {
+  prompt_id?: string
+  prompt_version?: number
+  template?: string
+  system?: string
+  model?: string
+}
 
 // Config the drawer hands back to the parent's launch().
 export interface EvalLaunchConfig {
@@ -52,6 +71,15 @@ export interface EvalLaunchConfig {
   models?: string[]
   /** Groups the runs of one multi-model launch. */
   batch_id?: string
+  /** Present ⇒ generate fresh output with this prompt before grading. */
+  task?: TaskConfig
+  /** Names the run, so a list of runs reads as a list of experiments. */
+  name?: string
+  /**
+   * How many times to run each example. Only meaningful with a task: the point
+   * is to see how much a score moves when nothing about the input changed.
+   */
+  trials?: number
 }
 
 const METRIC_CHOICES = [
@@ -64,6 +92,13 @@ const METRIC_CHOICES = [
 ] as const
 
 const DEFAULT_METRICS = ["hallucination", "relevance", "completeness"]
+
+/**
+ * Provider calls one task run is allowed to make, mirroring the API's
+ * MAX_TASK_EXAMPLES. Trials divide into it rather than multiplying past it, so
+ * the ceiling means the same thing whatever the trial count.
+ */
+const MAX_TASK_GENERATIONS = 500
 
 // Prompt names per metric come from the pipeline spec in MetricFlowDiagram, so
 // the editor and the architecture diagram can never disagree about which judge
@@ -87,6 +122,24 @@ const STARTER_TEMPLATE =
   "and a short reason.\n\n" +
   'Return ONLY: {"score": <0-1>, "reason": "<why>"}'
 
+// A task template starts by showing the one variable that always exists, so the
+// syntax is learned from a working example rather than from documentation.
+const STARTER_TASK_TEMPLATE = "{{input}}"
+
+/** Variables every task template can reference, whatever the dataset holds. */
+const TASK_VARS = ["input", "expected"] as const
+
+/** A saved prompt, as the task picker needs it. */
+interface SavedPromptRef {
+  prompt_id: string
+  name: string
+  slug: string
+  template: string
+  model: string | null
+  version: number
+  kind: string
+}
+
 interface JudgePromptRow {
   name: string
   description: string | null
@@ -97,10 +150,27 @@ interface JudgePromptRow {
   version: number
 }
 
+/** How a scorer decides its number: ask a model, or run an expression. */
+type ScorerKind = "judge" | "code"
+
+/**
+ * One option a choice-scored judge can pick, and what it is worth.
+ *
+ * Asking a model for a calibrated float is asking it to do the thing it is worst
+ * at; picking between written options is a classification task it does well. The
+ * number then comes from this table, so it never varies between runs.
+ */
+interface ScorerChoice {
+  label: string
+  score: number
+}
+
 interface DatasetScorer {
   slug: string
   name: string
   template: string | null
+  kind: ScorerKind
+  choices: ScorerChoice[] | null
   threshold: number
   created_at: string | null
 }
@@ -119,7 +189,34 @@ interface ScorerDraft {
   slug?: string
   name: string
   template: string
+  kind: ScorerKind
+  /** null ⇒ the judge returns a free 0–1 score, the behaviour judges have always had. */
+  choices: ScorerChoice[] | null
   threshold: number
+}
+
+// A code scorer opens on a check people actually write, so the language is
+// learned from a working example rather than from a reference page.
+const STARTER_CODE = "len(output) < 500"
+
+// Turning choices on opens with pass/fail, which is what most rubrics are.
+const STARTER_CHOICES: ScorerChoice[] = [
+  { label: "Y", score: 1 },
+  { label: "N", score: 0 },
+]
+
+/**
+ * Whether a choice set can be saved. Mirrors the server's rules so the failure
+ * is shown on the button rather than after a round trip. `null` (no choice set)
+ * is always fine — it means the judge scores freely.
+ */
+function choicesUsable(choices: ScorerChoice[] | null): boolean {
+  if (choices === null) return true
+  if (choices.length < 2) return false
+  const labels = choices.map((c) => c.label.trim().toLowerCase())
+  if (labels.some((l) => !l)) return false
+  if (new Set(labels).size !== labels.length) return false
+  return choices.every((c) => c.score >= 0 && c.score <= 1)
 }
 
 /**
@@ -155,7 +252,8 @@ export function RunEvaluationDrawer({
   const [mode, setMode] = useState<EvalMode>(isSingle ? "metrics" : "agentic")
   const [judgeSel, setJudgeSel] = useState<JudgeSelection>(DEFAULT_JUDGE_SELECTION)
   // Chat models from the price table, as `provider:model` specs for the pickers.
-  const modelSpecOptions = toSpecs(useModels()).map((s) => ({ value: s.spec, label: s.label }))
+  const allModels = useModels()
+  const modelSpecOptions = toSpecs(allModels).map((s) => ({ value: s.spec, label: s.label }))
   // Judge models for a metrics run. Picking more than one launches a run per
   // model so their scores can be compared; empty means the server default.
   const [metricsModels, setMetricsModels] = useState<string[]>([])
@@ -163,6 +261,21 @@ export function RunEvaluationDrawer({
   const [agenticModels, setAgenticModels] = useState<string[]>([])
   const [chosenMetrics, setChosenMetrics] = useState<string[]>(DEFAULT_METRICS)
   const [activeTab, setActiveTab] = useState<string>(DEFAULT_METRICS[0])
+
+  // ── Task: what is being evaluated ──
+  // Off by default, because the existing behaviour — grading the output each
+  // example already carries — is the right answer for a dataset of real traces.
+  // Turning it on is how you ask the other question: if I change this prompt or
+  // this model, do my scores move?
+  const [taskOn, setTaskOn] = useState(false)
+  const [taskSource, setTaskSource] = useState<"prompt" | "inline">("prompt")
+  const [taskPromptId, setTaskPromptId] = useState<string>("")
+  const [taskTemplate, setTaskTemplate] = useState<string>(STARTER_TASK_TEMPLATE)
+  const [taskModel, setTaskModel] = useState<string>("")
+  const [trials, setTrials] = useState(1)
+  const [savedPrompts, setSavedPrompts] = useState<SavedPromptRef[]>([])
+  const [promptsListError, setPromptsListError] = useState<string | null>(null)
+  const [runName, setRunName] = useState<string>("")
 
   // Dataset custom scorers (the saved library) + this run's selection.
   const [scorers, setScorers] = useState<DatasetScorer[]>([])
@@ -254,13 +367,27 @@ export function RunEvaluationDrawer({
     }
   }, [])
 
+  // Saved prompts the task can run. Judge prompts are excluded: they grade an
+  // answer, they don't produce one.
+  const loadSavedPrompts = useCallback(async () => {
+    setPromptsListError(null)
+    try {
+      const res = await authFetch<{ prompts: SavedPromptRef[] }>("/api/v1/prompts")
+      setSavedPrompts((res.prompts ?? []).filter((p) => p.kind !== "judge"))
+    } catch (err) {
+      setPromptsListError(err instanceof ApiError ? err.detail : "Failed to load prompts")
+      setSavedPrompts([])
+    }
+  }, [])
+
   // Scorers, judge prompts, and key availability load whenever the drawer opens.
   useEffect(() => {
     if (!open) return
     loadScorers()
     loadPrompts()
     loadCredentials()
-  }, [open, loadScorers, loadPrompts, loadCredentials])
+    loadSavedPrompts()
+  }, [open, loadScorers, loadPrompts, loadCredentials, loadSavedPrompts])
 
   // Close on Escape (but Escape inside the scorer editor just closes the editor).
   useEffect(() => {
@@ -288,15 +415,40 @@ export function RunEvaluationDrawer({
 
   const activeModels = effectiveMode === "agentic" ? agenticModels : metricsModels
 
+  const chosenTaskPrompt = savedPrompts.find((p) => p.prompt_id === taskPromptId)
+  // The task's own model, resolved the way the server will: an explicit choice
+  // wins, otherwise the saved prompt's model.
+  const effectiveTaskModel = taskOn
+    ? specModel(taskModel) || (taskSource === "prompt" ? chosenTaskPrompt?.model ?? "" : "")
+    : ""
+  // Generation is BYOK only — there is no managed key path for a task, because
+  // the task is the customer's own product, not our grading. The provider comes
+  // from the price table rather than a second copy of the server's prefix rules,
+  // so the two can't drift as models are added.
+  const taskProvider = effectiveTaskModel
+    ? allModels.find((m) => m.id === effectiveTaskModel)?.provider ?? null
+    : null
+
   // Providers of the selected models that have no key path (neither a saved
   // BYOK key nor a managed platform key). A run can't use them, so it's blocked.
   const missingProviders = Array.from(
-    new Set(activeModels.map((m) => m.split(":")[0])),
+    new Set([
+      ...activeModels.map((m) => m.split(":")[0]),
+      ...(taskProvider && !savedProviders.has(taskProvider) ? [taskProvider] : []),
+    ]),
   ).filter((p) => !savedProviders.has(p) && !managedProviders.has(p))
   const keysReady = missingProviders.length === 0
 
+  // An enabled task must actually be runnable: something to run, and a model to
+  // run it on. Launching without these fails server-side, so block it here.
+  const taskReady =
+    !taskOn ||
+    (Boolean(effectiveTaskModel) &&
+      (taskSource === "prompt" ? Boolean(chosenTaskPrompt) : taskTemplate.trim().length > 0))
+
   const canRun =
     keysReady &&
+    taskReady &&
     (effectiveMode !== "metrics" || chosenMetrics.length > 0 || selected.length > 0)
 
   // Rough scale of a run, so the cost of judge/model choice is visible before
@@ -309,17 +461,24 @@ export function RunEvaluationDrawer({
   // every depth.
   const modelCount = Math.max(1, activeModels.length)
   const agenticLayers = judgeSel.depth === "fast" ? 1 : 3
+  // Only judge scorers cost a model call. Counting code scorers here would
+  // overstate the run and, worse, make the cheap option look expensive.
+  const judgeScorerCount = selected.filter((s) => s.kind !== "code").length
+  const codeScorerCount = selected.length - judgeScorerCount
   const graderCount =
     effectiveMode === "agentic"
-      ? agenticLayers + selected.length
-      : chosenMetrics.length + selected.length
+      ? agenticLayers + judgeScorerCount
+      : chosenMetrics.length + judgeScorerCount
   const estCalls = exampleCount * graderCount * modelCount
   const costNote =
-    effectiveMode === "agentic"
+    (effectiveMode === "agentic"
       ? judgeSel.depth === "deep"
         ? "Deep depth adds a jury, multiplying judge calls per layer."
         : "Tool selection runs only on spans with tool calls; retrieval adds a call per retrieval step."
-      : "Multi-step metrics like hallucination make more than one call each."
+      : "Multi-step metrics like hallucination make more than one call each.") +
+    (codeScorerCount > 0
+      ? ` ${codeScorerCount} code scorer${codeScorerCount === 1 ? "" : "s"} run free.`
+      : "")
 
   function toggleScorer(slug: string, on: boolean) {
     setSelectedScorers((prev) => {
@@ -336,8 +495,12 @@ export function RunEvaluationDrawer({
       toast.error("Give the scorer a name.")
       return
     }
-    if (!hasPlaceholder(editing.template, "answer")) {
+    if (editing.kind === "judge" && !hasPlaceholder(editing.template, "answer")) {
       toast.error("The prompt must reference {{answer}} (the output being graded).")
+      return
+    }
+    if (editing.kind === "code" && !editing.template.trim()) {
+      toast.error("Write the expression the scorer evaluates.")
       return
     }
     setSavingScorer(true)
@@ -348,6 +511,8 @@ export function RunEvaluationDrawer({
           slug: editing.slug,
           name: editing.name.trim(),
           template: editing.template,
+          kind: editing.kind,
+          choices: editing.kind === "judge" ? editing.choices : null,
           threshold: editing.threshold,
         },
       })
@@ -437,7 +602,7 @@ export function RunEvaluationDrawer({
   function useProposal(p: ScorerProposal) {
     setProposals([])
     setEditingPrompt(null)
-    setEditing({ name: p.name, template: p.prompt, threshold: p.threshold })
+    setEditing({ name: p.name, template: p.prompt, kind: "judge", choices: null, threshold: p.threshold })
   }
 
   async function removeScorer(slug: string) {
@@ -455,24 +620,49 @@ export function RunEvaluationDrawer({
     }
   }
 
+  /**
+   * The task to send, or undefined to keep grading the output each example
+   * already carries. A saved prompt is sent by id + version so the run records
+   * exactly which prompt it executed, and stays reproducible after that prompt
+   * is edited.
+   */
+  function buildTask(): TaskConfig | undefined {
+    if (!taskOn) return undefined
+    const model = specModel(taskModel)
+    if (taskSource === "prompt") {
+      const chosen = savedPrompts.find((p) => p.prompt_id === taskPromptId)
+      if (!chosen) return undefined
+      return {
+        prompt_id: chosen.prompt_id,
+        prompt_version: chosen.version,
+        ...(model ? { model } : {}),
+      }
+    }
+    return { template: taskTemplate, ...(model ? { model } : {}) }
+  }
+
   function handleRun() {
     if (!canRun || busy) return
+    const task = buildTask()
+    const name = runName.trim() || undefined
+    const custom_judges: Record<string, number> = {}
+    for (const s of selected) custom_judges[s.slug] = s.threshold
+    const shared = {
+      task,
+      name,
+      // Sent only with a task. Re-scoring one recorded output N times would
+      // measure the judge's variance, not the model's, and quietly bill for it.
+      trials: task && trials > 1 ? trials : undefined,
+      custom_judges: Object.keys(custom_judges).length ? custom_judges : undefined,
+    }
     if (effectiveMode === "metrics") {
-      const custom_judges: Record<string, number> = {}
-      for (const s of selected) custom_judges[s.slug] = s.threshold
-      onLaunch("metrics", {
-        models: metricsModels,
-        metrics: chosenMetrics,
-        custom_judges: Object.keys(custom_judges).length ? custom_judges : undefined,
-      })
+      onLaunch("metrics", { ...shared, models: metricsModels, metrics: chosenMetrics })
     } else {
-      const custom_judges: Record<string, number> = {}
-      for (const s of selected) custom_judges[s.slug] = s.threshold
       onLaunch("agentic", {
+        ...shared,
         models: agenticModels,
         depth: judgeSel.depth,
         jury: judgeSel.jury,
-        custom_judges: Object.keys(custom_judges).length ? custom_judges : undefined,
       })
     }
   }
@@ -596,7 +786,16 @@ export function RunEvaluationDrawer({
               size="sm"
               onClick={saveScorer}
               disabled={
-                savingScorer || !editing.name.trim() || !hasPlaceholder(editing.template, "answer")
+                savingScorer ||
+                !editing.name.trim() ||
+                !editing.template.trim() ||
+                // A judge that never references the answer cannot see what it
+                // is grading; a code scorer reads `output` as a variable and has
+                // no placeholders to require.
+                (editing.kind === "judge" && !hasPlaceholder(editing.template, "answer")) ||
+                // Blank or duplicate labels are rejected server-side; catching
+                // them here saves a round trip to be told so.
+                !choicesUsable(editing.choices)
               }
             >
               {savingScorer ? (
@@ -628,6 +827,45 @@ export function RunEvaluationDrawer({
 
         {/* Body */}
         <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+            <TaskSection
+              on={taskOn}
+              onToggle={setTaskOn}
+              source={taskSource}
+              onSourceChange={setTaskSource}
+              prompts={savedPrompts}
+              promptsError={promptsListError}
+              promptId={taskPromptId}
+              onPromptChange={setTaskPromptId}
+              template={taskTemplate}
+              onTemplateChange={setTaskTemplate}
+              model={taskModel}
+              onModelChange={setTaskModel}
+              modelOptions={modelSpecOptions}
+              inheritedModel={chosenTaskPrompt?.model ?? null}
+              exampleCount={exampleCount}
+              trials={trials}
+              onTrialsChange={setTrials}
+              disabled={busy}
+            />
+
+            <div className="space-y-1.5">
+              <label htmlFor="run-name" className="text-xs font-medium text-foreground">
+                Run name <span className="font-normal text-muted-foreground">(optional)</span>
+              </label>
+              <input
+                id="run-name"
+                value={runName}
+                onChange={(e) => setRunName(e.target.value)}
+                disabled={busy}
+                placeholder={taskOn ? "e.g. Support prompt v3 on GPT-5" : "e.g. Weekly baseline"}
+                className="w-full rounded-md border border-border/60 bg-background px-2.5 py-1.5 text-sm outline-none transition-colors focus:border-primary/50 disabled:opacity-50"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Names this run so the history reads as a list of experiments rather
+                than a list of timestamps.
+              </p>
+            </div>
+
             {/* Evaluator — agentic datasets choose evaluator vs scorer. */}
             {!isSingle ? (
               <div className="space-y-2">
@@ -729,11 +967,15 @@ export function RunEvaluationDrawer({
                   onToggle={toggleScorer}
                   onAdd={() => {
                     setEditingPrompt(null)
-                    setEditing({ name: "", template: STARTER_TEMPLATE, threshold: 0.5 })
+                    setEditing({ name: "", template: STARTER_TEMPLATE, kind: "judge", choices: null, threshold: 0.5 })
                   }}
                   onEdit={(s) => {
                     setEditingPrompt(null)
-                    setEditing({ slug: s.slug, name: s.name, template: s.template ?? STARTER_TEMPLATE, threshold: s.threshold })
+                    setEditing({
+                      slug: s.slug, name: s.name, kind: s.kind, choices: s.choices,
+                      template: s.template ?? (s.kind === "code" ? STARTER_CODE : STARTER_TEMPLATE),
+                      threshold: s.threshold,
+                    })
                   }}
                   onRemove={removeScorer}
                   note="Graded against each run's final answer."
@@ -814,11 +1056,15 @@ export function RunEvaluationDrawer({
                   onToggle={toggleScorer}
                   onAdd={() => {
                     setEditingPrompt(null)
-                    setEditing({ name: "", template: STARTER_TEMPLATE, threshold: 0.5 })
+                    setEditing({ name: "", template: STARTER_TEMPLATE, kind: "judge", choices: null, threshold: 0.5 })
                   }}
                   onEdit={(s) => {
                     setEditingPrompt(null)
-                    setEditing({ slug: s.slug, name: s.name, template: s.template ?? STARTER_TEMPLATE, threshold: s.threshold })
+                    setEditing({
+                      slug: s.slug, name: s.name, kind: s.kind, choices: s.choices,
+                      template: s.template ?? (s.kind === "code" ? STARTER_CODE : STARTER_TEMPLATE),
+                      threshold: s.threshold,
+                    })
                   }}
                   onRemove={removeScorer}
                   onSuggest={suggestScorers}
@@ -850,6 +1096,291 @@ export function RunEvaluationDrawer({
   )
 }
 
+// ── Task: what is being evaluated ───────────────────────────────────────────
+
+/**
+ * Chooses between the two questions a run can answer.
+ *
+ * Off (the default): grade the output every example already carries — the right
+ * question for a dataset of real production traces.
+ *
+ * On: run this prompt on this model against every example and grade the fresh
+ * output — the question you ask before shipping a prompt or model change.
+ */
+function TaskSection({
+  on,
+  onToggle,
+  source,
+  onSourceChange,
+  prompts,
+  promptsError,
+  promptId,
+  onPromptChange,
+  template,
+  onTemplateChange,
+  model,
+  onModelChange,
+  modelOptions,
+  inheritedModel,
+  exampleCount,
+  trials,
+  onTrialsChange,
+  disabled,
+}: {
+  on: boolean
+  onToggle: (on: boolean) => void
+  source: "prompt" | "inline"
+  onSourceChange: (s: "prompt" | "inline") => void
+  prompts: SavedPromptRef[]
+  promptsError: string | null
+  promptId: string
+  onPromptChange: (id: string) => void
+  template: string
+  onTemplateChange: (t: string) => void
+  model: string
+  onModelChange: (m: string) => void
+  modelOptions: { value: string; label: string }[]
+  inheritedModel: string | null
+  exampleCount: number
+  trials: number
+  onTrialsChange: (n: number) => void
+  disabled: boolean
+}) {
+  const chosen = prompts.find((p) => p.prompt_id === promptId)
+  const activeTemplate = source === "prompt" ? chosen?.template ?? "" : template
+  // How many examples the run will actually reach, given the generation ceiling.
+  const gradedExamples = Math.min(
+    exampleCount,
+    Math.floor(MAX_TASK_GENERATIONS / Math.max(1, trials)),
+  )
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-medium text-foreground">What to evaluate</p>
+
+      <div className="grid grid-cols-2 gap-2">
+        {([
+          {
+            value: false,
+            icon: Database02Icon,
+            title: "Recorded output",
+            desc: "Grade what each example already holds",
+          },
+          {
+            value: true,
+            icon: PlayIcon,
+            title: "Run a prompt",
+            desc: "Generate fresh output, then grade it",
+          },
+        ]).map((opt) => {
+          const isSel = on === opt.value
+          return (
+            <button
+              key={String(opt.value)}
+              type="button"
+              onClick={() => onToggle(opt.value)}
+              disabled={disabled}
+              className={cn(
+                "rounded-lg border p-3 text-left transition-colors disabled:opacity-50",
+                isSel
+                  ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30"
+                  : "border-border/60 hover:bg-muted/40",
+              )}
+            >
+              <HugeiconsIcon
+                icon={opt.icon}
+                size={16}
+                className={isSel ? "text-primary" : "text-muted-foreground"}
+              />
+              <p className={cn("mt-1.5 text-sm font-medium", isSel ? "text-primary" : "text-foreground")}>
+                {opt.title}
+              </p>
+              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{opt.desc}</p>
+            </button>
+          )
+        })}
+      </div>
+
+      {!on ? null : (
+        <div className="space-y-3 rounded-md border border-border/60 bg-muted/20 px-3 py-3">
+          <div className="flex gap-1.5">
+            {([
+              { v: "prompt" as const, label: "Saved prompt" },
+              { v: "inline" as const, label: "Write one" },
+            ]).map((t) => (
+              <button
+                key={t.v}
+                type="button"
+                onClick={() => onSourceChange(t.v)}
+                disabled={disabled}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-50",
+                  source === t.v
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          {source === "prompt" ? (
+            <div className="space-y-1.5">
+              <SearchSelect
+                value={promptId}
+                onChange={onPromptChange}
+                options={prompts.map((p) => ({
+                  value: p.prompt_id,
+                  label: `${p.name} · v${p.version}`,
+                }))}
+                placeholder={prompts.length ? "Choose a prompt" : "No saved prompts"}
+                emptyText="No prompts saved yet."
+                disabled={disabled || prompts.length === 0}
+              />
+              {promptsError ? (
+                <p className="text-[11px] text-destructive">{promptsError}</p>
+              ) : prompts.length === 0 ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Save a prompt on the Prompts page to run it here, or write one below.
+                </p>
+              ) : chosen ? (
+                <>
+                  <pre className="max-h-28 overflow-auto rounded-md border border-border/60 bg-background px-2.5 py-2 text-[11px] leading-relaxed text-muted-foreground">
+                    {chosen.template}
+                  </pre>
+                  <p className="text-[11px] text-muted-foreground">
+                    Pinned to v{chosen.version}, so this run stays reproducible after
+                    the prompt is edited.
+                  </p>
+                </>
+              ) : null}
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <PromptEditor
+                value={template}
+                onChange={onTemplateChange}
+                placeholder="Answer the customer: {{input}}"
+                className="min-h-[7rem]"
+              />
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium text-foreground">Model</p>
+            <SearchSelect
+              value={model}
+              onChange={onModelChange}
+              options={modelOptions}
+              placeholder={inheritedModel ? `${inheritedModel} (from prompt)` : "Choose a model"}
+              clearLabel={inheritedModel ? `${inheritedModel} (from prompt)` : undefined}
+              disabled={disabled}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Runs on your own provider key — this is your product being tested, not
+              our grading, so a platform key is never used for it.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-medium text-foreground">Trials per example</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[1, 2, 3, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => onTrialsChange(n)}
+                  disabled={disabled}
+                  className={cn(
+                    "rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-50",
+                    trials === n
+                      ? "border-primary bg-primary/10 text-foreground"
+                      : "border-border/60 text-muted-foreground hover:bg-muted/50",
+                  )}
+                >
+                  {n}×
+                </button>
+              ))}
+              {trials > 1 ? (
+                <span className="text-[11px] tabular-nums text-muted-foreground">
+                  {(gradedExamples * trials).toLocaleString()} generations
+                </span>
+              ) : null}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {trials === 1
+                ? "One shot per example. Enough to compare prompts, not enough to tell a real regression from a noisy model."
+                : `Runs each example ${trials} times and reports the average with its spread — so a score that swings between identical runs shows up as noise rather than as a result. Costs ${trials}× as much.`}
+            </p>
+            {/* One launch is capped at MAX_TASK_GENERATIONS provider calls, and
+                trials count against it. Said here rather than discovered from a
+                run that quietly covered a fifth of the dataset. */}
+            {gradedExamples < exampleCount ? (
+              <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                A run is capped at {MAX_TASK_GENERATIONS.toLocaleString()} generations, so this grades
+                the first {gradedExamples.toLocaleString()} of {exampleCount.toLocaleString()} examples
+                {trials > 1 ? ` at ${trials}× each` : ""}.
+              </p>
+            ) : null}
+          </div>
+
+          <TaskVariableHint template={activeTemplate} exampleCount={exampleCount} />
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Names the variables a task template can use, and — more usefully — warns when
+ * a template references none of them, because that sends the identical prompt
+ * for every row and produces a run whose scores mean nothing.
+ */
+function TaskVariableHint({
+  template,
+  exampleCount,
+}: {
+  template: string
+  exampleCount: number
+}) {
+  const used = TASK_VARS.filter((v) => hasPlaceholder(template, v))
+  const referencesAnything = /\{\{\s*\w+\s*\}\}/.test(template)
+
+  return (
+    <div className="space-y-1.5 border-t border-border/60 pt-2.5">
+      <p className="text-[11px] text-muted-foreground">
+        Variables:{" "}
+        {TASK_VARS.map((v) => (
+          <code
+            key={v}
+            className={cn(
+              "mr-1 rounded px-1 py-0.5 font-mono text-[10px]",
+              used.includes(v)
+                ? "bg-primary/10 text-primary"
+                : "bg-muted text-muted-foreground",
+            )}
+          >
+            {`{{${v}}}`}
+          </code>
+        ))}
+        plus any column your examples carry in metadata.
+      </p>
+      {!referencesAnything && template.trim() ? (
+        <p className="text-[11px] text-amber-600 dark:text-amber-400">
+          This template uses no variables, so each example&apos;s input is appended
+          to it. Add <code className="font-mono">{"{{input}}"}</code> to control
+          where it goes.
+        </p>
+      ) : null}
+      <p className="text-[11px] text-muted-foreground">
+        {exampleCount} generation{exampleCount === 1 ? "" : "s"} before any grading
+        begins.
+      </p>
+    </div>
+  )
+}
+
 // ── Scorer editor (extended drawer body) ────────────────────────────────────
 
 function ScorerEditorBody({
@@ -861,7 +1392,26 @@ function ScorerEditorBody({
   onChange: (draft: ScorerDraft) => void
   disabled: boolean
 }) {
+  const isCode = draft.kind === "code"
   const hasAnswer = hasPlaceholder(draft.template, "answer")
+
+  /** Switching kind swaps in that kind's starter, but never discards work the
+   *  author has already done to the body. */
+  function setKind(kind: ScorerKind) {
+    if (kind === draft.kind) return
+    const untouched =
+      !draft.template.trim() ||
+      draft.template === STARTER_TEMPLATE ||
+      draft.template === STARTER_CODE
+    onChange({
+      ...draft,
+      kind,
+      template: untouched
+        ? kind === "code" ? STARTER_CODE : STARTER_TEMPLATE
+        : draft.template,
+    })
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-hidden px-5 py-5">
       <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
@@ -891,29 +1441,302 @@ function ScorerEditorBody({
         </div>
       </div>
 
+      {/* Kind. Only offered when creating: changing it on a saved scorer would
+          silently re-grade every dataset already referencing that slug. */}
+      {draft.slug ? null : (
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            {
+              kind: "judge" as const,
+              title: "LLM judge",
+              desc: "Ask a model. For subjective calls like tone or helpfulness.",
+            },
+            {
+              kind: "code" as const,
+              title: "Code",
+              desc: "Run an expression. Exact, instant, free — and never varies.",
+            },
+          ]).map((opt) => {
+            const isSel = draft.kind === opt.kind
+            return (
+              <button
+                key={opt.kind}
+                type="button"
+                onClick={() => setKind(opt.kind)}
+                disabled={disabled}
+                className={cn(
+                  "rounded-lg border p-2.5 text-left transition-colors disabled:opacity-50",
+                  isSel
+                    ? "border-primary/50 bg-primary/5 ring-1 ring-primary/30"
+                    : "border-border/60 hover:bg-muted/40",
+                )}
+              >
+                <p className={cn("text-xs font-medium", isSel ? "text-primary" : "text-foreground")}>
+                  {opt.title}
+                </p>
+                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                  {opt.desc}
+                </p>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <div className="flex min-h-0 flex-1 flex-col">
-        <label className="mb-1 text-[11px] text-muted-foreground">Prompt</label>
+        <label className="mb-1 text-[11px] text-muted-foreground">
+          {isCode ? "Expression" : "Prompt"}
+        </label>
         <div className="min-h-0 flex-1 overflow-hidden rounded-md border border-border/60">
           <PromptEditor
             value={draft.template}
             onChange={(v) => onChange({ ...draft, template: v })}
-            placeholder={STARTER_TEMPLATE}
-            varSyntax="both"
+            placeholder={isCode ? STARTER_CODE : STARTER_TEMPLATE}
+            varSyntax={isCode ? "none" : "both"}
           />
         </div>
       </div>
 
-      {!hasAnswer ? (
-        <p className="text-[11px] text-destructive">
-          The prompt must reference <span className="font-mono">{"{{answer}}"}</span> (the output being graded).
-        </p>
+      {isCode ? (
+        <CodeScorerHelp source={draft.template} disabled={disabled} />
       ) : (
-        <p className="text-[11px] text-muted-foreground">
-          Placeholders: <span className="font-mono">{"{{answer}}"}</span>, <span className="font-mono">{"{{question}}"}</span>,{" "}
-          <span className="font-mono">{"{{context}}"}</span>. Return{" "}
-          <span className="font-mono">{'{"score", "reason"}'}</span>.
-        </p>
+        <>
+          <ChoiceEditor
+            choices={draft.choices}
+            onChange={(choices) => onChange({ ...draft, choices })}
+            disabled={disabled}
+          />
+          {!hasAnswer ? (
+            <p className="text-[11px] text-destructive">
+              The prompt must reference <span className="font-mono">{"{{answer}}"}</span> (the output being graded).
+            </p>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              Placeholders: <span className="font-mono">{"{{answer}}"}</span>,{" "}
+              <span className="font-mono">{"{{question}}"}</span>,{" "}
+              <span className="font-mono">{"{{context}}"}</span>.
+              {draft.choices ? null : (
+                <>
+                  {" "}Return <span className="font-mono">{'{"score", "reason"}'}</span>.
+                </>
+              )}
+            </p>
+          )}
+        </>
       )}
+    </div>
+  )
+}
+
+/**
+ * The options a judge may pick from, and what each is worth.
+ *
+ * Off by default: a free 0–1 score is what judges have always returned, and
+ * switching every existing scorer to a rubric would change what their numbers
+ * mean. On, the judge is offered exactly these labels and the score is read from
+ * the table — so it stops varying between runs.
+ */
+function ChoiceEditor({
+  choices,
+  onChange,
+  disabled,
+}: {
+  choices: ScorerChoice[] | null
+  onChange: (choices: ScorerChoice[] | null) => void
+  disabled: boolean
+}) {
+  const on = choices !== null
+  const labels = (choices ?? []).map((c) => c.label.trim().toLowerCase())
+  const duplicate = labels.some((l, i) => l && labels.indexOf(l) !== i)
+  const blank = (choices ?? []).some((c) => !c.label.trim())
+
+  function update(index: number, patch: Partial<ScorerChoice>) {
+    onChange((choices ?? []).map((c, i) => (i === index ? { ...c, ...patch } : c)))
+  }
+
+  return (
+    <div className="space-y-2 rounded-md border border-border/60 bg-muted/20 px-2.5 py-2">
+      <label className="flex cursor-pointer items-start gap-2">
+        <input
+          type="checkbox"
+          checked={on}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.checked ? STARTER_CHOICES : null)}
+          className="mt-0.5 size-3 accent-primary"
+        />
+        <span className="min-w-0">
+          <span className="text-[11px] font-medium text-foreground">
+            Pick from fixed options
+          </span>
+          <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">
+            The judge chooses a label and the score comes from your table, instead
+            of the model inventing a number. Steadier between runs.
+          </span>
+        </span>
+      </label>
+
+      {!on ? null : (
+        <div className="space-y-1.5">
+          <div className="grid grid-cols-[1fr_4.5rem_1.5rem] gap-1.5 text-[10px] uppercase tracking-wide text-muted-foreground/60">
+            <span>Option</span>
+            <span>Score</span>
+            <span />
+          </div>
+          {(choices ?? []).map((choice, i) => (
+            <div key={i} className="grid grid-cols-[1fr_4.5rem_1.5rem] items-center gap-1.5">
+              <input
+                value={choice.label}
+                onChange={(e) => update(i, { label: e.target.value })}
+                placeholder="e.g. Y"
+                disabled={disabled}
+                className="h-7 w-full rounded border border-border/60 bg-background px-2 text-[11px] outline-none focus:border-primary/50"
+              />
+              <input
+                type="number"
+                min={0}
+                max={1}
+                step={0.25}
+                value={choice.score}
+                onChange={(e) => update(i, { score: Number(e.target.value) })}
+                disabled={disabled}
+                className="h-7 w-full rounded border border-border/60 bg-background px-2 text-[11px] outline-none focus:border-primary/50"
+              />
+              <button
+                type="button"
+                aria-label={`Remove option ${choice.label || i + 1}`}
+                disabled={disabled || (choices ?? []).length <= 2}
+                onClick={() => onChange((choices ?? []).filter((_, j) => j !== i))}
+                title={
+                  (choices ?? []).length <= 2
+                    ? "A choice set needs at least two options"
+                    : undefined
+                }
+                className="inline-flex size-6 items-center justify-center rounded text-muted-foreground/60 transition-colors hover:bg-muted hover:text-destructive disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-muted-foreground/60"
+              >
+                <HugeiconsIcon icon={Delete02Icon} size={12} />
+              </button>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            disabled={disabled || (choices ?? []).length >= 12}
+            onClick={() => onChange([...(choices ?? []), { label: "", score: 0.5 }])}
+            className="text-[11px] text-primary transition-colors hover:underline disabled:opacity-40 disabled:no-underline"
+          >
+            + Add option
+          </button>
+
+          {blank ? (
+            <p className="text-[11px] text-destructive">Every option needs a label.</p>
+          ) : duplicate ? (
+            <p className="text-[11px] text-destructive">
+              Two options share a label — the judge could not tell them apart.
+            </p>
+          ) : null}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Reference for the scorer language, plus a way to try it on one example.
+ *
+ * Authoring a scorer blind and discovering it was wrong across a whole run is
+ * the slow way to get it right, so the check happens here in a second.
+ */
+function CodeScorerHelp({ source, disabled }: { source: string; disabled: boolean }) {
+  const [sample, setSample] = useState("")
+  const [expected, setExpected] = useState("")
+  const [result, setResult] = useState<
+    { ok: true; score: number; reason: string } | { ok: false; error: string } | null
+  >(null)
+  const [testing, setTesting] = useState(false)
+
+  async function test() {
+    if (!source.trim() || testing) return
+    setTesting(true)
+    try {
+      setResult(
+        await authFetch<
+          { ok: true; score: number; reason: string } | { ok: false; error: string }
+        >("/api/v1/prompts/code-scorer/test", {
+          method: "POST",
+          body: { source, output: sample, expected },
+        }),
+      )
+    } catch (err) {
+      setResult({ ok: false, error: err instanceof ApiError ? err.detail : "Test failed" })
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-2 rounded-md border border-border/60 bg-muted/20 px-2.5 py-2">
+      <p className="text-[11px] text-muted-foreground">
+        Reads{" "}
+        {["output", "expected", "input", "metadata"].map((v) => (
+          <code key={v} className="mr-1 rounded bg-muted px-1 py-0.5 font-mono text-[10px]">
+            {v}
+          </code>
+        ))}
+        — return a number 0–1, or true/false.
+      </p>
+      <p className="text-[11px] text-muted-foreground">
+        Helpers:{" "}
+        <span className="font-mono text-[10px]">
+          contains · matches · is_json · json_parse · similarity · word_count · clamp
+        </span>
+      </p>
+
+      <div className="grid gap-1.5 sm:grid-cols-2">
+        <input
+          value={sample}
+          onChange={(e) => setSample(e.target.value)}
+          placeholder="Try an output…"
+          disabled={disabled}
+          className="h-7 w-full rounded border border-border/60 bg-background px-2 text-[11px] outline-none focus:border-primary/50"
+        />
+        <input
+          value={expected}
+          onChange={(e) => setExpected(e.target.value)}
+          placeholder="…and an expected value (optional)"
+          disabled={disabled}
+          className="h-7 w-full rounded border border-border/60 bg-background px-2 text-[11px] outline-none focus:border-primary/50"
+        />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 text-[11px]"
+          onClick={test}
+          disabled={disabled || testing || !source.trim()}
+        >
+          {testing ? (
+            <HugeiconsIcon icon={Loading03Icon} size={12} className="animate-spin" />
+          ) : (
+            <HugeiconsIcon icon={PlayIcon} size={12} />
+          )}
+          Test
+        </Button>
+        {result === null ? null : result.ok ? (
+          <span className="text-[11px]">
+            <span className="text-muted-foreground">scored </span>
+            <b className="font-mono text-emerald-600 dark:text-emerald-400">
+              {result.score.toFixed(2)}
+            </b>
+          </span>
+        ) : (
+          <span className="min-w-0 flex-1 truncate text-[11px] text-destructive" title={result.error}>
+            {result.error}
+          </span>
+        )}
+      </div>
     </div>
   )
 }
@@ -1326,7 +2149,12 @@ function CustomScorers({
             label="scorer"
             placeholder={scorers.length === 0 ? "No scorers yet" : "Select scorers"}
             emptyText="No custom scorers saved yet."
-            options={scorers.map((s) => ({ value: s.slug, label: s.name }))}
+            // A code scorer is free and instant where a judge costs a model
+            // call per example, so which one a scorer is belongs on the label.
+            options={scorers.map((s) => ({
+              value: s.slug,
+              label: s.kind === "code" ? `${s.name} · code` : s.name,
+            }))}
             selected={Array.from(selected)}
             onToggle={onToggle}
             disabled={disabled}

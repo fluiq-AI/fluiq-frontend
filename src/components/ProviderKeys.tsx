@@ -23,11 +23,35 @@ import { Label } from "@/components/ui/label"
  * everywhere and the provider vocabulary can't drift.
  */
 
+// Mirrors fluiq-api/shared/providers.py. Kept in step by hand: an unlabelled
+// provider falls back to its raw id, which is ugly rather than broken.
 export const PROVIDER_LABEL: Record<string, string> = {
-  anthropic: "Anthropic",
   openai: "OpenAI",
+  anthropic: "Anthropic",
   gemini: "Google (Gemini)",
-  moonshot: "Moonshot",
+  mistral: "Mistral",
+  groq: "Groq",
+  together: "Together AI",
+  fireworks: "Fireworks",
+  perplexity: "Perplexity",
+  xai: "xAI (Grok)",
+  cerebras: "Cerebras",
+  deepseek: "DeepSeek",
+  moonshot: "Moonshot (Kimi)",
+  zai: "Z.AI (GLM)",
+  openrouter: "OpenRouter",
+  vercel: "Vercel AI Gateway",
+  baseten: "Baseten",
+  deepinfra: "DeepInfra",
+  sambanova: "SambaNova",
+  nebius: "Nebius AI Studio",
+  novita: "Novita AI",
+  hyperbolic: "Hyperbolic",
+  vertex: "Google Vertex AI",
+  databricks: "Databricks",
+  cloudflare: "Cloudflare Workers AI",
+  azure_openai: "Azure OpenAI",
+  bedrock: "AWS Bedrock",
 }
 
 export interface ProviderKeyState {

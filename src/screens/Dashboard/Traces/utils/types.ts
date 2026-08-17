@@ -194,6 +194,8 @@ export interface TraceRecord {
   cost?: number | null
   currency?: string | null
   evaluations?: EvaluationScore[]
+  /** Labels from the SDK or applied in the dashboard. */
+  tags?: string[]
 }
 
 // Phase of a trace as observed by the live SSE stream. ``running`` rows are
@@ -240,6 +242,8 @@ export interface TraceFilters {
   integration: string             // "all" or a raw integration string e.g. "OPENAI"
   quality:     TraceQualityFilter
   status:      TraceStatusFilter
+  /** Tags a trace must carry (all of them, not any). Empty = no tag filter. */
+  tags:        string[]
 }
 
 export const DEFAULT_TRACE_FILTERS: TraceFilters = {
@@ -248,4 +252,5 @@ export const DEFAULT_TRACE_FILTERS: TraceFilters = {
   integration: "all",
   quality:     "all",
   status:      "all",
+  tags:        [],
 }

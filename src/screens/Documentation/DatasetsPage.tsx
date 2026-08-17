@@ -127,6 +127,16 @@ await fetch(\`\${BASE}/datasets/\${ds.dataset_id}/examples\`, {
         <p className="text-sm text-muted-foreground">
           Pass a <code className="font-mono text-foreground">source_trace_id</code> in an example's metadata (use the run's <span className="font-medium text-foreground">root</span> trace id) and Fluiq snapshots that run's whole trajectory into the dataset automatically.
         </p>
+        <p className="text-sm text-muted-foreground">
+          <span className="font-medium text-foreground">Per-example few-shot.</span> An example&apos;s
+          metadata can carry a <code className="font-mono text-foreground">few_shot</code> list of{" "}
+          <code className="font-mono text-foreground">{"{input, output}"}</code> pairs, which a task
+          template reaches as <code className="font-mono text-foreground">{"{{few_shot}}"}</code> —
+          rendered ready to drop into a prompt. It lives on the example rather than the template because
+          the useful examples usually differ per row: the nearest neighbours to <em>this</em> question,
+          not a fixed three pasted into every prompt. Rows without it render nothing at all, so one
+          template serves both. Capped at ten per example.
+        </p>
       </div>
     </>
   )

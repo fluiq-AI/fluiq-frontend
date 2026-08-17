@@ -4,6 +4,10 @@ import { Link, NavLink, Navigate, Outlet } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
 import {
   Activity01Icon,
+  Analytics01Icon,
+  CheckmarkCircle02Icon,
+  SourceCodeIcon,
+  PulseIcon,
   ApiIcon,
   DashboardSquare01Icon,
   Database01Icon,
@@ -47,8 +51,11 @@ const NAV_SECTIONS = [
   {
     section: "Observability",
     items: [
+      { to: "/dashboard/monitor", label: "Monitor", icon: Analytics01Icon },
       { to: "/dashboard/traces", label: "Traces", icon: Activity01Icon },
       { to: "/dashboard/agents", label: "Agents", icon: RoboticIcon },
+      { to: "/dashboard/review", label: "Review", icon: CheckmarkCircle02Icon },
+      { to: "/dashboard/sql", label: "SQL", icon: SourceCodeIcon },
     ],
   },
   {
@@ -57,7 +64,9 @@ const NAV_SECTIONS = [
       { to: "/dashboard/tests", label: "Tests", icon: TestTube01Icon },
       { to: "/dashboard/datasets", label: "Datasets", icon: Database01Icon },
       { to: "/dashboard/prompts", label: "Prompts", icon: AiContentGenerator01Icon },
+      { to: "/dashboard/scorers", label: "Scorers", icon: JusticeScale01Icon },
       { to: "/dashboard/judge-prompts", label: "Judge Prompts", icon: JusticeScale01Icon },
+      { to: "/dashboard/online-scoring", label: "Online Scoring", icon: PulseIcon },
     ],
   },
   {

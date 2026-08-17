@@ -44,6 +44,9 @@ function buildParams(keyId: string, offset: number, filters: TraceFilters): URLS
   if (filters.security    !== "all")    p.set("security",    filters.security)
   if (filters.integration !== "all")    p.set("integration", filters.integration)
   if (filters.quality     !== "all")    p.set("quality",     filters.quality)
+  // Repeated, not comma-joined: the API takes ?tag=a&tag=b, and a comma would
+  // be a legal character inside a tag rather than a separator.
+  for (const t of filters.tags) p.append("tag", t)
   return p
 }
 
@@ -67,7 +70,11 @@ function Traces() {
   // the list's headline columns so we no longer prefetch every child to sum it.
   const [rollups, setRollups] = useState<Map<string, RootRollup>>(new Map())
 
-  const { filters, setFilter, clearFilters, activeFilterCount } = useTraceFilters()
+  const { filters, setFilter, applyFilters, clearFilters, activeFilterCount } =
+    useTraceFilters()
+  // Tags the org actually uses, for the filter dropdown. Loaded once: the set
+  // changes rarely, and refetching it per page would be noise.
+  const [orgTags, setOrgTags] = useState<{ tag: string; count: number }[]>([])
 
   const apiKeys = useMemo(() => organization?.api_keys ?? [], [organization])
   const groups = useMemo(() => buildTraceTree(traces), [traces])
@@ -234,6 +241,34 @@ function Traces() {
     clearFilters()
   }, [clearFilters])
 
+  const handleApplyView = useCallback((next: Partial<TraceFilters>) => {
+    setPage(0)
+    applyFilters(next)
+  }, [applyFilters])
+
+  /**
+   * Tag edits land in two places: the selected trace (what the drawer renders)
+   * and the row in the list behind it. Updating only the first would leave the
+   * list showing stale labels the moment the drawer closes.
+   */
+  const handleTagsChange = useCallback((tags: string[]) => {
+    setSelectedTrace((prev) => (prev ? { ...prev, tags } : prev))
+    setTraces((prev) =>
+      prev.map((t) =>
+        t.event?.trace_id && t.event.trace_id === selectedTrace?.event?.trace_id
+          ? { ...t, tags }
+          : t,
+      ),
+    )
+  }, [selectedTrace])
+
+  useEffect(() => {
+    authFetch<{ tags: { tag: string; count: number }[] }>("/api/v1/traces/tags")
+      .then((res) => setOrgTags(res.tags ?? []))
+      // A missing tag list only costs the dropdown; the trace list is unaffected.
+      .catch(() => setOrgTags([]))
+  }, [])
+
   // Auto-fetch whenever the page, key, or filters change. Key/filter changes
   // reset the page to 0 at their change sites (handleKeyChange / the wrapped
   // filter handlers) so we never fetch a stale offset against a fresh result
@@ -339,6 +374,8 @@ function Traces() {
             keyId={keyId}
             onKeyChange={handleKeyChange}
             loading={loading}
+            orgTags={orgTags}
+            onApplyView={handleApplyView}
           />
           
           {error ? (
@@ -438,6 +475,7 @@ function Traces() {
           onFocusTrace={focusTrace}
           onFocusTool={focusTool}
           onClearTool={() => setSelectedTool(null)}
+          onTagsChange={handleTagsChange}
         />
       ) : null}
     </>

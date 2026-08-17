@@ -134,7 +134,9 @@ interface PromptEditorProps {
    * `{{variable}}`; `"dollar"` highlights `$variable` and `${variable}`, which
    * is what judge prompts and custom scorers use; `"both"` highlights either.
    */
-  varSyntax?: "braces" | "dollar" | "both"
+  /** Which placeholder dialect to paint. "none" for bodies that have no
+   *  placeholders at all — a code scorer's `{` is a dict, not a variable. */
+  varSyntax?: "braces" | "dollar" | "both" | "none"
 }
 
 export function PromptEditor({

@@ -13,7 +13,10 @@ export function useTraceFilters() {
       (filters.security    !== d.security    ? 1 : 0) +
       (filters.integration !== d.integration ? 1 : 0) +
       (filters.quality     !== d.quality     ? 1 : 0) +
-      (filters.status      !== d.status      ? 1 : 0)
+      (filters.status      !== d.status      ? 1 : 0) +
+      // Each tag narrows independently, so each counts — "2 filters" reading as
+      // one when two tags are applied would misstate how narrow the list is.
+      filters.tags.length
     )
   }, [filters])
 
@@ -25,5 +28,10 @@ export function useTraceFilters() {
     setFilters(DEFAULT_TRACE_FILTERS)
   }, [])
 
-  return { filters, setFilter, clearFilters, activeFilterCount }
+  /** Replace the whole filter set — how a saved view is applied. */
+  const applyFilters = useCallback((next: Partial<TraceFilters>) => {
+    setFilters({ ...DEFAULT_TRACE_FILTERS, ...next })
+  }, [])
+
+  return { filters, setFilter, setFilters, applyFilters, clearFilters, activeFilterCount }
 }

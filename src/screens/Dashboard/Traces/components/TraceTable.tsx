@@ -231,6 +231,24 @@ export function TraceTreeRows({
                     <span className="text-muted-foreground/60">{"\u2014"}</span>
                   )}
                 </span>
+                {/* Tags on the row, capped at two: they are a scanning aid, and
+                    a row that wraps to three lines of labels stops being one. */}
+                {(t.tags ?? []).slice(0, 2).map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {(t.tags?.length ?? 0) > 2 ? (
+                  <span
+                    title={(t.tags ?? []).join(", ")}
+                    className="text-[10px] text-muted-foreground/60"
+                  >
+                    +{(t.tags?.length ?? 0) - 2}
+                  </span>
+                ) : null}
                 {/* The node itself is fine, but a step deeper in the tree
                     failed/blocked \u2014 an outline (vs. filled) chip distinguishes
                     "happened inside" from "this node", and forms a trail the

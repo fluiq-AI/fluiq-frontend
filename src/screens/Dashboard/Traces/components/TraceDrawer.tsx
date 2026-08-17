@@ -17,6 +17,8 @@ import { findGroupForTrace } from "../helpers/treeBuilder"
 import type { DrawerTab, SelectedTool, ToolSelectFn, TraceRecord } from "../utils/types"
 import { formatCost, formatDate, formatLatency, getModel, getStr, isFailed, traceToDatasetExample } from "../utils"
 import { AddToDataset } from "@/components/AddToDataset"
+import { TraceTags } from "./TraceTags"
+import { FlagForReview } from "./FlagForReview"
 
 export function TraceDrawer({
   trace,
@@ -29,6 +31,7 @@ export function TraceDrawer({
   onFocusTrace,
   onFocusTool,
   onClearTool,
+  onTagsChange,
 }: {
   trace: TraceRecord
   group: ReturnType<typeof findGroupForTrace>
@@ -40,6 +43,8 @@ export function TraceDrawer({
   onFocusTrace: (t: TraceRecord) => void
   onFocusTool: ToolSelectFn
   onClearTool: () => void
+  /** Absent ⇒ tags are read-only here (a surface without a list to update). */
+  onTagsChange?: (tags: string[]) => void
 }) {
   const [leftView, setLeftView] = useState<LeftView>("architecture")
   const isTree = leftView === "tree"
@@ -125,13 +130,27 @@ export function TraceDrawer({
               <span className="px-2 text-muted-foreground/60">{"·"}</span>
               <span className="font-mono">{trace.api_key_prefix}{"…"}</span>
             </p>
+            {/* Tags belong on the run, not on each span: a label answers "which
+                cohort was this request?", which is a property of the whole run. */}
+            {isRootTrace && !selectedTool && onTagsChange ? (
+              <div className="mt-2">
+                <TraceTags
+                  traceId={String(trace.event?.trace_id ?? "")}
+                  tags={trace.tags ?? []}
+                  onChange={onTagsChange}
+                />
+              </div>
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             {/* Adding to a dataset captures the whole run (keyed by the root's
                 trace_id), so it only makes sense on the root span — not on a
                 child span or a selected tool overlay. */}
             {isRootTrace && !selectedTool ? (
-              <AddToDataset example={traceToDatasetExample(detailTrace)} />
+              <>
+                <FlagForReview traceId={String(trace.event?.trace_id ?? "")} />
+                <AddToDataset example={traceToDatasetExample(detailTrace)} />
+              </>
             ) : null}
             <button
               type="button"

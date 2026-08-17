@@ -267,6 +267,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  pull-requests: write   # only needed for --pr-comment
+
 jobs:
   eval-gate:
     runs-on: ubuntu-latest
@@ -281,13 +285,15 @@ jobs:
       - name: Run eval gate
         env:
           FLUIQ_API_KEY: \${{ secrets.FLUIQ_API_KEY }}
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
         run: |
           python -m fluiq.ci \\
             --dataset "checkout-regressions" \\
             --kind metrics \\
             --metrics hallucination,relevance,completeness \\
             --fail-below 0.7 \\
-            --min-example 0.5`}</Code>
+            --min-example 0.5 \\
+            --pr-comment`}</Code>
       <p className="text-sm text-muted-foreground">
         <code className="font-mono text-foreground">--kind agentic</code> runs the full layered agent
         evaluation (tool selection, trajectory, coordination) over each example&apos;s pinned trajectory
@@ -296,6 +302,23 @@ jobs:
         average. Exit codes: <code className="font-mono text-foreground">0</code> pass,{" "}
         <code className="font-mono text-foreground">1</code> gate failed,{" "}
         <code className="font-mono text-foreground">2</code> error/timeout.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        <code className="font-mono text-foreground">--pr-comment</code> posts the result to the pull
+        request itself — per-metric scores, the delta against the last run on the base branch, and the
+        weakest examples — so the reviewer deciding whether to merge sees the numbers without opening a
+        build log. The comment is <span className="font-medium text-foreground">updated in place</span> on
+        every push rather than appended, and it&apos;s posted whether the gate passes or fails: a report
+        that only appears on failure gets read as an alarm instead of as a result. Needs{" "}
+        <code className="font-mono text-foreground">pull-requests: write</code>; if posting fails the gate
+        still returns its real exit code.
+      </p>
+      <p className="text-sm text-muted-foreground">
+        <code className="font-mono text-foreground">--trials N</code> runs each example N times and reports
+        the average alongside its spread. Reach for it when a gate keeps flapping — it separates a genuine
+        regression from a model that is simply noisy, at N× the cost. Trials are independent generations,
+        not one output scored repeatedly, so what you measure is the variance of your app rather than of
+        the judge.
       </p>
 
       <p className="font-medium">Quotas</p>

@@ -46,6 +46,20 @@ interface RunSummary {
 
 type RunKind = "agentic" | "security" | "metrics"
 
+/**
+ * The prompt + model a run executed against every example. Present only on task
+ * runs; absent means the run graded the output each example already carried.
+ */
+interface RunTask {
+  template: string
+  system?: string | null
+  model: string
+  max_tokens?: number
+  prompt_id?: string | null
+  prompt_version?: number | null
+  prompt_name?: string | null
+}
+
 interface DatasetRun {
   run_id: string
   kind: RunKind
@@ -59,6 +73,16 @@ interface DatasetRun {
   finished_at?: string | null
   /** Groups the runs launched together by one multi-model comparison. */
   batch_id?: string | null
+  /** Agentic depth, or the comma-joined metric list on a metrics run. */
+  depth?: string | null
+  /** Experiment identity — what this run was, beyond when it happened. */
+  name?: string | null
+  description?: string | null
+  /** What was executed, when the run had a task. */
+  task?: RunTask | null
+  /** Task-run progress: examples generated, and how many of those failed. */
+  generated?: number
+  gen_failed?: number
 }
 
 interface ReportItem {
@@ -67,7 +91,16 @@ interface ReportItem {
   input?: string | null
   expected_output?: string | null
   done: boolean
-  result?: { metric: string; score: number | null }[] | Record<string, unknown> | null
+  result?: MetricRow[] | Record<string, unknown> | null
+  /** Present when the run used trials: how many runs this row averages. */
+  trials?: number
+  /** What the task produced for this example, and what it cost. Task runs only. */
+  output?: string | null
+  gen_error?: string | null
+  latency_ms?: number | null
+  input_tokens?: number | null
+  output_tokens?: number | null
+  cost_usd?: number | null
 }
 
 /** Per-example security verdict, as returned on a security run's report items. */
@@ -106,6 +139,18 @@ interface CompareMetric {
   avg: number
   baseline_avg: number
   delta: number
+}
+
+/**
+ * One metric's score for one example. `spread` and `trials` appear only on
+ * trialled runs, where the row is an average of several independent runs.
+ */
+interface MetricRow {
+  metric: string
+  score: number | null
+  /** Best trial minus worst. Large ⇒ the average is not a stable number. */
+  spread?: number
+  trials?: number
 }
 
 interface CompareExample {
@@ -433,10 +478,15 @@ export function DatasetRuns({
 
   function buildRunBody(kind: RunKind, cfg?: EvalLaunchConfig): Record<string, unknown> {
     const body: Record<string, unknown> = { kind }
+    // A task makes the run generate the output it grades, instead of grading
+    // whatever each example already carried.
+    if (cfg?.task) body.task = cfg.task
+    if (cfg?.name) body.name = cfg.name
     if (kind === "metrics" && cfg?.metrics) body.metrics = cfg.metrics
     // Custom scorers apply to both evaluators, not just metrics.
     if (kind !== "security" && cfg?.custom_judges) body.custom_judges = cfg.custom_judges
     if (cfg?.batch_id) body.batch_id = cfg.batch_id
+    if (cfg?.trials && cfg.trials > 1) body.trials = cfg.trials
     // Security scans are regex/NER only, so no judge is involved.
     if (kind !== "security" && cfg) {
       if (cfg.judge) body.judge = cfg.judge
@@ -791,7 +841,17 @@ export function DatasetRuns({
                     className="shrink-0 text-muted-foreground"
                   />
                   <span className="min-w-0 flex-1 truncate">
-                    <span className="font-medium capitalize">{r.kind}</span>
+                    {/* A named run identifies itself; an unnamed one falls back
+                        to its kind, which is all it ever had to go on. */}
+                    <span className="font-medium capitalize">{r.name || r.kind}</span>
+                    {r.task ? (
+                      <span
+                        className="ml-1 font-mono text-[10px] text-emerald-600 dark:text-emerald-400"
+                        title={`Task: ${r.task.prompt_name ?? "inline prompt"} on ${r.task.model}`}
+                      >
+                        ▸{r.task.model}
+                      </span>
+                    ) : null}
                     {r.model ? (
                       <span className="ml-1 font-mono text-[10px] text-primary/80">
                         {r.model.split(":")[1] ?? r.model}
@@ -954,6 +1014,8 @@ function ReportView({
 
       <VerdictCard report={report} />
 
+      {run.task ? <TaskCard run={run} items={report.items} /> : null}
+
       {autoDelta && !compare ? <DeltaStrip compare={autoDelta} /> : null}
 
       {run.kind === "agentic" ? (
@@ -979,6 +1041,99 @@ function ReportView({
           <SecurityItemTable items={report.items} />
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * What the run executed, and what executing it cost.
+ *
+ * Shown only on task runs. The technical metrics matter next to the quality
+ * scores because the best-scoring model is often the slowest and dearest one —
+ * seeing both together is what turns a score into a decision.
+ */
+function TaskCard({ run, items }: { run: DatasetRun; items: ReportItem[] }) {
+  const [showPrompt, setShowPrompt] = useState(false)
+  const task = run.task
+  if (!task) return null
+
+  const generated = items.filter((it) => it.output != null)
+  const failed = items.filter((it) => it.gen_error)
+
+  const latencies = generated
+    .map((it) => it.latency_ms)
+    .filter((v): v is number => typeof v === "number")
+    .sort((a, b) => a - b)
+  const p50 = latencies.length ? latencies[Math.floor(latencies.length / 2)] : null
+  const totalCost = generated.reduce((sum, it) => sum + (it.cost_usd ?? 0), 0)
+  const totalTokens = generated.reduce(
+    (sum, it) => sum + (it.input_tokens ?? 0) + (it.output_tokens ?? 0),
+    0,
+  )
+
+  const label = task.prompt_name
+    ? `${task.prompt_name}${task.prompt_version ? ` · v${task.prompt_version}` : ""}`
+    : "Inline prompt"
+
+  return (
+    <div className="rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
+          Task
+        </span>
+        <span className="text-xs font-medium text-foreground">{label}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">{task.model}</span>
+        <button
+          type="button"
+          onClick={() => setShowPrompt((v) => !v)}
+          className="ml-auto text-[11px] text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline"
+        >
+          {showPrompt ? "Hide prompt" : "Show prompt"}
+        </button>
+      </div>
+
+      {showPrompt ? (
+        <pre className="mt-2 max-h-40 overflow-auto rounded-md border border-border/60 bg-background px-2.5 py-2 text-[11px] leading-relaxed text-muted-foreground">
+          {task.template}
+        </pre>
+      ) : null}
+
+      <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+        <span>
+          Generated <b className="font-mono text-foreground">{generated.length}</b>/{run.total}
+        </span>
+        {p50 !== null ? (
+          <span>
+            Latency p50 <b className="font-mono text-foreground">{(p50 / 1000).toFixed(2)}s</b>
+          </span>
+        ) : null}
+        {totalTokens > 0 ? (
+          <span>
+            Tokens <b className="font-mono text-foreground">{formatCount(totalTokens)}</b>
+          </span>
+        ) : null}
+        {totalCost > 0 ? (
+          <span>
+            Cost <b className="font-mono text-foreground">${totalCost.toFixed(4)}</b>
+          </span>
+        ) : null}
+      </div>
+
+      {failed.length > 0 ? (
+        <div className="mt-2 rounded-md border border-amber-500/30 bg-amber-500/5 px-2.5 py-2">
+          <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
+            {failed.length} example{failed.length === 1 ? "" : "s"} produced no output and
+            {failed.length === 1 ? " was" : " were"} not scored
+          </p>
+          <ul className="mt-1 space-y-0.5">
+            {failed.slice(0, 3).map((it) => (
+              <li key={it.example_id} className="truncate text-[11px] text-muted-foreground">
+                {it.gen_error}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -1145,7 +1300,7 @@ function MetricsItemTable({ items }: { items: ReportItem[] }) {
     return items
       .filter((it) => Array.isArray(it.result) && it.result.length > 0)
       .map((it) => {
-        const rows = it.result as { metric: string; score: number | null }[]
+        const rows = it.result as MetricRow[]
         const values = rows.map((r) => r.score).filter((s): s is number => typeof s === "number")
         const avg = values.length ? values.reduce((a, b) => a + b, 0) / values.length : null
         return { it, rows, avg }
@@ -1183,31 +1338,126 @@ function MetricsItemTable({ items }: { items: ReportItem[] }) {
       </div>
       <div className="max-h-72 space-y-1 overflow-y-auto pr-1">
         {shown.map(({ it, rows, avg }) => (
-          <div
-            key={it.example_id}
-            className={cn(
-              "flex items-center gap-2 rounded border px-2 py-1.5 text-[11px]",
-              avg !== null && avg < FAIL_THRESHOLD
-                ? "border-destructive/30 bg-destructive/5"
-                : "border-border/40 bg-background/60",
-            )}
-          >
-            <span className="min-w-0 flex-1 truncate text-muted-foreground">
-              {(it.input || "").slice(0, 120) || it.example_id}
-            </span>
-            <span className="flex shrink-0 items-center gap-2">
-              {rows.map((r) => (
-                <span key={r.metric} className="font-mono text-[10px] text-muted-foreground">
-                  {r.metric.slice(0, 4)} <b className={scoreColor(r.score)}>{pct(r.score)}</b>
-                </span>
-              ))}
-              <span className={cn("w-10 text-right font-mono font-semibold", scoreColor(avg))}>
-                {pct(avg)}
-              </span>
-            </span>
-          </div>
+          <ExampleRow key={it.example_id} item={it} rows={rows} avg={avg} />
         ))}
       </div>
+    </div>
+  )
+}
+
+/**
+ * One graded example, expandable to show what the task actually produced.
+ *
+ * A score on its own says a row failed; reading the output next to the expected
+ * answer is what says why — so the row opens rather than sending you elsewhere.
+ * Rows only expand on task runs, where there is a generated output to read.
+ */
+function ExampleRow({
+  item,
+  rows,
+  avg,
+}: {
+  item: ReportItem
+  rows: MetricRow[]
+  avg: number | null
+}) {
+  const [open, setOpen] = useState(false)
+  const expandable = item.output != null
+  const failed = avg !== null && avg < FAIL_THRESHOLD
+
+  const summary = (
+    <>
+      <span className="min-w-0 flex-1 truncate text-left text-muted-foreground">
+        {(item.input || "").slice(0, 120) || item.example_id}
+      </span>
+      {item.trials && item.trials > 1 ? (
+        <span
+          className="shrink-0 rounded bg-muted px-1 font-mono text-[9px] text-muted-foreground"
+          title={`Average of ${item.trials} runs of this example`}
+        >
+          {item.trials}×
+        </span>
+      ) : null}
+      <span className="flex shrink-0 items-center gap-2">
+        {rows.map((r) => (
+          <span key={r.metric} className="font-mono text-[10px] text-muted-foreground">
+            {r.metric.slice(0, 4)} <b className={scoreColor(r.score)}>{pct(r.score)}</b>
+            {/* A metric that swings between identical runs is a finding, not a
+                detail: without it the average reads as a settled number. Only
+                a spread worth acting on is shown — flagging ±2 points would
+                train people to ignore the marker that matters. */}
+            {typeof r.spread === "number" && r.spread >= 0.1 ? (
+              <span
+                className="ml-0.5 text-amber-600 dark:text-amber-400"
+                title={`Swung ${Math.round(r.spread * 100)} points across ${r.trials ?? "several"} identical runs`}
+              >
+                ±{Math.round((r.spread / 2) * 100)}
+              </span>
+            ) : null}
+          </span>
+        ))}
+        <span className={cn("w-10 text-right font-mono font-semibold", scoreColor(avg))}>
+          {pct(avg)}
+        </span>
+      </span>
+    </>
+  )
+
+  const shell = cn(
+    "flex w-full items-center gap-2 rounded border px-2 py-1.5 text-[11px]",
+    failed ? "border-destructive/30 bg-destructive/5" : "border-border/40 bg-background/60",
+  )
+
+  if (!expandable) return <div className={shell}>{summary}</div>
+
+  return (
+    <div
+      className={cn(
+        "rounded border",
+        failed ? "border-destructive/30 bg-destructive/5" : "border-border/40 bg-background/60",
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 px-2 py-1.5 text-[11px] transition-colors hover:bg-muted/40"
+      >
+        {summary}
+      </button>
+      {open ? (
+        <div className="space-y-2 border-t border-border/40 px-2 py-2">
+          <Field label="Input" value={item.input} />
+          <Field label="Output" value={item.output} />
+          {item.expected_output ? <Field label="Expected" value={item.expected_output} /> : null}
+          <p className="flex flex-wrap gap-x-3 text-[10px] text-muted-foreground">
+            {typeof item.latency_ms === "number" ? (
+              <span>{(item.latency_ms / 1000).toFixed(2)}s</span>
+            ) : null}
+            {typeof item.input_tokens === "number" ? (
+              <span>
+                {item.input_tokens} in / {item.output_tokens ?? 0} out
+              </span>
+            ) : null}
+            {typeof item.cost_usd === "number" && item.cost_usd > 0 ? (
+              <span>${item.cost_usd.toFixed(6)}</span>
+            ) : null}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function Field({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div>
+      <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/60">
+        {label}
+      </p>
+      <pre className="mt-0.5 max-h-32 overflow-auto whitespace-pre-wrap break-words text-[11px] leading-relaxed text-foreground">
+        {value || "—"}
+      </pre>
     </div>
   )
 }
@@ -1471,13 +1721,71 @@ const COMPARE_STATUS_STYLE: Record<CompareExample["status"], string> = {
   pending: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
 }
 
+/**
+ * The difference between two runs, in words.
+ *
+ * "Same dataset, prompt v3 -> v4, same model" is the sentence a reader needs
+ * before a score delta means anything. Comparing runs that differ in three ways
+ * at once is how people conclude the wrong thing from a real regression.
+ */
+function TaskDiff({ run, baseline }: { run: DatasetRun; baseline: DatasetRun }) {
+  const changes: { label: string; from: string; to: string }[] = []
+
+  const taskModel = (r: DatasetRun) => r.task?.model ?? null
+  const promptOf = (r: DatasetRun) =>
+    r.task?.prompt_name
+      ? `${r.task.prompt_name}${r.task.prompt_version ? ` v${r.task.prompt_version}` : ""}`
+      : r.task
+        ? "inline prompt"
+        : null
+
+  const pairs: [string, string | null, string | null][] = [
+    ["Prompt", promptOf(baseline), promptOf(run)],
+    ["Task model", taskModel(baseline), taskModel(run)],
+    ["Judge", baseline.model ?? null, run.model ?? null],
+    ["Depth", baseline.depth ?? null, run.depth ?? null],
+  ]
+  for (const [label, from, to] of pairs) {
+    if (from !== to) changes.push({ label, from: from ?? "—", to: to ?? "—" })
+  }
+
+  if (changes.length === 0) {
+    // Worth saying explicitly: two identical configurations scoring differently
+    // is a finding about variance, not about a change.
+    return (
+      <p className="text-[11px] text-muted-foreground">
+        Same configuration in both runs — any difference here is run-to-run variance.
+      </p>
+    )
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {changes.map((change) => (
+        <span
+          key={change.label}
+          className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-0.5 text-[10px]"
+        >
+          <span className="text-muted-foreground">{change.label}</span>
+          <span className="font-mono text-muted-foreground/70 line-through">{change.from}</span>
+          <span className="text-muted-foreground/50">{"→"}</span>
+          <span className="font-mono font-medium text-primary">{change.to}</span>
+        </span>
+      ))}
+    </div>
+  )
+}
+
 function CompareView({ compare }: { compare: CompareReport }) {
-  const { summary, metrics, examples, baseline } = compare
+  const { summary, metrics, examples, baseline, run } = compare
   return (
     <div className="space-y-3 rounded-md border border-border/60 bg-muted/10 p-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-medium">
-          vs baseline <span className="text-muted-foreground">{fmtDate(baseline.created_at)}</span>
+          vs baseline{" "}
+          <span className="text-muted-foreground">
+            {baseline.name || fmtDate(baseline.created_at)}
+          </span>
         </p>
         <div className="flex gap-1.5 text-[10px]">
           {summary.regressed > 0 ? (
@@ -1495,6 +1803,12 @@ function CompareView({ compare }: { compare: CompareReport }) {
           </span>
         </div>
       </div>
+
+      {/* What actually differs between the two runs. A score delta without this
+          is a number with no cause — the first question anyone asks of a
+          regression is "what changed?", and it was previously unanswerable
+          without opening both runs. */}
+      <TaskDiff run={run} baseline={baseline} />
 
       {metrics.length > 0 ? (
         <div className="space-y-1">

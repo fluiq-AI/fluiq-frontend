@@ -6,7 +6,7 @@ import {
   Cancel01Icon,
   CheckmarkCircle02Icon,
   Copy01Icon,
-  // Database01Icon,
+  Database01Icon,
   Delete02Icon,
   FloppyDiskIcon,
   Loading03Icon,
@@ -18,8 +18,6 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 
 import { cn } from "@/lib/utils"
-// import { ApiError } from "@/lib/api"
-// import { authFetch } from "@/lib/authFetch"
 import { Button } from "@/components/ui/button"
 import { Tip } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
@@ -40,9 +38,9 @@ import {
   scoreBandClass,
 } from "@/pages/Dashboard/Traces/utils"
 import type { CompareResult, MetricResult, ModelOption, PromptRow,  TraceMetadata, PromptVersion, PromptEnv, EnvDeployment, PromptKind } from "../utils/types"
-// import type { DatasetRef } from "../utils/types"
 import { PromptEditor } from "./PromptEditor"
 import { PromptEvalDrawer } from "./PromptEvalDrawer"
+import { DatasetRunPanel } from "./DatasetRunPanel"
 
 // ── Score Card ────────────────────────────────────────────────────────────────
 
@@ -343,82 +341,10 @@ export function EvalPlayground({
   const [copiedSnippet, setCopiedSnippet] = useState(false)
   const [templateVarsOpen, setTemplateVarsOpen] = useState(true)
 
-  // DATASETS — commented out until batch eval flow is built
-  // const [showDatasetPanel, setShowDatasetPanel] = useState(false)
-  // const [datasets,         setDatasets]         = useState<DatasetRef[]>([])
-  // const [datasetsLoading,  setDatasetsLoading]  = useState(false)
-  // const [newDatasetName,   setNewDatasetName]   = useState("")
-  // const [creatingDataset,  setCreatingDataset]  = useState(false)
-  // const [addingToId,       setAddingToId]       = useState<string | null>(null)
-  // const [addedToId,        setAddedToId]        = useState<string | null>(null)
-  // const [datasetError,     setDatasetError]     = useState<string | null>(null)
-
-  // async function openDatasetPanel() {
-  //   setShowDatasetPanel((v) => !v)
-  //   if (!showDatasetPanel) {
-  //     setDatasetsLoading(true)
-  //     setDatasetError(null)
-  //     try {
-  //       const data = await authFetch<{ datasets: DatasetRef[] }>("/api/v1/datasets")
-  //       setDatasets(data.datasets)
-  //     } catch {
-  //       setDatasets([])
-  //     } finally {
-  //       setDatasetsLoading(false)
-  //     }
-  //   }
-  // }
-
-  // async function handleCreateAndAdd() {
-  //   if (!newDatasetName.trim()) return
-  //   setCreatingDataset(true)
-  //   setDatasetError(null)
-  //   try {
-  //     const ds = await authFetch<DatasetRef>("/api/v1/datasets", {
-  //       method: "POST",
-  //       body: { name: newDatasetName.trim() },
-  //     })
-  //     setDatasets((prev) => [ds, ...prev])
-  //     setNewDatasetName("")
-  //     await addExample(ds.dataset_id)
-  //   } catch (err) {
-  //     setDatasetError(err instanceof ApiError ? err.detail : "Failed to create dataset")
-  //   } finally {
-  //     setCreatingDataset(false)
-  //   }
-  // }
-
-  // async function addExample(datasetId: string) {
-  //   if (!row) return
-  //   setAddingToId(datasetId)
-  //   setDatasetError(null)
-  //   const metadata: Record<string, unknown> = {}
-  //   if (row.model !== "—") metadata["model"] = row.model
-  //   if (row.metadata.cost != null) metadata["cost"] = row.metadata.cost
-  //   if (row.metadata.traceId) metadata["source_trace_id"] = row.metadata.traceId
-  //   if (row.trace.ingested_at) metadata["ingested_at"] = row.trace.ingested_at
-  //   try {
-  //     await authFetch(`/api/v1/datasets/${datasetId}/examples`, {
-  //       method: "POST",
-  //       body: {
-  //         input:           renderedPrompt || templateText,
-  //         expected_output: row.fullOutput || null,
-  //         metadata,
-  //       },
-  //     })
-  //     setDatasets((prev) =>
-  //       prev.map((d) =>
-  //         d.dataset_id === datasetId ? { ...d, example_count: d.example_count + 1 } : d,
-  //       ),
-  //     )
-  //     setAddedToId(datasetId)
-  //     setTimeout(() => setAddedToId(null), 2500)
-  //   } catch (err) {
-  //     setDatasetError(err instanceof ApiError ? err.detail : "Failed to add example")
-  //   } finally {
-  //     setAddingToId(null)
-  //   }
-  // }
+  // Running this prompt across a whole dataset, rather than the single row in
+  // view. Adding an example to a dataset is the AddToDataset control below; this
+  // is the other direction — evaluate against every example already in one.
+  const [datasetRunOpen, setDatasetRunOpen] = useState(false)
 
   return (
     <div className="flex flex-col h-full">
@@ -546,6 +472,15 @@ export function EvalPlayground({
           >
             <HugeiconsIcon icon={PlayIcon} size={14} />
             Evaluate &amp; compare
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDatasetRunOpen(true)}
+            className={cn(datasetRunOpen && "border-primary/40 bg-primary/5 text-primary")}
+          >
+            <HugeiconsIcon icon={Database01Icon} size={14} />
+            Run over dataset
           </Button>
           {savedPromptId ? (
             <Button
@@ -914,6 +849,19 @@ export function EvalPlayground({
         onToggleMetric={onToggleMetric ?? (() => {})}
         judgeModel={judgeModel ?? ""}
         onJudgeModelChange={onJudgeModelChange ?? (() => {})}
+      />
+
+      {/* ── Run over dataset ── */}
+      <DatasetRunPanel
+        open={datasetRunOpen}
+        onClose={() => setDatasetRunOpen(false)}
+        templateText={templateText}
+        promptName={templateName}
+        savedPromptId={savedPromptId}
+        savedPromptVersion={currentVersion}
+        modelOptions={modelOptions}
+        defaultModels={compareModels}
+        judgeModel={judgeModel}
       />
     </div>
   )

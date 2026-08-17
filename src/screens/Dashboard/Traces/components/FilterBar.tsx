@@ -4,7 +4,9 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -20,6 +22,7 @@ import type {
   TraceStatusFilter,
 } from "../utils/types"
 import { ALL_KEYS } from "../utils/constants"
+import { ViewPicker } from "./ViewPicker"
 
 const INTEGRATIONS: { value: string; label: string }[] = [
   { value: "all",           label: "All integrations" },
@@ -94,6 +97,8 @@ export function FilterBar({
   keyId,
   onKeyChange,
   loading,
+  orgTags = [],
+  onApplyView,
 }: {
   filters: TraceFilters
   setFilter: <K extends keyof TraceFilters>(key: K, value: TraceFilters[K]) => void
@@ -103,6 +108,9 @@ export function FilterBar({
   keyId: string
   onKeyChange: (id: string) => void
   loading: boolean
+  /** Tags the org actually uses, with counts. Drives the tag dropdown. */
+  orgTags?: { tag: string; count: number }[]
+  onApplyView: (filters: Partial<TraceFilters>) => void
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-2.5">
@@ -201,6 +209,12 @@ export function FilterBar({
         ]}
       />
 
+      <TagFilter
+        selected={filters.tags}
+        available={orgTags}
+        onChange={(tags) => setFilter("tags", tags)}
+      />
+
       {activeFilterCount > 0 ? (
         <button
           type="button"
@@ -215,7 +229,68 @@ export function FilterBar({
         </button>
       ) : null}
 
-      
+      {/* Views sit at the far right, after the filters they capture — you narrow
+          first, then decide the result is worth keeping. */}
+      <div className="ml-auto">
+        <ViewPicker filters={filters} onApply={onApplyView} />
+      </div>
     </div>
+  )
+}
+
+/**
+ * Tags a trace must carry. Multiple tags narrow (AND), matching every other
+ * filter here — one that widened instead would be a trap.
+ */
+function TagFilter({
+  selected,
+  available,
+  onChange,
+}: {
+  selected: string[]
+  available: { tag: string; count: number }[]
+  onChange: (tags: string[]) => void
+}) {
+  // Nothing tagged yet: showing an empty dropdown teaches nothing, so the
+  // control stays hidden until there is something to pick.
+  if (available.length === 0 && selected.length === 0) return null
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(triggerCls, selected.length > 0 && "border-primary/40 bg-primary/5 text-primary")}
+      >
+        {selected.length === 0
+          ? "Tags"
+          : selected.length === 1
+            ? selected[0]
+            : `${selected.length} tags`}
+        <span className="text-[10px] opacity-60">▾</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="max-h-72 min-w-52 overflow-y-auto">
+        {available.map((t) => {
+          const on = selected.includes(t.tag)
+          return (
+            <DropdownMenuCheckboxItem
+              key={t.tag}
+              checked={on}
+              onCheckedChange={(next) =>
+                onChange(next ? [...selected, t.tag] : selected.filter((x) => x !== t.tag))
+              }
+            >
+              <span className="truncate">{t.tag}</span>
+              <span className="ml-auto pl-2 font-mono text-[10px] text-muted-foreground">
+                {t.count}
+              </span>
+            </DropdownMenuCheckboxItem>
+          )
+        })}
+        {selected.length > 0 ? (
+          <DropdownMenuItem onClick={() => onChange([])} className="text-muted-foreground">
+            Clear tags
+          </DropdownMenuItem>
+        ) : null}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
