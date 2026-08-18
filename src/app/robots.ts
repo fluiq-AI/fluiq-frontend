@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { getSiteUrl } from "@/lib/site-url"
+import { CANONICAL_ORIGIN, getHost, isSiteHost } from "@/lib/site-url"
 
 const PRIVATE_PATHS = [
   "/dashboard/",
@@ -9,11 +9,20 @@ const PRIVATE_PATHS = [
   "/reset-password",
 ]
 
-// Read the host inside the handler, not at module scope: `headers()` is
+// The host is read inside the handler, not at module scope: `headers()` is
 // request-scoped, and a module-level read is evaluated once per module
 // instantiation, which would pin robots.txt to whichever host warmed it first.
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  const SITE = await getSiteUrl()
+  const SITE = CANONICAL_ORIGIN
+
+  // Amplify preview URLs and dev servers serve the whole site but are not
+  // redirected (that would make previews untestable), so they are closed to
+  // crawlers outright rather than left as duplicates of the real domain. The
+  // registered alternate domains never reach here — `@/middleware` 301s them.
+  if (!isSiteHost(await getHost())) {
+    return { rules: [{ userAgent: "*", disallow: "/" }] }
+  }
+
   return {
     rules: [
       // Traditional search crawlers

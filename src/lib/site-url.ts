@@ -1,28 +1,20 @@
 /**
- * Per-request site origin.
+ * Site origin, for canonical tags, Open Graph URLs and JSON-LD.
  *
- * The site is served on several hostnames. Canonical tags, Open Graph URLs and
- * JSON-LD must describe the host the visitor actually asked for, otherwise every
- * domain points its canonical at one of the others and the alternates collapse
- * into a single indexed site.
+ * The site is reachable on several hostnames but indexed on exactly one. Every
+ * generated URL therefore names `CANONICAL_ORIGIN` regardless of which host
+ * served the request: `metadataBase` in the root layout makes each page's
+ * relative `alternates.canonical` and `openGraph.url` absolute against it, and
+ * `<JsonLd>` resolves the static descriptors in `@/lib/seo-pages` the same way.
  *
- * Two mechanisms cover the whole app:
- *
- *  1. `metadataBase` in the root layout is built from the request host, so every
- *     page's relative `alternates.canonical` and `openGraph.url` resolve to the
- *     live host with no per-page change.
- *  2. Static JSON-LD descriptors (see `@/lib/seo-pages`) are authored against
- *     `CANONICAL_ORIGIN` and rewritten by `<JsonLd>` at render time.
- *
- * These helpers read `headers()`, so they only work in Server Components, route
- * handlers and `generateMetadata`. Client components cannot use them.
+ * `getHost` still reads `headers()`, so it only works in Server Components,
+ * route handlers and `generateMetadata`. Client components cannot use it.
  */
 import { headers } from "next/headers"
 
 import {
   CANONICAL_HOST,
   CANONICAL_ORIGIN,
-  originForHost,
   siblingOrigin,
   SIBLING_SUBDOMAINS,
 } from "@/lib/site-host"
@@ -30,8 +22,11 @@ import {
 // Re-exported so server callers keep a single import; the definitions live in
 // `@/lib/site-host` because client components cannot import `next/headers`.
 export {
+  ALTERNATE_HOSTS,
+  bareHost,
   CANONICAL_HOST,
   CANONICAL_ORIGIN,
+  isSiteHost,
   originForHost,
   siteApex,
   siblingOrigin,
@@ -43,9 +38,16 @@ export async function getHost(): Promise<string> {
   return (await headers()).get("host") ?? CANONICAL_HOST
 }
 
-/** Absolute origin for this request, e.g. "https://getfluiq.com". */
+/**
+ * Absolute origin for every generated URL, e.g. "https://getfluiq.com".
+ *
+ * Always the canonical origin, never the request host. `@/middleware` 301s the
+ * alternate domains here, so the only hosts that can still reach this code are
+ * previews and dev servers — and those must not emit self-referential
+ * canonicals, or they become indexable duplicates of the real site.
+ */
 export async function getSiteUrl(): Promise<string> {
-  return originForHost(await getHost())
+  return CANONICAL_ORIGIN
 }
 
 /**

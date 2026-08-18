@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next"
 import { API_BASE_URL } from "@/lib/api"
 import { INTEGRATIONS } from "@/pages/Integrations/data"
 
-import { getHost, originForHost, siblingOrigin } from "@/lib/site-url"
+import { CANONICAL_HOST, CANONICAL_ORIGIN, siblingOrigin } from "@/lib/site-url"
 
 // The sitemap reads the request host, so the route itself renders per request
 // (a route-segment `revalidate` would be ignored). This caches only the blog
@@ -89,8 +89,10 @@ async function fetchBlogSlugs(): Promise<string[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const host = await getHost()
-  const SITE = originForHost(host)
+  // Pinned to the canonical domain, not the request host: a sitemap may only
+  // list URLs on the site it is served from, and the alternate domains 301 here.
+  const host = CANONICAL_HOST
+  const SITE = CANONICAL_ORIGIN
 
   const SUBDOMAIN_URLS: { url: string; changeFrequency: ChangeFreq; priority: number }[] = [
     { url: siblingOrigin("polygate", host), changeFrequency: "monthly", priority: 0.8 },

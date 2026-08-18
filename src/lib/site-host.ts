@@ -5,9 +5,37 @@
  * a client component. The pure pieces live here so both sides can share them.
  */
 
-/** Fallback host, and the origin the static SEO descriptors are written against. */
-export const CANONICAL_HOST = "fluiqai.dev"
+/**
+ * The one host the site is indexed on. Everything else 301s here.
+ *
+ * The site answers on four registered domains. Serving the same pages on all
+ * four made them compete as duplicates rather than reinforce one another, so
+ * only this host is canonical, indexable, and named in the sitemap; the rest
+ * are redirects that pass their link equity along (see `@/middleware`).
+ */
+export const CANONICAL_HOST = "getfluiq.com"
 export const CANONICAL_ORIGIN = `https://${CANONICAL_HOST}`
+
+/** The registered domains that redirect to `CANONICAL_HOST`. */
+export const ALTERNATE_HOSTS = ["getfluiq.dev", "fluiqai.dev", "fluiq.net"] as const
+
+/** Hostname with any port and leading `www.` removed. */
+export function bareHost(host: string): string {
+  return host.replace(/:\d+$/, "").toLowerCase().replace(/^www\./, "")
+}
+
+/**
+ * True for a hostname the marketing site is meant to be reached on — the
+ * canonical domain, the alternates, and the `www.` form of any of them.
+ *
+ * Deliberately false for Amplify preview URLs, raw IPs and dev servers: those
+ * must not be redirected (previews would become untestable), they are kept out
+ * of the index by `middleware` and `robots` instead.
+ */
+export function isSiteHost(host: string): boolean {
+  const bare = bareHost(host)
+  return bare === CANONICAL_HOST || (ALTERNATE_HOSTS as readonly string[]).includes(bare)
+}
 
 /** Local dev is plain HTTP; every real host is HTTPS. */
 export function originForHost(host: string): string {
