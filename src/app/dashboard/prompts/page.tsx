@@ -1,5 +1,5 @@
 "use client"
-import Component from "@/pages/Dashboard/Prompts/index"
+import Component from "@/pages/Dashboard/Prompts/PromptsShell"
 
 export default function Page() {
   return <Component />

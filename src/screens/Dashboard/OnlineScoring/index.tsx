@@ -224,13 +224,6 @@ function OnlineScoring() {
                 explicitly asked — so anything you didn&apos;t instrument goes
                 ungraded.
               </p>
-              <Button
-                size="sm"
-                className="mt-3"
-                onClick={() => setEditing({ draft: { ...NEW_RULE } })}
-              >
-                Create your first rule
-              </Button>
             </CardContent>
           </Card>
         ) : (

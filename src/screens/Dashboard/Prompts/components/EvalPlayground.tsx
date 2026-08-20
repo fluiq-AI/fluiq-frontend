@@ -1,6 +1,7 @@
 import { useState } from "react"
 import {
   Alert02Icon,
+  BotIcon,
   ArrowUp01Icon,
   ArrowDown01Icon,
   Cancel01Icon,
@@ -21,6 +22,14 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Tip } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AddToDataset } from "@/components/AddToDataset"
@@ -41,6 +50,24 @@ import type { CompareResult, MetricResult, ModelOption, PromptRow,  TraceMetadat
 import { PromptEditor } from "./PromptEditor"
 import { PromptEvalDrawer } from "./PromptEvalDrawer"
 import { DatasetRunPanel } from "./DatasetRunPanel"
+
+/**
+ * What a custom judge is handed to grade. Mirrors VALID_SCORE_TARGETS in
+ * routes/prompts — the evaluator renders the matching slice of the run
+ * (jobs/agentic/evidence.py) instead of the final answer.
+ */
+export const SCORE_TARGETS = [
+  { key: "output", label: "Final answer",
+    hint: "The response itself. Works on any trace." },
+  { key: "tools", label: "Tools & MCP",
+    hint: "The tools offered and the calls actually made, with arguments and results." },
+  { key: "retrieval", label: "Retrieval & reranking",
+    hint: "Each query and its documents in rank order, so ordering can be graded." },
+  { key: "trajectory", label: "Trajectory",
+    hint: "Every step in sequence, ending with the final answer." },
+  { key: "coordination", label: "Multi-agent",
+    hint: "Hand-offs between agents, in the order they happened." },
+] as const
 
 // ── Score Card ────────────────────────────────────────────────────────────────
 
@@ -248,6 +275,8 @@ export function EvalPlayground({
   saveSlug,
   saveKind = "completion",
   onSaveKindChange,
+  saveTarget = "output",
+  onSaveTargetChange,
   savePending,
   saveError,
   saveSuccess,
@@ -273,6 +302,10 @@ export function EvalPlayground({
   deployLoading = null,
   onDeploy,
   onDelete,
+  toolsPanel = null,
+  toolsCount = 0,
+  showTools = false,
+  onToggleTools,
 }: {
   row?: PromptRow | null
   templateName: string
@@ -306,6 +339,8 @@ export function EvalPlayground({
   saveSlug: string
   saveKind?: PromptKind
   onSaveKindChange?: (k: PromptKind) => void
+  saveTarget?: string
+  onSaveTargetChange?: (t: string) => void
   savePending: boolean
   saveError: string | null
   saveSuccess: boolean
@@ -331,6 +366,11 @@ export function EvalPlayground({
   deployLoading?: PromptEnv | null
   onDeploy?: (env: PromptEnv, deploy: boolean) => void
   onDelete?: () => void
+  /** Rendered by the page so this component stays unaware of tool shapes. */
+  toolsPanel?: React.ReactNode
+  toolsCount?: number
+  showTools?: boolean
+  onToggleTools?: () => void
 }) {
   const hasVars = detectedVars.length > 0
   const isTemplateModified = row ? templateText !== row.userPrompt : false
@@ -480,8 +520,24 @@ export function EvalPlayground({
             className={cn(datasetRunOpen && "border-primary/40 bg-primary/5 text-primary")}
           >
             <HugeiconsIcon icon={Database01Icon} size={14} />
-            Run over dataset
+            Evaluate on dataset
           </Button>
+          {onToggleTools ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onToggleTools}
+              className={cn(showTools && "border-primary/40 bg-primary/5 text-primary")}
+            >
+              <HugeiconsIcon icon={BotIcon} size={14} />
+              Tools &amp; MCP
+              {toolsCount > 0 ? (
+                <span className="ml-1 rounded-full bg-primary/10 px-1.5 font-mono text-[10px] text-primary">
+                  {toolsCount}
+                </span>
+              ) : null}
+            </Button>
+          ) : null}
           {savedPromptId ? (
             <Button
               variant="outline"
@@ -682,6 +738,34 @@ export function EvalPlayground({
                   <p className="text-[11px] font-medium text-amber-700 dark:text-amber-400">
                     Custom judge prompt
                   </p>
+
+                  {/* What this judge is shown. An agent fails in more than one
+                      place, and a prompt asking about tool choice cannot answer
+                      from the final answer alone — the tool calls are not in it. */}
+                  <div className="space-y-1 pb-1">
+                    <p className="text-[11px] text-muted-foreground">What should it grade?</p>
+                    <div className="flex flex-wrap gap-1">
+                      {SCORE_TARGETS.map(({ key, label, hint }) => (
+                        <button
+                          key={key}
+                          type="button"
+                          title={hint}
+                          onClick={() => onSaveTargetChange?.(key)}
+                          className={cn(
+                            "rounded-md border px-2 py-1 text-[11px] transition-colors",
+                            saveTarget === key
+                              ? "border-primary/50 bg-primary/10 text-primary"
+                              : "border-border/60 text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] leading-snug text-muted-foreground/70">
+                      {SCORE_TARGETS.find((t) => t.key === saveTarget)?.hint}
+                    </p>
+                  </div>
                   <p className="text-[11px] leading-relaxed text-muted-foreground">
                     Use{" "}
                     <code className="rounded bg-muted px-1 font-mono text-[10px]">{"{{question}}"}</code>,{" "}
@@ -851,7 +935,45 @@ export function EvalPlayground({
         onJudgeModelChange={onJudgeModelChange ?? (() => {})}
       />
 
-      {/* ── Run over dataset ── */}
+      {/* ── Tools & MCP ──
+          A dialog rather than a panel in the flow: editing a toolset means
+          typing JSON schemas, which needs room and full attention, and the
+          inline version squeezed that into a strip above the editor while the
+          prompt it belongs to scrolled away underneath. */}
+      <Dialog
+        open={Boolean(showTools && toolsPanel)}
+        onOpenChange={(open) => {
+          // onToggleTools is a toggle, so only call it on a real close —
+          // Radix also fires onOpenChange(true), which would close it again.
+          if (!open && showTools) onToggleTools?.()
+        }}
+      >
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Tools &amp; MCP</DialogTitle>
+            <DialogDescription>
+              What this prompt may call. Offered to the model on every evaluation
+              run, and scored by the agentic evaluator&apos;s tool-selection
+              layer — so the tools a prompt is judged with are the ones recorded
+              here.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="-mr-2 max-h-[65vh] overflow-y-auto pr-2">{toolsPanel}</div>
+          <DialogFooter className="items-center justify-between gap-3 sm:justify-between">
+            {/* Said out loud because a modal that closes cleanly reads as
+                "saved", and the toolset is stored with the prompt — closing
+                this dialog does not write anything. */}
+            <p className="text-[11px] text-muted-foreground">
+              Saved with the prompt — use Save to keep these changes.
+            </p>
+            <Button size="sm" variant="outline" onClick={() => onToggleTools?.()}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Evaluate on dataset ── */}
       <DatasetRunPanel
         open={datasetRunOpen}
         onClose={() => setDatasetRunOpen(false)}

@@ -90,6 +90,16 @@ export interface SavedPrompt {
   model: string | null
   variables: { name: string }[]
   kind: PromptKind
+  /** Which slice of a run a judge grades. 'output' for everything else. */
+  target?: string
+  /** Agentic toolset carried on the prompt; empty for a plain completion. */
+  tools?: { name: string; description: string; parameters: Record<string, unknown> }[]
+  mcp_servers?: {
+    label: string
+    url: string | null
+    description: string
+    tools: { name: string; description: string; parameters: Record<string, unknown> }[]
+  }[]
   is_deployed: boolean
   deployed_at: string | null
   version: number

@@ -57,7 +57,24 @@ interface Aggregate {
  * and nothing at all for composites. Nobody could answer "what do we measure?"
  * without opening three screens and remembering the fourth.
  */
-function Scorers() {
+/**
+ * ``embedded`` renders the body without its own page header, so the Prompts
+ * page can host this as a tab. A scorer *is* a prompt — keeping them on
+ * separate screens is what made "what do we measure?" hard to answer.
+ *
+ * ``view`` selects which sections render. The scorer sections live under
+ * Prompts; aggregates get their own page, because an aggregate is a weighted
+ * formula over scores that already exist — no prompt text, no model call.
+ * They share one component because the aggregate builder's component list is
+ * exactly the built-in metrics plus the saved scorers loaded here.
+ */
+type ScorersView = "all" | "scorers" | "aggregates"
+
+function Scorers(
+  { embedded = false, view = "all" }: { embedded?: boolean; view?: ScorersView } = {},
+) {
+  const showScorers = view === "all" || view === "scorers"
+  const showAggregates = view === "all" || view === "aggregates"
   const [saved, setSaved] = useState<SavedScorer[]>([])
   const [builtIn, setBuiltIn] = useState<BuiltInMetric[]>([])
   const [aggregates, setAggregates] = useState<Aggregate[]>([])
@@ -154,10 +171,12 @@ function Scorers() {
 
   return (
     <div>
-      <DashboardPageHeader
-        title="Scorers"
-        description="Everything this workspace can measure, and how it combines them."
-      />
+      {embedded ? null : (
+        <DashboardPageHeader
+          title="Scorers"
+          description="Everything this workspace can measure, and how it combines them."
+        />
+      )}
 
       <div className="space-y-6 px-6 py-6">
         {error ? (
@@ -175,6 +194,8 @@ function Scorers() {
           </Card>
         ) : (
           <>
+            {!showScorers ? null : (
+            <>
             <Section
               title="Built in"
               hint="Shipped judges, editable per organization and per dataset."
@@ -218,8 +239,9 @@ function Scorers() {
             >
               {saved.length === 0 ? (
                 <Empty>
-                  No custom scorers yet. Add one from a dataset&apos;s run drawer or
-                  the Prompts page.
+                  No custom scorers yet. Save a prompt as a{" "}
+                  <strong>Judge</strong> on the Prompts tab, or add one from a
+                  dataset&apos;s run drawer.
                 </Empty>
               ) : (
                 <div className="space-y-2">
@@ -273,7 +295,10 @@ function Scorers() {
                 </div>
               )}
             </Section>
+            </>
+            )}
 
+            {!showAggregates ? null : (
             <Section
               title="Aggregates"
               hint="One number from several scorers, weighted the way your team agreed."
@@ -438,6 +463,7 @@ function Scorers() {
                 </div>
               ) : null}
             </Section>
+            )}
           </>
         )}
       </div>

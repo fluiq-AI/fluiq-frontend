@@ -33,6 +33,8 @@ import type { ModelOption } from "./utils/types"
 import { detectVars, renderTemplate, toPromptRow, toSlug } from "./utils"
 import { SpanTimeline, spanTypeIcon } from "./components/SpanTimeline"
 import { EvalPlayground } from "./components/EvalPlayground"
+import { ToolsEditor } from "./components/ToolsEditor"
+import type { McpServerDef, ToolDef } from "./components/ToolsEditor"
 
 // ── Per-tab state ─────────────────────────────────────────────────────────────
 
@@ -69,6 +71,12 @@ type PromptTab = {
   saveName: string
   saveSlug: string
   saveKind: PromptKind
+  /** Which slice of a run a judge grades; 'output' is the final answer. */
+  saveTarget: string
+  // Agentic toolset carried on the prompt (see components/ToolsEditor).
+  tools: ToolDef[]
+  mcpServers: McpServerDef[]
+  showTools: boolean
   savePending: boolean
   saveError: string | null
   saveSuccess: boolean
@@ -95,6 +103,10 @@ function makeTab(overrides: Partial<PromptTab> = {}): PromptTab {
     saveName: "",
     saveSlug: "",
     saveKind: "completion",
+    saveTarget: "output",
+    tools: [],
+    mcpServers: [],
+    showTools: false,
     savePending: false,
     saveError: null,
     saveSuccess: false,
@@ -112,7 +124,25 @@ function makeTab(overrides: Partial<PromptTab> = {}): PromptTab {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-function Prompts() {
+const JUDGE_STARTER = `You are grading an AI answer.
+
+Question: {{question}}
+Answer: {{answer}}
+Context: {{context}}
+
+Decide whether the answer is acceptable. Reply with JSON only:
+{"score": <0-1>, "reason": "<one sentence>"}`
+
+/**
+ * ``embedded`` drops the page header; PromptsShell renders it above the tabs.
+ *
+ * ``newJudgeAt`` is a timestamp the shell bumps when the Judge Prompts tab asks
+ * for a new judge. A timestamp rather than a boolean so pressing the button
+ * twice opens a second draft instead of silently doing nothing.
+ */
+function Prompts(
+  { embedded = false, newJudgeAt = 0 }: { embedded?: boolean; newJudgeAt?: number } = {},
+) {
   // ── Tab state ──
   const [tabs, setTabs] = useState<PromptTab[]>([])
   const [activeTabId, setActiveTabId] = useState<string | null>(null)
@@ -249,6 +279,22 @@ function Prompts() {
     return tab.id
   }
 
+  // "New judge prompt" from the Judge Prompts tab. Opens a draft that already
+  // has the {{answer}} placeholder and the JSON contract the API enforces —
+  // starting blank means the first save is rejected for a rule the author has
+  // not been told about yet.
+  useEffect(() => {
+    if (!newJudgeAt) return
+    openNewTab({
+      templateName: "New judge",
+      templateText: JUDGE_STARTER,
+      saveKind: "judge",
+      showSaveForm: true,
+    })
+    // openNewTab is stable for this purpose; the timestamp is the trigger.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newJudgeAt])
+
   function closeTab(id: string) {
     setTabs((prev) => {
       const idx = prev.findIndex((t) => t.id === id)
@@ -281,6 +327,27 @@ function Prompts() {
       saveName: p.name,
       saveSlug: p.slug,
       saveKind: p.kind ?? "completion",
+      saveTarget: p.target ?? "output",
+      tools: (p.tools ?? []).map((t) => ({
+        name: t.name,
+        description: t.description ?? "",
+        parameters: t.parameters ?? { type: "object", properties: {} },
+      })),
+      mcpServers: (p.mcp_servers ?? []).map((srv) => ({
+        label: srv.label,
+        url: srv.url ?? "",
+        description: srv.description ?? "",
+        tools: (srv.tools ?? []).map((t) => ({
+          name: t.name,
+          description: t.description ?? "",
+          parameters: t.parameters ?? { type: "object", properties: {} },
+        })),
+      })),
+      // Never auto-open: the toolset is a dialog now, and popping one over the
+      // editor every time someone clicks a prompt in the sidebar interrupts the
+      // thing they came to do. The count on the "Tools & MCP" button is what
+      // says the prompt has one.
+      showTools: false,
       activeRow: null,
       savedPromptId: p.prompt_id,
       savedPromptEnvs: p.environments,
@@ -423,6 +490,9 @@ function Prompts() {
           body: {
             name: activeTab.saveName.trim() || activeTab.templateName.trim(),
             template: activeTab.templateText,
+            tools: activeTab.tools,
+            mcp_servers: activeTab.mcpServers,
+            target: activeTab.saveTarget,
           },
         })
         setSavedPrompts((prev) => prev.map((p) => (p.prompt_id === result.prompt_id ? result : p)))
@@ -443,6 +513,9 @@ function Prompts() {
                 ? activeTab.activeRow.model
                 : undefined,
             variables: activeDetectedVars,
+            tools: activeTab.tools,
+            mcp_servers: activeTab.mcpServers,
+            target: activeTab.saveTarget,
           },
         })
         setSavedPrompts((prev) => [result, ...prev])
@@ -573,13 +646,21 @@ function Prompts() {
 
   return (
     <>
-      <DashboardPageHeader
-        title="Prompts"
-        description="Write, discover, evaluate, and deploy prompt templates."
-      />
+      {embedded ? null : (
+        <DashboardPageHeader
+          title="Prompts"
+          description="Write, discover, evaluate, and deploy prompt templates."
+        />
+      )}
 
-      {/* ── Full-height IDE layout ── */}
-      <div className="flex h-[calc(100vh-48px)] overflow-hidden">
+      {/* ── Full-height IDE layout ──
+          Shorter when embedded: the shell's header + tab bar sit above it. */}
+      <div
+        className={cn(
+          "flex overflow-hidden",
+          embedded ? "h-[calc(100vh-136px)]" : "h-[calc(100vh-48px)]",
+        )}
+      >
 
         {/* ── Left sidebar ── */}
         <div className="flex w-52 shrink-0 flex-col border-r border-border/60 bg-background">
@@ -892,6 +973,8 @@ function Prompts() {
               saveSlug={activeTab.saveSlug}
               saveKind={activeTab.saveKind}
               onSaveKindChange={(k) => updateActiveTab({ saveKind: k })}
+              saveTarget={activeTab.saveTarget}
+              onSaveTargetChange={(t) => updateActiveTab({ saveTarget: t })}
               savePending={activeTab.savePending}
               saveError={activeTab.saveError}
               saveSuccess={activeTab.saveSuccess}
@@ -952,6 +1035,20 @@ function Prompts() {
               deployLoading={activeTab.deployLoading}
               onDeploy={handleDeployEnv}
               onDelete={handleDeleteSaved}
+              showTools={activeTab.showTools}
+              onToggleTools={() => updateActiveTab({ showTools: !activeTab.showTools })}
+              toolsCount={
+                activeTab.tools.length +
+                activeTab.mcpServers.reduce((n, s) => n + s.tools.length, 0)
+              }
+              toolsPanel={
+                <ToolsEditor
+                  tools={activeTab.tools}
+                  mcpServers={activeTab.mcpServers}
+                  onToolsChange={(tools) => updateActiveTab({ tools })}
+                  onMcpChange={(mcpServers) => updateActiveTab({ mcpServers })}
+                />
+              }
             />
           ) : (
             <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">

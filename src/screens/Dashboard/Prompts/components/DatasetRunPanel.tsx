@@ -352,7 +352,7 @@ export function DatasetRunPanel({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Run over dataset"
+      aria-label="Evaluate on dataset"
       className="fixed inset-0 z-50 flex"
     >
       <div className="flex-1 bg-black/40" onClick={onClose} />
@@ -370,9 +370,14 @@ export function DatasetRunPanel({
       <div className="flex h-full w-full max-w-4xl flex-col border-l border-border/60 bg-background shadow-xl duration-200 animate-in slide-in-from-right-6">
         <div className="flex items-start justify-between gap-4 border-b border-border/60 px-5 py-4">
           <div className="min-w-0">
-            <h2 className="font-heading text-base font-semibold">Run over dataset</h2>
+            <h2 className="font-heading text-base font-semibold">Evaluate on dataset</h2>
+            {/* Spelled out because "run over a dataset" doesn't say what comes
+                back, and the shape of the result is the thing people need to
+                picture before they'll press the button. */}
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Score this prompt against every example, on one or more models.
+              Runs this prompt against every example in a dataset and scores the
+              output. One row per example, one column per model you pick.
+              Results are saved in Datasets → Runs.
             </p>
           </div>
           <button
