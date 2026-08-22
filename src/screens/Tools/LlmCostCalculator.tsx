@@ -17,6 +17,7 @@ import { IslandCta } from "@/components/IslandCta"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
+import { LeadCapture } from "@/components/LeadCapture"
 import {
   Select,
   SelectContent,
@@ -802,6 +803,22 @@ export default function LlmCostCalculator() {
               <HugeiconsIcon icon={ArrowRight02Icon} size={15} className="ml-2 inline" />
             </IslandCta>
           </div>
+
+          {/* The estimate rides along in context: a lead sitting on a $40k/mo
+              bill is a very different conversation from one on $12/mo. */}
+          <LeadCapture
+            variant="warm"
+            sourcePage="llm-cost-calculator"
+            className="mt-12 text-left"
+            heading="Want the real number instead of the estimate?"
+            blurb="This is arithmetic on the numbers you typed. Leave your email and I'll help you get actual per-call cost out of your app — traced, attributed, and broken down by agent."
+            cta="Show me the real number"
+            context={{
+              estimated_monthly_usd: Math.round(monthly * 100) / 100,
+              model: model?.id ?? null,
+              requests_per_month: requests,
+            }}
+          />
         </div>
       </section>
 

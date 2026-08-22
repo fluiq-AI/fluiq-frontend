@@ -17,6 +17,7 @@ import { IslandCta } from "@/components/IslandCta"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
+import { LeadCapture } from "@/components/LeadCapture"
 import { fetchScenarios, scanText, type Gate, type Scenario } from "@/lib/demo"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
@@ -485,6 +486,23 @@ export default function ResponseGateDemo() {
               >
                 <GateVerdict gate={myGate} />
               </motion.div>
+            )}
+
+            {/* Peak interest: they just watched the gate run on their own output. */}
+            {myGate && (
+              <LeadCapture
+                sourcePage="response-gate-demo"
+                heading="Run this on every response, not just this one"
+                blurb="That was a single scan on text you pasted. The same gate runs inline on everything your agent sends back. We're taking on a few teams running agents in production — leave your email and I'll reach out personally."
+                cta="Request access"
+                fineprint="One email from a founder, not a drip campaign. We never store the text you scan."
+                context={{
+                  blocked: myGate.blocked,
+                  blocked_at: myGate.blocked_at,
+                  finding_kinds: myGate.output_scan.kinds,
+                  finding_count: myGate.output_scan.findings.length,
+                }}
+              />
             )}
           </div>
         </div>

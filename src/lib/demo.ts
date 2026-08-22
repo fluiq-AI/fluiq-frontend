@@ -40,3 +40,16 @@ export async function scanText(prompt: string, response: string) {
     body: { prompt, response },
   })
 }
+
+/** Capture a visitor's email from a public marketing page. Fire-and-remember:
+ *  the row is persisted server-side before the notification email is attempted. */
+export async function captureLead(
+  email: string,
+  sourcePage: string,
+  context?: Record<string, unknown>,
+) {
+  return apiRequest<{ ok: boolean; new: boolean }>("/api/v1/leads", {
+    method: "POST",
+    body: { email, source_page: sourcePage, context: context ?? {} },
+  })
+}
