@@ -2,7 +2,7 @@
 
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Book02Icon, SourceCodeIcon, GithubIcon, CloudServerIcon, HelpCircleIcon /*, Calculator01Icon, ShieldKeyIcon, News01Icon */ } from "@hugeicons/core-free-icons"
+import { Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon, News01Icon } from "@hugeicons/core-free-icons"
 
 import { useSiteHost } from "@/contexts/SiteHostContext"
 import { siblingOrigin } from "@/lib/site-host"
@@ -28,15 +28,13 @@ const navGroups = (host: string): { heading: string; items: NavItem[] }[] => [
   {
     heading: "Learn",
     items: [
-      // The blog was served from the API, which is gone. Uncomment this entry
-      // and News01Icon in the import above to restore it.
-      // {
-      //   name: "Blogs",
-      //   slug: "blog",
-      //   to: "/blog",
-      //   description: "Writing on evals, security & cost",
-      //   icon: News01Icon,
-      // },
+      {
+        name: "Blogs",
+        slug: "blog",
+        to: "/blog",
+        description: "Writing on evals, security & cost",
+        icon: News01Icon,
+      },
       {
         name: "FAQ",
         slug: "faq",
@@ -68,25 +66,20 @@ const navGroups = (host: string): { heading: string; items: NavItem[] }[] => [
   {
     heading: "Tools",
     items: [
-      // Both tools called the API for their data -- the demo for its scan
-      // scenarios, the calculator for its model price table -- so neither works
-      // now that the API is gone. Uncomment these (and ShieldKeyIcon /
-      // Calculator01Icon in the import above, plus rename
-      // src/app/_response-gate-demo and _llm-cost-calculator back) to restore.
-      // {
-      //   name: "Response Gate Demo",
-      //   slug: "response-gate-demo",
-      //   to: "/response-gate-demo",
-      //   description: "What an LLM leaks while refusing",
-      //   icon: ShieldKeyIcon,
-      // },
-      // {
-      //   name: "LLM Cost Calculator",
-      //   slug: "llm-cost-calculator",
-      //   to: "/llm-cost-calculator",
-      //   description: "Compare OpenAI, Claude & Gemini",
-      //   icon: Calculator01Icon,
-      // },
+      {
+        name: "Response Gate Demo",
+        slug: "response-gate-demo",
+        to: "/response-gate-demo",
+        description: "What an LLM leaks while refusing",
+        icon: ShieldKeyIcon,
+      },
+      {
+        name: "LLM Cost Calculator",
+        slug: "llm-cost-calculator",
+        to: "/llm-cost-calculator",
+        description: "Compare OpenAI, Claude & Gemini",
+        icon: Calculator01Icon,
+      },
       {
         name: "polygate",
         slug: "polygate",

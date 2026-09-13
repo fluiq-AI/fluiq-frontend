@@ -1,8 +1,18 @@
 # Fluiq Frontend
 
-Marketing site + product app for [Fluiq](https://getfluiq.com), the control
-plane for AI agents in production. Built with **Next.js 16 (App Router)**, React 19, TypeScript,
-Tailwind CSS v4, and Redux Toolkit.
+Marketing site **and the full product app** for Fluiq, the control plane for AI
+agents in production. Built with **Next.js 16 (App Router)**, React 19,
+TypeScript, Tailwind CSS v4, and Redux Toolkit.
+
+This is the complete application — dashboard, traces, evaluations, security,
+datasets, prompts, auth, admin. **Fork this one if you are self-hosting.**
+[fluiq](https://github.com/fluiq-AI/fluiq) installs it alongside the backend in
+four commands.
+
+> The public archive at getfluiq.com is deployed from
+> [fluiq-frontend-vercel](https://github.com/fluiq-AI/fluiq-frontend-vercel)
+> instead — a trimmed fork with the product surfaces switched off, because
+> there is no hosted API behind them any more. Nothing here is trimmed.
 
 > **Status: archived.** Fluiq ran from 10 April to September 2026 and never
 > found customers. The hosted service is shut down and the infrastructure is

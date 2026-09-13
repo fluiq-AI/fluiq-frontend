@@ -50,8 +50,7 @@ export default function QuickstartPage() {
               <p className="font-medium">Get an API key</p>
               <p className="text-muted-foreground">
                 Create a free account and copy your key from the dashboard.{" "}
-                {/* archived: hosted signup/pricing/contact are gone: <Link to="/signup" className="font-medium text-foreground hover:underline">Sign up &rarr;</Link> */}
-                <a href="https://github.com/fluiq-AI" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:underline">Self-host it &rarr;</a>
+                <Link to="/signup" className="font-medium text-foreground hover:underline">Sign up &rarr;</Link>
               </p>
             </div>
           </div>

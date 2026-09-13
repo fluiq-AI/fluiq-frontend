@@ -83,8 +83,7 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
               <motion.div className="flex flex-wrap items-center gap-3"
                 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.32, ease: EASE_OUT }}>
-                {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Start free</IslandCta> */}
-                <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
+                <IslandCta to="/signup">Start free</IslandCta>
                 <IslandCta to={pillar.docHref} variant="ghost">Read the docs</IslandCta>
               </motion.div>
             </div>
@@ -178,10 +177,9 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
             <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-[#0a0a0a] dark:text-[#FAF9F6]">
               Part of the Fluiq platform
             </h2>
-            {/* archived: hosted signup/pricing/contact are gone: <Link to="/pricing" className="text-[13px] font-medium text-[#1860D3] hover:underline dark:text-[#6FA8FF]"> */}
-            <a href="https://github.com/fluiq-AI" target="_blank" rel="noopener noreferrer" className="text-[13px] font-medium text-[#1860D3] hover:underline dark:text-[#6FA8FF]">
-              View the source
-            </a>
+            <Link to="/pricing" className="text-[13px] font-medium text-[#1860D3] hover:underline dark:text-[#6FA8FF]">
+              Compare plans
+            </Link>
           </div>
           <div data-animate data-delay="1" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {others.map((p) => (
@@ -219,8 +217,7 @@ export default function PillarPage({ slug }: { slug: PillarSlug }) {
               Tracing, security, evaluation, datasets, and prompts all run on the free tier. Slack alerts unlock on a paid plan.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Start free</IslandCta> */}
-              <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
+              <IslandCta to="/signup">Start free</IslandCta>
               <IslandCta to={pillar.docHref} variant="ghost">Read the docs</IslandCta>
             </div>
           </div>

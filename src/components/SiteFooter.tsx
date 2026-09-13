@@ -25,17 +25,12 @@ const PLATFORM_LINKS = [
 
 const NAV_LINKS = [
   { label: "Integrations",  to: "/integrations" },
-  // Commented out with the hosted service, not removed. There is nothing to
-  // price; the blog and the contact form were both served by the API, which no
-  // longer exists. Uncomment these (and rename src/app/_pricing, _blog and
-  // _contact back) to bring them back.
-  // { label: "Pricing",       to: "/pricing" },
+  { label: "Pricing",       to: "/pricing" },
   { label: "Docs",          to: "/documentation" },
-  // Both tools read their data from the API, which no longer exists.
-  // { label: "Response Gate Demo", to: "/response-gate-demo" },
-  // { label: "Cost Calculator", to: "/llm-cost-calculator" },
-  // { label: "Blog",          to: "/blog" },
-  // { label: "Contact",       to: "/contact" },
+  { label: "Response Gate Demo", to: "/response-gate-demo" },
+  { label: "Cost Calculator", to: "/llm-cost-calculator" },
+  { label: "Blog",          to: "/blog" },
+  { label: "Contact",       to: "/contact" },
 ]
 
 // `sibling` links resolve against the domain the visitor is on (see
@@ -45,17 +40,11 @@ type ExternalLink = { label: string } & (
   | { sibling: string; href?: never }
 )
 
-// The `sibling` entries resolve to polygate.getfluiq.com and infrager.getfluiq.com.
-// Both moved to Vercel on the same subdomains, so they stay live.
 const OPEN_SOURCE_LINKS: ExternalLink[] = [
   { label: "polygate",        sibling: "polygate" },
+  { label: "polygate GitHub", href: "https://github.com/SaurabhKumbhar24/polygate" },
   { label: "Infrager",        sibling: "infrager" },
-  { label: "Fluiq (all repos)", href: "https://github.com/fluiq-AI" },
-  { label: "Python SDK",        href: "https://github.com/fluiq-AI/fluiq-sdk" },
-  { label: "TypeScript SDK",    href: "https://github.com/fluiq-AI/fluiq-sdk-typescript" },
-  { label: "guardrail-bench",   href: "https://github.com/SaurabhKumbhar24/guardrail-bench" },
-  { label: "polygate GitHub",   href: "https://github.com/SaurabhKumbhar24/Polygate" },
-  { label: "Infrager GitHub",   href: "https://github.com/SaurabhKumbhar24/Infrager" },
+  { label: "Infrager GitHub", href: "https://github.com/SaurabhKumbhar24/Infrager" },
 ]
 
 const INTEGRATION_LINKS = [
@@ -85,8 +74,6 @@ export function SiteFooter() {
             </div>
             <p className="text-[13px] text-[#9A9A92] max-w-50 leading-relaxed">
               Secure, observe, evaluate.
-              <br />
-              Archived and open source.
             </p>
           </div>
 

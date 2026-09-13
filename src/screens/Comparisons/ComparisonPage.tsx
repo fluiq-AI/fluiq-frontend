@@ -12,7 +12,7 @@ import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
-// import { LeadCapture } from "@/components/LeadCapture"
+import { LeadCapture } from "@/components/LeadCapture"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -121,8 +121,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
           <motion.div className="mt-9 flex flex-wrap items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
-            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Get started free</IslandCta> */}
-            <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
+            <IslandCta to="/signup">Get started free</IslandCta>
             <IslandCta to="/documentation" variant="ghost">Read the docs</IslandCta>
           </motion.div>
 
@@ -283,8 +282,6 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
       </section>
 
       {/* ── Pricing comparison ───────────────────────────────────────────── */}
-      {/* archived: Fluiq is free and open source now, so a price comparison
-          against a paid competitor is no longer a like-for-like claim.
       {data.pricing && (
         <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
           <div className="mx-auto max-w-5xl px-6">
@@ -354,7 +351,6 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
           </div>
         </section>
       )}
-      */}
 
       {/* ── CTA ─────────────────────────────────────────────────────────── */}
       <section className="py-24">
@@ -366,8 +362,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
             Free tier. No credit card. Full observability, security, and evals on your first LLM call.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Start free</IslandCta> */}
-            <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
+            <IslandCta to="/signup">Start free</IslandCta>
           </div>
           <p className="mt-4 text-[12px] text-[#9A9A92]">
             Unlimited free traces · 100 evals & 1,000 security scans / month · 14-day retention
@@ -375,7 +370,6 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
 
           {/* Catches the high-intent visitors who read the whole comparison but
               aren't ready to create an account. */}
-          {/* archived: this posted to /api/v1/leads on the API, which is gone.
           <LeadCapture
             variant="warm"
             sourcePage={data.slug}
@@ -384,7 +378,6 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
             blurb="Leave your email and I'll send you a short, honest writeup of where Fluiq actually differs — and where it doesn't. No signup required."
             cta="Send it to me"
           />
-          */}
         </div>
       </section>
 

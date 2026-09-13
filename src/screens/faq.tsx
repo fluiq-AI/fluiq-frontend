@@ -193,10 +193,8 @@ export default function Faq() {
                   <p className="mt-2 text-[14px] text-[#6B6B66] dark:text-[#9A9A92]">
                     Try a different word, or ask us directly.
                   </p>
-                  {/* archived: the contact form posted to the API, which is gone.
-                      Was: href="/contact" */}
                   <a
-                    href="https://github.com/fluiq-AI/fluiq-sdk/issues"
+                    href="/contact"
                     className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-[#1860D3] transition-opacity hover:opacity-80 dark:text-[#6FA8FF]"
                   >
                     Talk to us
@@ -251,8 +249,7 @@ export default function Faq() {
             We answer our own support email. Ask the awkward question.
           </p>
           <div className="mt-8 flex justify-center">
-            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/contact">Talk to us</IslandCta> */}
-            <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
+            <IslandCta to="/contact">Talk to us</IslandCta>
           </div>
         </div>
       </section>

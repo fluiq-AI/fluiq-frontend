@@ -18,11 +18,6 @@ import { cn } from "@/lib/utils"
  *   ghost   — hairline glass pill, no inner icon; the secondary action.
  *
  * Pass `fullWidth` to stretch inside cards (label left, icon hugs the edge).
- *
- * An absolute `to` (anything starting with "http") renders a plain anchor that
- * opens in a new tab, rather than a router Link — the router would otherwise
- * treat it as an in-app path. This exists because every "Start free" CTA now
- * points at the GitHub org instead of a signup page that no longer exists.
  */
 
 const SPRING = "duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
@@ -55,17 +50,10 @@ export function IslandCta({
   fullWidth?: boolean
   className?: string
 }) {
-  const isExternal = /^https?:\/\//.test(to)
-  const Anchor = ({ className: cls, children: kids }: { className: string; children: React.ReactNode }) =>
-    isExternal ? (
-      <a href={to} target="_blank" rel="noopener noreferrer" className={cls}>{kids}</a>
-    ) : (
-      <Link to={to} className={cls}>{kids}</Link>
-    )
-
   if (variant === "ghost") {
     return (
-      <Anchor
+      <Link
+        to={to}
         className={cn(
           `group/cta inline-flex h-12 items-center justify-center rounded-full border border-[#E5E1D6] bg-[#FAF9F6]/60 px-6 text-[14px] font-medium text-[#0a0a0a] backdrop-blur-sm transition-all ${SPRING} hover:border-[#1860D3]/40 hover:bg-[#F2F0E9] active:scale-[0.98] dark:border-[#2A2A2A] dark:bg-white/[0.03] dark:text-[#FAF9F6] dark:hover:border-[#6FA8FF]/40 dark:hover:bg-[#1A1A1A]`,
           fullWidth && "w-full",
@@ -73,12 +61,13 @@ export function IslandCta({
         )}
       >
         {children}
-      </Anchor>
+      </Link>
     )
   }
 
   return (
-    <Anchor
+    <Link
+      to={to}
       className={cn(
         `group/cta inline-flex h-12 items-center gap-3 rounded-full py-1 pl-6 pr-1.5 text-[14px] font-medium transition-all ${SPRING} active:scale-[0.98]`,
         SHELL[variant],
@@ -95,6 +84,6 @@ export function IslandCta({
       >
         <HugeiconsIcon icon={ArrowRight02Icon} size={15} />
       </span>
-    </Anchor>
+    </Link>
   )
 }
