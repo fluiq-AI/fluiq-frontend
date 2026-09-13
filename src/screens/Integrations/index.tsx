@@ -72,7 +72,8 @@ export default function IntegrationsIndex() {
           <motion.div className="mt-8 flex flex-wrap items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3, ease: EASE_OUT }}>
-            <IslandCta to="/signup">Get started free</IslandCta>
+            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Get started free</IslandCta> */}
+            <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
             <IslandCta to="/documentation/quickstart" variant="ghost">Quickstart guide</IslandCta>
           </motion.div>
         </div>
@@ -136,8 +137,10 @@ export default function IntegrationsIndex() {
             Use the <code className="font-mono text-[14px] bg-[#F2F0E9] dark:bg-[#1A1A1A] px-1.5 py-0.5 rounded">@trace</code> decorator to manually instrument any Python function. Or reach out, new integrations ship regularly.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <IslandCta to="/signup">Start free</IslandCta>
-            <IslandCta to="/contact" variant="ghost">Request an integration</IslandCta>
+            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Start free</IslandCta> */}
+            <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
+            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/contact" variant="ghost">Request an integration</IslandCta> */}
+            <IslandCta to="https://github.com/fluiq-AI/fluiq-sdk/issues" variant="ghost">Request an integration</IslandCta>
           </div>
         </div>
       </section>

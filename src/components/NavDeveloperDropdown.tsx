@@ -2,7 +2,7 @@
 
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon, News01Icon } from "@hugeicons/core-free-icons"
+import { Book02Icon, SourceCodeIcon, Calculator01Icon, GithubIcon, CloudServerIcon, HelpCircleIcon, ShieldKeyIcon /*, News01Icon */ } from "@hugeicons/core-free-icons"
 
 import { useSiteHost } from "@/contexts/SiteHostContext"
 import { siblingOrigin } from "@/lib/site-host"
@@ -28,13 +28,15 @@ const navGroups = (host: string): { heading: string; items: NavItem[] }[] => [
   {
     heading: "Learn",
     items: [
-      {
-        name: "Blogs",
-        slug: "blog",
-        to: "/blog",
-        description: "Writing on evals, security & cost",
-        icon: News01Icon,
-      },
+      // The blog was served from the API, which is gone. Uncomment this entry
+      // and News01Icon in the import above to restore it.
+      // {
+      //   name: "Blogs",
+      //   slug: "blog",
+      //   to: "/blog",
+      //   description: "Writing on evals, security & cost",
+      //   icon: News01Icon,
+      // },
       {
         name: "FAQ",
         slug: "faq",

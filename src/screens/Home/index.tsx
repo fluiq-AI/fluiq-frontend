@@ -205,7 +205,8 @@ export default function Home() {
               <motion.div className="flex flex-wrap items-center gap-3"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
-                <IslandCta to="/signup">Start free</IslandCta>
+                {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Start free</IslandCta> */}
+                <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
                 <IslandCta to="/documentation" variant="ghost">Read the docs</IslandCta>
               </motion.div>
             </div>
@@ -560,7 +561,8 @@ export default function Home() {
               Tracing, security scanning, and evaluation all run on the free tier. No code changes required.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <IslandCta to="/signup">Start free</IslandCta>
+              {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Start free</IslandCta> */}
+              <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
               <IslandCta to="/documentation" variant="ghost">Read the docs</IslandCta>
             </div>
             <p className="mt-5 text-[12px] text-[#9A9A92]">No credit card required. pip install fluiq, instrument in 60 seconds.</p>

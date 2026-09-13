@@ -795,7 +795,8 @@ export default function LlmCostCalculator() {
             attributed to the agent node that spent it. Two lines of Python.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <IslandCta to="/signup" variant="accent">
+            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup" variant="accent"> */}
+            <IslandCta to="https://github.com/fluiq-AI" variant="accent">
               Start free
             </IslandCta>
             <IslandCta to="/observability" variant="ghost">

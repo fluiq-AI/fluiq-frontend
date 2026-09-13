@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ArrowRight02Icon } from "@hugeicons/core-free-icons"
+import { GithubIcon } from "@hugeicons/core-free-icons"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -81,13 +81,21 @@ export function SiteNavbar({ variant = "marketing", active, badge, landing }: Si
             <a href="#how-it-works" className={linkClass("platform")}>How it works</a>
           )}
           <NavIntegrationsDropdown triggerClassName={triggerClass("integrations")} />
+          {/* Fluiq is archived and open source — there is nothing to price and no
+              inbox behind the contact form. Restore both if the hosted service
+              ever comes back.
           <Link to="/pricing" className={linkClass("pricing")}>Pricing</Link>
+          */}
           <NavDeveloperDropdown triggerClassName={triggerClass("developer")} />
+          {/*
           <Link to="/contact" className={linkClass("contact")}>Contact</Link>
+          */}
         </nav>
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          {/* Sign-in and sign-up are gone with the hosted service: there is no API
+              to authenticate against. The single CTA now points at the source.
           {isDocs ? (
             <Button size="sm" asChild>
               <Link to="/signup">
@@ -97,14 +105,25 @@ export function SiteNavbar({ variant = "marketing", active, badge, landing }: Si
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="text-[#6B6B66] dark:text-[#9A9A92] hover:text-[#0a0a0a] dark:hover:text-[#FAF9F6]" asChild>
+              <Button variant="ghost" size="sm" className="..." asChild>
                 <Link to="/login">Login</Link>
               </Button>
-              <Button size="sm" className="cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]" asChild>
+              <Button size="sm" className="cta-btn ..." asChild>
                 <Link to="/signup">Start free <HugeiconsIcon icon={ArrowRight02Icon} size={14} /></Link>
               </Button>
             </>
           )}
+          */}
+          <Button
+            size="sm"
+            className={isDocs ? undefined : "cta-btn bg-[#0a0a0a] text-white hover:bg-[#1a1a1a] dark:bg-[#FAF9F6] dark:text-[#0A0A0A] dark:hover:bg-[#F2F0E9]"}
+            asChild
+          >
+            <a href="https://github.com/fluiq-AI" target="_blank" rel="noopener noreferrer">
+              <HugeiconsIcon icon={GithubIcon} size={14} />
+              GitHub
+            </a>
+          </Button>
         </div>
       </div>
     </header>

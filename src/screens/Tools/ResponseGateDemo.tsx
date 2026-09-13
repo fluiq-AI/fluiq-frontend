@@ -587,7 +587,8 @@ export default function ResponseGateDemo() {
             <code>{`import fluiq\n\nfluiq.instrument()\nfluiq.secure(mode="block")`}</code>
           </pre>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <IslandCta to="/signup">Start free</IslandCta>
+            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Start free</IslandCta> */}
+            <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
             <IslandCta to="/security" variant="ghost">How the gate works</IslandCta>
           </div>
         </div>

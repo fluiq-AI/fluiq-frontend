@@ -121,7 +121,8 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
           <motion.div className="mt-9 flex flex-wrap items-center justify-center gap-3"
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35, ease: EASE_OUT }}>
-            <IslandCta to="/signup">Get started free</IslandCta>
+            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Get started free</IslandCta> */}
+            <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
             <IslandCta to="/documentation" variant="ghost">Read the docs</IslandCta>
           </motion.div>
 
@@ -362,7 +363,8 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
             Free tier. No credit card. Full observability, security, and evals on your first LLM call.
           </p>
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-            <IslandCta to="/signup">Start free</IslandCta>
+            {/* archived: hosted signup/pricing/contact are gone: <IslandCta to="/signup">Start free</IslandCta> */}
+            <IslandCta to="https://github.com/fluiq-AI">View on GitHub</IslandCta>
           </div>
           <p className="mt-4 text-[12px] text-[#9A9A92]">
             Unlimited free traces · 100 evals & 1,000 security scans / month · 14-day retention

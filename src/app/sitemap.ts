@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next"
 
-import { API_BASE_URL } from "@/lib/api"
+// API_BASE_URL is commented out along with the blog-slug fetch below.
+// import { API_BASE_URL } from "@/lib/api"
 import { INTEGRATIONS } from "@/pages/Integrations/data"
 
 import { CANONICAL_HOST, CANONICAL_ORIGIN, siblingOrigin } from "@/lib/site-url"
@@ -8,7 +9,7 @@ import { CANONICAL_HOST, CANONICAL_ORIGIN, siblingOrigin } from "@/lib/site-url"
 // The sitemap reads the request host, so the route itself renders per request
 // (a route-segment `revalidate` would be ignored). This caches only the blog
 // slug fetch, so a new post shows up within the hour without hammering the API.
-const BLOG_SLUGS_TTL = 3600
+// const BLOG_SLUGS_TTL = 3600
 
 type ChangeFreq = NonNullable<MetadataRoute.Sitemap[number]["changeFrequency"]>
 type Entry = { path: string; changeFrequency: ChangeFreq; priority: number }
@@ -16,9 +17,9 @@ type Entry = { path: string; changeFrequency: ChangeFreq; priority: number }
 const STATIC_ROUTES: Entry[] = [
   // Marketing
   { path: "/", changeFrequency: "weekly", priority: 1.0 },
-  { path: "/pricing", changeFrequency: "monthly", priority: 0.9 },
+  // { path: "/pricing", changeFrequency: "monthly", priority: 0.9 },
   { path: "/faq", changeFrequency: "monthly", priority: 0.7 },
-  { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
+  // { path: "/contact", changeFrequency: "monthly", priority: 0.7 },
 
   // Free tools (linkable assets)
   { path: "/response-gate-demo", changeFrequency: "monthly", priority: 0.9 },
@@ -61,7 +62,7 @@ const STATIC_ROUTES: Entry[] = [
   { path: "/lakera-alternative", changeFrequency: "monthly", priority: 0.9 },
 
   // Blog index (posts appended below)
-  { path: "/blog", changeFrequency: "weekly", priority: 0.7 },
+  // { path: "/blog", changeFrequency: "weekly", priority: 0.7 },
 
   // Legal
   { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
@@ -75,18 +76,18 @@ const STATIC_ROUTES: Entry[] = [
 // Published blog slugs come from the API. Fail open — a sitemap should never
 // break the build if the API is unreachable; posts just appear on the next
 // successful regeneration.
-async function fetchBlogSlugs(): Promise<string[]> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/blog/slugs`, {
-      next: { revalidate: BLOG_SLUGS_TTL },
-    })
-    if (!res.ok) return []
-    const data = (await res.json()) as { slugs?: string[] }
-    return Array.isArray(data.slugs) ? data.slugs : []
-  } catch {
-    return []
-  }
-}
+// async function fetchBlogSlugs(): Promise<string[]> {
+//   try {
+//     const res = await fetch(`${API_BASE_URL}/api/v1/blog/slugs`, {
+//       next: { revalidate: BLOG_SLUGS_TTL },
+//     })
+//     if (!res.ok) return []
+//     const data = (await res.json()) as { slugs?: string[] }
+//     return Array.isArray(data.slugs) ? data.slugs : []
+//   } catch {
+//     return []
+//   }
+// }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Pinned to the canonical domain, not the request host: a sitemap may only
@@ -94,6 +95,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const host = CANONICAL_HOST
   const SITE = CANONICAL_ORIGIN
 
+  // Both subdomains moved to Vercel on the same hostnames.
   const SUBDOMAIN_URLS: { url: string; changeFrequency: ChangeFreq; priority: number }[] = [
     { url: siblingOrigin("polygate", host), changeFrequency: "monthly", priority: 0.8 },
     { url: siblingOrigin("infrager", host), changeFrequency: "monthly", priority: 0.8 },
@@ -120,12 +122,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  const blogEntries: MetadataRoute.Sitemap = (await fetchBlogSlugs()).map((slug) => ({
-    url: `${SITE}/blog/${slug}`,
-    lastModified,
-    changeFrequency: "weekly",
-    priority: 0.6,
-  }))
+  // const blogEntries: MetadataRoute.Sitemap = (await fetchBlogSlugs()).map((slug) => ({
+  //   url: `${SITE}/blog/${slug}`,
+  //   lastModified,
+  //   changeFrequency: "weekly",
+  //   priority: 0.6,
+  // }))
 
-  return [...staticEntries, ...subdomainEntries, ...integrationEntries, ...blogEntries]
+  return [...staticEntries, ...subdomainEntries, ...integrationEntries /*, ...blogEntries */]
 }
