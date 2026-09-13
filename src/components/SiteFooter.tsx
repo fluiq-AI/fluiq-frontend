@@ -31,8 +31,9 @@ const NAV_LINKS = [
   // _contact back) to bring them back.
   // { label: "Pricing",       to: "/pricing" },
   { label: "Docs",          to: "/documentation" },
-  { label: "Response Gate Demo", to: "/response-gate-demo" },
-  { label: "Cost Calculator", to: "/llm-cost-calculator" },
+  // Both tools read their data from the API, which no longer exists.
+  // { label: "Response Gate Demo", to: "/response-gate-demo" },
+  // { label: "Cost Calculator", to: "/llm-cost-calculator" },
   // { label: "Blog",          to: "/blog" },
   // { label: "Contact",       to: "/contact" },
 ]

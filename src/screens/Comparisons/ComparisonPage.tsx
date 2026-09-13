@@ -12,7 +12,7 @@ import { useScrollReveal } from "@/pages/Home/hooks/useScrollReveal"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SiteNavbar } from "@/components/SiteNavbar"
 import { GrainOverlay, HeroAtmosphere } from "@/components/SiteBackdrop"
-import { LeadCapture } from "@/components/LeadCapture"
+// import { LeadCapture } from "@/components/LeadCapture"
 
 const EASE_OUT = [0.22, 1, 0.36, 1] as const
 
@@ -283,6 +283,8 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
       </section>
 
       {/* ── Pricing comparison ───────────────────────────────────────────── */}
+      {/* archived: Fluiq is free and open source now, so a price comparison
+          against a paid competitor is no longer a like-for-like claim.
       {data.pricing && (
         <section className="border-b border-[#D4CFC1] dark:border-[#1A1A1A] py-20">
           <div className="mx-auto max-w-5xl px-6">
@@ -352,6 +354,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
           </div>
         </section>
       )}
+      */}
 
       {/* ── CTA ─────────────────────────────────────────────────────────── */}
       <section className="py-24">
@@ -372,6 +375,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
 
           {/* Catches the high-intent visitors who read the whole comparison but
               aren't ready to create an account. */}
+          {/* archived: this posted to /api/v1/leads on the API, which is gone.
           <LeadCapture
             variant="warm"
             sourcePage={data.slug}
@@ -380,6 +384,7 @@ export default function ComparisonPage({ data }: { data: CompetitorData }) {
             blurb="Leave your email and I'll send you a short, honest writeup of where Fluiq actually differs — and where it doesn't. No signup required."
             cta="Send it to me"
           />
+          */}
         </div>
       </section>
 
