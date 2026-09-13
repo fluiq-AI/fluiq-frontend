@@ -4,6 +4,19 @@ Marketing site + product app for [Fluiq](https://getfluiq.com), the control
 plane for AI agents in production. Built with **Next.js 16 (App Router)**, React 19, TypeScript,
 Tailwind CSS v4, and Redux Toolkit.
 
+> **Status: archived.** Fluiq ran from 10 April to September 2026 and never
+> found customers. The hosted service is shut down and the infrastructure is
+> gone. The code is MIT and stays public because it works. Nothing here is
+> maintained — fork it freely.
+>
+> The rest of the project: [fluiq-api](https://github.com/fluiq-AI/fluiq-api) ·
+> [tracer](https://github.com/fluiq-AI/fluiq-worker-tracer) ·
+> [evaluator](https://github.com/fluiq-AI/fluiq-worker-evaluator) ·
+> [security](https://github.com/fluiq-AI/fluiq-worker-security) ·
+> [Python SDK](https://github.com/fluiq-AI/fluiq-sdk) ·
+> [TypeScript SDK](https://github.com/fluiq-AI/fluiq-sdk-typescript) ·
+> [guardrail-bench](https://github.com/SaurabhKumbhar24/guardrail-bench)
+
 > Migrated from Vite + react-router + a puppeteer prerender step to Next.js App
 > Router with server-rendered metadata. See [Architecture notes](#architecture-notes).
 
